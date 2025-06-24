@@ -1,0 +1,1328 @@
+{
+  "crop-calendar": [
+    {
+      "id": "1750357319993",
+      "uniqueId": "CC_Oti Region_Biakoye_Maize_1750357319993",
+      "region": "Oti Region",
+      "district": "Biakoye",
+      "crop": "Maize",
+      "majorSeason": {
+        "startMonth": "January",
+        "startWeek": "2024-12-29",
+        "file": "BIAKOYE CALENDAR FOR MAIZE.xlsx"
+      },
+      "minorSeason": {
+        "startMonth": null,
+        "startWeek": null,
+        "hasFile": false
+      },
+      "uploadDate": "2025-06-19T18:21:59.993Z",
+      "userId": "1750357198829",
+      "fileData": {
+        "filename": "BIAKOYE CALENDAR FOR MAIZE.xlsx",
+        "sheets": {
+          "Sheet1": {
+            "headers": [
+              " 2025 CROPPING CALENDAR FOR MAIZE PRODUCTION-OTI REGION, BIAKOYE DISTRICT "
+            ],
+            "data": [
+              [
+                "MAIZE PRODUCTION - MAJOR SEASON"
+              ],
+              [
+                "S/N",
+                "STAGE OF ACTIVITY ",
+                "JAN",
+                null,
+                null,
+                null,
+                null,
+                "FEB",
+                null,
+                null,
+                null,
+                "MAR",
+                null,
+                null,
+                null,
+                "APR",
+                null,
+                null,
+                null,
+                "MAY",
+                null,
+                null,
+                null,
+                null,
+                "JUN",
+                null,
+                null,
+                null,
+                null,
+                "JUL",
+                null,
+                null,
+                null,
+                "AUG",
+                null,
+                null,
+                null,
+                "SEPT"
+              ],
+              [
+                null,
+                null,
+                "WK1",
+                "WK2",
+                "WK3",
+                "WK4",
+                "WK5",
+                "WK1",
+                "WK2",
+                "WK3",
+                "WK4",
+                "WK1",
+                "WK2",
+                "WK3",
+                "WK4",
+                "WK1",
+                "WK2",
+                "WK3",
+                "WK4",
+                "WK1",
+                "WK2",
+                "WK3",
+                "WK4",
+                "WK5",
+                "WK1",
+                "WK2",
+                "WK3",
+                "WK4",
+                "WK1",
+                "WK2",
+                "WK3",
+                "WK4",
+                "WK5",
+                "WK1",
+                "WK2",
+                "WK3",
+                "WK4",
+                "WK1",
+                "WK2"
+              ],
+              [
+                null,
+                "Calendar Date",
+                "29 - 4",
+                "5 - 11",
+                "12 - 18",
+                "19 - 25 ",
+                "26 - 1",
+                "2 - 8",
+                "9 - 15",
+                "16 - 22",
+                "23 - 1",
+                "2 - 8",
+                "9 - 15",
+                "16 - 22",
+                "23 - 29",
+                "30 - 5",
+                "6 - 12",
+                "13 - 19",
+                "20 - 26 ",
+                "27 - 3",
+                "4 - 10",
+                "11 - 17",
+                "18 - 24",
+                "25 - 31",
+                "1 - 7",
+                "8 - 14",
+                "15 - 21",
+                "22 - 28",
+                "29 - 5",
+                "6 - 12",
+                "13-19",
+                "20-22",
+                "23-2",
+                "3-9",
+                "10-16",
+                "17-23",
+                "24-30",
+                "31-6",
+                "7-13"
+              ],
+              [
+                1,
+                "Site Selection"
+              ],
+              [
+                2,
+                "Land Preparation"
+              ],
+              [
+                3,
+                "Sowing / Planting"
+              ],
+              [
+                4,
+                "1st Fertilizer Application (NPK)"
+              ],
+              [
+                5,
+                "1st Weed Control & Pest Management"
+              ],
+              [
+                6,
+                "2nd Fertilizer Application (Urea)"
+              ],
+              [
+                7,
+                "2nd Weed Control & Pest Management"
+              ],
+              [
+                8,
+                "Harvesting"
+              ],
+              [
+                9,
+                "Post-harvest Handling"
+              ]
+            ],
+            "totalRows": 13
+          }
+        },
+        "totalSheets": 1,
+        "totalRecords": 13
+      },
+      "sampleActivities": [
+        "MAIZE PRODUCTION - MAJOR SEASON",
+        "S/N | STAGE OF ACTIVITY  | JAN |  |  |  |  | FEB |  |  |  | MAR |  |  |  | APR |  |  |  | MAY |  |  |  |  | JUN |  |  |  |  | JUL |  |  |  | AUG |  |  |  | SEPT",
+        " |  | WK1 | WK2 | WK3 | WK4 | WK5 | WK1 | WK2 | WK3 | WK4 | WK1 | WK2 | WK3 | WK4 | WK1 | WK2 | WK3 | WK4 | WK1 | WK2 | WK3 | WK4 | WK5 | WK1 | WK2 | WK3 | WK4 | WK1 | WK2 | WK3 | WK4 | WK5 | WK1 | WK2 | WK3 | WK4 | WK1 | WK2",
+        " | Calendar Date | 29 - 4 | 5 - 11 | 12 - 18 | 19 - 25  | 26 - 1 | 2 - 8 | 9 - 15 | 16 - 22 | 23 - 1 | 2 - 8 | 9 - 15 | 16 - 22 | 23 - 29 | 30 - 5 | 6 - 12 | 13 - 19 | 20 - 26  | 27 - 3 | 4 - 10 | 11 - 17 | 18 - 24 | 25 - 31 | 1 - 7 | 8 - 14 | 15 - 21 | 22 - 28 | 29 - 5 | 6 - 12 | 13-19 | 20-22 | 23-2 | 3-9 | 10-16 | 17-23 | 24-30 | 31-6 | 7-13",
+        "1 | Site Selection"
+      ]
+    }
+  ],
+  "agromet-advisory": [],
+  "poultry-calendar": [],
+  "poultry-advisory": [
+    {
+      "id": "1750410135028",
+      "uniqueId": "REG01_DS005_PT001_1750410124611",
+      "regionCode": "REG01",
+      "districtCode": "DS005",
+      "poultryTypeCode": "PT001",
+      "breedCode": "BR001",
+      "title": "Weekly poultry management for Ada east",
+      "description": "",
+      "selectedSheets": [
+        "Site selection",
+        "Seed selection and seed treatme",
+        "Land preparation",
+        "Planting Sowing",
+        "1st fertilizer",
+        "Pest and disease",
+        "2nd fertilizer",
+        "3rd Fertilizer Application",
+        "2nd Weed & Pest Control",
+        "Rogueing",
+        "Bird scaring and Netting",
+        "Harvesting",
+        "Post-harvest handling"
+      ],
+      "fileData": {
+        "filename": "BIAKOYE RICE ADVISORY.xlsx",
+        "sheets": {
+          "Site selection": {
+            "headers": [
+              "[ZONE]",
+              "[REGION]",
+              "[DISTRICT]",
+              "[MONTH/YEAR]",
+              "[WEEK]",
+              "[START DATE]",
+              "[END DATE]",
+              "[CROP]"
+            ],
+            "data": [
+              [
+                "Transition",
+                "REG10/Oti Region",
+                "DS179/Biakoye",
+                "May/June 2025",
+                "1 - 7",
+                45788,
+                45836,
+                "CT0000000008/rice"
+              ],
+              [
+                null,
+                "[RAINFALL]",
+                "[TEMP]",
+                "[HUMIDITY]",
+                "[SOIL MOISTURE]",
+                "[SOIL TEMP]",
+                "[SUNSHINE INTENSITY]",
+                "[SUNRISE]",
+                "[SUNSET]",
+                "[EVAPO-TRANSP.]"
+              ],
+              [
+                "[FORECAST]",
+                "30% occurrence",
+                "26/34°C",
+                0.6,
+                "-",
+                "-",
+                "8 hours",
+                0.2590277777777778,
+                0.7534722222222222,
+                "3.5 - 4.0 mm/day"
+              ],
+              [
+                "[IMPLICATION]",
+                "No rainfall to low rainfall expected",
+                "Suitable temperature",
+                "Moderate effect",
+                "-",
+                "-",
+                "High day light",
+                "Late sunrise",
+                "Early sunset",
+                "Moderate water loss\r\nSite selection activities should begin"
+              ],
+              [
+                "[ADVISORY]",
+                "Site should be selected at lowland areas or a flat land near to water ",
+                "Field investigation activities can begin (soil nutrient analysis and field measurement)",
+                "Good condition for field activities.\r\n\r\nField workers are advised to radiate often.",
+                "-",
+                "-",
+                "Adequate day length for field activity",
+                "Field activities can begin early in the day",
+                "Darkness would set in early thus decreasing visibility and affecting field activities",
+                "Remain hydrated and wear protective clothing during field activities"
+              ],
+              [
+                "[FORECAST AND ADVISORY TITLE]",
+                "OVERALL SUMMARY WEATHER OUTLOOK & ADVISORY FOR RICE FARMERS IN THE BIAKOYE DISTRICT OF THE OTI REGION FOR THE  11TH MAY TO 28TH JUNE. 2025."
+              ],
+              [
+                "[FORECAST AND ADVISORY BODY]",
+                "For the months of 11th MAY to 28TH JUNE, 2025, expected temperature will be 26°C (for minimum) to 34°C (maximum) with relative humidity of about 60% and low chances of rainfall (30% chance), the weather conditions will be favorable for activities in line with selecting a suitable field for rice production.\r\n\r\nSelect a low land and valleys that have good water holding capacity and not of too much of stumps. Know the history of the land regarding pests and disease prevalence.                 \r\nAvoid gravelly and shallow soils and select deep well-drained loamy soils.\r\n\r\n"
+              ],
+              [
+                "[SMS/TEXT]",
+                "Select a good land with good waterholding capacity and rich in soil nutrients and free of pests and diseases."
+              ]
+            ],
+            "totalRows": 8
+          },
+          "Seed selection and seed treatme": {
+            "headers": [
+              "[ZONE]",
+              "[REGION]",
+              "[DISTRICT]",
+              "[MONTH/YEAR]",
+              "[WEEK]",
+              "[START DATE]",
+              "[END DATE]",
+              "[CROP]"
+            ],
+            "data": [
+              [
+                "Transition",
+                "REG10/Oti Region",
+                "DS179/Biakoye",
+                "June/July 2025",
+                "6 -10",
+                45458,
+                45857,
+                "CT0000000008/rice"
+              ],
+              [
+                null,
+                "[RAINFALL]",
+                "[TEMP]",
+                "[HUMIDITY]",
+                "[SOIL MOISTURE]",
+                "[SOIL TEMP]",
+                "[SUNSHINE INTENSITY]",
+                "[SUNRISE]",
+                "[SUNSET]",
+                "[EVAPO-TRANSP.]"
+              ],
+              [
+                "[FORECAST]",
+                "30% occurrence",
+                "26/34°C",
+                0.6,
+                "-",
+                "-",
+                "8 hours",
+                0.2590277777777778,
+                0.7534722222222222,
+                "3.5 - 4.0 mm/day"
+              ],
+              [
+                "[IMPLICATION]",
+                "No rainfall to low rainfall expected",
+                "Suitable temperature",
+                "Moderate effect",
+                "-",
+                "-",
+                "High day light",
+                "Late sunrise",
+                "Early sunset",
+                "Moderate water loss\r\nSite selection activities should begin"
+              ],
+              [
+                "[ADVISORY]",
+                "Do your germination test for your variety eg Agra for at least 80% viability",
+                "Field investigation activities can begin (soil nutrient analysis and field measurement)",
+                "Good condition for field activities.\r\n\r\nField workers are advised to radiate often.",
+                "-",
+                "-",
+                "Adequate day length for field activity",
+                "Field activities can begin early in the day",
+                "Darkness would set in early thus decreasing visibility and affecting field activities",
+                "Remain hydrated and wear protective clothing during field activities"
+              ],
+              [
+                "[FORECAST AND ADVISORY TITLE]",
+                "OVERALL SUMMARY WEATHER OUTLOOK & ADVISORY FOR RICE FARMERS IN THE BIAKOYE DISTRICT OF OTI REGION FOR THE WEEK OF 15th JUNE– 19th JULY. 2025"
+              ],
+              [
+                "[FORECAST AND ADVISORY BODY]",
+                "\r\n\r\nSelect varieties such as Agyapa, Legon 1, Koreamu, AGRA\r\n               \r\nTtreat the seeds with recommended insecticides and fungicides before broadcasting. \r\n"
+              ],
+              [
+                "[SMS/TEXT]",
+                "Treat the seeds with recommended seed dressers or other recommended insecticides and fungicices. Contact the Agric Extension officer in your area for furthe advice."
+              ]
+            ],
+            "totalRows": 8
+          },
+          "Land preparation": {
+            "headers": [
+              "[ZONE]",
+              "[REGION]",
+              "[DISTRICT]",
+              "[MONTH/YEAR]",
+              "[WEEK]",
+              "[START DATE]",
+              "[END DATE]",
+              "[CROP]"
+            ],
+            "data": [
+              [
+                "Transition",
+                "REG10/Oti Region",
+                "DS179/Biakoye",
+                "June/July 2025",
+                "4 - 9",
+                45809,
+                45850,
+                "CT0000000008/rice"
+              ],
+              [
+                null,
+                "[RAINFALL]",
+                "[TEMP]",
+                "[HUMIDITY]",
+                "[SOIL MOISTURE]",
+                "[SOIL TEMP]",
+                "[SUNSHINE INTENSITY]",
+                "[SUNRISE]",
+                "[SUNSET]",
+                "[EVAPO-TRANSP.]"
+              ],
+              [
+                "[FORECAST]",
+                "40% occurrence",
+                "26/34°C",
+                0.65,
+                "-",
+                "-",
+                "9 hours",
+                0.2590277777777778,
+                0.7534722222222222,
+                "3.5-4.0 mm/day"
+              ],
+              [
+                "[IMPLICATION]",
+                "Low rainfall expected",
+                "Suitable temperature",
+                "Moderate effect",
+                "-",
+                "-",
+                "High day light",
+                "Late sunrise",
+                "Early sunset",
+                "Moderate water loss"
+              ],
+              [
+                "[ADVISORY]",
+                "Land preparation activities should begin \r\nSecure all machinery, labour and finances needed \r\n\r\nPlough and harrow farmland to a fine tilth when adequate moisture is available\r\n\r\nInclude moisture and soil conservation techniques in land preparation",
+                "Construct firebelt during bush burning to avoid bushfires",
+                "Plan land preparation early in the morning or late in the afternoon when humidity levels are generally high.",
+                "-",
+                "-",
+                "Perform land preparation early in the morning or late in the afternoon to avoid exposure to intense heat\r\n- stay hydrated and take regular breaks during field activities, especially under high sunlight",
+                "Field activity should begin very early in the morning",
+                "Field activity can extend into late afternoon",
+                "Adjust workload and complete tasks before soil moisture become unworkable"
+              ],
+              [
+                "[FORECAST AND ADVISORY TITLE]",
+                "OVERALL SUMMARY WEATHER OUTLOOK & ADVISORY FOR RICE FARMERS IN THE BIAKOYE DISTRICT OF THE OTI REGION FOR THE WEEK OF 1ST JUNE – 12 JULY 2025"
+              ],
+              [
+                "[FORECAST AND ADVISORY BODY]",
+                "For the period of 1st June to 12th July 2025, expected temperature will be 26°C (for minimum) to 34°C (maximum) with relative humidity of about 65% and low chances of rainfall (40% chance), the weather conditions will be favorable for activities in line with selecting a suitable field for rice production.\r\n\r\nSlash and leave all crop residues and slashed weeds to decompose to conserve soil moisture and protect soil structure\r\nField demarcation and fencing can be executed during this time. Ploughing activities should be done when the site receives adequate rainfall.   \r\nPractice no or minimum tillage."
+              ],
+              [
+                "[SMS/TEXT]",
+                "Leave crop residues/trash to decompose for soil moisture. Do adequate slashing, control burning and ploughing on the onset of the rain. Use no or minimal tillage to protect soil from effects of erosion."
+              ]
+            ],
+            "totalRows": 8
+          },
+          "Planting Sowing": {
+            "headers": [
+              "[ZONE]",
+              "[REGION]",
+              "[DISTRICT]",
+              "[MONTH/YEAR]",
+              "[WEEK]",
+              "[START DATE]",
+              "[END DATE]",
+              "[CROP]"
+            ],
+            "data": [
+              [
+                "Transition",
+                "REG10/Oti Region",
+                "DS179/Biakoye",
+                "June/July 2025",
+                "7 - 10",
+                45830,
+                45857,
+                "CT0000000008/rice"
+              ],
+              [
+                null,
+                "[RAINFALL]",
+                "[TEMP]",
+                "[HUMIDITY]",
+                "[SOIL MOISTURE]",
+                "[SOIL TEMP]",
+                "[SUNSHINE INTENSITY]",
+                "[SUNRISE]",
+                "[SUNSET]",
+                "[EVAPO-TRANSP.]"
+              ],
+              [
+                "[FORECAST]",
+                "60% occurrence",
+                "25/33°C",
+                0.8,
+                "-",
+                "-",
+                "9 hours",
+                0.24305555555555555,
+                0.7569444444444444,
+                "3.5-4.0 mm/day"
+              ],
+              [
+                "[IMPLICATION]",
+                "Medium rainfall expected",
+                "Suitable temperature",
+                "Moderate to high effect",
+                "-",
+                "-",
+                "High day light",
+                "Early sunrise",
+                "Late sunset",
+                "Moderate water loss"
+              ],
+              [
+                "[ADVISORY]",
+                "Germination Test\r\nChoose a suitable maize variety\r\nDetermine the germination percentage of seed ( > 80% acceptable)\r\nPlant seeds after adequate rainfall\r\nTarget plant population of 25,000 – 26,000 plants per acre \r\nEnsure adequate soil moisture for germination\r\n",
+                "There will be suitable temperature to support germination and seedling growth",
+                "There will be adequate air moisture to support germination and seedling growth",
+                "-",
+                "-",
+                "There will be suitable sunlight and energy to support germination and seedling growth",
+                "Field activity should begin very early in the morning",
+                "Field activity can extend into late afternoon",
+                "Soil moisture must be monitored regularly to ensure adequate soil moisture availability"
+              ],
+              [
+                "[FORECAST AND ADVISORY TITLE]",
+                "OVERALL SUMMARY WEATHER OUTLOOK & ADVISORY FOR RICE FARMERS IN THE BIAKOYE DISTRICT OF THE OTI REGION FOR THE WEEK OF 22ND JUNE – 19TH  JULY. 2025"
+              ],
+              [
+                "[FORECAST AND ADVISORY BODY]",
+                "For the week of 22nd June to 19th July 2025, expected temperature will be 25°C (for minimum) to 33°C (maximum) with relative humidity of about 80% and high chances of rainfall (60% chance), the weather conditions will be favorable for planting / sowing activities for rice production\r\n\r\nSelect Agra, Legon 1, Koreamu rice variety for planting\r\nConduct germination test 7 days before sowing to ensure seed viability (≥ 80%)\r\nPlant at the start of the rainy season for good germination and plant establishment. Delayed planting may affect yields.\r\nBroadcast treated seeds, 40 kg/acre or as advised by Extension officers or seed producer. "
+              ],
+              [
+                "[SMS/TEXT]",
+                "\r\nSelect Agra, Legon 1, Koreamu rice variety for planting. Conduct germination test 7 days before sowing to ensure seed viability (≥ 80%)\r\nPlant at the start of the rainy season for good germination and plant establishment. Delayed planting may affect yields.\r\nBroadcast treated seeds, 40 kg/acre or as advised by Extension officers or seed producer. ."
+              ]
+            ],
+            "totalRows": 8
+          },
+          "1st fertilizer": {
+            "headers": [
+              "[ZONE]",
+              "[REGION]",
+              "[DISTRICT]",
+              "[MONTH/YEAR]",
+              "[WEEK]",
+              "[START DATE]",
+              "[END DATE]",
+              "[CROP]"
+            ],
+            "data": [
+              [
+                "Transsition",
+                "REG10/Oti",
+                "DS179/Biakoye",
+                "June – July 2025",
+                "8 - 10",
+                45837,
+                45857,
+                "CT0000000008/rice"
+              ],
+              [
+                null,
+                "[RAINFALL]",
+                "[TEMP]",
+                "[HUMIDITY]",
+                "[SOIL MOISTURE]",
+                "[SOIL TEMP]",
+                "[SUNSHINE INTENSITY]",
+                "[SUNRISE]",
+                "[SUNSET]",
+                "[EVAPO-TRANSP.]"
+              ],
+              [
+                "[FORECAST]",
+                "60% occurrence",
+                "25/33°C",
+                0.8,
+                "-",
+                "-",
+                "9 hours",
+                0.24305555555555555,
+                0.7569444444444444,
+                "3.7-4.3 mm/day"
+              ],
+              [
+                "[IMPLICATION]",
+                "Medium rainfall expected",
+                "Suitable temperature",
+                "Moderate effect",
+                "-",
+                "-",
+                "High day light",
+                "Early sunrise",
+                "Late sunset",
+                "Moderate water loss"
+              ],
+              [
+                "[ADVISORY]",
+                "Fertilizer Application\r\nSelect fertilizer based on maize variety, ecological zone and cultural practice adopted\r\nApply 3 bags of NPK at 5cm away from each plant at planting or within 2 weeks of germination\r\nOrganic and foliar fertilizers can be added as supplementary nutrition to boost plant growth and yields",
+                "Apply fertilizers when day temperatures are low",
+                "- Adequate air and soil moisture will be available for fertilizer application",
+                null,
+                null,
+                "- High ligh and heat intensity would affect fertilizer application\r\n- Apply fertilizers early morning or later afternoon",
+                "- Complete fertilizer application before 9am",
+                "- Start late afternnon fertilizer application from 4pm",
+                "Ensure there is adequate soil moisture for granular fertilizer to dissolve in the soil"
+              ],
+              [
+                "[FORECAST AND ADVISORY TITLE]",
+                "OVERALL SUMMARY WEATHER OUTLOOK & ADVISORY FOR RICE FARMERS IN THE BIAKOYE DISTRICT OF THE OTI REGION FOR THE WEEK OF 29 JUNE – 19th JULY, 2025"
+              ],
+              [
+                "[FORECAST AND ADVISORY BODY]",
+                "For the week of 29th June to 19th July 2025, expected temperature will be 25°C (for minimum) to 33°C (maximum) with relative humidity of about 80% and high chances of rainfall (60% chance), the weather conditions will be favorable for planting / sowing activities for rice production\r\n\r\n\r\nUse fertilizers recommended for specific agro-ecological zones, variety potential, cropping history, soil type, soil moisture, cultural practices, and soil fertility.\r\nApply recommended quantities and rates for maximum benefits by broadcasting.\r\nBasic fertilizer required is 2 bags (50kg) of NPK per acre.\r\nNPK rate: Broadcast 2 bags (50kg) within 14 days after germination with adequate soil moisture.\r\nApply foliar (liquid) fertilizers during late vegetative and early grain-fill stages to improve yields and seed/grain quality.\r\nFollow product instructions and use foliar fertilizers to supplement, not replace, compound fertilizers\r\n"
+              ],
+              [
+                "[SMS/TEXT]",
+                " Apply 2 bags (50kg) NPK/acre, within 14 days of broadcasting "
+              ]
+            ],
+            "totalRows": 8
+          },
+          "Pest and disease": {
+            "headers": [
+              "[ZONE]",
+              "[REGION]",
+              "[DISTRICT]",
+              "[MONTH/YEAR]",
+              "[WEEK]",
+              "[START DATE]",
+              "[END DATE]",
+              "[CROP]"
+            ],
+            "data": [
+              [
+                "Transition",
+                "REG10/OTI REGION",
+                "DS179/BIAKOYE",
+                45839,
+                "10",
+                45851,
+                45857,
+                "CT0000000008/rice"
+              ],
+              [
+                null,
+                "[RAINFALL]",
+                "[TEMP]",
+                "[HUMIDITY]",
+                "[SOIL MOISTURE]",
+                "[SOIL TEMP]",
+                "[SUNSHINE INTENSITY]",
+                "[SUNRISE]",
+                "[SUNSET]",
+                "[EVAPO-TRANSP.]"
+              ],
+              [
+                "[FORECAST]",
+                "60% occurrence",
+                "26/33°C",
+                0.67,
+                "-",
+                "-",
+                "9 hours",
+                0.24305555555555555,
+                0.7569444444444444,
+                "3.5-4.0 mm/day"
+              ],
+              [
+                "[IMPLICATION]",
+                "medium rainfall expected",
+                "Suitable temperature",
+                "Moderate effect",
+                "-",
+                "-",
+                "High day light",
+                "Early sunrise",
+                "Late sunset",
+                "Moderate water loss"
+              ],
+              [
+                "[ADVISORY]",
+                "Weed Control\r\nHigh rainfall would promote rapid weed growth \r\nSpray appropriate weedicide at least 3 hours before and after it rains to ensure effectiveness\r\nManual weeding should be done a few hours after rains when soil is moist\r\nHigh rainfall affects pest movement and growth hence applying insecticide at least 3 hours before or after rains is encouraged",
+                "-High temperature promote rapid weed and pest development\r\n\r\nControl weeds before they flower and produce seeds",
+                "-Higher humidity promote weed growth\r\n\r\nRegular weeding to keep weed growth below threshhold",
+                null,
+                "High soil temperature would encourage pest activities in the soil \r\nScott field and soil regularly and apply appropriate pesticide to keep pest population in check",
+                "-Long day light and sun intensity encourage active pest activity and disease spread \r\nIntensify scotting activity during the vegetative and grain prodction stage to avoid yield loss",
+                "Pests and disease activity and damage on crop would begin very early in the day\r\n\r\nPesticides application should begin by 5;30am",
+                "Pests and diseases activities become active during the late aftering and evening\r\n\r\nSpray contact insectide after 4pm to have effective results"
+              ],
+              [
+                "[FORECAST AND ADVISORY TITLE]",
+                "OVERALL SUMMARY WEATHER OUTLOOK & ADVISORY FOR RICE FARMERS IN THE BIAKOYE DISTRICT OF THE OTI REGION FOR THE WEEK OF 13TH - 19TH JULY, 2025"
+              ],
+              [
+                "[FORECAST AND ADVISORY BODY]",
+                "For the week of 13th JULY to 19th JULY  2025, expected temperature will be 26°C (for minimum) to 33°C (maximum) with relative humidity of about 67% and moderate chances of rainfall (60% chance), the weather conditions will be favorable for weed management activities.\r\n\r\n Regularly look for the presence of weeds/pests/diseases or symptoms two weeks after germination\r\nIdentify weeds, pests and diseases in the field and establish control thresholds.\r\nManage weeds within the first 6 weeks of growth or before they produce flowers/seeds.\r\nEmploy manual, mechanical, biological, or chemical methods to control weeds, pests and diseases\r\nUse appropriate implements or recommended herbicides, pesticides and fungicides to manage weed/pest and disease spread.\r\nAvoid continuous use of chemicals or products with similar active ingredients to reduce resistance.\r\nKey pests  to look out for include  stem borers and rodents."
+              ],
+              [
+                "[SMS/TEXT]",
+                "Identify weeds/pests/diseases 2 weeks after planting. Control weeds early, and use manual/chemical methods. Avoid overusing chemicals to prevent resistance. Consult your AEA for further information."
+              ]
+            ],
+            "totalRows": 8
+          },
+          "2nd fertilizer": {
+            "headers": [
+              "[ZONE]",
+              "[REGION]",
+              "[DISTRICT]",
+              "[MONTH/YEAR]",
+              "[WEEK]",
+              "[START DATE]",
+              "[END DATE]",
+              "[CROP]"
+            ],
+            "data": [
+              [
+                "West Coast",
+                "REG10/OTI REGION",
+                "DS179/Biakoye",
+                "May/June 2025",
+                "21 - 24",
+                45795,
+                45822,
+                "CT0000000008/rice"
+              ],
+              [
+                null,
+                "[RAINFALL]",
+                "[TEMP]",
+                "[HUMIDITY]",
+                "[SOIL MOISTURE]",
+                "[SOIL TEMP]",
+                "[SUNSHINE INTENSITY]",
+                "[SUNRISE]",
+                "[SUNSET]",
+                "[EVAPO-TRANSP.]"
+              ],
+              [
+                "[FORECAST]",
+                "70% occurrence",
+                "25/32°C",
+                0.7,
+                "-",
+                "-",
+                "7 hours",
+                0.23958333333333334,
+                0.7604166666666666,
+                "3.5-4.0 mm/day"
+              ],
+              [
+                "[IMPLICATION]",
+                "High rainfall expected",
+                "Suitable temperature",
+                "Moderate effect",
+                "-",
+                "-",
+                "Moderate day light",
+                "Early sunrise",
+                "Late sunset",
+                "Moderate water loss"
+              ],
+              [
+                "[ADVISORY]",
+                "OVERALL SUMMARY WEATHER OUTLOOK & ADVISORY FOR RICE FARMERS IN THE BIAKOYE DISTRICT OF THE OTI REGION FOR THE WEEK OF 18TH MAY – 14TH JUNE, 2025",
+                "Apply fertilizers when day temperatures are low",
+                "- Adequate air and soil moisture will be available for fertilizer application",
+                "High or adequate soil moisture is required to dissolve the fertilizer into solution\r\nApply fertilizers early morning or later afternoon",
+                "High soil temperature promotes urea volatility from the soil\r\npest activities in the soil \r\nScott field and soil regularly and apply appropriate pesticide to keep pest population in check",
+                "- High ligh and heat intensity would affect fertilizer application\r\n- Apply fertilizers early morning or later afternoon",
+                "- Complete fertilizer application before 9am",
+                "- Start late afternoon fertilizer application from 4pm",
+                "Ensure there is adequate soil moisture for granular fertilizer to dissolve in the soil"
+              ],
+              [
+                "[FORECAST AND ADVISORY TITLE]",
+                "OVERALL SUMMARY WEATHER OUTLOOK & ADVISORY FOR RICE FARMERS IN THE WASSA AMENFI CENTRAL DISTRICT OF THE GT ACCRA REGION FOR THE WEEK OF 18TH MAY – 14TH JUNE, 2025"
+              ],
+              [
+                "[FORECAST AND ADVISORY BODY]",
+                "For the week of 18th May to 14th June 2025, expected temperature will be 25°C (for minimum) to 32°C (maximum) with relative humidity of about 70% and low chances of rainfall (70% chance), the weather conditions will be favorable for activities in line with selecting a suitable field for maize production\r\n\r\nUse fertilizers recommended for specific agro-ecological zones, variety potential, cropping history, soil type, soil moisture, cultural practices, and soil fertility.\r\nApply recommended quantities and rates for maximum benefits by burying fertilizer 5cm away from plants.\r\nBasic fertilizer required is 1bag (50kg) of urea per acre.\r\nUrea rate: 5g per plant 4-5 weeks after germination as top-dressing.\r\nFoliar (liquid) and organic fertilizers supply nutrients and improve soil physical characteristics. \r\nApply during late vegetative and early grain-fill stages to improve yields and seed/grain quality.\r\nFollow product instructions and use foliar (liquid) fertilizers to supplement, not replace, compound fertilizers."
+              ],
+              [
+                "[SMS/TEXT]",
+                "Use zone-specific fertilizers. Apply 1 bag urea/acre, 5g/plant 4-5 weeks after germination. Use foliar/organic fertilizers late in growth to boost yields and soil health"
+              ]
+            ],
+            "totalRows": 8
+          },
+          "3rd Fertilizer Application": {
+            "headers": [
+              "[ZONE]",
+              "[REGION]",
+              "[DISTRICT]",
+              "[MONTH/YEAR]",
+              "[WEEK]",
+              "[START DATE]",
+              "[END DATE]",
+              "[CROP]"
+            ],
+            "data": [
+              [
+                "Transition",
+                "REG10/Oti Region",
+                "DS179/Biakoye",
+                "Dec/Jan/Feb/March 2025",
+                "1 - 12",
+                null,
+                null,
+                "CT0000000008/rice"
+              ],
+              [
+                null,
+                "[RAINFALL]",
+                "[TEMP]",
+                "[HUMIDITY]",
+                "[SOIL MOISTURE]",
+                "[SOIL TEMP]",
+                "[SUNSHINE INTENSITY]",
+                "[SUNRISE]",
+                "[SUNSET]",
+                "[EVAPO-TRANSP.]"
+              ],
+              [
+                "[FORECAST]",
+                "40% occurrence",
+                "26/34°C",
+                0.65,
+                "-",
+                "-",
+                "9 hours",
+                0.2590277777777778,
+                0.7534722222222222,
+                "3.5-4.0 mm/day"
+              ],
+              [
+                "[IMPLICATION]",
+                "Low rainfall expected",
+                "Suitable temperature",
+                "Moderate effect",
+                "-",
+                "-",
+                "High day light",
+                "Late sunrise",
+                "Early sunset",
+                "Moderate water loss"
+              ],
+              [
+                "[ADVISORY]",
+                "Land preparation activities should begin \r\nSecure all machinery, labour and finances needed \r\n\r\nPlough and harrow farmland to a fine tilth when adequate moisture is available\r\n\r\nInclude moisture and soil conservation techniques in land preparation",
+                "Construct firebelt during bush burning to avoid bushfires",
+                "Plan land preparation early in the morning or late in the afternoon when humidity levels are generally high.",
+                "-",
+                "-",
+                "Perform land preparation early in the morning or late in the afternoon to avoid exposure to intense heat\r\n- stay hydrated and take regular breaks during field activities, especially under high sunlight",
+                "Field activity should begin very early in the morning",
+                "Field activity can extend into late afternoon",
+                "Adjust workload and complete tasks before soil moisture become unworkable"
+              ],
+              [
+                "[FORECAST AND ADVISORY TITLE]"
+              ],
+              [
+                "[FORECAST AND ADVISORY BODY]"
+              ],
+              [
+                "[SMS/TEXT]"
+              ]
+            ],
+            "totalRows": 8
+          },
+          "2nd Weed & Pest Control": {
+            "headers": [
+              "[ZONE]",
+              "[REGION]",
+              "[DISTRICT]",
+              "[MONTH/YEAR]",
+              "[WEEK]",
+              "[START DATE]",
+              "[END DATE]",
+              "[CROP]"
+            ],
+            "data": [
+              [
+                "Transition",
+                "REG10/Oti Region",
+                "DS179/Biakoye",
+                "April/May/June 2025",
+                "17 - 24",
+                45767,
+                45822,
+                "CT0000000001/rice"
+              ],
+              [
+                null,
+                "[RAINFALL]",
+                "[TEMP]",
+                "[HUMIDITY]",
+                "[SOIL MOISTURE]",
+                "[SOIL TEMP]",
+                "[SUNSHINE INTENSITY]",
+                "[SUNRISE]",
+                "[SUNSET]",
+                "[EVAPO-TRANSP.]"
+              ],
+              [
+                "[FORECAST]",
+                "70% occurrence",
+                "26/33°C",
+                0.67,
+                "-",
+                "-",
+                "9 hours",
+                0.23958333333333334,
+                0.7569444444444444,
+                "3.5-4.0 mm/day"
+              ],
+              [
+                "[IMPLICATION]",
+                "High rainfall expected",
+                "Suitable temperature",
+                "Moderate effect",
+                "-",
+                "-",
+                "High day light",
+                "Early sunrise",
+                "Late sunset",
+                "Moderate water loss"
+              ],
+              [
+                "[ADVISORY]",
+                "Weed Control High rainfall would promote rapid weed growth \r\nSpray appropriate weedicide at least 3 hours before and after it rains to ensure effectiveness\r\nManual weeding should be done a few hours after rains when soil is moist\r\nHigh rainfall affects pest movement and growth hence applying insecticide at least 3 hours before or after rains is encouraged",
+                "-High temperature promote rapid weed and pest development\r\n\r\nControl weeds before they flower and produce seeds",
+                "-Higher humidity promote weed growth\r\n\r\nRegular weeding to keep weed growth below threshold",
+                "-The high soil moisture promotes weed growth\r\n\r\nRegular weeding to keep weed growth below threshold",
+                "High soil temperature would encourage pest activities in the soil \r\nScott field and soil regularly and apply appropriate pesticide to keep pest population in check",
+                "-Long day light and sun intensity encourage active pest activity and disease spread \r\n\r\nIntensify scotting activity during the vegetative and grain production stage to avoid yield loss",
+                "Pests and disease activity and damage on crop would begin very early in the day\r\n\r\nPesticides application should begin by 5;30am",
+                "Pests and diseases activities become active during the late aftering and evening\r\n\r\nSpray contact insectide after 4pm to have effective results",
+                "High moisture loss would affect the efficacy of the chemicals used\r\n\r\nSpray appropriate chemical early Morning or late afternoon to reduce moisture loss and ensure effective action"
+              ],
+              [
+                "[FORECAST AND ADVISORY TITLE]",
+                "OVERALL SUMMARY WEATHER OUTLOOK & ADVISORY FOR RICE FARMERS IN THE BIAKOYE DISTRICT OF THE OTI REGION FOR THE WEEK OF 20th APRIL – 14TH JUNE, 2024"
+              ],
+              [
+                "[FORECAST AND ADVISORY BODY]",
+                "For the week of 20th April to 14th June 2025, expected temperature will be 26°C (for minimum) to 33°C (maximum) with relative humidity of about 67% and low chances of rainfall (70% chance), the weather conditions will be favorable for activities in line with selecting a suitable field for rice production\r\n Regular look for the presence of weeds/pests/diseases or symptoms two weeks after germination\r\nIdentify weeds, pests and diseases in the field and establish control thresholds.\r\nManage weeds within the first 6 weeks of growth or before they produce flowers/seeds.\r\n\r\n\r\n\r\nKey pests and vectors to look for include fall armyworm, stem borers."
+              ],
+              [
+                "[SMS/TEXT]",
+                "look out for weeds/pests/diseases 2 weeks after planting. Control weeds early, and use manual/chemical methods. Avoid overusing chemicals to prevent resistance."
+              ]
+            ],
+            "totalRows": 8
+          },
+          "Rogueing": {
+            "headers": [
+              "[ZONE]",
+              "[REGION]",
+              "[DISTRICT]",
+              "[MONTH/YEAR]",
+              "[WEEK]",
+              "[START DATE]",
+              "[END DATE]",
+              "[CROP]"
+            ],
+            "data": [
+              [
+                "Transition",
+                "REG10/Oti Region",
+                "DS179/Biakoye",
+                45839,
+                "10",
+                45851,
+                45857,
+                "CT0000000008/rice"
+              ],
+              [
+                null,
+                "[RAINFALL]",
+                "[TEMP]",
+                "[HUMIDITY]",
+                "[SOIL MOISTURE]",
+                "[SOIL TEMP]",
+                "[SUNSHINE INTENSITY]",
+                "[SUNRISE]",
+                "[SUNSET]",
+                "[EVAPO-TRANSP.]"
+              ],
+              [
+                "[FORECAST]",
+                "70% occurrence",
+                "26/33°C",
+                0.67,
+                "-",
+                "-",
+                "9 hours",
+                0.23958333333333334,
+                0.7569444444444444,
+                "3.5-4.0 mm/day"
+              ],
+              [
+                "[IMPLICATION]",
+                "High rainfall expected",
+                "Suitable temperature",
+                "Moderate effect",
+                "-",
+                "-",
+                "High day light",
+                "Early sunrise",
+                "Late sunset",
+                "Moderate water loss"
+              ],
+              [
+                "[ADVISORY]",
+                "Weed Control High rainfall would promote rapid weed growth \r\nSpray appropriate weedicide at least 3 hours before and after it rains to ensure effectiveness\r\nManual weeding should be done a few hours after rains when soil is moist\r\nHigh rainfall affects pest movement and growth hence applying insecticide at least 3 hours before or after rains is encouraged",
+                "-High temperature promote rapid weed and pest development\r\n\r\nControl weeds before they flower and produce seeds",
+                "-Higher humidity promote weed growth\r\n\r\nRegular weeding to keep weed growth below threshold",
+                "-The high soil moisture promotes weed growth\r\n\r\nRegular weeding to keep weed growth below threshold",
+                "High soil temperature would encourage pest activities in the soil \r\nScott field and soil regularly and apply appropriate pesticide to keep pest population in check",
+                "-Long day light and sun intensity encourage active pest activity and disease spread \r\n\r\nIntensify scotting activity during the vegetative and grain production stage to avoid yield loss",
+                "Pests and disease activity and damage on crop would begin very early in the day\r\n\r\nPesticides application should begin by 5;30am",
+                "Pests and diseases activities become active during the late aftering and evening\r\n\r\nSpray contact insectide after 4pm to have effective results",
+                "High moisture loss would affect the efficacy of the chemicals used\r\n\r\nSpray appropriate chemical early Morning or late afternoon to reduce moisture loss and ensure effective action"
+              ],
+              [
+                "[FORECAST AND ADVISORY TITLE]",
+                "OVERALL SUMMARY WEATHER OUTLOOK & ADVISORY FOR RICE FARMERS BIAKOYE DISTRICT OF THE OTI REGION FOR THE WEEK OF 13th JULY , 2025 TO 19TH  JULY, 2025"
+              ],
+              [
+                "[FORECAST AND ADVISORY BODY]",
+                "For the week of 13th July to 19th July, 2025, expected temperature will be 26°C (for minimum) to 33°C (maximum) with relative humidity of about 67% and low chances of rainfall (70% chance), the weather conditions will be favorable for activities in line with selecting a suitable field for rice production\r\n Remove all unwanted varieties from the farm\r\n\r\n\r\n\r\n\r\n\r\n"
+              ],
+              [
+                "[SMS/TEXT]",
+                "Look for and remove all unwanted varieties from  the farm."
+              ]
+            ],
+            "totalRows": 8
+          },
+          "Bird scaring and Netting": {
+            "headers": [
+              "[ZONE]",
+              "[REGION]",
+              "[DISTRICT]",
+              "[MONTH/YEAR]",
+              "[WEEK]",
+              "[START DATE]",
+              "[END DATE]",
+              "[CROP]"
+            ],
+            "data": [
+              [
+                "West Coast",
+                "REG10/Oti Region",
+                "DS179/Biakoye",
+                "April/May/June 2025",
+                "17 - 24",
+                45767,
+                45822,
+                "CT0000000008/rice"
+              ],
+              [
+                null,
+                "[RAINFALL]",
+                "[TEMP]",
+                "[HUMIDITY]",
+                "[SOIL MOISTURE]",
+                "[SOIL TEMP]",
+                "[SUNSHINE INTENSITY]",
+                "[SUNRISE]",
+                "[SUNSET]",
+                "[EVAPO-TRANSP.]"
+              ],
+              [
+                "[FORECAST]",
+                "70% occurrence",
+                "26/33°C",
+                0.67,
+                "-",
+                "-",
+                "9 hours",
+                0.23958333333333334,
+                0.7569444444444444,
+                "3.5-4.0 mm/day"
+              ],
+              [
+                "[IMPLICATION]",
+                "High rainfall expected",
+                "Suitable temperature",
+                "Moderate effect",
+                "-",
+                "-",
+                "High day light",
+                "Early sunrise",
+                "Late sunset",
+                "Moderate water loss"
+              ],
+              [
+                "[ADVISORY]",
+                "Weed Control High rainfall would promote rapid weed growth \r\nSpray appropriate weedicide at least 3 hours before and after it rains to ensure effectiveness\r\nManual weeding should be done a few hours after rains when soil is moist\r\nHigh rainfall affects pest movement and growth hence applying insecticide at least 3 hours before or after rains is encouraged",
+                "-High temperature promote rapid weed and pest development\r\n\r\nControl weeds before they flower and produce seeds",
+                "-Higher humidity promote weed growth\r\n\r\nRegular weeding to keep weed growth below threshold",
+                "-The high soil moisture promotes weed growth\r\n\r\nRegular weeding to keep weed growth below threshold",
+                "High soil temperature would encourage pest activities in the soil \r\nScott field and soil regularly and apply appropriate pesticide to keep pest population in check",
+                "-Long day light and sun intensity encourage active pest activity and disease spread \r\n\r\nIntensify scotting activity during the vegetative and grain production stage to avoid yield loss",
+                "Pests and disease activity and damage on crop would begin very early in the day\r\n\r\nPesticides application should begin by 5;30am",
+                "Pests and diseases activities become active during the late aftering and evening\r\n\r\nSpray contact insectide after 4pm to have effective results",
+                "High moisture loss would affect the efficacy of the chemicals used\r\n\r\nSpray appropriate chemical early Morning or late afternoon to reduce moisture loss and ensure effective action"
+              ],
+              [
+                "[FORECAST AND ADVISORY TITLE]",
+                "OVERALL SUMMARY WEATHER OUTLOOK & ADVISORY FOR RICE FARMERS IN THE BIAKOYE DISTRICT OF THE OTI REGION FOR THE WEEK OF 20th APRIL – 14TH JUNE, 2024"
+              ],
+              [
+                "[FORECAST AND ADVISORY BODY]",
+                "For the week of 20th April to 14th June 2025, expected temperature will be 26°C (for minimum) to 33°C (maximum) with relative humidity of about 67% and low chances of rainfall (70% chance), the weather conditions will be favorable for activities in line with selecting a suitable field for rice production\r\n\r\nStart regular scouting for presence of weeds/pests/diseases or symptoms two weeks after germination\r\nIdentify weeds, pests and diseases in the field and establish control thresholds.\r\nManage weeds within the first 6 weeks of growth or before they produce flowers/seeds.\r\nPractice intercropping and crop rotation to prevent weed, pest and disease build-up.\r\nEmploy manual, mechanical, biological, or chemical methods to control weeds, pests and diseases\r\nUse appropriate implements or recommended herbicides, pesticides and fungicides to manage weed/pest and disease spread.\r\nAvoid continuous use of chemicals or products with similar active ingredients to reduce resistance.\r\nKey pests and vectors to scout for include fall armyworm, Africa armyworm, stem borers and leaf hoppers."
+              ],
+              [
+                "[SMS/TEXT]",
+                "Scout for weeds/pests/diseases 2 weeks after planting. Control weeds early, rotate crops, and use manual/chemical methods. Avoid overusing chemicals to prevent resistance."
+              ]
+            ],
+            "totalRows": 8
+          },
+          "Harvesting": {
+            "headers": [
+              "[ZONE]",
+              "[REGION]",
+              "[DISTRICT]",
+              "[MONTH/YEAR]",
+              "[WEEK]",
+              "[START DATE]",
+              "[END DATE]",
+              "[CROP]"
+            ],
+            "data": [
+              [
+                "westt Coast",
+                "REG10/OTI REGION",
+                "DS179/Biakoye",
+                "June/Jul/Aug/2025",
+                "25 - 32",
+                45823,
+                45878,
+                "CT0000000008/maize"
+              ],
+              [
+                null,
+                "[RAINFALL]",
+                "[TEMP]",
+                "[HUMIDITY]",
+                "[SOIL MOISTURE]",
+                "[SOIL TEMP]",
+                "[SUNSHINE INTENSITY]",
+                "[SUNRISE]",
+                "[SUNSET]",
+                "[EVAPO-TRANSP.]"
+              ],
+              [
+                "[FORECAST]",
+                "80% occurrence",
+                "24/29°C",
+                0.75,
+                "-",
+                "-",
+                "7 hours",
+                0.24305555555555555,
+                0.7618055555555555,
+                "3.5-4.0 mm/day"
+              ],
+              [
+                "[IMPLICATION]",
+                "High rainfall expected",
+                "Suitable temperature",
+                "High effect",
+                "-",
+                "-",
+                "Medium day light",
+                "Early sunrise",
+                "Late Sunset",
+                "Moderate water loss"
+              ],
+              [
+                "[ADVISORY]",
+                "Harvesting"
+              ],
+              [
+                "[FORECAST AND ADVISORY TITLE]",
+                "OVERALL SUMMARY WEATHER OUTLOOK & ADVISORY FOR MAIZE FARMERS IN THE BIAKOYE DISTRICT OF THE OTI REGION FOR THE WEEK OF 15TH JUNE – 9TH AUGUST 2025"
+              ],
+              [
+                "[FORECAST AND ADVISORY BODY]",
+                "For the week of 15th June to 9th August 2025, expected temperature will be 23°C (for minimum) to 29°C (maximum) with relative humidity of about 75% and high chances of rainfall (80% chance), the weather conditions will be favorable for harvesting activities of maize production\r\n\r\nHarvest maize at physiological maturity based on variety and market demand (fresh or dried).\r\nPhysiological maturity is indicated by a white creamy fluid when a kernel tip is broken (approx. 32% moisture).\r\nHarvest dried maize when grain moisture content is between 15% and 13%.\r\nPromptly remove harvested maize from the field to prevent quality degradation, burning, insect infestation, aflatoxin contamination, and market value loss.\r\nSafely transport maize using head portals, tractors, and trucks."
+              ],
+              [
+                "[SMS/TEXT]",
+                "Harvest maize at maturity (32% moisture for fresh, 13-15% for dried). Remove quickly to avoid pests, aflatoxin, and quality loss. Transport safely using proper methods.\r\n"
+              ]
+            ],
+            "totalRows": 8
+          },
+          "Post-harvest handling": {
+            "headers": [
+              "[ZONE]",
+              "[REGION]",
+              "[DISTRICT]",
+              "[MONTH/YEAR]",
+              "[WEEK]",
+              "[START DATE]",
+              "[END DATE]",
+              "[CROP]"
+            ],
+            "data": [
+              [
+                "West Coast",
+                "REG10/Oti Region",
+                "DS179/Biakoye",
+                " July/Aug/Sept 2025",
+                "29 - 36",
+                45851,
+                45906,
+                "CT0000000008/maize"
+              ],
+              [
+                null,
+                "[RAINFALL]",
+                "[TEMP]",
+                "[HUMIDITY]",
+                "[SOIL MOISTURE]",
+                "[SOIL TEMP]",
+                "[SUNSHINE INTENSITY]",
+                "[SUNRISE]",
+                "[SUNSET]",
+                "[EVAPO-TRANSP.]"
+              ],
+              [
+                "[FORECAST]",
+                "60% occurrence",
+                "24/28°.C",
+                0.78,
+                "-",
+                "-",
+                "8 hours",
+                0.24305555555555555,
+                0.7604166666666666,
+                "3.5-4.0 mm/day"
+              ],
+              [
+                "[IMPLICATION]",
+                "Medium rainfall expected",
+                "Suitable temperature",
+                "High effect",
+                "-",
+                "-",
+                "High day light",
+                "Early sunrise",
+                "Late sunset",
+                "Moderate water loss"
+              ],
+              [
+                "[ADVISORY]"
+              ],
+              [
+                "[FORECAST AND ADVISORY TITLE]",
+                "OVERALL SUMMARY WEATHER OUTLOOK & ADVISORY FOR MAIZE FARMERS IN THE BIAKOYE DISTRICT OF THE OTI REGION FOR THE WEEK OF 13TH JULY – 6TH SEPT, 2025"
+              ],
+              [
+                "[FORECAST AND ADVISORY BODY]",
+                "For the week of 13th July to 6th Sept 2025, expected temperature will be 24°C (for minimum) to 28°C (maximum) with relative humidity of about 78% and low chances of rainfall (60% chance), the weather conditions will be favorable for postharvest activities for maize production\r\n\r\nDry harvested maize (small quantity) on concrete compounds, fertilizer bags, polyethylene or tarpaulins sheets. \r\nEnsure that maize grains are properly dried without debris and insects (larger grain borers and weevils) before storage\r\nDry maize grains to 12-13% moisture content before storage to prevent fungal infections and toxin production.\r\nStore untreated maize for 2-3 months to prevent insect re-infestation.\r\nTreat dried grains with recommended insecticide and store in maize cribs, jute or polypropylene sacks.\r\nFor long storage, dehusk and or shell, and treat maize grains with insecticide prior to storage in cribs, silos or PICs-bags. \r\nUse aluminium phosphide 56% (Phostoxin, Temaphos, Celphos P, Bextoxin, Agroxin Tablet). Rate: 3 tablets per tonne (10 maxi bags).  Re-entry- 4 days after application.\r\nRegularly inspect treated/untreated stored grains to ensure quality is maintained during the storage period \r\n"
+              ],
+              [
+                "[SMS/TEXT]",
+                "Dry maize on clean surfaces to 12-13% moisture. Store untreated for 2-3 months. Treat grains with insecticide for long storage. Regularly check stored grains for quality.\r\n"
+              ]
+            ],
+            "totalRows": 8
+          }
+        },
+        "totalSheets": 13,
+        "totalRecords": 104
+      },
+      "uploadDate": "2025-06-20T09:02:15.028Z",
+      "userId": "1750409927020"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run lint)",
+      "Bash(npm run lint:*)",
+      "Bash(timeout 10s npm run dev)",
+      "Bash(node:*)",
+      "Bash(npm --version)",
+      "Bash(npm run build:*)",
+      "Bash(timeout 5s npm run server)",
+      "Bash(timeout 10s npm run server)",
+      "Bash(grep:*)",
+      "Bash(sed:*)",
+      "Bash(awk:*)",
+      "WebFetch(domain:mausam.imd.gov.in)",
+      "Bash(touch:*)",
+      "Bash(ls:*)",
+      "Bash(pkill:*)",
+      "Bash(npm run dev:*)",
+      "Bash(rm:*)",
+      "Bash(curl:*)",
+      "Bash(rg:*)",
+      "Bash(cp:*)",
+      "Bash(pip install:*)",
+      "Bash(timeout 8s npm run dev)",
+      "Bash(kill:*)",
+      "Bash(find:*)",
+      "WebFetch(domain:triagro-ai.netlify.app)",
+      "Bash(true)",
+      "Bash(timeout 15s npm run dev)",
+      "Bash(npm install:*)",
+      "Bash(npm run test:system:*)",
+      "Bash(mv:*)",
+      "Bash(npm run server:*)"
+    ],
+    "deny": []
+  }
+}

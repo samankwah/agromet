@@ -1,0 +1,6 @@
+🔐 TriAgro AI Authentication Server running on port 3002
+📡 Health check: http://localhost:3002/health
+👤 Sign up: POST http://localhost:3002/sign-up
+🔑 Sign in: POST http://localhost:3002/sign-in
+📁 File upload: POST http://localhost:3002/upload
+📊 Dashboard: GET http://localhost:3002/user/dashboard/stats

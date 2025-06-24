@@ -1,0 +1,10 @@
+🤖 AgriBot Claude API Proxy Server running on port 3001
+📡 Health check: http://localhost:3001/api/health
+💬 Chat endpoint: http://localhost:3001/api/chat
+❓ FAQ endpoint: http://localhost:3001/api/faq/{query}
+
+🌟 Phase 2 Smart Agricultural Intelligence:
+🌦️  Weather Analysis: http://localhost:3001/api/weather-analysis
+📊 Market Intelligence: http://localhost:3001/api/market-analysis
+🔍 Problem Diagnosis: http://localhost:3001/api/diagnose-problem
+🧠 Agricultural Intelligence: http://localhost:3001/api/agricultural-intelligence
