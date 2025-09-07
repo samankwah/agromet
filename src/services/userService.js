@@ -2,18 +2,28 @@ import axios from 'axios';
 
 class UserService {
   constructor() {
-    // Use local authentication server
-    this.baseURL = 'http://localhost:3001';
-    this.api = axios.create({
-      baseURL: this.baseURL,
+    // Auth server for authentication and user management
+    this.authBaseURL = 'http://localhost:3002';
+    this.authAPI = axios.create({
+      baseURL: this.authBaseURL,
       timeout: 15000,
       headers: {
         'Content-Type': 'application/json',
       },
     });
 
-    // Add request interceptor to include auth token
-    this.api.interceptors.request.use(
+    // Main server for agricultural data and AI services
+    this.dataBaseURL = 'http://localhost:3001';
+    this.dataAPI = axios.create({
+      baseURL: this.dataBaseURL,
+      timeout: 15000,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    // Add request interceptor for auth API
+    this.authAPI.interceptors.request.use(
       (config) => {
         const token = localStorage.getItem('token') || localStorage.getItem('donatrakAccessToken');
         if (token) {
@@ -26,8 +36,22 @@ class UserService {
       }
     );
 
-    // Add response interceptor for error handling
-    this.api.interceptors.response.use(
+    // Add request interceptor for data API
+    this.dataAPI.interceptors.request.use(
+      (config) => {
+        const token = localStorage.getItem('token') || localStorage.getItem('donatrakAccessToken');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
+      }
+    );
+
+    // Add response interceptor for auth API
+    this.authAPI.interceptors.response.use(
       (response) => response,
       (error) => {
         if (error.response?.status === 401) {
@@ -37,6 +61,22 @@ class UserService {
         return Promise.reject(error);
       }
     );
+
+    // Add response interceptor for data API
+    this.dataAPI.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          this.clearAuthData();
+          window.location.href = '/admin-login';
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    // Legacy support - keep this.api pointing to authAPI for backward compatibility
+    this.api = this.authAPI;
+    this.baseURL = this.authBaseURL;
   }
 
   // Authentication methods
@@ -491,7 +531,7 @@ class UserService {
         formData.append('dataType', dataType);
       }
 
-      const response = await this.api.post('/api/agricultural-data/upload', formData, {
+      const response = await this.dataAPI.post('/api/agricultural-data/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -525,7 +565,7 @@ class UserService {
         }
       });
 
-      const response = await this.api.get(`/api/agricultural-data/${dataType}?${params.toString()}`);
+      const response = await this.dataAPI.get(`/api/agricultural-data/${dataType}?${params.toString()}`);
       
       // Clean the data to extract only agricultural records and flatten complex objects
       let cleanData = response.data;
@@ -592,7 +632,7 @@ class UserService {
 
   async deleteAgriculturalData(dataType, recordId) {
     try {
-      await this.api.delete(`/api/agricultural-data/${dataType}/${recordId}`);
+      await this.dataAPI.delete(`/api/agricultural-data/${dataType}/${recordId}`);
       return {
         success: true,
         message: 'Agricultural data deleted successfully'

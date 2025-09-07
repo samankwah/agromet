@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { districtOfGhana } from "../districts";
 import { FaDownload, FaShareAlt, FaSpinner } from "react-icons/fa";
 import agriculturalDataService from '../services/agriculturalDataService';
+import PageTitle from '../components/PageTitle';
 
 // DownloadButton Component
 const DownloadButton = ({ onDownload }) => {
@@ -532,7 +533,7 @@ const regionsOfGhana = [
   "Western North",
   "Ahafo",
   "Savannah",
-  "Oti",
+  "Oti Region",
   "Bono East",
   "North East",
 ];
@@ -706,6 +707,7 @@ const CropCalendar = () => {
   const [availableCrops, setAvailableCrops] = useState([]);
   const [isUsingDynamicData, setIsUsingDynamicData] = useState(false);
   const [apiStats, setApiStats] = useState(null);
+  const [regionDistrictMapping, setRegionDistrictMapping] = useState({});
 
   // Get the selected year and season details
   const selectedOption = yearSeasonOptions.find(
@@ -734,6 +736,20 @@ const CropCalendar = () => {
         
         if (districtsResult.success) {
           setAvailableDistricts(districtsResult.data);
+          
+          // Build region-district mapping from uploaded data
+          const mapping = {};
+          districtsResult.data.forEach(item => {
+            if (item.region && item.district) {
+              if (!mapping[item.region]) {
+                mapping[item.region] = [];
+              }
+              if (!mapping[item.region].includes(item.district)) {
+                mapping[item.region].push(item.district);
+              }
+            }
+          });
+          setRegionDistrictMapping(mapping);
         }
         
         if (cropsResult.success) {
@@ -842,6 +858,9 @@ const CropCalendar = () => {
 
   // Slider effect to cycle through crops
   useEffect(() => {
+    // Only start slider if we have crops to display
+    if (cropsForSlider.length === 0) return;
+    
     const slideInterval = setInterval(() => {
       setCurrentSlide((prevSlide) => (prevSlide + 1) % cropsForSlider.length);
     }, 3000); // Change slide every 3 seconds
@@ -851,9 +870,9 @@ const CropCalendar = () => {
 
   useEffect(() => {
     const updateFarmingActivities = () => {
-      // Use dynamic data if available, otherwise fall back to static data
-      if (isUsingDynamicData && dynamicData.length > 0) {
-        setFarmingActivities(dynamicData);
+      // When using dynamic data mode, only show uploaded data - no hardcoded fallback
+      if (isUsingDynamicData) {
+        setFarmingActivities(dynamicData); // Will be empty if no match, showing "no data" message
         return;
       }
       
@@ -1045,7 +1064,9 @@ const CropCalendar = () => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-gray-200 min-h-screen p-0 lg:pt-20 pt-14">
+    <>
+      <PageTitle title="Crop Calendar" />
+      <div className="bg-gradient-to-br from-blue-50 to-gray-200 min-h-screen p-0 lg:pt-20 pt-14">
       <div className="container mx-auto bg-white rounded-lg shadow-lg p-6">
         <div className="flex flex-col md:flex-row justify-between items-center my-6 mb-10 gap-4">
           <div>
@@ -1167,26 +1188,18 @@ const CropCalendar = () => {
               className="border border-gray-300 rounded p-2 w-full"
             >
               <option value="All Districts">All Districts</option>
-              {/* Show dynamic districts if available, otherwise use static */}
-              {isUsingDynamicData && availableDistricts.length > 0 ? (
-                availableDistricts.map((district) => (
-                  <option key={district} value={district}>
-                    {district}
+              {/* Always show ALL districts for selected region from static data */}
+              {districtOfGhana
+                .filter(
+                  (d) =>
+                    d.region === selectedRegion ||
+                    selectedRegion === "All Regions"
+                )
+                .map((district, index) => (
+                  <option key={index} value={district.name}>
+                    {district.name}
                   </option>
-                ))
-              ) : (
-                districtOfGhana
-                  .filter(
-                    (d) =>
-                      d.region === selectedRegion ||
-                      selectedRegion === "All Regions"
-                  )
-                  .map((district, index) => (
-                    <option key={index} value={district.name}>
-                      {district.name}
-                    </option>
-                  ))
-              )}
+                ))}
             </select>
           </div>
         </div>
@@ -1325,6 +1338,7 @@ const CropCalendar = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

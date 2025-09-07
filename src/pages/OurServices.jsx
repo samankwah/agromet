@@ -1,3 +1,4 @@
+import PageTitle from '../components/PageTitle';
 import {
   FaCloudSunRain,
   FaMobileAlt,
@@ -7,7 +8,9 @@ import {
 
 const OurServices = () => {
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-blue-100 py-16">
+    <>
+      <PageTitle title="Our Services" />
+      <div className="bg-gradient-to-br from-blue-50 to-blue-100 py-16">
       <div className="container mx-auto p-8 pt-20">
         {/* Section Heading */}
         <h1 className="text-4xl font-extrabold mb-6 text-center text-blue-900">
@@ -84,7 +87,8 @@ const OurServices = () => {
           </button>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

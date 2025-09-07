@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import PageTitle from "../components/PageTitle";
 import {
   MapContainer,
   TileLayer,
@@ -734,8 +735,10 @@ const Home = () => {
   };
 
   return (
-    <div
-      className="min-h-screen bg-gray-950 mx-auto px-4 py-1 md:px-8 lg:px-12"
+    <>
+      <PageTitle title="Home - Agricultural Information Services for Ghana" includeAppName={false} />
+      <div
+        className="min-h-screen bg-gray-950 mx-auto px-4 py-1 md:px-8 lg:px-12"
       style={{
         backgroundImage: `url(${backgroundImage})`,
         backgroundSize: "1400px 1200px",
@@ -1009,6 +1012,7 @@ const Home = () => {
         </div>
       </main>
     </div>
+    </>
   );
 };
 

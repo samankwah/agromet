@@ -3,37 +3,23 @@ import { FaTimes, FaEye, FaTrash, FaPlus, FaDownload } from 'react-icons/fa';
 import PropTypes from 'prop-types';
 import userService from '../../services/userService';
 import TemplateGenerationService from '../../services/templateGenerationService';
+import { 
+  getRegionDistrictMapping, 
+  getAllRegionNames, 
+  getDistrictsByRegionName,
+  POULTRY_TYPES 
+} from '../../data/ghanaCodes';
 
-// Ghana regions and districts data (same as crop calendar)
-const ghanaRegionsDistricts = {
-  "Ahafo Region": ["Asunafo North", "Asunafo South", "Asutifi North", "Asutifi South", "Tano North", "Tano South"],
-  "Ashanti Region": ["Adansi North", "Adansi South", "Afigya Kwabre North", "Afigya Kwabre South", "Afigya Sekyere East", "Ahafo Ano North", "Ahafo Ano South East", "Ahafo Ano South West", "Amansie Central", "Amansie South", "Amansie West", "Atwima Kwanwoma", "Atwima Mponua", "Atwima Nwabiagya North", "Atwima Nwabiagya South", "Bekwai", "Bosome Freho", "Bosomtwe", "Ejisu", "Ejura Sekyedumase", "Juaben", "Kwabre East", "Kumasi", "Mampong", "Nsuta Kwamang Beposo", "Obuasi East", "Obuasi West", "Offinso North", "Offinso South", "Oforikrom", "Old Tafo", "Sekyere Afram Plains", "Sekyere Central", "Sekyere East", "Sekyere Kumawu", "Sekyere South"],
-  "Bono Region": ["Banda", "Berekum East", "Berekum West", "Dormaa Central", "Dormaa East", "Dormaa West", "Jaman North", "Jaman South", "Sunyani", "Sunyani West", "Tain", "Wenchi"],
-  "Bono East Region": ["Atebubu Amantin", "Kintampo North", "Kintampo South", "Nkoranza North", "Nkoranza South", "Pru East", "Pru West", "Sene East", "Sene West", "Techiman North", "Techiman South"],
-  "Central Region": ["Abura Asebu Kwamankese", "Agona East", "Agona West", "Ajumako Enyan Essiam", "Asikuma Odoben Brakwa", "Assin Central", "Assin North", "Assin South", "Awutu Senya", "Awutu Senya East", "Cape Coast", "Effutu", "Ekumfi", "Gomoa Central", "Gomoa East", "Gomoa West", "Kasoa", "Komenda Edina Eguafo Abirem", "Mfantsiman", "Twifo Ati Morkwa", "Twifo Hemang Lower Denkyira", "Upper Denkyira East", "Upper Denkyira West"],
-  "Eastern Region": ["Abuakwa North", "Abuakwa South", "Achiase", "Afram Plains North", "Afram Plains South", "Akim East", "Akim West", "Akuapim North", "Akuapim South", "Asene Manso Akroso", "Atiwa East", "Atiwa West", "Ayensuano", "Birim Central", "Birim North", "Birim South", "Denkyembour", "East Akim", "Fanteakwa North", "Fanteakwa South", "Kwaebibirem", "Kwahu Afram Plains South", "Kwahu East", "Kwahu South", "Kwahu West", "Lower Manya Krobo", "New Juaben North", "New Juaben South", "Nsawam Adoagyir", "Okere", "Suhum", "Upper Manya Krobo", "Upper West Akim", "West Akim", "Yilo Krobo"],
-  "Greater Accra Region": ["Ablekuma Central", "Ablekuma North", "Ablekuma West", "Accra", "Ada East", "Ada West", "Adenta", "Ashaiman", "Ayawaso Central", "Ayawaso East", "Ayawaso North", "Ayawaso West Wuogon", "Ga Central", "Ga East", "Ga North", "Ga South", "Ga West", "Kpone Katamanso", "Krowor", "La Dade Kotopon", "La Nkwantanang Madina", "Ledzokuku", "Okaikwei North", "Okaikwei South", "Shai Osudoku", "Tema East", "Tema West", "Weija Gbawe"],
-  "North East Region": ["Bunkpurugu Nakpanduri", "Chereponi", "East Mamprusi", "Mamprugu Moagduri", "West Mamprusi", "Yunyoo Nasuan"],
-  "Northern Region": ["Bole", "Central Gonja", "East Gonja", "Gushegu", "Karaga", "Kpandai", "Kumbungu", "Mion", "Nanumba North", "Nanumba South", "North Gonja", "Saboba", "Savelugu", "Sawla Tuna Kalba", "Tamale", "Tatale Sanguli", "Tolon", "West Gonja", "Yendi", "Zabzugu"],
-  "Oti Region": ["Biakoye", "Jasikan", "Kadjebi", "Krachi East", "Krachi Nchumuru", "Krachi West", "Nkwanta North", "Nkwanta South"],
-  "Savannah Region": ["Bole", "Central Gonja", "East Gonja", "North Gonja", "Sawla Tuna Kalba", "West Gonja", "Yapei Kusawgu"],
-  "Upper East Region": ["Bawku", "Bawku West", "Binduri", "Bolgatanga", "Builsa North", "Builsa South", "Garu", "Kassena Nankana East", "Kassena Nankana West", "Nabdam", "Pusiga", "Talensi", "Tempane"],
-  "Upper West Region": ["Daffiama Bussie Issa", "Jirapa", "Lambussie Karni", "Lawra", "Nadowli Kaleo", "Nandom", "Sissala East", "Sissala West", "Wa East", "Wa West"],
-  "Volta Region": ["Adaklu", "Agotime Ziope", "Akatsi North", "Akatsi South", "Central Tongu", "Ho", "Ho West", "Hohoe", "Keta", "Ketu North", "Ketu South", "North Dayi", "North Tongu", "South Dayi", "South Tongu", "Volta Region"],
-  "Western Region": ["Ahanta West", "Ellembelle", "Jomoro", "Mpohor", "Nzema East", "Prestea Huni Valley", "Sekondi Takoradi", "Shama", "Tarkwa Nsuaem", "Wassa Amenfi Central", "Wassa Amenfi East", "Wassa Amenfi West", "Wassa East", "Wiawso"],
-  "Western North Region": ["Aowin", "Bia East", "Bia West", "Bibiani Anhwiaso Bekwai", "Bodi", "Juaboso", "Sefwi Akontombra", "Sefwi Wiawso", "Suaman"]
+// Convert POULTRY_TYPES from centralized data to the format expected by the form
+const getPoultryTypesForForm = () => {
+  const formattedTypes = {};
+  Object.values(POULTRY_TYPES).forEach(type => {
+    formattedTypes[type.name] = Object.values(type.breeds);
+  });
+  return formattedTypes;
 };
 
-// Poultry types and breeds
-const poultryTypes = {
-  "Broiler": ["Cobb 500", "Ross 308", "Arbor Acres", "Hubbard Classic"],
-  "Layer": ["Isa Brown", "Lohmann Brown", "Bovans Brown", "Dekalb White"],
-  "Cockerel": ["Sasso", "Kuroiler", "Noiler", "Local Breeds"],
-  "Duck": ["Pekin", "Khaki Campbell", "Muscovy", "Local Duck"],
-  "Turkey": ["Broad Breasted White", "Bronze", "Local Turkey"],
-  "Guinea Fowl": ["Helmeted Guinea", "Local Guinea Fowl"],
-  "Goose": ["Embden", "Toulouse", "Local Goose"]
-};
+const poultryTypes = getPoultryTypesForForm();
 
 // Production stages for poultry
 const productionStages = [
@@ -80,10 +66,15 @@ const PoultryCalendarForm = ({ isOpen, onClose, onSave }) => {
   const [showPreview, setShowPreview] = useState(false);
   const [errors, setErrors] = useState({});
 
+  // Get regions from centralized data
+  const regionNames = getAllRegionNames();
+  const regionDistrictMapping = getRegionDistrictMapping();
+
   // Update districts when region changes
   useEffect(() => {
-    if (formData.region && ghanaRegionsDistricts[formData.region]) {
-      setDistricts(ghanaRegionsDistricts[formData.region]);
+    if (formData.region) {
+      const districtList = getDistrictsByRegionName(formData.region);
+      setDistricts(districtList);
       setFormData(prev => ({ ...prev, district: '' }));
     }
   }, [formData.region]);
@@ -303,7 +294,7 @@ const PoultryCalendarForm = ({ isOpen, onClose, onSave }) => {
                     }`}
                   >
                     <option value="">Select Region...</option>
-                    {Object.keys(ghanaRegionsDistricts).map(region => (
+                    {regionNames.map(region => (
                       <option key={region} value={region}>{region}</option>
                     ))}
                   </select>

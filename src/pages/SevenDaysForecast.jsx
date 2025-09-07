@@ -11,6 +11,7 @@ import {
   MapPin,
   Loader,
 } from "lucide-react";
+import PageTitle from "../components/PageTitle";
 
 const SevenDaysForecast = () => {
   const [selectedDay, setSelectedDay] = useState(0);
@@ -344,7 +345,9 @@ const SevenDaysForecast = () => {
   }
 
   return (
-    <div className="container mx-auto mt-10 px-4 sm:px-6 lg:px-8 mt-24">
+    <>
+      <PageTitle title="7-Day Weather Forecast" />
+      <div className="container mx-auto mt-10 px-4 sm:px-6 lg:px-8 mt-24">
       {/* Location and last updated info */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
         <div className="flex items-center mb-2 sm:mb-0">
@@ -592,6 +595,7 @@ const SevenDaysForecast = () => {
         </p>
       </div>
     </div>
+    </>
   );
 };
 

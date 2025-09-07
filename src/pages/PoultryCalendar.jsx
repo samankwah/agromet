@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import PageTitle from '../components/PageTitle';
 import { districtOfGhana } from "../districts";
 import { FaDownload, FaShareAlt, FaDatabase, FaInfoCircle } from "react-icons/fa";
 import agriculturalDataService from "../services/agriculturalDataService";
@@ -526,7 +527,9 @@ const PoultryCalendar = () => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-gray-200 min-h-screen p-0 lg:pt-20 pt-14">
+    <>
+      <PageTitle title="Poultry Calendar" />
+      <div className="bg-gradient-to-br from-blue-50 to-gray-200 min-h-screen p-0 lg:pt-20 pt-14">
       <div className="container mx-auto bg-white rounded-lg shadow-lg p-6">
         <div className="flex flex-col md:flex-row justify-between items-center my-6 mb-10 gap-4">
           <div>
@@ -684,7 +687,8 @@ const PoultryCalendar = () => {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

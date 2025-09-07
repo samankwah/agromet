@@ -1,3 +1,5 @@
+import PageTitle from "../components/PageTitle";
+
 const Weather = () => {
   const weatherData = [
     {
@@ -34,7 +36,9 @@ const Weather = () => {
   ];
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-blue-100 min-h-screen p-8">
+    <>
+      <PageTitle title="Weather Forecast" />
+      <div className="bg-gradient-to-br from-blue-50 to-blue-100 min-h-screen p-8">
       <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6">
         <h1 className="text-blue-800 text-3xl font-bold mb-4 text-center">
           Weekly Weather Forecast
@@ -58,6 +62,7 @@ const Weather = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

@@ -4,6 +4,7 @@ import hero from "../assets/images/signin.png";
 import googlelogo from "../assets/images/googlelogo.svg";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import userService from "../services/userService";
+import PageTitle from "../components/PageTitle";
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -85,7 +86,9 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:grid lg:grid-cols-5 bg-gray-50">
+    <>
+      <PageTitle title="Admin Login" />
+      <div className="min-h-screen flex flex-col lg:grid lg:grid-cols-5 bg-gray-50">
       {/* Left Section (Hero) */}
       <div
         className="lg:col-span-2 flex flex-col justify-center items-center bg-cover bg-center p-6 sm:p-8 lg:p-10 text-white relative"
@@ -238,6 +241,7 @@ const AdminLogin = () => {
         </form>
       </div>
     </div>
+    </>
   );
 };
 

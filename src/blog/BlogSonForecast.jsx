@@ -299,6 +299,7 @@
 // export default EventHeavyRainfallAlert;
 
 import { useState } from "react";
+import PageTitle from '../components/PageTitle';
 import calendarImage from "../assets/images/event2.png"; // Add your image path
 import {
   FaCloudRain,
@@ -315,7 +316,9 @@ const EventHeavyRainfallAlert = () => {
   const toggleTips = () => setIsTipsOpen(!isTipsOpen);
 
   return (
-    <div className="pt-24 pb-16 px-4 md:px-8 max-w-6xl mx-auto bg-gradient-to-b from-blue-100 to-gray-100 shadow-2xl rounded-2xl overflow-hidden">
+    <>
+      <PageTitle title="SON Forecast Blog" />
+      <div className="pt-24 pb-16 px-4 md:px-8 max-w-6xl mx-auto bg-gradient-to-b from-blue-100 to-gray-100 shadow-2xl rounded-2xl overflow-hidden">
       {/* Header Section */}
       <header className="mb-12 animate-fade-in">
         {/* Featured Image */}
@@ -471,7 +474,8 @@ const EventHeavyRainfallAlert = () => {
           </div>
         </div>
       </section>
-    </div>
+      </div>
+    </>
   );
 };
 

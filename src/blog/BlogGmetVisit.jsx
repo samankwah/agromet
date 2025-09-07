@@ -1,8 +1,11 @@
 import gmetVisitImage from "../assets/images/image1.png";
+import PageTitle from "../components/PageTitle";
 
 const BlogGmetVisit = () => {
   return (
-    <div className="pt-24 pb-16 px-4 md:px-0 max-w-5xl mx-auto bg-white shadow-lg rounded-lg">
+    <>
+      <PageTitle title="Visit to GMet by Ministry of Environment" />
+      <div className="pt-24 pb-16 px-4 md:px-0 max-w-5xl mx-auto bg-white shadow-lg rounded-lg">
       {/* Blog Header */}
       <header className="mb-12">
         {/* Featured Image */}
@@ -132,6 +135,7 @@ const BlogGmetVisit = () => {
         </div>
       </section>
     </div>
+    </>
   );
 };
 

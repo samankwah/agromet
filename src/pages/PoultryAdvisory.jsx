@@ -1,3 +1,4 @@
+import PageTitle from '../components/PageTitle';
 import {
   FaBiohazard,
   FaTractor,
@@ -15,7 +16,9 @@ import {
 
 const PoultryAdvisory = () => {
   return (
-    <div className="p-8 bg-gradient-to-br from-blue-50 to-blue-100 min-h-screen pt-24">
+    <>
+      <PageTitle title="Poultry Advisory" />
+      <div className="p-8 bg-gradient-to-br from-blue-50 to-blue-100 min-h-screen pt-24">
       {/* Main Container with max width */}
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
@@ -275,7 +278,8 @@ const PoultryAdvisory = () => {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

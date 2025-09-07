@@ -31,7 +31,14 @@
       "Bash(npm install:*)",
       "Bash(npm run test:system:*)",
       "Bash(mv:*)",
-      "Bash(npm run server:*)"
+      "Bash(npm run server:*)",
+      "Bash(dir /b \"C:\\Users\\CRAFT\\Desktop\\future MEST projects\\Frontend\\triagro-ai\\src\")",
+      "Bash(npm run migrate:*)",
+      "Bash(winget list:*)",
+      "Read(//c/Users/CRAFT/Pictures/Screenshots/**)",
+      "Bash(timeout:*)",
+      "Bash(psql:*)",
+      "Bash(start http://localhost:5173/crop-calendar)"
     ],
     "deny": []
   }

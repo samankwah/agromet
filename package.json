@@ -16,7 +16,10 @@
     "dev:complete": "concurrently \"npm run server\" \"npm run auth-server\" \"npm run dev\"",
     "test:system": "node final-system-test.js",
     "test:upload": "node test-admin-upload.js",
-    "test:content": "node test-content-management.js"
+    "test:content": "node test-content-management.js",
+    "migrate": "node scripts/migrate-database.js",
+    "migrate:status": "node scripts/migrate-database.js status",
+    "db:setup": "npm run migrate"
   },
   "dependencies": {
     "@amcharts/amcharts5": "^5.11.1",
@@ -55,6 +58,7 @@
     "multer": "^2.0.0",
     "node-fetch": "^3.3.2",
     "papaparse": "^5.5.3",
+    "pg": "^8.16.3",
     "prop-types": "^15.8.1",
     "react": "^18.3.1",
     "react-chartjs-2": "^5.2.0",
@@ -92,7 +96,14 @@
     "vite": "^5.4.1"
   },
   "main": "auth-server.js",
-  "keywords": ["agriculture", "data-management", "ghana", "react", "excel-processing", "admin-dashboard"],
+  "keywords": [
+    "agriculture",
+    "data-management",
+    "ghana",
+    "react",
+    "excel-processing",
+    "admin-dashboard"
+  ],
   "author": "TriAgro AI Development Team",
   "license": "MIT"
 }

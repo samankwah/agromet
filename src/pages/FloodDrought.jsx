@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PageTitle from '../components/PageTitle';
 import {
   BarChart,
   Bar,
@@ -781,7 +782,9 @@ const FloodDrought = () => {
   );
 
   return (
-    <div className="container mx-auto p-6 bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg mt-20">
+    <>
+      <PageTitle title="Flood & Drought Alerts" />
+      <div className="container mx-auto p-6 bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg mt-20">
       <h2 className="text-3xl font-bold text-center mb-8 text-gray-800">
         Flood and Drought Risk Analysis
       </h2>
@@ -843,7 +846,8 @@ const FloodDrought = () => {
         </p>
         <p>Last updated: May 2025</p>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

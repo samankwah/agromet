@@ -299,6 +299,93 @@ export const GHANA_REGIONS = {
       "DS231": "Nkwanta North",
       "DS232": "Nkwanta South Municipal"
     }
+  },
+  "REG12": {
+    name: "Ahafo Region",
+    code: "REG12",
+    districts: {
+      "DS233": "Asunafo North Municipal",
+      "DS234": "Asunafo South Municipal",
+      "DS235": "Asutifi North",
+      "DS236": "Asutifi South",
+      "DS237": "Tano North Municipal",
+      "DS238": "Tano South Municipal"
+    }
+  },
+  "REG13": {
+    name: "Bono Region", 
+    code: "REG13",
+    districts: {
+      "DS239": "Banda",
+      "DS240": "Berekum East Municipal",
+      "DS241": "Berekum West Municipal",
+      "DS242": "Dormaa Central Municipal",
+      "DS243": "Dormaa East",
+      "DS244": "Dormaa West",
+      "DS245": "Jaman North",
+      "DS246": "Jaman South Municipal",
+      "DS247": "Sunyani Municipal",
+      "DS248": "Sunyani West",
+      "DS249": "Tain",
+      "DS250": "Wenchi Municipal"
+    }
+  },
+  "REG14": {
+    name: "Bono East Region",
+    code: "REG14", 
+    districts: {
+      "DS251": "Atebubu Amantin Municipal",
+      "DS252": "Kintampo North Municipal",
+      "DS253": "Kintampo South Municipal",
+      "DS254": "Nkoranza North",
+      "DS255": "Nkoranza South Municipal",
+      "DS256": "Pru East",
+      "DS257": "Pru West Municipal",
+      "DS258": "Sene East",
+      "DS259": "Sene West",
+      "DS260": "Techiman North",
+      "DS261": "Techiman South Municipal"
+    }
+  },
+  "REG15": {
+    name: "North East Region",
+    code: "REG15",
+    districts: {
+      "DS262": "Bunkpurugu Nakpanduri",
+      "DS263": "Chereponi",
+      "DS264": "East Mamprusi Municipal",
+      "DS265": "Mamprugu Moagduri",
+      "DS266": "West Mamprusi Municipal",
+      "DS267": "Yunyoo Nasuan"
+    }
+  },
+  "REG16": {
+    name: "Savannah Region",
+    code: "REG16", 
+    districts: {
+      "DS268": "Bole",
+      "DS269": "Central Gonja",
+      "DS270": "East Gonja Municipal",
+      "DS271": "North Gonja",
+      "DS272": "Sawla Tuna Kalba",
+      "DS273": "West Gonja Municipal",
+      "DS274": "Yapei Kusawgu"
+    }
+  },
+  "REG17": {
+    name: "Western North Region",
+    code: "REG17",
+    districts: {
+      "DS275": "Aowin Municipal",
+      "DS276": "Bia East",
+      "DS277": "Bia West", 
+      "DS278": "Bibiani Anhwiaso Bekwai Municipal",
+      "DS279": "Bodi",
+      "DS280": "Juaboso",
+      "DS281": "Sefwi Akontombra",
+      "DS282": "Sefwi Wiawso Municipal",
+      "DS283": "Suaman"
+    }
   }
 };
 
@@ -513,4 +600,58 @@ export const parseUniqueId = (uniqueId) => {
     };
   }
   return null;
+};
+
+// Enhanced utility functions for easier regional data access
+export const getAllRegions = () => {
+  return Object.values(GHANA_REGIONS).map(region => ({
+    code: region.code,
+    name: region.name
+  }));
+};
+
+export const getAllRegionNames = () => {
+  return Object.values(GHANA_REGIONS).map(region => region.name);
+};
+
+export const getDistrictsByRegionName = (regionName) => {
+  const region = Object.values(GHANA_REGIONS).find(r => r.name === regionName);
+  return region ? Object.values(region.districts) : [];
+};
+
+export const getDistrictsByRegionCode = (regionCode) => {
+  const region = GHANA_REGIONS[regionCode];
+  return region ? Object.values(region.districts) : [];
+};
+
+export const getRegionByName = (regionName) => {
+  return Object.values(GHANA_REGIONS).find(region => region.name === regionName);
+};
+
+export const convertToRegionDistrictFormat = () => {
+  const formatted = {};
+  Object.values(GHANA_REGIONS).forEach(region => {
+    formatted[region.name] = Object.values(region.districts);
+  });
+  return formatted;
+};
+
+export const getRegionDistrictMapping = () => {
+  return convertToRegionDistrictFormat();
+};
+
+export const validateRegionDistrict = (regionName, districtName) => {
+  const region = getRegionByName(regionName);
+  if (!region) return false;
+  return Object.values(region.districts).includes(districtName);
+};
+
+export const getTotalRegionCount = () => {
+  return Object.keys(GHANA_REGIONS).length;
+};
+
+export const getTotalDistrictCount = () => {
+  return Object.values(GHANA_REGIONS).reduce((total, region) => {
+    return total + Object.keys(region.districts).length;
+  }, 0);
 };

@@ -3,6 +3,7 @@ import { FaCloudSun, FaCloudRain, FaDownload, FaSun } from "react-icons/fa";
 import { GiWaterDrop } from "react-icons/gi";
 import SON from "../assets/images/SON.png";
 import { FaExclamationCircle } from "react-icons/fa";
+import PageTitle from "../components/PageTitle";
 
 const SeasonalForecast = () => {
   const [selectedZone, setSelectedZone] = useState("East Coast");
@@ -122,7 +123,9 @@ const SeasonalForecast = () => {
   };
 
   return (
-    <div className="container mx-auto p-6 bg-teal-900 text-white pt-24">
+    <>
+      <PageTitle title="Seasonal Weather Forecast" />
+      <div className="container mx-auto p-6 bg-teal-900 text-white pt-24">
       {/* Header Section */}
       <div className="text-center mb-8">
         <h1 className="text-5xl font-bold">{selectedZone} Forecast</h1>
@@ -344,6 +347,7 @@ const SeasonalForecast = () => {
         </strong>
       </footer>
     </div>
+    </>
   );
 };
 

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 
 const ChatbotContext = createContext();
@@ -92,13 +92,13 @@ export const ChatbotProvider = ({ children }) => {
     localStorage.setItem('userRegion', region);
   };
 
-  const updateWeather = (weather) => {
+  const updateWeather = useCallback((weather) => {
     setUserContext(prev => ({ ...prev, weather }));
-  };
+  }, []);
 
-  const updateCrops = (crops) => {
+  const updateCrops = useCallback((crops) => {
     setUserContext(prev => ({ ...prev, crops }));
-  };
+  }, []);
 
   const updatePreferences = (newPreferences) => {
     setChatPreferences(prev => ({ ...prev, ...newPreferences }));

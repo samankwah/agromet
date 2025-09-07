@@ -7,8 +7,8 @@ import axios from 'axios';
  */
 class AgriculturalDataService {
   constructor() {
-    // Use the same backend URL as the auth system
-    this.baseURL = 'http://localhost:3002/api';
+    // Use the main server URL for agricultural data (port 3001)
+    this.baseURL = 'http://localhost:3001/api';
     this.api = axios.create({
       baseURL: this.baseURL,
       timeout: 10000,
@@ -17,11 +17,27 @@ class AgriculturalDataService {
       },
     });
 
+    // Add request interceptor for JWT authentication
+    this.api.interceptors.request.use(
+      (config) => {
+        const token = localStorage.getItem('token') || localStorage.getItem('donatrakAccessToken');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
+      }
+    );
+
     // Add response interceptor for error handling
     this.api.interceptors.response.use(
       (response) => response,
       (error) => {
         console.error('Agricultural Data API Error:', error);
+        // Don't redirect on 401 errors - let components handle authentication gracefully
+        // This allows public access to agricultural data while preserving admin functionality
         return Promise.reject(error);
       }
     );
@@ -39,7 +55,7 @@ class AgriculturalDataService {
         }
       });
 
-      const response = await this.api.get(`/crop-calendar?${params.toString()}`);
+      const response = await this.api.get(`/agricultural-data/crop-calendar?${params.toString()}`);
       return {
         success: true,
         data: response.data.data || [],
@@ -68,7 +84,7 @@ class AgriculturalDataService {
         }
       });
 
-      const response = await this.api.get(`/production-calendar?${params.toString()}`);
+      const response = await this.api.get(`/agricultural-data/production-calendar?${params.toString()}`);
       return {
         success: true,
         data: response.data.data || [],
@@ -97,7 +113,7 @@ class AgriculturalDataService {
         }
       });
 
-      const response = await this.api.get(`/agromet-advisory?${params.toString()}`);
+      const response = await this.api.get(`/agricultural-data/agromet-advisory?${params.toString()}`);
       return {
         success: true,
         data: response.data.data || [],
@@ -126,7 +142,7 @@ class AgriculturalDataService {
         }
       });
 
-      const response = await this.api.get(`/poultry-calendar?${params.toString()}`);
+      const response = await this.api.get(`/agricultural-data/poultry-calendar?${params.toString()}`);
       return {
         success: true,
         data: response.data.data || [],
@@ -148,10 +164,10 @@ class AgriculturalDataService {
    */
   async getDistricts() {
     try {
-      const response = await this.api.get('/districts');
+      const response = await this.api.get('/agricultural-data/crop-calendar');
       return {
         success: true,
-        data: response.data.data || []
+        data: response.data || []
       };
     } catch (error) {
       return {
@@ -167,10 +183,10 @@ class AgriculturalDataService {
    */
   async getCrops() {
     try {
-      const response = await this.api.get('/crops');
+      const response = await this.api.get('/agricultural-data/crop-calendar');
       return {
         success: true,
-        data: response.data.data || []
+        data: response.data || []
       };
     } catch (error) {
       return {
@@ -186,17 +202,28 @@ class AgriculturalDataService {
    */
   async getStatistics() {
     try {
-      const response = await this.api.get('/statistics');
+      // Since the main server doesn't have a statistics endpoint, 
+      // we'll determine statistics by checking each data type
+      const [cropCalendars, agrometAdvisories, poultryCalendars] = await Promise.all([
+        this.getCropCalendar(),
+        this.getAgrometAdvisory(),
+        this.getPoultryCalendar()
+      ]);
+
+      const stats = {
+        cropCalendars: cropCalendars.success ? (cropCalendars.data?.length || 0) : 0,
+        productionCalendars: 0, // Not implemented yet
+        agrometAdvisories: agrometAdvisories.success ? (agrometAdvisories.data?.length || 0) : 0,
+        poultryCalendars: poultryCalendars.success ? (poultryCalendars.data?.length || 0) : 0,
+        totalRecords: 0,
+        lastUpdated: new Date().toISOString()
+      };
+
+      stats.totalRecords = stats.cropCalendars + stats.agrometAdvisories + stats.poultryCalendars;
+
       return {
         success: true,
-        data: response.data.data || {
-          cropCalendars: 0,
-          productionCalendars: 0,
-          agrometAdvisories: 0,
-          poultryCalendars: 0,
-          totalRecords: 0,
-          lastUpdated: null
-        }
+        data: stats
       };
     } catch (error) {
       return {

@@ -164,6 +164,7 @@ app.use(
     origin: [
       "http://localhost:5173",
       "http://localhost:5174",
+      "http://localhost:5178",
       "http://localhost:3000",
     ],
     credentials: true,
@@ -316,8 +317,8 @@ app.post('/api/agricultural-data/upload', authenticateToken, uploadMemory.single
   }
 });
 
-// Get agricultural data
-app.get('/api/agricultural-data/:dataType', authenticateToken, (req, res) => {
+// Get agricultural data (public access)
+app.get('/api/agricultural-data/:dataType', (req, res) => {
   try {
     const { dataType } = req.params;
     

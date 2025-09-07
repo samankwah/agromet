@@ -604,7 +604,12 @@ function App() {
 
     { path: "/production/2024-minor", element: <CreateCropCalendar /> },
     { path: "/production/2025-major", element: <CreateCropCalendar /> },
-  ]);
+  ], {
+    future: {
+      v7_startTransition: true,
+      v7_relativeSplatPath: true,
+    },
+  });
 
   return <RouterProvider router={router} />;
 }
