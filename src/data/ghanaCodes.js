@@ -616,7 +616,7 @@ export const getAllRegionNames = () => {
 
 export const getDistrictsByRegionName = (regionName) => {
   const region = Object.values(GHANA_REGIONS).find(r => r.name === regionName);
-  return region ? Object.values(region.districts) : [];
+  return region ? Object.entries(region.districts).map(([code, name]) => ({code, name})) : [];
 };
 
 export const getDistrictsByRegionCode = (regionCode) => {
@@ -655,3 +655,141 @@ export const getTotalDistrictCount = () => {
     return total + Object.keys(region.districts).length;
   }, 0);
 };
+
+// Helper functions for calendar viewer
+export const getRegionName = (regionCode) => {
+  if (typeof regionCode === 'string' && GHANA_REGIONS[regionCode]) {
+    return GHANA_REGIONS[regionCode].name;
+  }
+  // If it's already a region name, return it
+  const region = Object.values(GHANA_REGIONS).find(r => r.name === regionCode);
+  return region ? region.name : regionCode;
+};
+
+export const getDistrictName = (districtCode) => {
+  // Search through all regions for the district
+  for (const region of Object.values(GHANA_REGIONS)) {
+    if (region.districts[districtCode]) {
+      return region.districts[districtCode];
+    }
+    // Also check by name if it's already a district name
+    const districtEntry = Object.entries(region.districts).find(
+      ([code, name]) => name === districtCode || code === districtCode
+    );
+    if (districtEntry) {
+      return districtEntry[1]; // Return the name
+    }
+  }
+  return districtCode; // Return as-is if not found
+};
+
+export const getRegionCode = (regionName) => {
+  const region = Object.values(GHANA_REGIONS).find(r => r.name === regionName);
+  return region ? region.code : regionName;
+};
+
+export const getDistrictCode = (districtName) => {
+  // Search through all regions for the district
+  for (const region of Object.values(GHANA_REGIONS)) {
+    const districtEntry = Object.entries(region.districts).find(
+      ([code, name]) => name === districtName
+    );
+    if (districtEntry) {
+      return districtEntry[0]; // Return the code
+    }
+  }
+  return districtName; // Return as-is if not found
+};
+
+/**
+ * Development and debugging utilities
+ */
+export const getSystemStats = () => {
+  return {
+    totalRegions: Object.keys(GHANA_REGIONS).length,
+    totalDistricts: Object.values(GHANA_REGIONS).reduce((total, region) => 
+      total + Object.keys(region.districts).length, 0
+    ),
+    totalCommodities: Object.keys(COMMODITY_CODES).length,
+    totalPoultryTypes: Object.keys(POULTRY_TYPES).length,
+    dataVersion: '2.0.0',
+    lastUpdated: new Date().toISOString()
+  };
+};
+
+/**
+ * Validates the entire GHANA_REGIONS data structure
+ * @returns {Object} Validation report
+ */
+export const validateDataIntegrity = () => {
+  const report = {
+    isValid: true,
+    errors: [],
+    warnings: [],
+    stats: getSystemStats()
+  };
+  
+  try {
+    // Check for duplicate region names
+    const regionNames = [];
+    const regionCodes = [];
+    
+    Object.entries(GHANA_REGIONS).forEach(([key, region]) => {
+      // Validate region structure
+      if (!region.name || !region.code || !region.districts) {
+        report.errors.push(`Invalid region structure for key ${key}`);
+        report.isValid = false;
+      }
+      
+      // Check for duplicate names
+      if (regionNames.includes(region.name)) {
+        report.errors.push(`Duplicate region name: ${region.name}`);
+        report.isValid = false;
+      }
+      regionNames.push(region.name);
+      
+      // Check for duplicate codes
+      if (regionCodes.includes(region.code)) {
+        report.errors.push(`Duplicate region code: ${region.code}`);
+        report.isValid = false;
+      }
+      regionCodes.push(region.code);
+      
+      // Validate districts
+      const districtNames = [];
+      Object.entries(region.districts).forEach(([districtCode, districtName]) => {
+        if (!districtName || typeof districtName !== 'string') {
+          report.errors.push(`Invalid district name for code ${districtCode} in ${region.name}`);
+          report.isValid = false;
+        }
+        
+        if (districtNames.includes(districtName)) {
+          report.warnings.push(`Duplicate district name "${districtName}" in ${region.name}`);
+        }
+        districtNames.push(districtName);
+      });
+    });
+    
+  } catch (error) {
+    report.errors.push(`Data integrity check failed: ${error.message}`);
+    report.isValid = false;
+  }
+  
+  return report;
+};
+
+// Development mode initialization
+if (process.env.NODE_ENV === 'development') {
+  console.log('🏛️ Ghana Codes System initialized');
+  
+  // Run integrity check
+  const integrity = validateDataIntegrity();
+  if (!integrity.isValid) {
+    console.error('⚠️ Data integrity issues found:', integrity.errors);
+  }
+  if (integrity.warnings.length > 0) {
+    console.warn('⚠️ Data warnings:', integrity.warnings);
+  }
+  
+  console.log('📊 System Stats:', integrity.stats);
+}

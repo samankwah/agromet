@@ -38,7 +38,19 @@
       "Read(//c/Users/CRAFT/Pictures/Screenshots/**)",
       "Bash(timeout:*)",
       "Bash(psql:*)",
-      "Bash(start http://localhost:5173/crop-calendar)"
+      "Bash(start http://localhost:5173/crop-calendar)",
+      "Bash(claude mcp:*)",
+      "Bash(start http://localhost:5175/dashboard)",
+      "Bash(start http://localhost:5173/dashboard)",
+      "Bash(start http://localhost:5175/crop-calendar)",
+      "Bash(taskkill:*)",
+      "Bash(start http://localhost:5173/production/calendar-preview)",
+      "Bash(cd:*)",
+      "Bash(npx eslint:*)",
+      "Bash(start http://localhost:5174/dashboard)",
+      "Bash(netstat:*)",
+      "Bash(cmd //c:*)",
+      "Bash(echo $VITE_BASE_URL)"
     ],
     "deny": []
   }

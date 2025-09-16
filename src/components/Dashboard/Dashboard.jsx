@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   FaBell,
   FaSignOutAlt,
@@ -14,9 +15,13 @@ import PoultryCalendarForm from "./PoultryCalendarForm";
 import CalendarDataPreview from "./CalendarDataPreview";
 import AgrometAdvisoryManager from "./AgrometAdvisoryManager";
 import PoultryAdvisoryManager from "./PoultryAdvisoryManager";
+import EnhancedCalendarUpload from "../EnhancedCalendarUpload";
+import EnhancedCalendarViewer from "../EnhancedCalendarViewer";
+import ProductionCycleManager from "../ProductionCycleManager";
 import userService from "../../services/userService";
 
 const Dashboard = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activePage, setActivePage] = useState("dashboard");
   const [showCropCalendarForm, setShowCropCalendarForm] = useState(false);
   const [showPoultryCalendarForm, setShowPoultryCalendarForm] = useState(false);
@@ -32,6 +37,27 @@ const Dashboard = () => {
     loadUserData();
     loadAgriculturalStats();
   }, []);
+
+  // AUTO-OPEN MODAL: Only open if explicitly requested or returning from preview
+  useEffect(() => {
+    const openModal = searchParams.get('openModal');
+    const storedFormData = localStorage.getItem('calendarFormData');
+    const isReturningFromPreview = sessionStorage.getItem('returningFromCalendarPreview');
+    
+    if (openModal === 'crop-calendar' || (storedFormData && isReturningFromPreview)) {
+      console.log('🔄 Opening crop calendar modal - URL param or returning from preview');
+      setShowCropCalendarForm(true);
+      
+      // Clear the URL parameter after opening modal
+      if (openModal) {
+        setSearchParams({});
+      }
+    } else if (storedFormData && !isReturningFromPreview) {
+      // Clean up old form data if not returning from preview
+      console.log('🧹 Cleaning up old form data on dashboard (not from preview)');
+      localStorage.removeItem('calendarFormData');
+    }
+  }, [searchParams, setSearchParams]); // React to URL changes
 
   // Auto-refresh recent uploads every 30 seconds when on dashboard
   useEffect(() => {
@@ -244,6 +270,12 @@ const Dashboard = () => {
         return "Manage Poultry Calendars";
       case "content-management-poultry-advisory":
         return "Manage Poultry Advisories";
+      case "enhanced-calendar-upload":
+        return "Enhanced Calendar Upload";
+      case "enhanced-calendar-viewer":
+        return "Enhanced Calendar Viewer";
+      case "enhanced-calendar-production":
+        return "Production Cycle Management";
       default:
         return "TriAgro AI Dashboard";
     }
@@ -446,37 +478,38 @@ const Dashboard = () => {
                           className="flex items-center p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
                         >
                           <FaCalendarAlt className="text-green-600 mr-3" />
-                          <span className="text-sm font-medium text-green-800">Create Crop Calendar</span>
-                        </button>
-                        
-                        <button
-                          onClick={() => handleNavigate("agricultural-poultry-calendar")}
-                          className="flex items-center p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-                        >
-                          <FaSeedling className="text-blue-600 mr-3" />
-                          <span className="text-sm font-medium text-blue-800">Create Poultry Calendar</span>
+                          <span className="text-sm font-medium text-green-800">Upload Crop Calendar</span>
                         </button>
                         
                         <button
                           onClick={() => handleNavigate("agricultural-agromet-advisory")}
+                          className="flex items-center p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                        >
+                          <FaCloudSun className="text-blue-600 mr-3" />
+                          <span className="text-sm font-medium text-blue-800">Upload Advisories</span>
+                        </button>
+                        
+                        <button
+                          onClick={() => handleNavigate("agricultural-poultry-calendar")}
                           className="flex items-center p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
                         >
-                          <FaCloudSun className="text-purple-600 mr-3" />
-                          <span className="text-sm font-medium text-purple-800">Manage Agromet Advisory</span>
+                          <FaSeedling className="text-purple-600 mr-3" />
+                          <span className="text-sm font-medium text-purple-800">Upload Poultry Calendar</span>
                         </button>
                         
                         <button
                           onClick={() => handleNavigate("agricultural-poultry-advisory")}
-                          className="flex items-center p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors"
+                          className="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                         >
-                          <FaUsers className="text-orange-600 mr-3" />
-                          <span className="text-sm font-medium text-orange-800">Manage Poultry Advisory</span>
+                          <FaUsers className="text-gray-600 mr-3" />
+                          <span className="text-sm font-medium text-gray-800">Upload Poultry Advisory</span>
                         </button>
                       </div>
                     </div>
                   </div>
                 </>
               )}
+
 
               {/* Content Management Pages */}
               {activePage.startsWith("content-management-") && (
@@ -526,6 +559,21 @@ const Dashboard = () => {
                   )}
                   {activePage === "agricultural-poultry-advisory" && (
                     <PoultryAdvisoryManager />
+                  )}
+                </div>
+              )}
+
+              {/* Enhanced Calendar Pages */}
+              {activePage.startsWith("enhanced-calendar") && (
+                <div className="bg-white rounded-lg shadow">
+                  {activePage === "enhanced-calendar-upload" && (
+                    <EnhancedCalendarUpload />
+                  )}
+                  {activePage === "enhanced-calendar-viewer" && (
+                    <EnhancedCalendarViewer />
+                  )}
+                  {activePage === "enhanced-calendar-production" && (
+                    <ProductionCycleManager />
                   )}
                 </div>
               )}

@@ -203,14 +203,14 @@
       ]
     },
     {
-      "id": "1757184997152",
-      "uniqueId": "CC_Western Region_Ellembelle_Maize_1757184997152",
+      "id": "1757606829245",
+      "uniqueId": "CC_Western Region_Ellembelle_Maize_1757606829245",
       "region": "Western Region",
       "district": "Ellembelle",
       "crop": "Maize",
       "majorSeason": {
-        "startMonth": "March",
-        "startWeek": "2025-03-02",
+        "startMonth": "January",
+        "startWeek": "2025-01-01",
         "file": "Western Calendar for Maize.xlsx"
       },
       "minorSeason": {
@@ -218,8 +218,207 @@
         "startWeek": null,
         "hasFile": false
       },
-      "uploadDate": "2025-09-06T18:56:37.152Z",
-      "userId": "1757183166522",
+      "uploadDate": "2025-09-11T16:07:09.245Z",
+      "userId": "1757541877230",
+      "fileData": {
+        "filename": "Western Calendar for Maize.xlsx",
+        "sheets": {
+          "MAIZE": {
+            "headers": [
+              "MAIZE PRODUCTION-MAJOR SEASON"
+            ],
+            "data": [
+              [
+                "S/N",
+                "STAGE OF ACTIVITY ",
+                "JAN",
+                null,
+                null,
+                null,
+                null,
+                "FEB",
+                null,
+                null,
+                null,
+                "MAR",
+                null,
+                null,
+                null,
+                "APR",
+                null,
+                null,
+                null,
+                "MAY",
+                null,
+                null,
+                null,
+                null,
+                "JUN",
+                null,
+                null,
+                null,
+                null,
+                "JUL",
+                null,
+                null,
+                null,
+                "AUG",
+                null,
+                null,
+                null,
+                "SEPT"
+              ],
+              [
+                null,
+                null,
+                "WK1",
+                "WK2",
+                "WK3",
+                "WK4",
+                "WK5",
+                "WK6",
+                "WK7",
+                "WK8",
+                "WK9",
+                "WK10",
+                "WK11",
+                "WK12",
+                "WK13",
+                "WK14",
+                "WK15",
+                "WK16",
+                "WK17",
+                "WK18",
+                "WK19",
+                "WK20",
+                "WK21",
+                "WK22",
+                "WK23",
+                "WK24",
+                "WK25",
+                "WK26",
+                "WK27",
+                "WK28",
+                "WK29",
+                "WK30",
+                "WK31",
+                "WK32",
+                "WK33",
+                "WK34",
+                "WK35",
+                "WK36",
+                "WK37"
+              ],
+              [
+                null,
+                "Calendar Date",
+                "29 - 4",
+                "5 - 11",
+                "12 - 18",
+                "19 - 25 ",
+                "26 - 1",
+                "2 - 8",
+                "9 - 15",
+                "16 - 22",
+                "23 - 1",
+                "2 - 8",
+                "9 - 15",
+                "16 - 22",
+                "23 - 29",
+                "30 - 5",
+                "6 - 12",
+                "13 - 19",
+                "20 - 26 ",
+                "27 - 3",
+                "4 - 10",
+                "11 - 17",
+                "18 - 24",
+                "25 - 31",
+                "1 - 7",
+                "8 - 14",
+                "15 - 21",
+                "22 - 28",
+                "29 - 5",
+                "6 - 12",
+                "13-19",
+                "20-22",
+                "23-2",
+                "3-9",
+                "10-16",
+                "17-23",
+                "24-30",
+                "31-6",
+                "7-13"
+              ],
+              [
+                1,
+                "Site Selection"
+              ],
+              [
+                2,
+                "Land preparation"
+              ],
+              [
+                3,
+                "Planting/sowing"
+              ],
+              [
+                4,
+                "1st fertilizer application"
+              ],
+              [
+                5,
+                "First weed management & Control of fall army worm"
+              ],
+              [
+                6,
+                "2nd Fertilizer Application (Urea or SOA)"
+              ],
+              [
+                7,
+                "Second weed management & Pest and disease control"
+              ],
+              [
+                8,
+                "Harvesting"
+              ],
+              [
+                9,
+                "Post harvest handling"
+              ]
+            ],
+            "totalRows": 12
+          }
+        },
+        "totalSheets": 1,
+        "totalRecords": 12
+      },
+      "sampleActivities": [
+        "S/N | STAGE OF ACTIVITY  | JAN |  |  |  |  | FEB |  |  |  | MAR |  |  |  | APR |  |  |  | MAY |  |  |  |  | JUN |  |  |  |  | JUL |  |  |  | AUG |  |  |  | SEPT",
+        " |  | WK1 | WK2 | WK3 | WK4 | WK5 | WK6 | WK7 | WK8 | WK9 | WK10 | WK11 | WK12 | WK13 | WK14 | WK15 | WK16 | WK17 | WK18 | WK19 | WK20 | WK21 | WK22 | WK23 | WK24 | WK25 | WK26 | WK27 | WK28 | WK29 | WK30 | WK31 | WK32 | WK33 | WK34 | WK35 | WK36 | WK37",
+        " | Calendar Date | 29 - 4 | 5 - 11 | 12 - 18 | 19 - 25  | 26 - 1 | 2 - 8 | 9 - 15 | 16 - 22 | 23 - 1 | 2 - 8 | 9 - 15 | 16 - 22 | 23 - 29 | 30 - 5 | 6 - 12 | 13 - 19 | 20 - 26  | 27 - 3 | 4 - 10 | 11 - 17 | 18 - 24 | 25 - 31 | 1 - 7 | 8 - 14 | 15 - 21 | 22 - 28 | 29 - 5 | 6 - 12 | 13-19 | 20-22 | 23-2 | 3-9 | 10-16 | 17-23 | 24-30 | 31-6 | 7-13",
+        "1 | Site Selection",
+        "2 | Land preparation"
+      ]
+    },
+    {
+      "id": "1757617692972",
+      "uniqueId": "CC_Western Region_Jomoro_Maize_1757617692972",
+      "region": "Western Region",
+      "district": "Jomoro",
+      "crop": "Maize",
+      "majorSeason": {
+        "startMonth": "January",
+        "startWeek": "2025-01-01",
+        "file": "Western Calendar for Maize.xlsx"
+      },
+      "minorSeason": {
+        "startMonth": null,
+        "startWeek": null,
+        "hasFile": false
+      },
+      "uploadDate": "2025-09-11T19:08:12.972Z",
+      "userId": "1757541877230",
       "fileData": {
         "filename": "Western Calendar for Maize.xlsx",
         "sheets": {
@@ -2300,5 +2499,6 @@
       "uploadDate": "2025-06-20T09:02:15.028Z",
       "userId": "1750409927020"
     }
-  ]
+  ],
+  "user-production-cycles": []
 }

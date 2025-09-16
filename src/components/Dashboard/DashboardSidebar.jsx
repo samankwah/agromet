@@ -8,24 +8,26 @@ import {
   FaChevronRight,
   FaSeedling,
   FaDatabase,
-  FaUpload,
   FaCalendarAlt,
   FaEgg,
   FaEye,
-  FaChartBar
+  FaChartBar,
+  FaCog,
+  FaStar,
+  FaFileAlt
 } from "react-icons/fa";
 import PropTypes from "prop-types";
 
 const Sidebar = ({ activePage, onNavigate }) => {
-  const [contentManagementExpanded, setContentManagementExpanded] = useState(true);
-  const [quickActionsExpanded, setQuickActionsExpanded] = useState(false);
+  const [calendarManagementExpanded, setCalendarManagementExpanded] = useState(true);
+  const [advisoryManagementExpanded, setAdvisoryManagementExpanded] = useState(false);
 
-  const toggleContentManagement = () => {
-    setContentManagementExpanded(!contentManagementExpanded);
+  const toggleCalendarManagement = () => {
+    setCalendarManagementExpanded(!calendarManagementExpanded);
   };
 
-  const toggleQuickActions = () => {
-    setQuickActionsExpanded(!quickActionsExpanded);
+  const toggleAdvisoryManagement = () => {
+    setAdvisoryManagementExpanded(!advisoryManagementExpanded);
   };
 
   return (
@@ -52,28 +54,28 @@ const Sidebar = ({ activePage, onNavigate }) => {
               </button>
             </li>
 
-            {/* Content Management */}
+            {/* Calendar Management */}
             <li>
               <button
-                onClick={toggleContentManagement}
+                onClick={toggleCalendarManagement}
                 className={`w-full flex items-center justify-between px-4 py-3 text-sm rounded-lg transition-all ${
-                  activePage.startsWith("content-management")
+                  activePage.startsWith("calendar") || activePage.startsWith("agricultural-crop") || activePage.startsWith("agricultural-poultry") || activePage.startsWith("enhanced-calendar")
                     ? "bg-green-700 shadow-md"
                     : "hover:bg-green-700 hover:shadow-sm"
                 }`}
               >
                 <div className="flex items-center">
-                  <FaDatabase className="mr-3" />
-                  <span>Content Management</span>
+                  <FaCalendarAlt className="mr-3" />
+                  <span>Calendar Management</span>
                 </div>
-                {contentManagementExpanded ? (
+                {calendarManagementExpanded ? (
                   <FaChevronDown className="ml-2" />
                 ) : (
                   <FaChevronRight className="ml-2" />
                 )}
               </button>
 
-              {contentManagementExpanded && (
+              {calendarManagementExpanded && (
                 <ul className="ml-4 mt-2 space-y-1">
                   <li>
                     <button
@@ -84,21 +86,8 @@ const Sidebar = ({ activePage, onNavigate }) => {
                           : "hover:bg-green-600"
                       }`}
                     >
-                      <FaCalendarAlt className="mr-3 text-sm" />
+                      <FaSeedling className="mr-3 text-sm" />
                       <span>Crop Calendars</span>
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      onClick={() => onNavigate("content-management-agromet-advisory")}
-                      className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all ${
-                        activePage === "content-management-agromet-advisory"
-                          ? "bg-green-600"
-                          : "hover:bg-green-600"
-                      }`}
-                    >
-                      <FaCloudSun className="mr-3 text-sm" />
-                      <span>Agromet Advisories</span>
                     </button>
                   </li>
                   <li>
@@ -112,6 +101,46 @@ const Sidebar = ({ activePage, onNavigate }) => {
                     >
                       <FaEgg className="mr-3 text-sm" />
                       <span>Poultry Calendars</span>
+                    </button>
+                  </li>
+                </ul>
+              )}
+            </li>
+
+            {/* Advisory Management */}
+            <li>
+              <button
+                onClick={toggleAdvisoryManagement}
+                className={`w-full flex items-center justify-between px-4 py-3 text-sm rounded-lg transition-all ${
+                  activePage.startsWith("advisory") || activePage.startsWith("agricultural-agromet") || activePage.startsWith("content-management-agromet") || activePage.startsWith("content-management-poultry-advisory")
+                    ? "bg-green-700 shadow-md"
+                    : "hover:bg-green-700 hover:shadow-sm"
+                }`}
+              >
+                <div className="flex items-center">
+                  <FaCloudSun className="mr-3" />
+                  <span>Advisory Management</span>
+                </div>
+                {advisoryManagementExpanded ? (
+                  <FaChevronDown className="ml-2" />
+                ) : (
+                  <FaChevronRight className="ml-2" />
+                )}
+              </button>
+
+              {advisoryManagementExpanded && (
+                <ul className="ml-4 mt-2 space-y-1">
+                  <li>
+                    <button
+                      onClick={() => onNavigate("content-management-agromet-advisory")}
+                      className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all ${
+                        activePage === "content-management-agromet-advisory"
+                          ? "bg-green-600"
+                          : "hover:bg-green-600"
+                      }`}
+                    >
+                      <FaCloudSun className="mr-3 text-sm" />
+                      <span>Agromet Advisories</span>
                     </button>
                   </li>
                   <li>
@@ -131,88 +160,9 @@ const Sidebar = ({ activePage, onNavigate }) => {
               )}
             </li>
 
-            {/* Quick Actions */}
-            <li>
-              <button
-                onClick={toggleQuickActions}
-                className={`w-full flex items-center justify-between px-4 py-3 text-sm rounded-lg transition-all ${
-                  activePage.startsWith("agricultural") || quickActionsExpanded
-                    ? "bg-green-700 shadow-md"
-                    : "hover:bg-green-700 hover:shadow-sm"
-                }`}
-              >
-                <div className="flex items-center">
-                  <FaUpload className="mr-3" />
-                  <span>Quick Upload</span>
-                </div>
-                {quickActionsExpanded ? (
-                  <FaChevronDown className="ml-2" />
-                ) : (
-                  <FaChevronRight className="ml-2" />
-                )}
-              </button>
-
-              {quickActionsExpanded && (
-                <ul className="ml-4 mt-2 space-y-1">
-                  <li>
-                    <button
-                      onClick={() => onNavigate("agricultural-crop-calendar")}
-                      className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all ${
-                        activePage === "agricultural-crop-calendar"
-                          ? "bg-green-600"
-                          : "hover:bg-green-600"
-                      }`}
-                    >
-                      <FaCalendarAlt className="mr-3 text-sm" />
-                      <span>Upload Crop Calendar</span>
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      onClick={() => onNavigate("agricultural-agromet-advisory")}
-                      className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all ${
-                        activePage === "agricultural-agromet-advisory"
-                          ? "bg-green-600"
-                          : "hover:bg-green-600"
-                      }`}
-                    >
-                      <FaCloudSun className="mr-3 text-sm" />
-                      <span>Upload Advisories</span>
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      onClick={() => onNavigate("agricultural-poultry-calendar")}
-                      className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all ${
-                        activePage === "agricultural-poultry-calendar"
-                          ? "bg-green-600"
-                          : "hover:bg-green-600"
-                      }`}
-                    >
-                      <FaEgg className="mr-3 text-sm" />
-                      <span>Upload Poultry Calendar</span>
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      onClick={() => onNavigate("agricultural-poultry-advisory")}
-                      className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all ${
-                        activePage === "agricultural-poultry-advisory"
-                          ? "bg-green-600"
-                          : "hover:bg-green-600"
-                      }`}
-                    >
-                      <FaSeedling className="mr-3 text-sm" />
-                      <span>Upload Poultry Advisory</span>
-                    </button>
-                  </li>
-                </ul>
-              )}
-            </li>
-
             <div className="border-t border-green-700 my-2"></div>
 
-            {/* Additional Features */}
+            {/* System Tools */}
             <li>
               <button
                 onClick={() => onNavigate("emergency")}
@@ -238,16 +188,6 @@ const Sidebar = ({ activePage, onNavigate }) => {
               >
                 <FaNewspaper className="mr-3" />
                 <span>News Management</span>
-              </button>
-            </li>
-
-            <li>
-              <button
-                onClick={() => window.open('/crop-calendar', '_blank')}
-                className="w-full flex items-center px-4 py-3 text-sm rounded-lg hover:bg-green-700 hover:shadow-sm transition-all"
-              >
-                <FaEye className="mr-3" />
-                <span>View Public Site</span>
               </button>
             </li>
           </ul>

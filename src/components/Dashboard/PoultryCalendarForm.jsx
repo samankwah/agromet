@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FaTimes, FaEye, FaTrash, FaPlus, FaDownload } from 'react-icons/fa';
 import PropTypes from 'prop-types';
 import userService from '../../services/userService';
@@ -9,6 +10,10 @@ import {
   getDistrictsByRegionName,
   POULTRY_TYPES 
 } from '../../data/ghanaCodes';
+import { getSafeDistrictsByRegion, getSafeRegions } from '../../utils/regionDistrictHelpers';
+import { SafeDistrictOptions } from '../../components/common/SafeSelectOptions';
+import calendarPreviewParser from '../../utils/calendarPreviewParser';
+import * as XLSX from 'xlsx';
 
 // Convert POULTRY_TYPES from centralized data to the format expected by the form
 const getPoultryTypesForForm = () => {
@@ -42,50 +47,69 @@ const months = [
 ];
 
 const PoultryCalendarForm = ({ isOpen, onClose, onSave }) => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     region: '',
     district: '',
     poultryType: '',
-    breed: '',
-    majorCycle: {
-      file: null,
-      startMonth: '',
-      startWeek: ''
-    },
-    minorCycle: {
+    productionCycle: {
       file: null,
       startMonth: '',
       startWeek: ''
     }
   });
 
-  const [districts, setDistricts] = useState([]);
-  const [breeds, setBreeds] = useState([]);
+  const [districtData, setDistrictData] = useState({ districts: [], meta: {} });
   const [loading, setLoading] = useState(false);
-  const [previewData, setPreviewData] = useState(null);
-  const [showPreview, setShowPreview] = useState(false);
   const [errors, setErrors] = useState({});
+  const [parsingPreview, setParsingPreview] = useState(false);
+  const [previewError, setPreviewError] = useState(null);
 
-  // Get regions from centralized data
-  const regionNames = getAllRegionNames();
+  // Get regions using safe helpers with error handling
+  const { regions: safeRegions } = getSafeRegions();
+  const regionNames = safeRegions.map(r => r.name);
   const regionDistrictMapping = getRegionDistrictMapping();
 
-  // Update districts when region changes
+  // Restore form data when returning from preview
+  useEffect(() => {
+    const storedFormData = localStorage.getItem('poultryCalendarFormData');
+    if (storedFormData && isOpen) {
+      try {
+        const parsedFormData = JSON.parse(storedFormData);
+        setFormData(parsedFormData);
+        localStorage.removeItem('poultryCalendarFormData');
+      } catch (error) {
+        console.error('Error restoring form data:', error);
+      }
+    }
+  }, [isOpen]);
+
+  // Update districts when region changes using safe helper
   useEffect(() => {
     if (formData.region) {
-      const districtList = getDistrictsByRegionName(formData.region);
-      setDistricts(districtList);
-      setFormData(prev => ({ ...prev, district: '' }));
+      try {
+        const result = getSafeDistrictsByRegion(formData.region, {
+          preferNewData: true,
+          fallbackToLegacy: true,
+          enableCaching: true
+        });
+        
+        setDistrictData(result);
+        setFormData(prev => ({ ...prev, district: '' }));
+        
+        // Log any data source issues in development
+        if (process.env.NODE_ENV === 'development' && result.meta.hasErrors) {
+          console.warn('District data has errors:', result.meta);
+        }
+      } catch (error) {
+        console.error('Error loading districts for region:', formData.region, error);
+        setDistrictData({ districts: [], meta: { error: error.message } });
+      }
+    } else {
+      setDistrictData({ districts: [], meta: {} });
     }
   }, [formData.region]);
 
-  // Update breeds when poultry type changes
-  useEffect(() => {
-    if (formData.poultryType && poultryTypes[formData.poultryType]) {
-      setBreeds(poultryTypes[formData.poultryType]);
-      setFormData(prev => ({ ...prev, breed: '' }));
-    }
-  }, [formData.poultryType]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -98,33 +122,33 @@ const PoultryCalendarForm = ({ isOpen, onClose, onSave }) => {
     }
   };
 
-  const handleCycleChange = (cycle, field, value) => {
+  const handleCycleChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
-      [cycle]: {
-        ...prev[cycle],
+      productionCycle: {
+        ...prev.productionCycle,
         [field]: value
       }
     }));
   };
 
-  const handleFileChange = (cycle, file) => {
+  const handleFileChange = (file) => {
     if (file) {
       setFormData(prev => ({
         ...prev,
-        [cycle]: {
-          ...prev[cycle],
+        productionCycle: {
+          ...prev.productionCycle,
           file: file
         }
       }));
     }
   };
 
-  const removeFile = (cycle) => {
+  const removeFile = () => {
     setFormData(prev => ({
       ...prev,
-      [cycle]: {
-        ...prev[cycle],
+      productionCycle: {
+        ...prev.productionCycle,
         file: null
       }
     }));
@@ -136,60 +160,126 @@ const PoultryCalendarForm = ({ isOpen, onClose, onSave }) => {
     if (!formData.region) newErrors.region = 'Region is required';
     if (!formData.district) newErrors.district = 'District is required';
     if (!formData.poultryType) newErrors.poultryType = 'Poultry type is required';
-    if (!formData.breed) newErrors.breed = 'Breed is required';
     
-    if (!formData.majorCycle.file) newErrors.majorCycleFile = 'Major cycle file is required';
-    if (!formData.majorCycle.startMonth) newErrors.majorCycleMonth = 'Major cycle start month is required';
+    if (!formData.productionCycle.file) newErrors.productionCycleFile = 'Production cycle file is required';
+    if (!formData.productionCycle.startMonth) newErrors.productionCycleMonth = 'Production cycle start month is required';
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const generatePreviewData = () => {
-    const baseData = {
-      region: formData.region,
-      district: formData.district,
-      poultryType: formData.poultryType,
-      breed: formData.breed,
-      commodityCode: `PT${Math.random().toString().substring(2, 12)}`, // Generate sample poultry code
-    };
-
-    const previewRows = [];
-    
-    if (formData.majorCycle.file) {
-      previewRows.push({
-        ...baseData,
-        cycle: 'Major',
-        startMonth: formData.majorCycle.startMonth,
-        startWeek: formData.majorCycle.startWeek || 'TBD',
-        stage: 'General',
-        healthManagement: 'Standard',
-        activities: 'Sample activities from uploaded file',
-        requirements: 'Sample requirements from uploaded file'
+  // Parse raw Excel content for direct preview
+  const parseRawExcelContent = async (file) => {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: 'array', cellStyles: true });
+      
+      const result = {};
+      
+      workbook.SheetNames.forEach(sheetName => {
+        const sheet = workbook.Sheets[sheetName];
+        const range = XLSX.utils.decode_range(sheet['!ref']);
+        const data = [];
+        
+        // Extract cell data with formatting
+        for (let row = range.s.r; row <= range.e.r; row++) {
+          const rowData = [];
+          for (let col = range.s.c; col <= range.e.c; col++) {
+            const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+            const cell = sheet[cellAddress];
+            
+            if (cell) {
+              rowData.push({
+                value: cell.v || '',
+                formula: cell.f || null,
+                type: cell.t || 'str',
+                style: cell.s || null,
+                address: cellAddress
+              });
+            } else {
+              rowData.push({
+                value: '',
+                formula: null,
+                type: 'str',
+                style: null,
+                address: cellAddress
+              });
+            }
+          }
+          data.push(rowData);
+        }
+        
+        result[sheetName] = {
+          data: data,
+          range: sheet['!ref'],
+          totalRows: range.e.r - range.s.r + 1,
+          totalCols: range.e.c - range.s.c + 1
+        };
       });
+      
+      return result;
+    } catch (error) {
+      console.error('Error parsing raw Excel content:', error);
+      return null;
     }
-
-    if (formData.minorCycle.file) {
-      previewRows.push({
-        ...baseData,
-        cycle: 'Minor',
-        startMonth: formData.minorCycle.startMonth,
-        startWeek: formData.minorCycle.startWeek || 'TBD',
-        stage: 'General',
-        healthManagement: 'Standard',
-        activities: 'Sample activities from uploaded file',
-        requirements: 'Sample requirements from uploaded file'
-      });
-    }
-
-    return previewRows;
   };
 
-  const handlePreview = () => {
+  const generatePreviewData = async () => {
+    if (!formData.productionCycle.file) {
+      setPreviewError('Please upload a production cycle Excel file first.');
+      return null;
+    }
+
+    setParsingPreview(true);
+    setPreviewError(null);
+
+    try {
+      // Parse the production cycle file with enhanced parser
+      const productionCycleData = await calendarPreviewParser.parseCalendarForPreview(
+        formData.productionCycle.file,
+        { region: formData.region, district: formData.district, poultryType: formData.poultryType }
+      );
+
+      // Parse raw Excel content for preview
+      const rawExcelContent = await parseRawExcelContent(formData.productionCycle.file);
+
+      // Create preview data structure
+      const combinedPreview = {
+        productionCycle: productionCycleData,
+        rawExcelContent: rawExcelContent,
+        metadata: {
+          region: formData.region,
+          district: formData.district,
+          poultryType: formData.poultryType,
+          totalFiles: 1,
+          parseDate: new Date().toISOString()
+        }
+      };
+
+      return combinedPreview;
+
+    } catch (error) {
+      console.error('Error parsing poultry calendar preview:', error);
+      setPreviewError(`Error parsing Excel file: ${error.message}`);
+      return null;
+    } finally {
+      setParsingPreview(false);
+    }
+  };
+
+  const handlePreview = async () => {
     if (validateForm()) {
-      const preview = generatePreviewData();
-      setPreviewData(preview);
-      setShowPreview(true);
+      const preview = await generatePreviewData();
+      if (preview) {
+        // Store preview data in localStorage for the preview page
+        localStorage.setItem('poultryCalendarPreviewData', JSON.stringify(preview.productionCycle));
+        
+        // Store form data for restoration when returning from preview
+        localStorage.setItem('poultryCalendarFormData', JSON.stringify(formData));
+        
+        // Navigate to preview page
+        navigate('/production/poultry-calendar-preview');
+      }
     }
   };
 
@@ -205,20 +295,12 @@ const PoultryCalendarForm = ({ isOpen, onClose, onSave }) => {
       submitData.append('region', formData.region);
       submitData.append('district', formData.district);
       submitData.append('poultryType', formData.poultryType);
-      submitData.append('breed', formData.breed);
       
-      // Add major cycle data
-      if (formData.majorCycle.file) {
-        submitData.append('majorCycleFile', formData.majorCycle.file);
-        submitData.append('majorCycleMonth', formData.majorCycle.startMonth);
-        submitData.append('majorCycleWeek', formData.majorCycle.startWeek);
-      }
-      
-      // Add minor cycle data
-      if (formData.minorCycle.file) {
-        submitData.append('minorCycleFile', formData.minorCycle.file);
-        submitData.append('minorCycleMonth', formData.minorCycle.startMonth);
-        submitData.append('minorCycleWeek', formData.minorCycle.startWeek);
+      // Add production cycle data
+      if (formData.productionCycle.file) {
+        submitData.append('productionCycleFile', formData.productionCycle.file);
+        submitData.append('productionCycleMonth', formData.productionCycle.startMonth);
+        submitData.append('productionCycleWeek', formData.productionCycle.startWeek);
       }
 
       // Submit using agricultural data service
@@ -233,12 +315,12 @@ const PoultryCalendarForm = ({ isOpen, onClose, onSave }) => {
           region: '',
           district: '',
           poultryType: '',
-          breed: '',
-          majorCycle: { file: null, startMonth: '', startWeek: '' },
-          minorCycle: { file: null, startMonth: '', startWeek: '' }
+          productionCycle: {
+            file: null,
+            startMonth: '',
+            startWeek: ''
+          }
         });
-        setPreviewData(null);
-        setShowPreview(false);
       }
     } catch (error) {
       console.error('Error saving poultry calendar:', error);
@@ -264,24 +346,26 @@ const PoultryCalendarForm = ({ isOpen, onClose, onSave }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Create Poultry Calendar</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100"
-          >
-            <FaTimes className="h-5 w-5" />
-          </button>
-        </div>
+    <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-start justify-center p-4 overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full my-8 max-h-[calc(100vh-4rem)]">
+        <div className="flex flex-col h-full max-h-[calc(100vh-4rem)]">
+          {/* Header - Always Visible */}
+          <div className="flex-shrink-0">
+            <div className="flex justify-between items-center p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">Create Poultry Calendar</h2>
+              <button
+                onClick={onClose}
+                className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100"
+              >
+                <FaTimes className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
 
-        <div className="p-6">
-          {!showPreview ? (
-            <>
+          {/* Scrollable Form Content */}
+          <div className="flex-1 overflow-y-auto p-6">
               {/* Basic Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Region <span className="text-red-500">*</span>
@@ -314,13 +398,21 @@ const PoultryCalendarForm = ({ isOpen, onClose, onSave }) => {
                     }`}
                     disabled={!formData.region}
                   >
-                    <option value="">Select District...</option>
-                    {districts.map(district => (
-                      <option key={district} value={district}>{district}</option>
-                    ))}
+                    <SafeDistrictOptions 
+                      districts={districtData.districts}
+                      placeholder="Select District..."
+                      includeEmpty={true}
+                    />
                   </select>
                   {errors.district && <p className="text-red-500 text-xs mt-1">{errors.district}</p>}
-                  <p className="text-gray-500 text-xs mt-1">Enter the district</p>
+                  {districtData.meta.hasErrors && (
+                    <p className="text-orange-500 text-xs mt-1">
+                      ⚠️ Using fallback data source
+                    </p>
+                  )}
+                  <p className="text-gray-500 text-xs mt-1">
+                    Enter the district {process.env.NODE_ENV === 'development' && districtData.meta.dataSource && `(${districtData.meta.dataSource})`}
+                  </p>
                 </div>
 
                 <div>
@@ -343,167 +435,81 @@ const PoultryCalendarForm = ({ isOpen, onClose, onSave }) => {
                   <p className="text-gray-500 text-xs mt-1">Enter the poultry type</p>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Breed <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={formData.breed}
-                    onChange={(e) => handleInputChange('breed', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                      errors.breed ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                    disabled={!formData.poultryType}
-                  >
-                    <option value="">Select Breed...</option>
-                    {breeds.map(breed => (
-                      <option key={breed} value={breed}>{breed}</option>
-                    ))}
-                  </select>
-                  {errors.breed && <p className="text-red-500 text-xs mt-1">{errors.breed}</p>}
-                  <p className="text-gray-500 text-xs mt-1">Enter the breed</p>
-                </div>
               </div>
 
-              {/* Production Cycles Section */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Major Cycle */}
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Major Production Cycle</h3>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Excel <span className="text-red-500">*</span>
+              {/* Production Cycle Section */}
+              <div className="border border-gray-200 rounded-lg p-6 mb-8">
+                <h3 className="text-lg font-medium text-gray-900 mb-6">Production Cycle</h3>
+                
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Excel <span className="text-red-500">*</span>
+                    </label>
+                    <div className="flex items-center space-x-2">
+                      <label className="flex-1 cursor-pointer">
+                        <input
+                          type="file"
+                          accept=".xlsx,.xls,.csv"
+                          onChange={(e) => handleFileChange(e.target.files[0])}
+                          className="hidden"
+                        />
+                        <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700 hover:bg-gray-100">
+                          {formData.productionCycle.file ? formData.productionCycle.file.name : 'Choose File'}
+                        </div>
                       </label>
-                      <div className="flex items-center space-x-2">
-                        <label className="flex-1 cursor-pointer">
-                          <input
-                            type="file"
-                            accept=".xlsx,.xls,.csv"
-                            onChange={(e) => handleFileChange('majorCycle', e.target.files[0])}
-                            className="hidden"
-                          />
-                          <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700 hover:bg-gray-100">
-                            {formData.majorCycle.file ? formData.majorCycle.file.name : 'Choose File'}
-                          </div>
-                        </label>
-                        {formData.majorCycle.file && (
-                          <button
-                            onClick={() => removeFile('majorCycle')}
-                            className="p-2 text-red-500 hover:text-red-700"
-                          >
-                            <FaTrash />
-                          </button>
-                        )}
-                      </div>
-                      {errors.majorCycleFile && <p className="text-red-500 text-xs mt-1">{errors.majorCycleFile}</p>}
-                      <p className="text-gray-500 text-xs mt-1">Upload Excel1</p>
+                      {formData.productionCycle.file && (
+                        <button
+                          onClick={() => removeFile()}
+                          className="p-2 text-red-500 hover:text-red-700"
+                        >
+                          <FaTrash />
+                        </button>
+                      )}
                     </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Major Cycle Start Month <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        value={formData.majorCycle.startMonth}
-                        onChange={(e) => handleCycleChange('majorCycle', 'startMonth', e.target.value)}
-                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                          errors.majorCycleMonth ? 'border-red-500' : 'border-gray-300'
-                        }`}
-                      >
-                        <option value="">Select Month...</option>
-                        {months.map(month => (
-                          <option key={month} value={month}>{month}</option>
-                        ))}
-                      </select>
-                      {errors.majorCycleMonth && <p className="text-red-500 text-xs mt-1">{errors.majorCycleMonth}</p>}
-                      <p className="text-gray-500 text-xs mt-1">Enter major cycle start month</p>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Start Week <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="date"
-                        value={formData.majorCycle.startWeek}
-                        onChange={(e) => handleCycleChange('majorCycle', 'startWeek', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                      />
-                    </div>
-
-
+                    {errors.productionCycleFile && <p className="text-red-500 text-xs mt-1">{errors.productionCycleFile}</p>}
+                    <p className="text-gray-500 text-xs mt-1">Upload Excel file for production cycle</p>
                   </div>
-                </div>
 
-                {/* Minor Cycle */}
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Minor Production Cycle</h3>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Excel</label>
-                      <div className="flex items-center space-x-2">
-                        <label className="flex-1 cursor-pointer">
-                          <input
-                            type="file"
-                            accept=".xlsx,.xls,.csv"
-                            onChange={(e) => handleFileChange('minorCycle', e.target.files[0])}
-                            className="hidden"
-                          />
-                          <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700 hover:bg-gray-100">
-                            {formData.minorCycle.file ? formData.minorCycle.file.name : 'Choose File'}
-                          </div>
-                        </label>
-                        {formData.minorCycle.file && (
-                          <button
-                            onClick={() => removeFile('minorCycle')}
-                            className="p-2 text-red-500 hover:text-red-700"
-                          >
-                            <FaTrash />
-                          </button>
-                        )}
-                      </div>
-                      <p className="text-gray-500 text-xs mt-1">Upload Excel2</p>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Minor Cycle Start Month
-                      </label>
-                      <select
-                        value={formData.minorCycle.startMonth}
-                        onChange={(e) => handleCycleChange('minorCycle', 'startMonth', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                      >
-                        <option value="">Select Month...</option>
-                        {months.map(month => (
-                          <option key={month} value={month}>{month}</option>
-                        ))}
-                      </select>
-                      <p className="text-gray-500 text-xs mt-1">Enter minor cycle start month</p>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Start Week
-                      </label>
-                      <input
-                        type="date"
-                        value={formData.minorCycle.startWeek}
-                        onChange={(e) => handleCycleChange('minorCycle', 'startWeek', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                      />
-                    </div>
-
-
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Production Cycle Start Month <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={formData.productionCycle.startMonth}
+                      onChange={(e) => handleCycleChange('startMonth', e.target.value)}
+                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                        errors.productionCycleMonth ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                    >
+                      <option value="">Select Month...</option>
+                      {months.map(month => (
+                        <option key={month} value={month}>{month}</option>
+                      ))}
+                    </select>
+                    {errors.productionCycleMonth && <p className="text-red-500 text-xs mt-1">{errors.productionCycleMonth}</p>}
+                    <p className="text-gray-500 text-xs mt-1">Enter production cycle start month</p>
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Start Week <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.productionCycle.startWeek}
+                      onChange={(e) => handleCycleChange('startWeek', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    />
+                  </div>
+
                 </div>
               </div>
+          </div>
 
-              {/* Action Buttons */}
-              <div className="flex justify-between items-center mt-8">
+          {/* Sticky Footer with Action Buttons */}
+              <div className="flex-shrink-0 border-t border-gray-200 px-6 py-4 bg-gray-50">
+            <div className="flex justify-between items-center">
                 <div className="flex space-x-2">
                   <button
                     onClick={handleDownloadTemplate}
@@ -515,10 +521,19 @@ const PoultryCalendarForm = ({ isOpen, onClose, onSave }) => {
                   <button
                     onClick={handlePreview}
                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center"
-                    disabled={loading}
+                    disabled={loading || parsingPreview}
                   >
-                    <FaEye className="mr-2" />
-                    Preview
+                    {parsingPreview ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Parsing...
+                      </>
+                    ) : (
+                      <>
+                        <FaEye className="mr-2" />
+                        Preview Calendar
+                      </>
+                    )}
                   </button>
                 </div>
                 
@@ -539,79 +554,8 @@ const PoultryCalendarForm = ({ isOpen, onClose, onSave }) => {
                     </>
                   )}
                 </button>
-              </div>
-            </>
-          ) : (
-            /* Preview Section */
-            <>
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Poultry Calendar Data Preview</h3>
-                <button
-                  onClick={() => setShowPreview(false)}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
-                >
-                  Back to Edit
-                </button>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Region</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">District</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Poultry Type</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Breed</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cycle</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Start Month</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stage</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Health Mgmt</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {previewData?.map((row, index) => (
-                      <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                        <td className="px-4 py-3 text-sm text-gray-900">{row.region}</td>
-                        <td className="px-4 py-3 text-sm text-gray-900">{row.district}</td>
-                        <td className="px-4 py-3 text-sm text-gray-900">{row.poultryType}</td>
-                        <td className="px-4 py-3 text-sm text-gray-900">{row.breed}</td>
-                        <td className="px-4 py-3 text-sm text-gray-900">
-                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                            row.cycle === 'Major' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
-                          }`}>
-                            {row.cycle}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-900">{row.startMonth}</td>
-                        <td className="px-4 py-3 text-sm text-gray-900">{row.stage}</td>
-                        <td className="px-4 py-3 text-sm text-gray-900">{row.healthManagement}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="flex justify-end mt-6">
-                <button
-                  onClick={handleSave}
-                  className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <FaPlus className="mr-2" />
-                      Confirm & Save
-                    </>
-                  )}
-                </button>
-              </div>
-            </>
-          )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

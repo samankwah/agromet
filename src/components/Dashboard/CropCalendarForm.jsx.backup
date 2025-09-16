@@ -80,52 +80,6 @@ const CropCalendarForm = ({ isOpen, onClose, onSave }) => {
     }
   }, [formData.region]);
 
-  // RESTORE FORM DATA: Only restore if returning from preview (with session flag)
-  useEffect(() => {
-    const storedFormData = localStorage.getItem('calendarFormData');
-    const isReturningFromPreview = sessionStorage.getItem('returningFromCalendarPreview');
-    
-    if (storedFormData && isReturningFromPreview) {
-      try {
-        const restored = JSON.parse(storedFormData);
-        console.log('🔄 Restoring form data from preview:', restored);
-        
-        setFormData(prev => ({
-          ...prev,
-          region: restored.region || '',
-          district: restored.district || '', 
-          crop: restored.crop || '',
-          majorSeason: {
-            ...prev.majorSeason,
-            // Don't restore file object, but show filename
-            startMonth: restored.majorSeason?.startMonth || '',
-            startWeek: restored.majorSeason?.startWeek || ''
-          },
-          minorSeason: {
-            ...prev.minorSeason,
-            startMonth: restored.minorSeason?.startMonth || '',
-            startWeek: restored.minorSeason?.startWeek || ''
-          }
-        }));
-        
-        // Clear both storage items after restoring
-        localStorage.removeItem('calendarFormData');
-        sessionStorage.removeItem('returningFromCalendarPreview');
-        
-        console.log('✅ Form data restored from preview');
-        
-      } catch (error) {
-        console.error('Error restoring form data:', error);
-        localStorage.removeItem('calendarFormData');
-        sessionStorage.removeItem('returningFromCalendarPreview');
-      }
-    } else if (storedFormData) {
-      // Clean up old stored data if not returning from preview
-      console.log('🧹 Cleaning up old form data (not from preview)');
-      localStorage.removeItem('calendarFormData');
-    }
-  }, []); // Run only on component mount
-
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
@@ -193,17 +147,31 @@ const CropCalendarForm = ({ isOpen, onClose, onSave }) => {
     setPreviewError(null);
 
     try {
-      // Parse the major season file with enhanced parser
+      // Parse the major season file
       const majorSeasonData = await calendarPreviewParser.parseCalendarForPreview(
         formData.majorSeason.file,
-        { region: formData.region, district: formData.district, crop: formData.crop }
+        {
+          region: formData.region,
+          district: formData.district,
+          crop: formData.crop,
+          season: 'Major',
+          startMonth: formData.majorSeason.startMonth,
+          startWeek: formData.majorSeason.startWeek
+        }
       );
 
       let minorSeasonData = null;
       if (formData.minorSeason.file) {
         minorSeasonData = await calendarPreviewParser.parseCalendarForPreview(
           formData.minorSeason.file,
-          { region: formData.region, district: formData.district, crop: formData.crop }
+          {
+            region: formData.region,
+            district: formData.district,
+            crop: formData.crop,
+            season: 'Minor',
+            startMonth: formData.minorSeason.startMonth,
+            startWeek: formData.minorSeason.startWeek
+          }
         );
       }
 
@@ -237,31 +205,6 @@ const CropCalendarForm = ({ isOpen, onClose, onSave }) => {
       if (preview) {
         // Store preview data in localStorage for the preview page
         localStorage.setItem('calendarPreviewData', JSON.stringify(preview.majorSeason));
-        
-        // PRESERVE FORM DATA: Store form data for when user returns from preview
-        const formDataForRestore = {
-          region: formData.region,
-          district: formData.district,
-          crop: formData.crop,
-          majorSeason: {
-            ...formData.majorSeason,
-            // Don't store File object, just metadata
-            fileName: formData.majorSeason.file?.name,
-            startMonth: formData.majorSeason.startMonth,
-            startWeek: formData.majorSeason.startWeek
-          },
-          minorSeason: {
-            ...formData.minorSeason,
-            // Don't store File object, just metadata  
-            fileName: formData.minorSeason.file?.name,
-            startMonth: formData.minorSeason.startMonth,
-            startWeek: formData.minorSeason.startWeek
-          }
-        };
-        localStorage.setItem('calendarFormData', JSON.stringify(formDataForRestore));
-        
-        // Set session flag to indicate we're going to preview
-        sessionStorage.setItem('returningFromCalendarPreview', 'true');
         
         // Navigate to the full-page preview
         navigate('/production/calendar-preview');
@@ -608,7 +551,115 @@ const CropCalendarForm = ({ isOpen, onClose, onSave }) => {
                   )}
                 </button>
               </div>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Enhanced Calendar Preview</h3>
+                <button
+                  onClick={() => setShowPreview(false)}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+                >
+                  Back to Edit
+                </button>
+              </div>
 
+              {/* Error Display */}
+              {previewError && (
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="text-red-700">{previewError}</div>
+                </div>
+              )}
+
+              {/* Major Season Calendar */}
+              {previewData?.majorSeason && (
+                <div className="mb-6">
+                  <h4 className="text-md font-semibold text-gray-800 mb-3 flex items-center">
+                    <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm mr-2">
+                      Major Season
+                    </span>
+                    {formData.majorSeason.startMonth && (
+                      <span className="text-sm text-gray-600">
+                        Starting: {formData.majorSeason.startMonth}
+                      </span>
+                    )}
+                  </h4>
+                  <CalendarPreviewTable 
+                    calendarData={previewData.majorSeason}
+                    loading={parsingPreview}
+                    error={previewError}
+                    showSummary={true}
+                    allowFullscreen={true}
+                  />
+                </div>
+              )}
+
+              {/* Minor Season Calendar */}
+              {previewData?.minorSeason && (
+                <div className="mb-6">
+                  <h4 className="text-md font-semibold text-gray-800 mb-3 flex items-center">
+                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm mr-2">
+                      Minor Season
+                    </span>
+                    {formData.minorSeason.startMonth && (
+                      <span className="text-sm text-gray-600">
+                        Starting: {formData.minorSeason.startMonth}
+                      </span>
+                    )}
+                  </h4>
+                  <CalendarPreviewTable 
+                    calendarData={previewData.minorSeason}
+                    loading={parsingPreview}
+                    error={previewError}
+                    showSummary={true}
+                    allowFullscreen={false}
+                  />
+                </div>
+              )}
+
+              {/* Combined Summary */}
+              {previewData?.metadata && (
+                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium text-gray-800 mb-2">Calendar Summary</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                      <div className="text-gray-600">Region</div>
+                      <div className="font-medium">{previewData.metadata.region}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-600">District</div>
+                      <div className="font-medium">{previewData.metadata.district}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-600">Crop</div>
+                      <div className="font-medium">{previewData.metadata.crop}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-600">Total Files</div>
+                      <div className="font-medium">{previewData.metadata.totalFiles}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={handleSave}
+                  className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <FaPlus className="mr-2" />
+                      Confirm & Save Calendar
+                    </>
+                  )}
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

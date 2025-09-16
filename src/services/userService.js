@@ -13,7 +13,7 @@ class UserService {
     });
 
     // Main server for agricultural data and AI services
-    this.dataBaseURL = 'http://localhost:3001';
+    this.dataBaseURL = 'http://localhost:3002';
     this.dataAPI = axios.create({
       baseURL: this.dataBaseURL,
       timeout: 15000,

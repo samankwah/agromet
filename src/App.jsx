@@ -326,6 +326,8 @@ import BlogNationalAssemblyVisit from "./blog/BlogNationalAssemblyVisit";
 import BlogSonForecast from "./blog/BlogSonForecast";
 import PoultryAdvisory from "./pages/PoultryAdvisory";
 import CropAdvisory from "./pages/CropAdvisory";
+import CalendarPreviewPage from "./pages/CalendarPreviewPage";
+import PoultryCalendarPreviewPage from "./pages/PoultryCalendarPreviewPage";
 import NotFound from "./components/NotFound";
 
 import OurServices from "./pages/OurServices";
@@ -359,6 +361,7 @@ import RootLayout from "./layouts/RootLayout";
 import AdminLayout from "./layouts/AdminLayout.jsx";
 import AdminLogin from "./pages/AdminLogin.jsx";
 import CreateCropCalendar from "./components/Dashboard/CreateCalendar.jsx";
+import CreatePoultryCalendarPage from "./pages/CreatePoultryCalendarPage.jsx";
 import MediaPage from "./pages/MediaPage.jsx";
 import AdminSignUp from "./pages/AdminSignUp.jsx";
 import CropDiagnosticTool from "./components/CropDiagnosticTool.jsx";
@@ -558,6 +561,7 @@ function App() {
         { path: "about", element: <About /> },
         { path: "weather", element: <Weather /> },
         { path: "crop-calendar", element: <CropCalendar /> },
+        { path: "calendar-preview", element: <CalendarPreviewPage /> },
         { path: "news", element: <NewsUpdates /> },
         { path: "7-days-forecast", element: <SevenDaysForecast /> },
         { path: "agro-bulletins", element: <AgroBulletins /> },
@@ -601,9 +605,16 @@ function App() {
       children: [{ index: true, element: <DashboardPage /> }],
     },
     { path: "/production/provisional", element: <CreateCropCalendar /> },
+    { path: "/production/calendar-preview", element: <CalendarPreviewPage /> },
+    { path: "/production/poultry-calendar-preview", element: <PoultryCalendarPreviewPage /> },
 
     { path: "/production/2024-minor", element: <CreateCropCalendar /> },
     { path: "/production/2025-major", element: <CreateCropCalendar /> },
+    
+    // Poultry Production Routes
+    { path: "/production/poultry/provisional", element: <CreatePoultryCalendarPage /> },
+    { path: "/production/poultry/current", element: <CreatePoultryCalendarPage /> },
+    { path: "/production/poultry/2025", element: <CreatePoultryCalendarPage /> },
   ], {
     future: {
       v7_startTransition: true,

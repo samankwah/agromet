@@ -9,6 +9,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import multer from 'multer';
 import XLSX from 'xlsx';
+import EnhancedCalendarParser from './services/enhancedCalendarParser.js';
 
 // ES6 module path resolution
 const __filename = fileURLToPath(import.meta.url);
@@ -18,7 +19,7 @@ const __dirname = path.dirname(__filename);
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3002;
 
 // JWT Secret (in production, use a secure random string from environment)
 const JWT_SECRET = process.env.JWT_SECRET || 'triagro-ai-secret-key-2025';
@@ -35,6 +36,9 @@ let agriculturalData = {
   'poultry-calendar': [],
   'poultry-advisory': []
 };
+
+// Initialize enhanced calendar parser
+const calendarParser = new EnhancedCalendarParser();
 
 // Ensure uploads directory exists
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -158,19 +162,31 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-// Middleware
+// Enhanced CORS configuration for proper preflight handling
 app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "http://localhost:5174",
+      "http://localhost:5174", 
+      "http://localhost:5175",
       "http://localhost:5178",
       "http://localhost:3000",
     ],
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: [
+      'Content-Type', 
+      'Authorization', 
+      'X-Requested-With',
+      'Accept',
+      'Origin'
+    ],
+    optionsSuccessStatus: 200, // For legacy browser support
+    preflightContinue: false
   })
 );
 app.use(express.json({ limit: "10mb" }));
+
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
@@ -186,23 +202,103 @@ app.get("/api/health", (req, res) => {
 // AGRICULTURAL DATA ENDPOINTS
 // =============================================================================
 
-// Upload agricultural data
-app.post('/api/agricultural-data/upload', authenticateToken, uploadMemory.single('file'), (req, res) => {
+// Enhanced agricultural calendar upload endpoint
+app.post('/api/agricultural-data/upload', authenticateToken, uploadMemory.single('file'), async (req, res) => {
   try {
     const { dataType } = req.body;
     const file = req.file;
     
-    console.log('Upload request received:', { dataType, hasFile: !!file });
+    console.log('Enhanced upload request received:', { dataType, hasFile: !!file });
     
     if (!dataType) {
       return res.status(400).json({ message: 'Data type is required' });
     }
     
-    if (!['crop-calendar', 'agromet-advisory', 'poultry-calendar', 'poultry-advisory'].includes(dataType)) {
+    if (!['crop-calendar', 'agromet-advisory', 'poultry-calendar', 'poultry-advisory', 'enhanced-calendar'].includes(dataType)) {
       return res.status(400).json({ message: 'Invalid data type' });
     }
+
+    // Handle enhanced calendar processing with dual-mode parser
+    if (dataType === 'enhanced-calendar' && file) {
+      const {
+        regionCode,
+        districtCode,
+        title,
+        description,
+        year
+      } = req.body;
+      
+      // Parse Excel file with enhanced calendar parser
+      const parseResult = await calendarParser.parseCalendarExcel(
+        file.buffer,
+        file.originalname,
+        {
+          region: regionCode,
+          district: districtCode,
+          year: year ? parseInt(year) : new Date().getFullYear()
+        }
+      );
+      
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          success: false,
+          message: 'Failed to parse calendar file',
+          error: parseResult.error 
+        });
+      }
+      
+      // Create enhanced calendar data structure
+      const enhancedCalendarData = {
+        id: Date.now().toString(),
+        uniqueId: `EC_${parseResult.commodity}_${regionCode}_${districtCode}_${Date.now()}`,
+        calendarType: parseResult.calendarType, // 'seasonal' or 'cycle'
+        commodity: parseResult.commodity,
+        regionCode,
+        districtCode,
+        title: title || parseResult.data.title,
+        description: description || '',
+        year: parseResult.data.metadata?.year || new Date().getFullYear(),
+        
+        // Calendar-specific data
+        timeline: parseResult.data.timeline,
+        activities: parseResult.data.activities,
+        schedule: parseResult.data.schedule,
+        
+        // Seasonal calendar specific
+        season: parseResult.data.season || null,
+        startMonth: parseResult.data.timeline?.startMonth || null,
+        endMonth: parseResult.data.timeline?.endMonth || null,
+        totalWeeks: parseResult.data.timeline?.totalWeeks || 0,
+        
+        // Cycle calendar specific
+        cycleDuration: parseResult.data.cycleDuration || null,
+        breedType: parseResult.data.metadata?.breedType || null,
+        flexibleStart: parseResult.data.timeline?.flexibleStart || false,
+        
+        // Metadata
+        parseMetadata: parseResult.metadata,
+        uploadDate: new Date().toISOString(),
+        userId: req.user.userId
+      };
+      
+      // Store in appropriate category based on calendar type
+      const storageKey = parseResult.calendarType === 'seasonal' ? 'crop-calendar' : 'poultry-calendar';
+      agriculturalData[storageKey].push(enhancedCalendarData);
+      saveDataToFile();
+      
+      console.log(`Enhanced ${parseResult.calendarType} calendar saved:`, enhancedCalendarData.id);
+      
+      return res.json({
+        success: true,
+        data: enhancedCalendarData,
+        message: `Enhanced ${parseResult.calendarType} calendar uploaded successfully`,
+        calendarType: parseResult.calendarType,
+        commodity: parseResult.commodity,
+        activities: parseResult.data.activities?.length || 0
+      });
+    }
     
-    // Handle different upload types
+    // Handle legacy upload types
     if (dataType === 'crop-calendar') {
       // Handle crop calendar form data
       const {
@@ -317,7 +413,206 @@ app.post('/api/agricultural-data/upload', authenticateToken, uploadMemory.single
   }
 });
 
-// Get agricultural data (public access)
+// Enhanced calendar query endpoint
+app.get('/api/enhanced-calendars', (req, res) => {
+  try {
+    const { 
+      calendarType, 
+      commodity, 
+      regionCode, 
+      districtCode, 
+      season, 
+      year, 
+      breedType, 
+      limit = 50 
+    } = req.query;
+    
+    console.log('Enhanced calendar query:', { calendarType, commodity, regionCode, districtCode });
+    
+    // Combine seasonal (crop-calendar) and cycle (poultry-calendar) data
+    let allCalendars = [];
+    
+    if (!calendarType || calendarType === 'seasonal') {
+      const seasonalCalendars = agriculturalData['crop-calendar']
+        .filter(item => item.calendarType === 'seasonal' || !item.calendarType)
+        .map(item => ({ ...item, calendarType: item.calendarType || 'seasonal' }));
+      allCalendars.push(...seasonalCalendars);
+    }
+    
+    if (!calendarType || calendarType === 'cycle') {
+      const cycleCalendars = agriculturalData['poultry-calendar']
+        .filter(item => item.calendarType === 'cycle' || !item.calendarType)
+        .map(item => ({ ...item, calendarType: item.calendarType || 'cycle' }));
+      allCalendars.push(...cycleCalendars);
+    }
+    
+    // Apply filters
+    let filteredCalendars = allCalendars;
+    
+    if (commodity) {
+      filteredCalendars = filteredCalendars.filter(item => 
+        item.commodity && item.commodity.toLowerCase().includes(commodity.toLowerCase())
+      );
+    }
+    
+    if (regionCode) {
+      filteredCalendars = filteredCalendars.filter(item => item.regionCode === regionCode);
+    }
+    
+    if (districtCode) {
+      filteredCalendars = filteredCalendars.filter(item => item.districtCode === districtCode);
+    }
+    
+    if (season) {
+      filteredCalendars = filteredCalendars.filter(item => 
+        item.season && item.season.toLowerCase() === season.toLowerCase()
+      );
+    }
+    
+    if (year) {
+      filteredCalendars = filteredCalendars.filter(item => item.year === parseInt(year));
+    }
+    
+    if (breedType) {
+      filteredCalendars = filteredCalendars.filter(item => 
+        item.breedType && item.breedType.toLowerCase().includes(breedType.toLowerCase())
+      );
+    }
+    
+    // Sort by upload date (newest first)
+    filteredCalendars.sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate));
+    
+    // Apply limit
+    const limitedResults = filteredCalendars.slice(0, parseInt(limit));
+    
+    console.log(`Returning ${limitedResults.length} enhanced calendar records`);
+    
+    res.json({
+      success: true,
+      data: limitedResults,
+      total: filteredCalendars.length,
+      filters: { calendarType, commodity, regionCode, districtCode, season, year, breedType },
+      summary: {
+        seasonal: filteredCalendars.filter(c => c.calendarType === 'seasonal').length,
+        cycle: filteredCalendars.filter(c => c.calendarType === 'cycle').length
+      }
+    });
+    
+  } catch (error) {
+    console.error('Enhanced calendar query error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error retrieving enhanced calendars',
+      error: error.message 
+    });
+  }
+});
+
+// Get specific calendar with activities
+app.get('/api/enhanced-calendars/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { includeActivities = true } = req.query;
+    
+    // Search in both crop and poultry calendars
+    let calendar = agriculturalData['crop-calendar'].find(item => item.id === id) ||
+                  agriculturalData['poultry-calendar'].find(item => item.id === id);
+    
+    if (!calendar) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Calendar not found' 
+      });
+    }
+    
+    // Optionally exclude activities for performance
+    if (includeActivities === 'false') {
+      const { activities, schedule, ...calendarWithoutActivities } = calendar;
+      calendar = calendarWithoutActivities;
+    }
+    
+    res.json({
+      success: true,
+      data: calendar
+    });
+    
+  } catch (error) {
+    console.error('Get calendar error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error retrieving calendar',
+      error: error.message 
+    });
+  }
+});
+
+// Get calendar activities for a specific production cycle
+app.get('/api/enhanced-calendars/:id/activities', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { currentWeek, startWeek, endWeek } = req.query;
+    
+    // Find calendar in both data stores
+    let calendar = agriculturalData['crop-calendar'].find(item => item.id === id) ||
+                  agriculturalData['poultry-calendar'].find(item => item.id === id);
+    
+    if (!calendar) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Calendar not found' 
+      });
+    }
+    
+    let activities = calendar.activities || [];
+    let schedule = calendar.schedule || [];
+    
+    // Filter activities by week range for cycle calendars
+    if (calendar.calendarType === 'cycle' && (currentWeek || startWeek || endWeek)) {
+      const weekNum = parseInt(currentWeek);
+      const startWeekNum = parseInt(startWeek);
+      const endWeekNum = parseInt(endWeek);
+      
+      if (weekNum) {
+        // Get activities for specific week
+        schedule = schedule.filter(item => 
+          item.periods && item.periods.some(period => 
+            period.productionWeek === weekNum
+          )
+        );
+      } else if (startWeekNum && endWeekNum) {
+        // Get activities for week range
+        schedule = schedule.filter(item => 
+          item.periods && item.periods.some(period => 
+            period.productionWeek >= startWeekNum && period.productionWeek <= endWeekNum
+          )
+        );
+      }
+    }
+    
+    res.json({
+      success: true,
+      data: {
+        calendarId: calendar.id,
+        calendarType: calendar.calendarType,
+        commodity: calendar.commodity,
+        activities: activities,
+        schedule: schedule,
+        timeline: calendar.timeline
+      },
+      filters: { currentWeek, startWeek, endWeek }
+    });
+    
+  } catch (error) {
+    console.error('Get activities error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error retrieving activities',
+      error: error.message 
+    });
+  }
+});
+
+// Get agricultural data (public access) - Legacy endpoint
 app.get('/api/agricultural-data/:dataType', (req, res) => {
   try {
     const { dataType } = req.params;
@@ -377,7 +672,303 @@ app.get('/api/agricultural-data/:dataType', (req, res) => {
   }
 });
 
-// Delete agricultural data
+// Production cycle management for poultry
+app.post('/api/production-cycles', authenticateToken, (req, res) => {
+  try {
+    const {
+      calendarId,
+      startDate,
+      batchName,
+      initialQuantity,
+      notes
+    } = req.body;
+    
+    if (!calendarId || !startDate) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Calendar ID and start date are required' 
+      });
+    }
+    
+    // Find the calendar template
+    const calendar = agriculturalData['poultry-calendar'].find(item => item.id === calendarId);
+    if (!calendar) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Calendar template not found' 
+      });
+    }
+    
+    if (calendar.calendarType !== 'cycle') {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Calendar must be cycle type for production cycles' 
+      });
+    }
+    
+    const productionCycle = {
+      id: Date.now().toString(),
+      calendarId: calendarId,
+      userId: req.user.userId,
+      
+      // Cycle tracking
+      startDate: new Date(startDate).toISOString().split('T')[0],
+      currentWeek: 1,
+      status: 'active',
+      
+      // Calculate expected end date
+      expectedEndDate: new Date(
+        new Date(startDate).getTime() + (calendar.cycleDuration || 8) * 7 * 24 * 60 * 60 * 1000
+      ).toISOString().split('T')[0],
+      totalDurationWeeks: calendar.cycleDuration || 8,
+      
+      // Production data
+      batchName: batchName || `${calendar.commodity} Batch ${Date.now()}`,
+      initialQuantity: parseInt(initialQuantity) || 100,
+      currentQuantity: parseInt(initialQuantity) || 100,
+      
+      // Progress tracking
+      completedActivities: [],
+      notes: notes || '',
+      
+      // Calendar reference data
+      commodity: calendar.commodity,
+      breedType: calendar.breedType,
+      regionCode: calendar.regionCode,
+      districtCode: calendar.districtCode,
+      
+      // Timestamps
+      createdDate: new Date().toISOString(),
+      updatedDate: new Date().toISOString()
+    };
+    
+    // Initialize user production cycles storage if not exists
+    if (!agriculturalData['user-production-cycles']) {
+      agriculturalData['user-production-cycles'] = [];
+    }
+    
+    agriculturalData['user-production-cycles'].push(productionCycle);
+    saveDataToFile();
+    
+    console.log('Production cycle created:', productionCycle.id);
+    
+    res.json({
+      success: true,
+      data: productionCycle,
+      message: 'Production cycle created successfully'
+    });
+    
+  } catch (error) {
+    console.error('Create production cycle error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error creating production cycle',
+      error: error.message 
+    });
+  }
+});
+
+// Get user production cycles
+app.get('/api/production-cycles', authenticateToken, (req, res) => {
+  try {
+    const { status, commodity, limit = 20 } = req.query;
+    const userId = req.user.userId;
+    
+    if (!agriculturalData['user-production-cycles']) {
+      agriculturalData['user-production-cycles'] = [];
+    }
+    
+    let cycles = agriculturalData['user-production-cycles']
+      .filter(cycle => cycle.userId === userId);
+    
+    // Apply filters
+    if (status) {
+      cycles = cycles.filter(cycle => cycle.status === status);
+    }
+    
+    if (commodity) {
+      cycles = cycles.filter(cycle => 
+        cycle.commodity && cycle.commodity.toLowerCase().includes(commodity.toLowerCase())
+      );
+    }
+    
+    // Calculate current week for each cycle
+    cycles = cycles.map(cycle => {
+      const startDate = new Date(cycle.startDate);
+      const currentDate = new Date();
+      const daysElapsed = Math.floor((currentDate - startDate) / (1000 * 60 * 60 * 24));
+      const calculatedWeek = Math.floor(daysElapsed / 7) + 1;
+      
+      return {
+        ...cycle,
+        currentWeek: Math.max(1, calculatedWeek),
+        daysElapsed,
+        progressPercent: Math.min(100, (calculatedWeek / cycle.totalDurationWeeks) * 100)
+      };
+    });
+    
+    // Sort by creation date (newest first)
+    cycles.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
+    
+    // Apply limit
+    const limitedCycles = cycles.slice(0, parseInt(limit));
+    
+    res.json({
+      success: true,
+      data: limitedCycles,
+      total: cycles.length,
+      summary: {
+        active: cycles.filter(c => c.status === 'active').length,
+        completed: cycles.filter(c => c.status === 'completed').length,
+        paused: cycles.filter(c => c.status === 'paused').length
+      }
+    });
+    
+  } catch (error) {
+    console.error('Get production cycles error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error retrieving production cycles',
+      error: error.message 
+    });
+  }
+});
+
+// Update production cycle
+app.put('/api/production-cycles/:id', authenticateToken, (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, currentQuantity, notes, completedActivities } = req.body;
+    const userId = req.user.userId;
+    
+    if (!agriculturalData['user-production-cycles']) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Production cycle not found' 
+      });
+    }
+    
+    const cycleIndex = agriculturalData['user-production-cycles']
+      .findIndex(cycle => cycle.id === id && cycle.userId === userId);
+    
+    if (cycleIndex === -1) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Production cycle not found' 
+      });
+    }
+    
+    const cycle = agriculturalData['user-production-cycles'][cycleIndex];
+    
+    // Update fields
+    if (status) cycle.status = status;
+    if (currentQuantity !== undefined) cycle.currentQuantity = parseInt(currentQuantity);
+    if (notes !== undefined) cycle.notes = notes;
+    if (completedActivities) cycle.completedActivities = completedActivities;
+    
+    // Set actual end date if completing
+    if (status === 'completed' && !cycle.actualEndDate) {
+      cycle.actualEndDate = new Date().toISOString().split('T')[0];
+    }
+    
+    cycle.updatedDate = new Date().toISOString();
+    
+    agriculturalData['user-production-cycles'][cycleIndex] = cycle;
+    saveDataToFile();
+    
+    console.log('Production cycle updated:', id);
+    
+    res.json({
+      success: true,
+      data: cycle,
+      message: 'Production cycle updated successfully'
+    });
+    
+  } catch (error) {
+    console.error('Update production cycle error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error updating production cycle',
+      error: error.message 
+    });
+  }
+});
+
+// Get current week activities for a production cycle
+app.get('/api/production-cycles/:id/current-activities', authenticateToken, (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.userId;
+    
+    if (!agriculturalData['user-production-cycles']) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Production cycle not found' 
+      });
+    }
+    
+    const cycle = agriculturalData['user-production-cycles']
+      .find(cycle => cycle.id === id && cycle.userId === userId);
+    
+    if (!cycle) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Production cycle not found' 
+      });
+    }
+    
+    // Find the calendar template
+    const calendar = agriculturalData['poultry-calendar'].find(item => item.id === cycle.calendarId);
+    if (!calendar) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Calendar template not found' 
+      });
+    }
+    
+    // Calculate current week
+    const startDate = new Date(cycle.startDate);
+    const currentDate = new Date();
+    const daysElapsed = Math.floor((currentDate - startDate) / (1000 * 60 * 60 * 24));
+    const currentWeek = Math.floor(daysElapsed / 7) + 1;
+    
+    // Get activities for current week
+    const currentActivities = calendar.schedule?.filter(item => 
+      item.periods && item.periods.some(period => 
+        period.productionWeek === currentWeek
+      )
+    ) || [];
+    
+    res.json({
+      success: true,
+      data: {
+        cycleId: cycle.id,
+        currentWeek: currentWeek,
+        daysElapsed: daysElapsed,
+        totalWeeks: cycle.totalDurationWeeks,
+        progressPercent: Math.min(100, (currentWeek / cycle.totalWeeks) * 100),
+        activities: currentActivities,
+        completedActivities: cycle.completedActivities || [],
+        cycle: {
+          batchName: cycle.batchName,
+          commodity: cycle.commodity,
+          currentQuantity: cycle.currentQuantity,
+          status: cycle.status
+        }
+      }
+    });
+    
+  } catch (error) {
+    console.error('Get current activities error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error retrieving current activities',
+      error: error.message 
+    });
+  }
+});
+
+// Delete agricultural data - Legacy endpoint
 app.delete('/api/agricultural-data/:dataType/:id', authenticateToken, (req, res) => {
   try {
     const { dataType, id } = req.params;
@@ -1619,11 +2210,20 @@ app.listen(PORT, () => {
   console.log(`📋 Get Data: http://localhost:${PORT}/api/agricultural-data/{dataType}`);
   console.log(`🗑️ Delete Data: http://localhost:${PORT}/api/agricultural-data/{dataType}/{id}`);
   console.log(`📁 Data stored in: ${dataFilePath}`);
+  console.log(`
+🌾 Enhanced Agricultural Calendar System:`); 
+  console.log(`📊 Enhanced Calendars: http://localhost:${PORT}/api/enhanced-calendars`);
+  console.log(`📋 Calendar Details: http://localhost:${PORT}/api/enhanced-calendars/{id}`);
+  console.log(`🗓️  Calendar Activities: http://localhost:${PORT}/api/enhanced-calendars/{id}/activities`);
+  console.log(`🐔 Production Cycles: http://localhost:${PORT}/api/production-cycles`);
+  console.log(`📈 Current Activities: http://localhost:${PORT}/api/production-cycles/{id}/current-activities`);
+  console.log(`📤 Enhanced Upload: http://localhost:${PORT}/api/agricultural-data/upload (dataType: enhanced-calendar)`);
   console.log(`🌾 Current data counts:`, {
     'crop-calendar': agriculturalData['crop-calendar'].length,
     'agromet-advisory': agriculturalData['agromet-advisory'].length,
     'poultry-calendar': agriculturalData['poultry-calendar'].length,
-    'poultry-advisory': agriculturalData['poultry-advisory'].length
+    'poultry-advisory': agriculturalData['poultry-advisory'].length,
+    'user-production-cycles': agriculturalData['user-production-cycles']?.length || 0
   });
 });
 
