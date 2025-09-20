@@ -45,6 +45,7 @@ const CropCalendarForm = ({ isOpen, onClose, onSave }) => {
   const [districtData, setDistrictData] = useState({ districts: [], meta: {} });
   const [loading, setLoading] = useState(false);
   const [previewData, setPreviewData] = useState(null);
+  const [showPreview, setShowPreview] = useState(false);
   const [errors, setErrors] = useState({});
   const [parsingPreview, setParsingPreview] = useState(false);
   const [previewError, setPreviewError] = useState(null);

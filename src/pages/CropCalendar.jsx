@@ -2,7 +2,13 @@ import { useState, useEffect } from "react";
 import { districtOfGhana } from "../districts";
 import { FaDownload, FaShareAlt, FaSpinner } from "react-icons/fa";
 import agriculturalDataService from '../services/agriculturalDataService';
+import dynamicCalendarManager from '../services/dynamicCalendarManager';
 import PageTitle from '../components/PageTitle';
+import { InlineOfflineWarning } from '../components/common/OfflineNotification';
+import SmartCalendarRenderer from '../components/common/SmartCalendarRenderer';
+import { getSafeDistrictsByRegion } from '../utils/regionDistrictHelpers';
+import { SafeDistrictOptions } from '../components/common/SafeSelectOptions';
+import { getAllRegionNames } from '../data/ghanaCodes';
 
 // DownloadButton Component
 const DownloadButton = ({ onDownload }) => {
@@ -82,461 +88,12 @@ const ShareButton = ({ onShare }) => {
   );
 };
 
-// Maize farming activities (default for Major Season: February to October)
-const maizeActivities = [
-  {
-    activity: "Site Selection",
-    start: "January",
-    end: "January",
-    color: "bg-[#00B0F0]",
-    advisory:
-      "Clear your arable site purchase certified seed \nfrom registered input dealers. \nUse recommended maize varieties \nsuch as Abontem for short-duration \ngrowth (80-90 days) or Obaatampa \nfor long-duration growth (105-120 days).",
-  },
-  {
-    activity: "Land Preparation",
-    start: "February",
-    end: "February",
-    color: "bg-[#BF9000]",
-    advisory:
-      "Plow the land to aerate the soil. \nUse minimum tillage, and ensure \nthe land is clear from debris. \nSpot burning may be used to clear \norganic matter. \nPrepare the land before the rains.",
-  },
-  {
-    activity: "Planting / Sowing",
-    start: "March",
-    end: "March",
-    color: "bg-[#000000]",
-    advisory:
-      "Plant seeds at the \nrecommended depth and \nspacing for optimal growth.",
-  },
-  {
-    activity: "1st Fertilizer Application",
-    start: "April",
-    end: "April",
-    color: "bg-[#FFFF00]",
-    advisory:
-      "Apply NPK 20:10:10 at \nthe rate of 2 bags per acre, \n14 days after planting. \nEnsure the field is moist \nbefore application. \nUse side placement at 3-5 cm \naway from the plant. \nBroadcast evenly for healthy growth.",
-  },
-  {
-    activity: "1st Weeding & control of fall army worm",
-    start: "April",
-    end: "April",
-    color: "bg-[#FF0000]",
-    advisory:
-      "Control weeds early, using \nmanual weeding or recommended \nselective herbicides. \nApply herbicides such as \nNico or Nomini Rice Pro. \nWeeding should be done \nwithin 3 weeks after planting \nto avoid crop competition.",
-  },
-  {
-    activity: "2nd Fertilizer Application (Urea&SOA)",
-    start: "May",
-    end: "May",
-    color: "bg-[#FFFF00]",
-    advisory:
-      "Apply NPK 20:10:10 at \nthe rate of 2 bags per acre, \n14 days after planting. \nEnsure the field is moist \nbefore application. \nUse side placement at 3-5 cm \naway from the plant. \nBroadcast evenly for healthy growth.",
-  },
-  {
-    activity: "2nd Weeding & Pest Control",
-    start: "May",
-    end: "May",
-    color: "bg-[#FF0000]",
-    advisory:
-      "Control weeds early, using \nmanual weeding or recommended \nselective herbicides. \nApply herbicides such as \nNico or Nomini Rice Pro. \nWeeding should be done \nwithin 3 weeks after planting \nto avoid crop competition. Apply pesticides to control \nFall Armyworm and other pests early. \nCommon pests like Fall Armyworm \ncan be controlled using pesticides \nsuch as Warrior, Super Viper, \nor Bypel Attack. \nApply early in the morning or \nlate in the evening for best results.",
-  },
-  {
-    activity: "Harvesting",
-    start: "July",
-    end: "July",
-    color: "bg-[#008000]",
-    advisory:
-      "Harvest when the maize is mature, \nand store in well-ventilated areas. \nHarvesting should be done early \nwhen the maize silk turns dry and brown. \nStore in hermetic bags to avoid \npest attacks during storage.",
-  },
-  {
-    activity: "Post harvest handling",
-    start: "August",
-    end: "August",
-    color: "bg-[#993366]",
-    advisory:
-      "Utilize drip irrigation for \nbetter moisture retention. \nGiven the urban nature of Greater Accra, \nconsider efficient irrigation systems \nto manage water use effectively.",
-  },
-];
+// All hardcoded activities removed - now using dynamic calendar manager
 
-// Rice farming activities (default for Major Season: February to October)
-const riceActivities = [
-  {
-    activity: "Site Selection",
-    start: "February",
-    end: "February",
-    color: "bg-[#00B0F0]",
-    advisory:
-      "Choose a well-drained site with access to irrigation or rainfall. \nSelect certified rice varieties such as Jasmine or Nerica for optimal yield. \nEnsure the land is suitable for paddy cultivation.",
-  },
-  {
-    activity: "Land Preparation",
-    start: "March",
-    end: "March",
-    color: "bg-[#BF9000]",
-    advisory:
-      "Plow and level the land to create a smooth seedbed. \nFlood the field with water for puddling if practicing lowland rice farming. \nRemove weeds and debris before planting.",
-  },
-  {
-    activity: "Seed selection and treatment",
-    start: "March",
-    end: "March",
-    color: "bg-[#808080]",
-    advisory:
-      "Select high-quality seeds with good germination rates. \nTreat seeds with fungicides to prevent seed-borne diseases. \nSoak seeds in water for 24 hours before sowing.",
-  },
-  {
-    activity: "Nursery Sowing",
-    start: "April",
-    end: "April",
-    color: "bg-[#800080]",
-    advisory:
-      "Sow seeds in a prepared nursery bed. \nMaintain adequate moisture and protect from pests. \nEnsure proper spacing to avoid overcrowding.",
-  },
-  {
-    activity: "Transplanting",
-    start: "April",
-    end: "April",
-    color: "bg-[#000000]",
-    advisory:
-      "Transplant seedlings 21-30 days old into the prepared field. \nMaintain a spacing of 20x20 cm for optimal growth. \nEnsure adequate water levels during planting.",
-  },
-  {
-    activity: "1st Weed management",
-    start: "May",
-    end: "May",
-    color: "bg-[#FF0000]",
-    advisory:
-      "Control weeds manually or with selective herbicides like Nominee Gold. \nWeed within 3 weeks of transplanting to reduce competition. \nMaintain water levels to suppress weed growth.",
-  },
-  {
-    activity: "2nd Weed management",
-    start: "June",
-    end: "June",
-    color: "bg-[#FF0000]",
-    advisory:
-      "Perform a second weeding to reduce competition. \nApply herbicides if necessary. \nMaintain water levels to minimize weed growth.",
-  },
-  {
-    activity: "1st Fertilizer Application",
-    start: "May",
-    end: "May",
-    color: "bg-[#FFFF00]",
-    advisory:
-      "Apply NPK 15:15:15 at the rate of 2 bags per acre, 10-14 days after transplanting. \nApply in a broadcast method over the flooded field. \nEnsure water is present to aid nutrient uptake.",
-  },
-  {
-    activity: "2nd Fertilizer Application",
-    start: "June",
-    end: "June",
-    color: "bg-[#FFFF00]",
-    advisory:
-      "Apply urea at the rate of 1 bag per acre, 30-35 days after transplanting. \nSpread evenly over the flooded field. \nEnsure water management to prevent nutrient loss.",
-  },
-  {
-    activity: "3rd Fertilizer Application",
-    start: "July",
-    end: "July",
-    color: "bg-[#FF00FF]",
-    advisory:
-      "Apply a top dressing of urea at the rate of 1 bag per acre. \nApply during the panicle initiation stage. \nEnsure even distribution for uniform growth.",
-  },
-  {
-    activity: "Booting",
-    start: "July",
-    end: "July",
-    color: "bg-[#FF00FF]",
-    advisory:
-      "Monitor the crop for the booting stage. \nEnsure adequate water supply to support grain development. \nProtect the crop from pests and diseases.",
-  },
-  {
-    activity: "Ripening",
-    start: "August",
-    end: "August",
-    color: "bg-[#FF00FF]",
-    advisory:
-      "Reduce water levels as the crop reaches the ripening stage. \nMonitor for pests like birds that may damage the grains. \nPrepare for harvest as grains mature.",
-  },
-  {
-    activity: "Harvesting",
-    start: "September",
-    end: "September",
-    color: "bg-[#008000]",
-    advisory:
-      "Harvest when 80-85% of grains are straw-colored. \nUse a sickle or combine harvester. \nDry the paddy to 12-14% moisture content before storage.",
-  },
-  {
-    activity: "Post-harvest Handling",
-    start: "October",
-    end: "October",
-    color: "bg-[#993366]",
-    advisory:
-      "Thresh and clean the rice promptly to avoid quality loss. \nStore in airtight containers or silos to protect from pests. \nConsider milling within a week of drying.",
-  },
-];
+// Hardcoded activity arrays removed - now using dynamic calendar manager
 
-// Sorghum farming activities (default for Major Season: February to October)
-const sorghumActivities = [
-  {
-    activity: "Site Selection",
-    start: "February",
-    end: "February",
-    color: "bg-[#00B0F0]",
-    advisory:
-      "Select a site with well-drained sandy loam soil. \nChoose drought-tolerant sorghum varieties like Kapaala or Dorado. \nEnsure the site has good sunlight exposure.",
-  },
-  {
-    activity: "Land Preparation",
-    start: "March",
-    end: "March",
-    color: "bg-[#BF9000]",
-    advisory:
-      "Plow and harrow the land to create a fine seedbed. \nRemove weeds and debris. \nIncorporate organic matter to improve soil fertility.",
-  },
-  {
-    activity: "Planting / Sowing",
-    start: "April",
-    end: "April",
-    color: "bg-[#000000]",
-    advisory:
-      "Sow seeds at a depth of 2-3 cm with a spacing of 60x20 cm. \nPlant at the onset of rains for rainfed systems. \nEnsure good seed-to-soil contact.",
-  },
-  {
-    activity: "1st Fertilizer Application",
-    start: "May",
-    end: "May",
-    color: "bg-[#FFFF00]",
-    advisory:
-      "Apply NPK 15:15:15 at the rate of 2 bags per acre, 2-3 weeks after planting. \nUse a side placement method near the plant base. \nEnsure the soil is moist for better uptake.",
-  },
-  {
-    activity: "1st Weeding & Pest Control",
-    start: "May",
-    end: "May",
-    color: "bg-[#FF0000]",
-    advisory:
-      "Weed manually or use selective herbicides. \nMonitor for pests like shoot fly and apply insecticides if needed. \nWeed within 3 weeks of planting to reduce competition.",
-  },
-  {
-    activity: "2nd Fertilizer Application (Urea)",
-    start: "June",
-    end: "June",
-    color: "bg-[#FFFF00]",
-    advisory:
-      "Apply urea at the rate of 1 bag per acre, 5-6 weeks after planting. \nBroadcast evenly around the plants. \nEnsure adequate moisture for nutrient absorption.",
-  },
-  {
-    activity: "2nd Weeding & Disease Control",
-    start: "June",
-    end: "June",
-    color: "bg-[#FF0000]",
-    advisory:
-      "Perform a second weeding to control late-emerging weeds. \nMonitor for diseases like anthracnose and apply fungicides if necessary. \nMaintain crop health through proper spacing.",
-  },
-  {
-    activity: "Harvesting",
-    start: "August",
-    end: "August",
-    color: "bg-[#008000]",
-    advisory:
-      "Harvest when grains are hard and dry (about 20% moisture). \nCut the heads with a sickle and dry them under shade. \nThresh and clean the grains before storage.",
-  },
-  {
-    activity: "Post-harvest Handling",
-    start: "September",
-    end: "September",
-    color: "bg-[#993366]",
-    advisory:
-      "Dry the grains to 12-14% moisture content to prevent mold. \nStore in airtight containers to protect from pests. \nUse treated storage bags to reduce insect damage.",
-  },
-];
-
-// Tomato farming activities (default for Major Season: April to August)
-const tomatoActivities = [
-  {
-    activity: "Site selection",
-    start: "April",
-    end: "April",
-    color: "bg-[#00B0F0]",
-    advisory:
-      "Choose a sunny, well-drained site with loamy soil. \nTest soil pH (ideal 6.0-6.8). \nAvoid fields with a history of tomato diseases.",
-  },
-  {
-    activity: "land preparation",
-    start: "April",
-    end: "April",
-    color: "bg-[#BF9000]",
-    advisory:
-      "Plow and harrow the land to a fine tilth. \nIncorporate organic manure or compost. \nPrepare raised beds for better drainage.",
-  },
-  {
-    activity: "germination test",
-    start: "April",
-    end: "April",
-    color: "bg-[#FF7F00]",
-    advisory:
-      "Test seed germination by placing 100 seeds in a moist cloth. \nCheck germination rate after 5-7 days. \nUse seeds with at least 80% germination rate.",
-  },
-  {
-    activity: "nursery",
-    start: "April",
-    end: "April",
-    color: "bg-[#808080]",
-    advisory:
-      "Prepare a nursery bed with fine soil. \nSow seeds thinly and cover lightly with soil. \nWater regularly and protect from direct sunlight.",
-  },
-  {
-    activity: "transplanting",
-    start: "May",
-    end: "May",
-    color: "bg-[#000000]",
-    advisory:
-      "Transplant seedlings 4-6 weeks old to the main field. \nSpace plants 60x45 cm apart. \nWater immediately after transplanting.",
-  },
-  {
-    activity: "addition of starter solution",
-    start: "May",
-    end: "May",
-    color: "bg-[#87CEEB]",
-    advisory:
-      "Apply a starter solution of NPK 10:20:10 to boost early growth. \nMix with water and apply around the plant base. \nAvoid over-application to prevent root burn.",
-  },
-  {
-    activity: "pest and disease management",
-    start: "May",
-    end: "July",
-    color: "bg-[#FF0000]",
-    advisory:
-      "Monitor for pests like aphids and diseases like blight. \nApply insecticides and fungicides as needed. \nUse integrated pest management practices.",
-  },
-  {
-    activity: "1st fertilizer application (NPK)",
-    start: "May",
-    end: "May",
-    color: "bg-[#FFFF00]",
-    advisory:
-      "Apply NPK 15:15:15 at the rate of 1 bag per acre, 2 weeks after transplanting. \nApply in a ring around the plant. \nWater after application to aid uptake.",
-  },
-  {
-    activity: "earthing-up/staking/trellising/pruning",
-    start: "June",
-    end: "June",
-    color: "bg-[#87CEEB]",
-    advisory:
-      "Earth up soil around the plant base to support roots. \nStake or trellis plants to prevent lodging. \nPrune suckers to improve air circulation.",
-  },
-  {
-    activity: "2nd fertilizer application (NPK)",
-    start: "June",
-    end: "June",
-    color: "bg-[#FFFF00]",
-    advisory:
-      "Apply NPK 15:15:15 at the rate of 1 bag per acre during flowering. \nApply in a ring around the plant. \nWater after application to aid uptake.",
-  },
-  {
-    activity: "harvesting",
-    start: "August",
-    end: "August",
-    color: "bg-[#008000]",
-    advisory:
-      "Harvest when fruits are firm and fully colored. \nPick fruits early in the morning to maintain freshness. \nHandle gently to avoid bruising.",
-  },
-  {
-    activity: "post-harvest",
-    start: "August",
-    end: "August",
-    color: "bg-[#993366]",
-    advisory:
-      "Sort and grade tomatoes for market. \nStore in a cool, shaded place to extend shelf life. \nPack in ventilated crates for transport.",
-  },
-];
-
-// Soybean farming activities (default for Major Season: February to September)
-const soybeanActivities = [
-  {
-    activity: "Site Selection",
-    start: "February",
-    end: "February",
-    color: "bg-[#00B0F0]",
-    advisory:
-      "Select a site with well-drained loam or sandy loam soil. \nChoose soybean varieties like Jenguma or Anidaso suited to your region. \nEnsure good sunlight and avoid waterlogged areas.",
-  },
-  {
-    activity: "Land Preparation",
-    start: "March",
-    end: "March",
-    color: "bg-[#BF9000]",
-    advisory:
-      "Plow and harrow the land to a fine tilth. \nIncorporate organic matter or lime if soil is acidic. \nRemove weeds and ensure proper drainage.",
-  },
-  {
-    activity: "Planting / Sowing",
-    start: "April",
-    end: "April",
-    color: "bg-[#000000]",
-    advisory:
-      "Sow seeds at a depth of 3-5 cm with a spacing of 50x10 cm. \nInoculate seeds with Rhizobium bacteria for nitrogen fixation. \nPlant at the onset of the rainy season.",
-  },
-  {
-    activity: "1st Fertilizer Application",
-    start: "May",
-    end: "May",
-    color: "bg-[#FFFF00]",
-    advisory:
-      "Apply phosphorus-based fertilizer (e.g., SSP) at 50 kg/ha, 2-3 weeks after planting. \nAvoid excess nitrogen to encourage nodulation. \nApply near the plant base and water lightly.",
-  },
-  {
-    activity: "1st Weeding & Pest Control",
-    start: "May",
-    end: "May",
-    color: "bg-[#FF0000]",
-    advisory:
-      "Weed manually or use pre-emergence herbicides like Pendimethalin. \nMonitor for pests like pod borers and apply insecticides if needed. \nWeed within 3 weeks of planting.",
-  },
-  {
-    activity: "2nd Weeding & Disease Control",
-    start: "June",
-    end: "June",
-    color: "bg-[#FF0000]",
-    advisory:
-      "Perform a second weeding to control late weeds. \nWatch for diseases like soybean rust and apply fungicides if detected. \nMaintain plant health with proper spacing.",
-  },
-  {
-    activity: "Harvesting",
-    start: "August",
-    end: "August",
-    color: "bg-[#008000]",
-    advisory:
-      "Harvest when pods turn yellow-brown and seeds are hard (about 14% moisture). \nCut plants and dry them in the field. \nThresh and clean seeds promptly.",
-  },
-  {
-    activity: "Post-harvest Handling",
-    start: "September",
-    end: "September",
-    color: "bg-[#993366]",
-    advisory:
-      "Dry seeds to 12% moisture content to prevent mold. \nStore in airtight containers or silos to protect from pests. \nUse fumigation if storing for long periods.",
-  },
-];
-
-// Regions of Ghana
-const regionsOfGhana = [
-  "Greater Accra",
-  "Ashanti",
-  "Northern",
-  "Eastern",
-  "Western",
-  "Volta",
-  "Upper East",
-  "Upper West",
-  "Central",
-  "Bono",
-  "Western North",
-  "Ahafo",
-  "Savannah",
-  "Oti Region",
-  "Bono East",
-  "North East",
-];
+// Get regions dynamically from ghanaCodes to ensure consistency
+const regionsOfGhana = getAllRegionNames();
 
 // List of crops for the slider
 const cropsForSlider = ["Maize", "Rice", "Sorghum", "Tomato", "Soybean"];
@@ -651,41 +208,6 @@ const adjustActivitiesForSeason = (baseActivities, season) => {
   });
 };
 
-// Function to generate region-specific activity times based on climate (offsetting activity months)
-const generateRegionActivities = (baseActivities, offset) => {
-  const regions = {};
-
-  const months = [
-    { month: "January", monthNo: 1 },
-    { month: "February", monthNo: 2 },
-    { month: "March", monthNo: 3 },
-    { month: "April", monthNo: 4 },
-    { month: "May", monthNo: 5 },
-    { month: "June", monthNo: 6 },
-    { month: "July", monthNo: 7 },
-    { month: "August", monthNo: 8 },
-    { month: "September", monthNo: 9 },
-    { month: "October", monthNo: 10 },
-    { month: "November", monthNo: 11 },
-    { month: "December", monthNo: 12 },
-  ];
-
-  const adjustMonth = (monthName, offset) => {
-    const monthIndex = months.findIndex((m) => m?.month === monthName);
-    const adjustedIndex = (monthIndex + offset + 12) % 12;
-    return months[adjustedIndex]?.month;
-  };
-
-  regionsOfGhana.forEach((region) => {
-    regions[region] = baseActivities.map((activity) => ({
-      ...activity,
-      start: adjustMonth(activity.start, offset),
-      end: adjustMonth(activity.end, offset),
-    }));
-  });
-
-  return regions;
-};
 
 const CropCalendar = () => {
   const [selectedCrop, setSelectedCrop] = useState("all");
@@ -696,6 +218,7 @@ const CropCalendar = () => {
   const [farmingActivities, setFarmingActivities] = useState([]); // Default state for activities
   const [loading, setLoading] = useState(false); // Loading state for filtering
   const [initialLoad, setInitialLoad] = useState(true); // Track if initial load
+  const [districtData, setDistrictData] = useState({ districts: [], meta: {} }); // Safe district data
   const [hoveredActivity, setHoveredActivity] = useState(null); // To track the hovered activity
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 }); // Track position of the tooltip
   const [currentSlide, setCurrentSlide] = useState(0); // State for the slider
@@ -708,6 +231,7 @@ const CropCalendar = () => {
   const [isUsingDynamicData, setIsUsingDynamicData] = useState(false);
   const [apiStats, setApiStats] = useState(null);
   const [regionDistrictMapping, setRegionDistrictMapping] = useState({});
+  const [calendarMetadata, setCalendarMetadata] = useState({});
 
   // Get the selected year and season details
   const selectedOption = yearSeasonOptions.find(
@@ -721,6 +245,21 @@ const CropCalendar = () => {
     const weeks = generateWeeks(selectedSeason);
     setWeeksData(weeks);
   }, [selectedSeason]);
+
+  // Initialize dynamic calendar manager on component mount
+  useEffect(() => {
+    const initializeCalendarManager = async () => {
+      try {
+        // Excel-only calendar system - no template initialization needed
+        console.log('📄 Excel-only calendar system - no template initialization');
+        console.log('✅ Dynamic Calendar Manager initialized successfully');
+      } catch (error) {
+        console.error('❌ Failed to initialize Dynamic Calendar Manager:', error);
+      }
+    };
+
+    initializeCalendarManager();
+  }, []); // Run once on mount
 
   // Load dynamic data from backend on component mount
   useEffect(() => {
@@ -820,6 +359,31 @@ const CropCalendar = () => {
     }
   }, [selectedCrop, selectedDistrict, selectedSeason, selectedYear, isUsingDynamicData]);
 
+  // Load districts safely when region changes
+  useEffect(() => {
+    if (selectedRegion && selectedRegion !== "All Regions") {
+      try {
+        const result = getSafeDistrictsByRegion(selectedRegion, {
+          preferNewData: true,
+          excelDataOnly: true,
+          enableCaching: true
+        });
+
+        setDistrictData(result);
+
+        // Log any data source issues in development
+        if (process.env.NODE_ENV === 'development' && result.meta.hasErrors) {
+          console.warn('District data has errors:', result.meta);
+        }
+      } catch (error) {
+        console.error('Error loading districts for region:', selectedRegion, error);
+        setDistrictData({ districts: [], meta: { error: error.message } });
+      }
+    } else {
+      setDistrictData({ districts: [], meta: {} });
+    }
+  }, [selectedRegion]);
+
   // Function to transform backend crop calendar data to activity format
   const transformBackendDataToActivities = (cropCalendarData) => {
     const activities = [];
@@ -869,8 +433,8 @@ const CropCalendar = () => {
   }, []);
 
   useEffect(() => {
-    const updateFarmingActivities = () => {
-      // When using dynamic data mode, only show uploaded data - no hardcoded fallback
+    const updateFarmingActivities = async () => {
+      // Excel-only calendar system - only show uploaded Excel data
       if (isUsingDynamicData) {
         setFarmingActivities(dynamicData); // Will be empty if no match, showing "no data" message
         return;
@@ -880,20 +444,76 @@ const CropCalendar = () => {
 
       let baseActivities = [];
       let adjustedActivities = [];
-      let regionCalendars = {};
-      let offset = 0;
 
-      // Determine the base activities based on the selected crop
-      if (selectedCrop === "maize" || selectedCrop === "all") {
-        baseActivities = maizeActivities;
-      } else if (selectedCrop === "rice") {
-        baseActivities = riceActivities;
-      } else if (selectedCrop === "sorghum") {
-        baseActivities = sorghumActivities;
-      } else if (selectedCrop === "tomato") {
-        baseActivities = tomatoActivities;
-      } else if (selectedCrop === "soybean") {
-        baseActivities = soybeanActivities;
+      // Get dynamic calendar data based on the selected crop and location
+      try {
+        console.log(`🔍 Fetching dynamic calendar data for crop: ${selectedCrop}, region: ${selectedRegion}, district: ${selectedDistrict}`);
+
+        const filters = {
+          commodity: selectedCrop === "all" ? "maize" : selectedCrop, // Default to maize for "all"
+          regionCode: selectedRegion !== "All Regions" ? selectedRegion : undefined,
+          districtCode: selectedDistrict !== "All Districts" ? selectedDistrict : undefined,
+          season: selectedSeason
+        };
+
+        // Excel-only mode - only show uploaded calendar data
+        const options = {
+          strictMode: isUsingDynamicData
+        };
+
+        const calendarResult = await dynamicCalendarManager.getCalendarData(filters, options);
+
+        if (calendarResult.success && calendarResult.data.length > 0) {
+          console.log(`✅ Using ${calendarResult.metadata.source || 'unknown'} calendar data (priority: ${calendarResult.metadata.dataSourcePriority || 0})`);
+          baseActivities = calendarResult.data;
+
+          // Map metadata field names for compatibility
+          const mappedMetadata = {
+            ...calendarResult.metadata,
+            dataSourceUsed: calendarResult.metadata.dataSourceUsed || calendarResult.metadata.source,
+            priority: calendarResult.metadata.priority || calendarResult.metadata.dataSourcePriority,
+            hasUploadedData: (calendarResult.metadata.dataSourceUsed || calendarResult.metadata.source) === 'uploaded'
+          };
+          setCalendarMetadata(mappedMetadata);
+        } else {
+          // Handle strict mode "no data" vs general "no data"
+          const isStrictModeNoData = calendarResult.metadata && calendarResult.metadata.strictMode;
+
+          if (isStrictModeNoData) {
+            console.log('🚫 Strict mode: No uploaded/computed data found for filters');
+            baseActivities = [];
+            setCalendarMetadata({
+              dataSourceUsed: 'no-data',
+              priority: 0,
+              hasUploadedData: false,
+              strictMode: true,
+              message: calendarResult.message || 'No Excel calendar data uploaded for selected filters',
+              queryTime: new Date().toISOString()
+            });
+          } else {
+            console.log('⚠️ No calendar data found, using empty activities');
+            baseActivities = [];
+            setCalendarMetadata({
+              dataSourceUsed: 'no-data',
+              priority: 0,
+              hasUploadedData: false,
+              strictMode: false,
+              message: 'No Excel calendar data available for this selection',
+              queryTime: new Date().toISOString()
+            });
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error fetching dynamic calendar data:', error);
+        baseActivities = [];
+        setCalendarMetadata({
+          dataSourceUsed: 'no-data',
+          priority: 0,
+          hasUploadedData: false,
+          strictMode: isUsingDynamicData,
+          queryTime: new Date().toISOString(),
+          error: error.message
+        });
       }
 
       // Adjust activities for the selected season
@@ -902,67 +522,13 @@ const CropCalendar = () => {
         selectedSeason
       );
 
-      // Determine offset based on region or district
-      if (selectedDistrict !== "All Districts") {
-        const district = districtOfGhana.find(
-          (d) => d.name === selectedDistrict
-        );
-        if (district) {
-          const climateOffsets = {
-            "Greater Accra": 2,
-            Ashanti: 0,
-            Northern: 3,
-            Eastern: 2,
-            Western: 3,
-            Volta: 2,
-            "Upper East": 4,
-            "Upper West": 4,
-            Central: 2,
-            Bono: 3,
-            "Western North": 2,
-            Ahafo: 2,
-            Savannah: 4,
-            Oti: 2,
-            "Bono East": 3,
-            "North East": 4,
-          };
-          offset = climateOffsets[district.region] || 0;
-        }
-      } else if (selectedRegion !== "All Regions") {
-        const climateOffsets = {
-          "Greater Accra": 1,
-          Ashanti: 1,
-          Northern: 2,
-          Eastern: 1,
-          Western: 1,
-          Volta: 1,
-          "Upper East": 2,
-          "Upper West": 2,
-          Central: 1,
-          Bono: 2,
-          "Western North": 1,
-          Ahafo: 1,
-          Savannah: 1,
-          Oti: 1,
-          "Bono East": 2,
-          "North East": 1,
-        };
-        offset = climateOffsets[selectedRegion] || 0;
-      }
-
-      // Generate region-specific activities with the determined offset
-      regionCalendars = generateRegionActivities(adjustedActivities, offset);
+      // Excel-only calendar system - no climate offset calculations
 
       if (initialLoad) {
         setFarmingActivities(adjustedActivities); // Default to adjusted activities on initial load
         setInitialLoad(false);
-      } else if (
-        selectedRegion === "All Regions" &&
-        selectedDistrict === "All Districts"
-      ) {
-        setFarmingActivities(adjustedActivities);
       } else {
-        setFarmingActivities(regionCalendars[selectedRegion] || []);
+        setFarmingActivities(adjustedActivities); // Always use Excel data without climate adjustments
       }
 
       console.log(
@@ -972,7 +538,7 @@ const CropCalendar = () => {
       setLoading(false);
     };
 
-    updateFarmingActivities();
+    updateFarmingActivities().catch(console.error);
   }, [
     selectedCrop,
     selectedRegion,
@@ -1002,6 +568,7 @@ const CropCalendar = () => {
   const handleYearSeasonChange = (e) => {
     setSelectedYearSeason(e.target.value);
   };
+
 
   const handleMouseEnter = (activity, e) => {
     setHoveredActivity(activity);
@@ -1068,6 +635,10 @@ const CropCalendar = () => {
       <PageTitle title="Crop Calendar" />
       <div className="bg-gradient-to-br from-blue-50 to-gray-200 min-h-screen p-0 lg:pt-20 pt-14">
       <div className="container mx-auto bg-white rounded-lg shadow-lg p-6">
+        <InlineOfflineWarning
+          message="Calendar data may be limited while server is offline"
+          className="mb-6"
+        />
         <div className="flex flex-col md:flex-row justify-between items-center my-6 mb-10 gap-4">
           <div>
             <h1 className="text-gray-800 text-3xl font-bold text-center md:text-left">
@@ -1186,23 +757,23 @@ const CropCalendar = () => {
               value={selectedDistrict}
               onChange={handleDistrictChange}
               className="border border-gray-300 rounded p-2 w-full"
+              disabled={selectedRegion === "All Regions"}
             >
               <option value="All Districts">All Districts</option>
-              {/* Always show ALL districts for selected region from static data */}
-              {districtOfGhana
-                .filter(
-                  (d) =>
-                    d.region === selectedRegion ||
-                    selectedRegion === "All Regions"
-                )
-                .map((district, index) => (
-                  <option key={index} value={district.name}>
-                    {district.name}
-                  </option>
-                ))}
+              <SafeDistrictOptions
+                districts={districtData.districts}
+                placeholder=""
+                includeEmpty={false}
+              />
             </select>
+            {districtData.meta.hasErrors && (
+              <p className="text-orange-500 text-xs mt-1">
+📄 No uploaded data available
+              </p>
+            )}
           </div>
         </div>
+
 
         {/* Loading state */}
         {loading && (
@@ -1213,129 +784,79 @@ const CropCalendar = () => {
         )}
         
         {/* Data source indicator */}
-        {!loading && (
+        {!loading && farmingActivities.length > 0 && (
           <div className="mb-4 text-sm text-gray-600">
-            {isUsingDynamicData ? (
+            {calendarMetadata.dataSourceUsed === 'uploaded' ? (
               <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                 <span className="font-medium text-green-800">📊 Displaying data from uploaded Excel/CSV files</span>
                 <div className="mt-1 text-xs text-green-600">
                   {farmingActivities.length} activities found for current filters
                 </div>
               </div>
-            ) : (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <span className="font-medium text-blue-800">📚 Displaying default crop calendar templates</span>
-                <div className="mt-1 text-xs text-blue-600">
-                  Upload Excel/CSV files through the dashboard to see dynamic data
+            ) : calendarMetadata.dataSourceUsed === 'computed' ? (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <span className="font-medium text-yellow-800">⚡ Displaying computed calendar data</span>
+                <div className="mt-1 text-xs text-yellow-600">
+                  Generated based on climate and regional data
                 </div>
               </div>
-            )}
+            ) : calendarMetadata.dataSourceUsed === 'no-data' ? (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                <span className="font-medium text-gray-800">📄 No calendar data available for this selection</span>
+                <div className="mt-1 text-xs text-gray-600">
+                  Upload Excel/CSV files through the dashboard to see calendar data
+                </div>
+              </div>
+            ) : null}
           </div>
         )}
         
         {/* No data message */}
-        {!loading && isUsingDynamicData && farmingActivities.length === 0 && (
+        {!loading && farmingActivities.length === 0 && (
           <div className="text-center py-8">
-            <div className="text-gray-500 text-lg mb-2">No crop calendar data found</div>
-            <p className="text-gray-400">Try adjusting your filters or upload crop calendar data through the dashboard.</p>
+            {isUsingDynamicData && calendarMetadata.strictMode ? (
+              // Strict mode: No uploaded data for specific filters
+              <div>
+                <div className="text-gray-500 text-lg mb-2">📂 No uploaded data found</div>
+                <p className="text-gray-400 mb-3">
+                  {calendarMetadata.message || "No uploaded calendar data matches your current filter selection."}
+                </p>
+                <p className="text-sm text-blue-600">
+                  Try adjusting your filters or upload calendar data for this crop/region combination.
+                </p>
+              </div>
+            ) : (
+              // General no data message
+              <div>
+                <div className="text-gray-500 text-lg mb-2">No crop calendar data found</div>
+                <p className="text-gray-400">Try adjusting your filters or upload crop calendar data through the dashboard.</p>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Calendar Table */}
-        <div className="overflow-x-auto">
-          <table className="min-w-max border-collapse border border-gray-300">
-            <thead>
-              {/* Row 1: Months */}
-              <tr className="bg-gray-200">
-                <th
-                  className="border border-gray-300 p-2 text-left left-0 bg-gray-200 z-20"
-                  rowSpan="2"
-                >
-                  Stage of Activity
-                </th>
-                {Array.from(
-                  {
-                    length:
-                      selectedSeason === "Major"
-                        ? 9 // February to October (9 months)
-                        : 4, // September to December (4 months)
-                  },
-                  (_, i) => {
-                    const monthIndex =
-                      selectedSeason === "Major" ? i + 1 : i + 8; // Start from February (1) or September (8)
-                    const month = new Date(0, monthIndex).toLocaleString(
-                      "default",
-                      { month: "long" }
-                    );
-                    const weeksInMonth = weeksData.filter(
-                      (week) => week?.month === month
-                    );
-                    return (
-                      <th
-                        key={i}
-                        className="border border-gray-300 p-2"
-                        colSpan={weeksInMonth.length}
-                      >
-                        {month}
-                      </th>
-                    );
-                  }
-                )}
-              </tr>
-              {/* Row 2: Weeks and Dates */}
-              <tr className="bg-gray-100">
-                {weeksData.map((week, index) => (
-                  <th
-                    key={index}
-                    className="border border-gray-300 p-0 text-justify text-xs"
-                  >
-                    <div>{week.week}</div>
-                    <div>{week.dateRange}</div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {farmingActivities.map((activity, index) => (
-                <tr key={index}>
-                  <td className="border border-gray-300 p-3">
-                    {activity.activity}
-                  </td>
-                  {weeksData.map((week, weekIndex) => {
-                    const month = week?.month;
-                    const isActive =
-                      month >= activity.start && month <= activity.end;
-                    return (
-                      <td
-                        key={weekIndex}
-                        className={`border border-gray-300 p-2 ${
-                          isActive ? activity.color : ""
-                        }`}
-                        onMouseEnter={(e) => handleMouseEnter(activity, e)}
-                        onMouseLeave={handleMouseLeave}
-                      ></td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {/* Tooltip for crop advisory */}
-          {hoveredActivity && (
-            <div
-              className="absolute bg-gray-800 w-[220px] text-white text-sm p-2 rounded"
-              style={{
-                top: tooltipPosition.y + 10,
-                left: tooltipPosition.x + 10,
-              }}
-            >
-              <p className="font-semibold">{hoveredActivity.activity}</p>
-              <p>{`Start: ${hoveredActivity.start}`}</p>
-              <p>{`End: ${hoveredActivity.end}`}</p>
-              <p className="mt-2 text-white">{hoveredActivity.advisory}</p>
-            </div>
-          )}
-        </div>
+        {/* Smart Calendar Renderer */}
+        <SmartCalendarRenderer
+          activities={farmingActivities}
+          weeksData={weeksData}
+          metadata={{
+            ...calendarMetadata,
+            activitiesCount: farmingActivities.length,
+            selectedCrop,
+            selectedRegion,
+            selectedDistrict,
+            selectedSeason
+          }}
+          loading={loading}
+          error={calendarMetadata.error}
+          onActivityHover={handleMouseEnter}
+          onActivityLeave={handleMouseLeave}
+          onDownload={handleDownload}
+          viewMode="timeline"
+          showDataSourceIndicator={true}
+          showMetadata={true}
+          className="bg-white rounded-lg border border-gray-200"
+        />
       </div>
     </div>
     </>

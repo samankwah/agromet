@@ -3,7 +3,7 @@ import axios from 'axios';
 class UserService {
   constructor() {
     // Auth server for authentication and user management
-    this.authBaseURL = 'http://localhost:3002';
+    this.authBaseURL = 'http://localhost:3003';
     this.authAPI = axios.create({
       baseURL: this.authBaseURL,
       timeout: 15000,
@@ -13,7 +13,7 @@ class UserService {
     });
 
     // Main server for agricultural data and AI services
-    this.dataBaseURL = 'http://localhost:3002';
+    this.dataBaseURL = 'http://localhost:3003';
     this.dataAPI = axios.create({
       baseURL: this.dataBaseURL,
       timeout: 15000,
@@ -99,9 +99,14 @@ class UserService {
 
   async signIn(credentials) {
     try {
+      console.log('🔐 Attempting sign-in to:', this.authBaseURL + '/sign-in');
+      console.log('📧 Email:', credentials.email);
+
       const response = await this.api.post('/sign-in', credentials);
-      
+      console.log('✅ Sign-in response received:', response.status);
+
       if (response.data?.accessToken) {
+        console.log('🎟️ Access token received, storing auth data');
         this.setAuthData(response.data.accessToken, response.data.user);
         return {
           success: true,
@@ -109,12 +114,35 @@ class UserService {
           message: 'Login successful'
         };
       } else {
+        console.error('❌ No access token in response:', response.data);
         throw new Error('No access token received');
       }
     } catch (error) {
+      console.error('❌ Sign-in error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message,
+        url: error.config?.url
+      });
+
+      let errorMessage = 'Login failed';
+      if (error.response?.status === 401) {
+        errorMessage = 'Invalid email or password';
+      } else if (error.response?.status === 403) {
+        errorMessage = 'Account access denied';
+      } else if (error.response?.status >= 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (error.code === 'NETWORK_ERROR' || error.message.includes('Network Error')) {
+        errorMessage = 'Network connection failed. Please check your internet connection.';
+      } else {
+        errorMessage = error.response?.data?.message || error.message;
+      }
+
       return {
         success: false,
-        error: error.response?.data?.message || error.message
+        error: errorMessage,
+        statusCode: error.response?.status
       };
     }
   }
@@ -132,38 +160,70 @@ class UserService {
   // User profile methods
   async getUserProfile() {
     try {
-      // Since the backend might not have a dedicated profile endpoint,
-      // we'll check if user data exists in localStorage first
-      const user = this.getCurrentUser();
-      if (user) {
+      const token = this.getAuthToken();
+      console.log('👤 Getting user profile, token exists:', !!token);
+
+      if (!token) {
+        console.log('❌ No token found in localStorage');
         return {
-          success: true,
-          data: user
+          success: false,
+          error: 'No authentication token found'
         };
       }
-      
-      // If no local user data, try to fetch from server
-      // Note: This endpoint may not exist on the backend yet
+
+      // Try to fetch fresh profile from server
+      console.log('🌐 Fetching profile from server:', this.authBaseURL + '/user/profile');
       const response = await this.api.get('/user/profile');
+      console.log('✅ Profile fetched successfully:', response.status);
+
       return {
         success: true,
-        data: response.data
+        data: response.data.data || response.data
       };
     } catch (error) {
-      // If endpoint doesn't exist but we have a token, assume user is valid
-      const token = this.getAuthToken();
-      const user = this.getCurrentUser();
-      
-      if (token && user) {
+      console.error('❌ Get profile error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message
+      });
+
+      // Handle specific error cases
+      if (error.response?.status === 401) {
+        console.log('🔄 Token expired or invalid, clearing auth data');
+        this.clearAuthData();
         return {
-          success: true,
-          data: user
+          success: false,
+          error: 'Authentication expired. Please log in again.',
+          shouldRedirect: true
         };
       }
-      
+
+      if (error.response?.status === 403) {
+        console.log('🚫 Access forbidden');
+        return {
+          success: false,
+          error: 'Access denied'
+        };
+      }
+
+      // If server is unreachable but we have local user data, try to use it
+      const localUser = this.getCurrentUser();
+      const token = this.getAuthToken();
+
+      if (token && localUser && (error.code === 'NETWORK_ERROR' || error.response?.status >= 500)) {
+        console.log('🔌 Server unreachable, using cached user data');
+        return {
+          success: true,
+          data: localUser,
+          cached: true
+        };
+      }
+
       return {
         success: false,
-        error: error.response?.data?.message || error.message
+        error: error.response?.data?.message || error.message,
+        statusCode: error.response?.status
       };
     }
   }

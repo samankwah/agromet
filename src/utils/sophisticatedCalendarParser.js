@@ -429,47 +429,11 @@ class SophisticatedCalendarParser {
   }
 
   /**
-   * Get crop-specific activity templates
+   * Template generation disabled in Excel-only system
    */
   getCropSpecificActivities(crop) {
-    const cropTemplates = {
-      'maize': [
-        { name: 'Site Selection', schedule: [0, 1], color: '#8B4513' },
-        { name: 'Land preparation', schedule: [2, 3, 4, 5], color: '#FFA500' },
-        { name: 'Planting/sowing', schedule: [8, 9, 10, 11], color: '#FFFF00' },
-        { name: '1st fertilizer application', schedule: [12, 13], color: '#FF0000' },
-        { name: 'First weed management & Control of fall army worm', schedule: [14, 15], color: '#FF4500' },
-        { name: '2nd Fertilizer Application (Urea or SOA)', schedule: [16, 17, 18, 19], color: '#FF0000' },
-        { name: 'Second weed management & Pest and disease control', schedule: [20, 21, 22, 23], color: '#DC143C' },
-        { name: 'Harvesting', schedule: [24, 25, 26, 27], color: '#008000' },
-        { name: 'Post harvest handling', schedule: [26, 27], color: '#800080' }
-      ],
-      'rice': [
-        { name: 'Field Selection & Preparation', schedule: [0, 1, 2], color: '#8B4513' },
-        { name: 'Land preparation & Leveling', schedule: [3, 4, 5], color: '#FFA500' },
-        { name: 'Seed bed preparation & Sowing', schedule: [6, 7, 8, 9], color: '#FFFF00' },
-        { name: 'Transplanting', schedule: [10, 11], color: '#32CD32' },
-        { name: '1st Fertilizer application', schedule: [12, 13], color: '#FF0000' },
-        { name: 'Weed control & Water management', schedule: [14, 15, 16, 17], color: '#FF4500' },
-        { name: '2nd Fertilizer application', schedule: [18, 19], color: '#FF0000' },
-        { name: 'Pest & Disease management', schedule: [20, 21, 22, 23], color: '#DC143C' },
-        { name: 'Harvesting & Post-harvest', schedule: [24, 25, 26, 27], color: '#008000' }
-      ],
-      'cassava': [
-        { name: 'Site Selection', schedule: [0, 1], color: '#8B4513' },
-        { name: 'Land clearing & preparation', schedule: [2, 3, 4], color: '#FFA500' },
-        { name: 'Stem cutting preparation', schedule: [5, 6], color: '#FFD700' },
-        { name: 'Planting', schedule: [7, 8, 9], color: '#FFFF00' },
-        { name: 'First weeding', schedule: [12, 13], color: '#FF4500' },
-        { name: 'Second weeding & Earthing up', schedule: [16, 17], color: '#FF4500' },
-        { name: 'Pest & Disease control', schedule: [20, 21, 22, 23], color: '#DC143C' },
-        { name: 'Harvesting (Early)', schedule: [20, 21, 22, 23], color: '#008000' },
-        { name: 'Final Harvesting', schedule: [24, 25, 26, 27], color: '#008000' }
-      ]
-    };
-
-    // Return crop-specific template or default to maize
-    return cropTemplates[crop] || cropTemplates['maize'];
+    console.log('🚫 Crop-specific activity templates disabled in Excel-only system');
+    return []; // Return empty array - no templates
   }
 
   /**

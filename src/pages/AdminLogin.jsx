@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import hero from "../assets/images/signin.png";
 import googlelogo from "../assets/images/googlelogo.svg";
@@ -19,6 +19,12 @@ const AdminLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
+  // Clear any existing auth data when component mounts
+  useEffect(() => {
+    console.log('🔐 AdminLogin: Clearing any existing auth data');
+    userService.clearAuthData();
+  }, []);
 
   const handleChange = (e) => {
     const { id, value } = e.target;

@@ -167,8 +167,9 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "http://localhost:5174", 
+      "http://localhost:5174",
       "http://localhost:5175",
+      "http://localhost:5176",
       "http://localhost:5178",
       "http://localhost:3000",
     ],
@@ -416,57 +417,171 @@ app.post('/api/agricultural-data/upload', authenticateToken, uploadMemory.single
 // Enhanced calendar query endpoint
 app.get('/api/enhanced-calendars', (req, res) => {
   try {
-    const { 
-      calendarType, 
-      commodity, 
-      regionCode, 
-      districtCode, 
-      season, 
-      year, 
-      breedType, 
-      limit = 50 
+    const {
+      calendarType,
+      commodity,
+      regionCode,
+      districtCode,
+      season,
+      year,
+      breedType,
+      computed = false,
+      includeMetadata = true,
+      limit = 50,
+      // Advanced filtering parameters
+      search,
+      sortBy = 'uploadDate',
+      sortOrder = 'desc',
+      offset = 0,
+      dateFrom,
+      dateTo,
+      status,
+      tags,
+      createdBy,
+      hasActivities,
+      minActivities,
+      maxActivities
     } = req.query;
     
-    console.log('Enhanced calendar query:', { calendarType, commodity, regionCode, districtCode });
-    
+    console.log('🔍 Enhanced calendar query received:', { calendarType, commodity, regionCode, districtCode, season, year });
+
+    // Helper function to map region codes to names
+    const getRegionName = (codeOrName) => {
+      const regionMapping = {
+        'WR': 'Western Region',
+        'WNR': 'Western North Region',
+        'AR': 'Ashanti Region',
+        'CR': 'Central Region',
+        'ER': 'Eastern Region',
+        'GAR': 'Greater Accra Region',
+        'NR': 'Northern Region',
+        'NER': 'North East Region',
+        'UER': 'Upper East Region',
+        'UWR': 'Upper West Region',
+        'VR': 'Volta Region',
+        'OR': 'Oti Region',
+        'BR': 'Brong-Ahafo Region',
+        'SR': 'Savannah Region',
+        'BAR': 'Bono Ahafo Region'
+      };
+      return regionMapping[codeOrName] || codeOrName;
+    };
+
+    // Helper function to map district codes to names
+    const getDistrictName = (codeOrName) => {
+      const districtMapping = {
+        'ELLEMBELLE': 'Ellembelle',
+        'JOMORO': 'Jomoro',
+        'BIAKOYE': 'Biakoye'
+        // Add more mappings as needed
+      };
+      return districtMapping[codeOrName] || codeOrName;
+    };
+
+    // Convert codes to names for filtering
+    const regionName = regionCode ? getRegionName(regionCode) : null;
+    const districtName = districtCode ? getDistrictName(districtCode) : null;
+
+    console.log(`🔄 Code mapping: regionCode="${regionCode}" → regionName="${regionName}", districtCode="${districtCode}" → districtName="${districtName}"`);
+
     // Combine seasonal (crop-calendar) and cycle (poultry-calendar) data
     let allCalendars = [];
-    
+
     if (!calendarType || calendarType === 'seasonal') {
       const seasonalCalendars = agriculturalData['crop-calendar']
         .filter(item => item.calendarType === 'seasonal' || !item.calendarType)
         .map(item => ({ ...item, calendarType: item.calendarType || 'seasonal' }));
       allCalendars.push(...seasonalCalendars);
+      console.log(`📊 Loaded ${seasonalCalendars.length} seasonal calendars from crop-calendar`);
     }
-    
+
     if (!calendarType || calendarType === 'cycle') {
       const cycleCalendars = agriculturalData['poultry-calendar']
         .filter(item => item.calendarType === 'cycle' || !item.calendarType)
         .map(item => ({ ...item, calendarType: item.calendarType || 'cycle' }));
       allCalendars.push(...cycleCalendars);
+      console.log(`📊 Loaded ${cycleCalendars.length} cycle calendars from poultry-calendar`);
     }
-    
-    // Apply filters
+
+    console.log(`📚 Total calendars before filtering: ${allCalendars.length}`);
+
+    // Log sample data structure for debugging
+    if (allCalendars.length > 0) {
+      console.log('📋 Sample calendar data structure:');
+      allCalendars.slice(0, 3).forEach(item => {
+        console.log(`   📄 ID: ${item.id}, region: "${item.region}", regionCode: "${item.regionCode}", district: "${item.district}", districtCode: "${item.districtCode}", crop: "${item.crop}", commodity: "${item.commodity}"`);
+      });
+    }
+
+    // Apply filters with detailed logging
     let filteredCalendars = allCalendars;
     
     if (commodity) {
-      filteredCalendars = filteredCalendars.filter(item => 
-        item.commodity && item.commodity.toLowerCase().includes(commodity.toLowerCase())
-      );
+      const beforeCommodity = filteredCalendars.length;
+      filteredCalendars = filteredCalendars.filter(item => {
+        // Check both 'commodity' and 'crop' fields for compatibility
+        const commodityField = item.commodity || item.crop;
+        const matches = commodityField && commodityField.toLowerCase().includes(commodity.toLowerCase());
+        if (!matches) {
+          console.log(`❌ Commodity filter: "${commodityField}" does not match "${commodity}"`);
+        }
+        return matches;
+      });
+      console.log(`🌾 Commodity filter ("${commodity}"): ${beforeCommodity} → ${filteredCalendars.length} calendars`);
     }
-    
-    if (regionCode) {
-      filteredCalendars = filteredCalendars.filter(item => item.regionCode === regionCode);
+
+    if (regionCode || regionName) {
+      const beforeRegion = filteredCalendars.length;
+      const filterValue = regionName || regionCode;
+      console.log(`🗺️  Applying region filter: "${filterValue}" (original: "${regionCode}")`);
+      filteredCalendars = filteredCalendars.filter(item => {
+        // Check both 'regionCode' and 'region' fields for compatibility
+        const regionField = item.regionCode || item.region;
+        const matches = regionField === filterValue || regionField === regionCode;
+        console.log(`   📍 Calendar ${item.id}: regionField="${regionField}", matches=${matches}`);
+        return matches;
+      });
+      console.log(`🗺️  Region filter ("${filterValue}"): ${beforeRegion} → ${filteredCalendars.length} calendars`);
     }
-    
-    if (districtCode) {
-      filteredCalendars = filteredCalendars.filter(item => item.districtCode === districtCode);
+
+    if (districtCode || districtName) {
+      const beforeDistrict = filteredCalendars.length;
+      const filterValue = districtName || districtCode;
+      console.log(`🏘️  Applying district filter: "${filterValue}" (original: "${districtCode}")`);
+      filteredCalendars = filteredCalendars.filter(item => {
+        // Check both 'districtCode' and 'district' fields for compatibility
+        const districtField = item.districtCode || item.district;
+        const matches = districtField === filterValue || districtField === districtCode;
+        console.log(`   📍 Calendar ${item.id}: districtField="${districtField}", matches=${matches}`);
+        return matches;
+      });
+      console.log(`🏘️  District filter ("${filterValue}"): ${beforeDistrict} → ${filteredCalendars.length} calendars`);
     }
     
     if (season) {
-      filteredCalendars = filteredCalendars.filter(item => 
-        item.season && item.season.toLowerCase() === season.toLowerCase()
-      );
+      const beforeSeason = filteredCalendars.length;
+      console.log(`🗓️  Applying season filter: "${season}"`);
+      filteredCalendars = filteredCalendars.filter(item => {
+        // Check direct season field
+        if (item.season && item.season.toLowerCase() === season.toLowerCase()) {
+          return true;
+        }
+
+        // Check majorSeason/minorSeason structure for legacy data
+        if (season.toLowerCase() === 'major' && item.majorSeason && item.majorSeason.startMonth) {
+          console.log(`   ✅ Calendar ${item.id}: Has majorSeason data`);
+          return true;
+        }
+
+        if (season.toLowerCase() === 'minor' && item.minorSeason && item.minorSeason.startMonth) {
+          console.log(`   ✅ Calendar ${item.id}: Has minorSeason data`);
+          return true;
+        }
+
+        console.log(`   ❌ Calendar ${item.id}: No season match (season="${item.season}", majorSeason=${!!item.majorSeason?.startMonth}, minorSeason=${!!item.minorSeason?.startMonth})`);
+        return false;
+      });
+      console.log(`🗓️  Season filter ("${season}"): ${beforeSeason} → ${filteredCalendars.length} calendars`);
     }
     
     if (year) {
@@ -474,29 +589,196 @@ app.get('/api/enhanced-calendars', (req, res) => {
     }
     
     if (breedType) {
-      filteredCalendars = filteredCalendars.filter(item => 
+      filteredCalendars = filteredCalendars.filter(item =>
         item.breedType && item.breedType.toLowerCase().includes(breedType.toLowerCase())
       );
     }
-    
-    // Sort by upload date (newest first)
-    filteredCalendars.sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate));
-    
-    // Apply limit
-    const limitedResults = filteredCalendars.slice(0, parseInt(limit));
-    
+
+    // Advanced filtering parameters
+    if (search) {
+      const searchTerm = search.toLowerCase();
+      filteredCalendars = filteredCalendars.filter(item => {
+        const searchableFields = [
+          item.commodity,
+          item.crop,
+          item.title,
+          item.description,
+          item.regionCode,
+          item.districtCode,
+          item.breedType,
+          item.season
+        ].filter(Boolean);
+
+        return searchableFields.some(field =>
+          field.toLowerCase().includes(searchTerm)
+        ) || (item.activities && item.activities.some(activity =>
+          (activity.name && activity.name.toLowerCase().includes(searchTerm)) ||
+          (activity.description && activity.description.toLowerCase().includes(searchTerm))
+        ));
+      });
+    }
+
+    if (dateFrom || dateTo) {
+      filteredCalendars = filteredCalendars.filter(item => {
+        const uploadDate = new Date(item.uploadDate);
+        if (dateFrom && uploadDate < new Date(dateFrom)) return false;
+        if (dateTo && uploadDate > new Date(dateTo)) return false;
+        return true;
+      });
+    }
+
+    if (status) {
+      filteredCalendars = filteredCalendars.filter(item =>
+        item.status && item.status.toLowerCase() === status.toLowerCase()
+      );
+    }
+
+    if (tags) {
+      const tagList = tags.split(',').map(tag => tag.trim().toLowerCase());
+      filteredCalendars = filteredCalendars.filter(item => {
+        if (!item.tags) return false;
+        const itemTags = Array.isArray(item.tags) ? item.tags : item.tags.split(',');
+        return tagList.some(tag =>
+          itemTags.some(itemTag => itemTag.toLowerCase().includes(tag))
+        );
+      });
+    }
+
+    if (createdBy) {
+      filteredCalendars = filteredCalendars.filter(item =>
+        item.createdBy && item.createdBy.toLowerCase().includes(createdBy.toLowerCase())
+      );
+    }
+
+    if (hasActivities !== undefined) {
+      const hasActivitiesBool = hasActivities === 'true';
+      filteredCalendars = filteredCalendars.filter(item =>
+        hasActivitiesBool ? (item.activities && item.activities.length > 0) :
+                           (!item.activities || item.activities.length === 0)
+      );
+    }
+
+    if (minActivities) {
+      const min = parseInt(minActivities);
+      filteredCalendars = filteredCalendars.filter(item =>
+        item.activities && item.activities.length >= min
+      );
+    }
+
+    if (maxActivities) {
+      const max = parseInt(maxActivities);
+      filteredCalendars = filteredCalendars.filter(item =>
+        !item.activities || item.activities.length <= max
+      );
+    }
+
+    // Handle computed calendar request (mark results as computed)
+    if (computed === 'true') {
+      filteredCalendars = filteredCalendars.map(calendar => ({
+        ...calendar,
+        isComputed: true,
+        computedDate: new Date().toISOString(),
+        metadata: {
+          ...calendar.metadata,
+          source: 'computed',
+          computationMethod: 'uploaded_data_only'
+        }
+      }));
+    }
+
+    // Advanced sorting
+    const validSortFields = ['uploadDate', 'commodity', 'regionCode', 'districtCode', 'season', 'year', 'title'];
+    const sortField = validSortFields.includes(sortBy) ? sortBy : 'uploadDate';
+    const isDesc = sortOrder.toLowerCase() === 'desc';
+
+    filteredCalendars.sort((a, b) => {
+      let aVal = a[sortField] || '';
+      let bVal = b[sortField] || '';
+
+      // Handle date sorting
+      if (sortField === 'uploadDate') {
+        aVal = new Date(aVal);
+        bVal = new Date(bVal);
+      }
+
+      // Handle string sorting
+      if (typeof aVal === 'string') {
+        aVal = aVal.toLowerCase();
+        bVal = bVal.toLowerCase();
+      }
+
+      if (aVal < bVal) return isDesc ? 1 : -1;
+      if (aVal > bVal) return isDesc ? -1 : 1;
+      return 0;
+    });
+
+    // Apply pagination
+    const offsetNum = parseInt(offset) || 0;
+    const limitNum = parseInt(limit) || 50;
+    const limitedResults = filteredCalendars.slice(offsetNum, offsetNum + limitNum);
+
     console.log(`Returning ${limitedResults.length} enhanced calendar records`);
-    
-    res.json({
+
+    // Build response with enhanced metadata
+    const response = {
       success: true,
       data: limitedResults,
       total: filteredCalendars.length,
-      filters: { calendarType, commodity, regionCode, districtCode, season, year, breedType },
-      summary: {
-        seasonal: filteredCalendars.filter(c => c.calendarType === 'seasonal').length,
-        cycle: filteredCalendars.filter(c => c.calendarType === 'cycle').length
+      pagination: {
+        offset: offsetNum,
+        limit: limitNum,
+        total: filteredCalendars.length,
+        hasNext: (offsetNum + limitNum) < filteredCalendars.length,
+        hasPrev: offsetNum > 0,
+        totalPages: Math.ceil(filteredCalendars.length / limitNum),
+        currentPage: Math.floor(offsetNum / limitNum) + 1
+      },
+      filters: {
+        calendarType,
+        commodity,
+        regionCode,
+        districtCode,
+        season,
+        year,
+        breedType,
+        computed: computed === 'true',
+        search,
+        sortBy: sortField,
+        sortOrder,
+        dateFrom,
+        dateTo,
+        status,
+        tags,
+        createdBy,
+        hasActivities,
+        minActivities,
+        maxActivities
       }
-    });
+    };
+
+    // Add metadata if requested
+    if (includeMetadata === 'true' || includeMetadata === true) {
+      response.metadata = {
+        queryTimestamp: new Date().toISOString(),
+        dataSource: computed === 'true' ? 'computed' : 'uploaded',
+        summary: {
+          seasonal: filteredCalendars.filter(c => c.calendarType === 'seasonal').length,
+          cycle: filteredCalendars.filter(c => c.calendarType === 'cycle').length,
+          computed: filteredCalendars.filter(c => c.isComputed).length
+        },
+        availableRegions: [...new Set(filteredCalendars.map(c => c.regionCode).filter(Boolean))],
+        availableCommodities: [...new Set(filteredCalendars.map(c => c.commodity).filter(Boolean))]
+      };
+    }
+
+    console.log(`✅ Final result: ${filteredCalendars.length} calendars found`);
+    if (filteredCalendars.length > 0) {
+      console.log('📋 Returned calendar IDs:', filteredCalendars.map(c => c.id));
+    } else {
+      console.log('❌ No calendars match the filters');
+    }
+
+    res.json(response);
     
   } catch (error) {
     console.error('Enhanced calendar query error:', error);
@@ -504,6 +786,163 @@ app.get('/api/enhanced-calendars', (req, res) => {
       success: false,
       message: 'Error retrieving enhanced calendars',
       error: error.message 
+    });
+  }
+});
+
+// Enhanced metadata endpoint for filtering capabilities (must be before /:id route)
+app.get('/api/enhanced-calendars/metadata', (req, res) => {
+  try {
+    const { includeRegionMapping = true, includeDistrictMapping = true } = req.query;
+
+    const allCalendars = [
+      ...agriculturalData['crop-calendar'],
+      ...agriculturalData['poultry-calendar']
+    ];
+
+    // Extract unique values from uploaded calendars
+    const uploadedRegions = [...new Set(allCalendars.map(c => c.regionCode).filter(Boolean))];
+    const uploadedDistricts = [...new Set(allCalendars.map(c => c.districtCode).filter(Boolean))];
+    const uploadedCommodities = [...new Set(allCalendars.map(c => c.commodity).filter(Boolean))];
+
+    // Standard Ghana regions and districts (from Ghana administrative structure)
+    const standardRegions = [
+      { code: 'Greater Accra Region', name: 'Greater Accra Region' },
+      { code: 'Ashanti Region', name: 'Ashanti Region' },
+      { code: 'Western Region', name: 'Western Region' },
+      { code: 'Central Region', name: 'Central Region' },
+      { code: 'Eastern Region', name: 'Eastern Region' },
+      { code: 'Volta Region', name: 'Volta Region' },
+      { code: 'Northern Region', name: 'Northern Region' },
+      { code: 'Upper East Region', name: 'Upper East Region' },
+      { code: 'Upper West Region', name: 'Upper West Region' },
+      { code: 'Brong Ahafo Region', name: 'Brong Ahafo Region' },
+      { code: 'Western North Region', name: 'Western North Region' },
+      { code: 'Ahafo Region', name: 'Ahafo Region' },
+      { code: 'Bono Region', name: 'Bono Region' },
+      { code: 'Bono East Region', name: 'Bono East Region' },
+      { code: 'Oti Region', name: 'Oti Region' },
+      { code: 'North East Region', name: 'North East Region' },
+      { code: 'Savannah Region', name: 'Savannah Region' }
+    ];
+
+    // Standard commodities supported by the system
+    const standardCommodities = [
+      'maize', 'rice', 'sorghum', 'millet', 'cassava', 'yam', 'plantain', 'cocoyam',
+      'tomato', 'pepper', 'onion', 'okra', 'garden egg', 'cabbage', 'lettuce',
+      'soybean', 'groundnut', 'cowpea', 'bambara beans',
+      'cocoa', 'coffee', 'oil palm', 'coconut', 'rubber',
+      'broiler chicken', 'layer chicken', 'guinea fowl', 'duck', 'turkey',
+      'cattle', 'goat', 'sheep', 'pig', 'rabbit',
+      'tilapia', 'catfish', 'grasscutter'
+    ];
+
+    // Helper function to get districts by region
+    const getDistrictsByRegion = (calendars) => {
+      const districtsByRegion = {};
+      calendars.forEach(calendar => {
+        if (calendar.regionCode && calendar.districtCode) {
+          if (!districtsByRegion[calendar.regionCode]) {
+            districtsByRegion[calendar.regionCode] = [];
+          }
+          if (!districtsByRegion[calendar.regionCode].includes(calendar.districtCode)) {
+            districtsByRegion[calendar.regionCode].push(calendar.districtCode);
+          }
+        }
+      });
+      return districtsByRegion;
+    };
+
+    const metadata = {
+      totalCalendars: allCalendars.length,
+      dataStatus: {
+        hasUploadedData: allCalendars.length > 0,
+        uploadedCalendars: allCalendars.length,
+        lastUpload: allCalendars.length > 0 ?
+          new Date(Math.max(...allCalendars.map(c => new Date(c.uploadDate || 0).getTime()))).toISOString() : null
+      },
+      availableFilters: {
+        calendarTypes: [...new Set(allCalendars.map(c => c.calendarType).filter(Boolean))],
+        commodities: {
+          uploaded: uploadedCommodities.sort(),
+          standard: standardCommodities.sort(),
+          all: [...new Set([...uploadedCommodities, ...standardCommodities])].sort()
+        },
+        regions: {
+          uploaded: uploadedRegions.sort(),
+          standard: standardRegions.map(r => r.code).sort(),
+          all: [...new Set([...uploadedRegions, ...standardRegions.map(r => r.code)])].sort(),
+          mapping: includeRegionMapping === 'true' ? standardRegions : []
+        },
+        districts: {
+          uploaded: uploadedDistricts.sort(),
+          all: uploadedDistricts.sort(),
+          byRegion: includeDistrictMapping === 'true' ? getDistrictsByRegion(allCalendars) : {}
+        },
+        seasons: [...new Set(allCalendars.map(c => c.season).filter(Boolean))],
+        years: [...new Set(allCalendars.map(c => c.year).filter(Boolean))].sort(),
+        breedTypes: [...new Set(allCalendars.map(c => c.breedType).filter(Boolean))]
+      },
+      statistics: {
+        byCommodity: {},
+        byRegion: {},
+        byDistrict: {},
+        byCalendarType: {},
+        byYear: {},
+        coverage: {
+          regionsWithData: uploadedRegions.length,
+          totalRegions: standardRegions.length,
+          coveragePercentage: uploadedRegions.length > 0 ?
+            Math.round((uploadedRegions.length / standardRegions.length) * 100) : 0
+        }
+      }
+    };
+
+    // Generate enhanced statistics
+    allCalendars.forEach(calendar => {
+      // Commodity stats
+      if (calendar.commodity) {
+        metadata.statistics.byCommodity[calendar.commodity] =
+          (metadata.statistics.byCommodity[calendar.commodity] || 0) + 1;
+      }
+
+      // Region stats
+      if (calendar.regionCode) {
+        metadata.statistics.byRegion[calendar.regionCode] =
+          (metadata.statistics.byRegion[calendar.regionCode] || 0) + 1;
+      }
+
+      // District stats
+      if (calendar.districtCode) {
+        metadata.statistics.byDistrict[calendar.districtCode] =
+          (metadata.statistics.byDistrict[calendar.districtCode] || 0) + 1;
+      }
+
+      // Calendar type stats
+      if (calendar.calendarType) {
+        metadata.statistics.byCalendarType[calendar.calendarType] =
+          (metadata.statistics.byCalendarType[calendar.calendarType] || 0) + 1;
+      }
+
+      // Year stats
+      if (calendar.year) {
+        metadata.statistics.byYear[calendar.year] =
+          (metadata.statistics.byYear[calendar.year] || 0) + 1;
+      }
+    });
+
+    res.json({
+      success: true,
+      data: metadata,
+      generatedAt: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Metadata generation error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error generating metadata',
+      error: error.message
     });
   }
 });
@@ -2194,6 +2633,412 @@ process.on('SIGINT', () => {
   process.exit(0);
 });
 
+
+// ========================================================================
+// CALENDAR VERSIONING SYSTEM
+// ========================================================================
+
+// Get calendar versions
+app.get('/api/enhanced-calendars/:id/versions', authenticateToken, (req, res) => {
+  try {
+    const { id } = req.params;
+    const { includeContent = false } = req.query;
+
+    // Initialize version storage if it doesn't exist
+    if (!agriculturalData['calendar-versions']) {
+      agriculturalData['calendar-versions'] = {};
+    }
+
+    const versions = agriculturalData['calendar-versions'][id] || [];
+
+    // Filter out content if not requested for performance
+    const filteredVersions = includeContent === 'true' ? versions :
+      versions.map(version => ({
+        ...version,
+        content: undefined // Remove large content field
+      }));
+
+    res.json({
+      success: true,
+      data: {
+        calendarId: id,
+        totalVersions: versions.length,
+        versions: filteredVersions.sort((a, b) => b.version - a.version) // Latest first
+      },
+      metadata: {
+        hasVersions: versions.length > 0,
+        latestVersion: versions.length > 0 ? Math.max(...versions.map(v => v.version)) : 0,
+        oldestVersion: versions.length > 0 ? Math.min(...versions.map(v => v.version)) : 0
+      }
+    });
+
+  } catch (error) {
+    console.error('Get calendar versions error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error retrieving calendar versions',
+      error: error.message
+    });
+  }
+});
+
+// Get specific calendar version
+app.get('/api/enhanced-calendars/:id/versions/:versionNumber', authenticateToken, (req, res) => {
+  try {
+    const { id, versionNumber } = req.params;
+
+    // Initialize version storage if it doesn't exist
+    if (!agriculturalData['calendar-versions']) {
+      agriculturalData['calendar-versions'] = {};
+    }
+
+    const versions = agriculturalData['calendar-versions'][id] || [];
+    const version = versions.find(v => v.version === parseInt(versionNumber));
+
+    if (!version) {
+      return res.status(404).json({
+        success: false,
+        message: `Version ${versionNumber} not found for calendar ${id}`
+      });
+    }
+
+    res.json({
+      success: true,
+      data: version,
+      metadata: {
+        calendarId: id,
+        versionNumber: parseInt(versionNumber),
+        isLatestVersion: version.version === Math.max(...versions.map(v => v.version))
+      }
+    });
+
+  } catch (error) {
+    console.error('Get calendar version error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error retrieving calendar version',
+      error: error.message
+    });
+  }
+});
+
+// Create new calendar version
+app.post('/api/enhanced-calendars/:id/versions', authenticateToken, (req, res) => {
+  try {
+    const { id } = req.params;
+    const { versionNotes, changes, content } = req.body;
+
+    // Validate required fields
+    if (!content) {
+      return res.status(400).json({
+        success: false,
+        message: 'Calendar content is required for versioning'
+      });
+    }
+
+    // Initialize version storage if it doesn't exist
+    if (!agriculturalData['calendar-versions']) {
+      agriculturalData['calendar-versions'] = {};
+    }
+
+    if (!agriculturalData['calendar-versions'][id]) {
+      agriculturalData['calendar-versions'][id] = [];
+    }
+
+    const versions = agriculturalData['calendar-versions'][id];
+    const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version)) + 1 : 1;
+
+    // Create new version
+    const newVersion = {
+      id: `${id}_v${nextVersion}`,
+      calendarId: id,
+      version: nextVersion,
+      content: content,
+      versionNotes: versionNotes || `Version ${nextVersion}`,
+      changes: changes || [],
+      createdAt: new Date().toISOString(),
+      createdBy: req.user?.id || 'system',
+      metadata: {
+        contentSize: JSON.stringify(content).length,
+        activitiesCount: content.activities?.length || 0,
+        scheduleCount: content.schedule?.length || 0
+      }
+    };
+
+    // Add version to storage
+    versions.push(newVersion);
+
+    // Update main calendar with version reference
+    const mainCalendars = [
+      ...agriculturalData['crop-calendar'],
+      ...agriculturalData['poultry-calendar']
+    ];
+
+    const mainCalendar = mainCalendars.find(c => c.id === id);
+    if (mainCalendar) {
+      mainCalendar.currentVersion = nextVersion;
+      mainCalendar.lastVersionUpdate = new Date().toISOString();
+      mainCalendar.hasVersions = true;
+    }
+
+    // Save data
+    saveAgriculturalData();
+
+    console.log(`Created version ${nextVersion} for calendar ${id}`);
+
+    res.json({
+      success: true,
+      data: newVersion,
+      message: `Version ${nextVersion} created successfully`,
+      metadata: {
+        calendarId: id,
+        versionNumber: nextVersion,
+        totalVersions: versions.length
+      }
+    });
+
+  } catch (error) {
+    console.error('Create calendar version error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error creating calendar version',
+      error: error.message
+    });
+  }
+});
+
+// Restore calendar to specific version
+app.post('/api/enhanced-calendars/:id/restore/:versionNumber', authenticateToken, (req, res) => {
+  try {
+    const { id, versionNumber } = req.params;
+    const { createBackup = true } = req.body;
+
+    // Get the version to restore
+    if (!agriculturalData['calendar-versions'] || !agriculturalData['calendar-versions'][id]) {
+      return res.status(404).json({
+        success: false,
+        message: 'No versions found for this calendar'
+      });
+    }
+
+    const versions = agriculturalData['calendar-versions'][id];
+    const versionToRestore = versions.find(v => v.version === parseInt(versionNumber));
+
+    if (!versionToRestore) {
+      return res.status(404).json({
+        success: false,
+        message: `Version ${versionNumber} not found`
+      });
+    }
+
+    // Find the main calendar
+    let mainCalendar = null;
+    let calendarArray = null;
+
+    // Check in crop calendars
+    const cropIndex = agriculturalData['crop-calendar'].findIndex(c => c.id === id);
+    if (cropIndex !== -1) {
+      mainCalendar = agriculturalData['crop-calendar'][cropIndex];
+      calendarArray = agriculturalData['crop-calendar'];
+    } else {
+      // Check in poultry calendars
+      const poultryIndex = agriculturalData['poultry-calendar'].findIndex(c => c.id === id);
+      if (poultryIndex !== -1) {
+        mainCalendar = agriculturalData['poultry-calendar'][poultryIndex];
+        calendarArray = agriculturalData['poultry-calendar'];
+      }
+    }
+
+    if (!mainCalendar) {
+      return res.status(404).json({
+        success: false,
+        message: 'Calendar not found'
+      });
+    }
+
+    // Create backup of current version if requested
+    let backupVersion = null;
+    if (createBackup) {
+      const nextVersion = Math.max(...versions.map(v => v.version)) + 1;
+      backupVersion = {
+        id: `${id}_v${nextVersion}`,
+        calendarId: id,
+        version: nextVersion,
+        content: { ...mainCalendar },
+        versionNotes: `Backup before restore to v${versionNumber}`,
+        changes: [`Restored from version ${versionNumber}`],
+        createdAt: new Date().toISOString(),
+        createdBy: req.user?.id || 'system',
+        isBackup: true
+      };
+      versions.push(backupVersion);
+    }
+
+    // Restore the calendar content
+    const restoredContent = versionToRestore.content;
+    Object.assign(mainCalendar, restoredContent, {
+      currentVersion: parseInt(versionNumber),
+      lastVersionUpdate: new Date().toISOString(),
+      restoredAt: new Date().toISOString(),
+      restoredBy: req.user?.id || 'system'
+    });
+
+    // Save data
+    saveAgriculturalData();
+
+    console.log(`Restored calendar ${id} to version ${versionNumber}`);
+
+    res.json({
+      success: true,
+      message: `Calendar restored to version ${versionNumber}`,
+      data: {
+        calendarId: id,
+        restoredToVersion: parseInt(versionNumber),
+        backupCreated: createBackup,
+        backupVersion: backupVersion?.version || null,
+        restoredAt: new Date().toISOString()
+      }
+    });
+
+  } catch (error) {
+    console.error('Restore calendar version error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error restoring calendar version',
+      error: error.message
+    });
+  }
+});
+
+// Compare calendar versions
+app.get('/api/enhanced-calendars/:id/versions/:version1/compare/:version2', authenticateToken, (req, res) => {
+  try {
+    const { id, version1, version2 } = req.params;
+
+    // Get versions
+    if (!agriculturalData['calendar-versions'] || !agriculturalData['calendar-versions'][id]) {
+      return res.status(404).json({
+        success: false,
+        message: 'No versions found for this calendar'
+      });
+    }
+
+    const versions = agriculturalData['calendar-versions'][id];
+    const v1 = versions.find(v => v.version === parseInt(version1));
+    const v2 = versions.find(v => v.version === parseInt(version2));
+
+    if (!v1 || !v2) {
+      return res.status(404).json({
+        success: false,
+        message: 'One or both versions not found'
+      });
+    }
+
+    // Simple comparison logic
+    const comparison = {
+      version1: {
+        version: v1.version,
+        createdAt: v1.createdAt,
+        notes: v1.versionNotes
+      },
+      version2: {
+        version: v2.version,
+        createdAt: v2.createdAt,
+        notes: v2.versionNotes
+      },
+      differences: {
+        activitiesChanged: (v1.content.activities?.length || 0) !== (v2.content.activities?.length || 0),
+        scheduleChanged: (v1.content.schedule?.length || 0) !== (v2.content.schedule?.length || 0),
+        metadataChanged: JSON.stringify(v1.content.metadata || {}) !== JSON.stringify(v2.content.metadata || {}),
+        contentSizeDiff: (v1.metadata?.contentSize || 0) - (v2.metadata?.contentSize || 0)
+      },
+      summary: `Comparing version ${version1} to version ${version2}`
+    };
+
+    res.json({
+      success: true,
+      data: comparison,
+      metadata: {
+        calendarId: id,
+        comparedVersions: [parseInt(version1), parseInt(version2)]
+      }
+    });
+
+  } catch (error) {
+    console.error('Compare calendar versions error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error comparing calendar versions',
+      error: error.message
+    });
+  }
+});
+
+// Delete calendar version
+app.delete('/api/enhanced-calendars/:id/versions/:versionNumber', authenticateToken, (req, res) => {
+  try {
+    const { id, versionNumber } = req.params;
+
+    // Get versions
+    if (!agriculturalData['calendar-versions'] || !agriculturalData['calendar-versions'][id]) {
+      return res.status(404).json({
+        success: false,
+        message: 'No versions found for this calendar'
+      });
+    }
+
+    const versions = agriculturalData['calendar-versions'][id];
+    const versionIndex = versions.findIndex(v => v.version === parseInt(versionNumber));
+
+    if (versionIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: `Version ${versionNumber} not found`
+      });
+    }
+
+    // Don't allow deletion of the current version
+    const mainCalendars = [
+      ...agriculturalData['crop-calendar'],
+      ...agriculturalData['poultry-calendar']
+    ];
+    const mainCalendar = mainCalendars.find(c => c.id === id);
+
+    if (mainCalendar && mainCalendar.currentVersion === parseInt(versionNumber)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot delete the current active version'
+      });
+    }
+
+    // Remove the version
+    const deletedVersion = versions.splice(versionIndex, 1)[0];
+
+    // Save data
+    saveAgriculturalData();
+
+    console.log(`Deleted version ${versionNumber} for calendar ${id}`);
+
+    res.json({
+      success: true,
+      message: `Version ${versionNumber} deleted successfully`,
+      data: {
+        calendarId: id,
+        deletedVersion: versionNumber,
+        remainingVersions: versions.length
+      }
+    });
+
+  } catch (error) {
+    console.error('Delete calendar version error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting calendar version',
+      error: error.message
+    });
+  }
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🤖 AgriBot Claude API Proxy Server running on port ${PORT}`);
@@ -2215,15 +3060,25 @@ app.listen(PORT, () => {
   console.log(`📊 Enhanced Calendars: http://localhost:${PORT}/api/enhanced-calendars`);
   console.log(`📋 Calendar Details: http://localhost:${PORT}/api/enhanced-calendars/{id}`);
   console.log(`🗓️  Calendar Activities: http://localhost:${PORT}/api/enhanced-calendars/{id}/activities`);
+  console.log(`📊 Calendar Metadata: http://localhost:${PORT}/api/enhanced-calendars/metadata`);
   console.log(`🐔 Production Cycles: http://localhost:${PORT}/api/production-cycles`);
   console.log(`📈 Current Activities: http://localhost:${PORT}/api/production-cycles/{id}/current-activities`);
   console.log(`📤 Enhanced Upload: http://localhost:${PORT}/api/agricultural-data/upload (dataType: enhanced-calendar)`);
+  console.log(`
+📝 Calendar Versioning System:`);
+  console.log(`📋 Calendar Versions: http://localhost:${PORT}/api/enhanced-calendars/{id}/versions`);
+  console.log(`📄 Specific Version: http://localhost:${PORT}/api/enhanced-calendars/{id}/versions/{versionNumber}`);
+  console.log(`➕ Create Version: POST http://localhost:${PORT}/api/enhanced-calendars/{id}/versions`);
+  console.log(`🔄 Restore Version: POST http://localhost:${PORT}/api/enhanced-calendars/{id}/restore/{versionNumber}`);
+  console.log(`🔍 Compare Versions: http://localhost:${PORT}/api/enhanced-calendars/{id}/versions/{v1}/compare/{v2}`);
+  console.log(`🗑️ Delete Version: DELETE http://localhost:${PORT}/api/enhanced-calendars/{id}/versions/{versionNumber}`);
   console.log(`🌾 Current data counts:`, {
     'crop-calendar': agriculturalData['crop-calendar'].length,
     'agromet-advisory': agriculturalData['agromet-advisory'].length,
     'poultry-calendar': agriculturalData['poultry-calendar'].length,
     'poultry-advisory': agriculturalData['poultry-advisory'].length,
-    'user-production-cycles': agriculturalData['user-production-cycles']?.length || 0
+    'user-production-cycles': agriculturalData['user-production-cycles']?.length || 0,
+    'calendar-versions': Object.keys(agriculturalData['calendar-versions'] || {}).length
   });
 });
 

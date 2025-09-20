@@ -54,6 +54,7 @@
     "html2pdf.js": "^0.10.3",
     "jsonwebtoken": "^9.0.2",
     "jspdf": "^2.5.2",
+    "jspdf-autotable": "^5.0.2",
     "leaflet": "^1.9.4",
     "lodash": "^4.17.21",
     "lucide-react": "^0.439.0",

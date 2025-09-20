@@ -3,6 +3,8 @@ import PageTitle from '../components/PageTitle';
 import { districtOfGhana } from "../districts";
 import { FaDownload, FaShareAlt, FaDatabase, FaInfoCircle } from "react-icons/fa";
 import agriculturalDataService from "../services/agriculturalDataService";
+import dynamicCalendarManager from '../services/dynamicCalendarManager';
+import { InlineOfflineWarning } from '../components/common/OfflineNotification';
 
 // DownloadButton Component
 const DownloadButton = ({ onDownload }) => {
@@ -310,60 +312,16 @@ const regionsOfGhana = [
   "North East",
 ];
 
-// Function to generate region-specific poultry activity times based on climate
-const generateRegionPoultryActivities = () => {
-  const regions = {};
+// Excel-only poultry calendar system - no climate offset calculations
+const generateRegionPoultryActivities = async () => {
+  console.log('🐔 Excel-only poultry calendar system - no computed activities generated');
 
-  // Example climate offset data
-  const climateOffsets = {
-    "Greater Accra": 0, // No offset
-    Ashanti: 1, // Starts 1 week later
-    Northern: 4, // Starts 2 weeks later
-    Eastern: 1, // Starts 1 week earlier
-    Western: 3, // Starts 3 weeks later
-    Volta: 1, // Slightly later
-    "Upper East": 4, // Late planting
-    "Upper West": 3, // Late planting
-    Central: 2, // Neutral
-    Bono: 3, // Neutral
-    "Western North": 1, // Slightly earlier
-    Ahafo: 1, // Slightly earlier
-    Savannah: 3, // Late planting
-    Oti: 2, // Neutral
-    "Bono East": 1, // Neutral
-    "North East": 4, // Late planting
-  };
-
-  // Helper function to adjust the week based on climate offset
-  const adjustWeek = (week, offset) => {
-    let newWeek = week + offset;
-    if (newWeek < 1) newWeek += 22; // Wrap around the year if it goes negative
-    if (newWeek > 22) newWeek -= 22; // Wrap around if it exceeds 52 weeks
-    return newWeek;
-  };
-
-  // Generate activities for each region and poultry type
-  regionsOfGhana.forEach((region) => {
-    const offset = climateOffsets[region] || 0; // Default to 0 if no specific offset
-    regions[region] = {
-      layers: basePoultryActivities.layers.map((activity) => ({
-        ...activity,
-        start: adjustWeek(activity.start, offset),
-        end: adjustWeek(activity.end, offset),
-      })),
-      broilers: basePoultryActivities.broilers.map((activity) => ({
-        ...activity,
-        start: adjustWeek(activity.start, offset),
-        end: adjustWeek(activity.end, offset),
-      })),
-    };
-  });
-
-  return regions;
+  // Return empty regions object - only use uploaded Excel data
+  return {};
 };
 
-// Declare poultry production calendars for each region
-const poultryCalendars = generateRegionPoultryActivities();
+// Declare poultry production calendars for each region (will be populated asynchronously)
+let poultryCalendars = {};
 
 const PoultryCalendar = () => {
   const [selectedPoultry, setSelectedPoultry] = useState("layers");
@@ -400,13 +358,19 @@ const PoultryCalendar = () => {
           const hasPoultryData = statsResult.data.poultryCalendars > 0;
           
           if (hasPoultryData) {
-            // Load poultry calendar data
-            const poultryResult = await agriculturalDataService.getPoultryCalendar();
-            
-            if (poultryResult.success && poultryResult.data.length > 0) {
-              setDynamicPoultryData(poultryResult.data);
+            // Use dynamic calendar manager for unified data handling
+            console.log('🐔 Loading poultry calendars via dynamic calendar manager...');
+            const calendarResult = await dynamicCalendarManager.getCalendarData({
+              calendarType: 'cycle', // Poultry calendars are typically cycle-based
+              includeWeatherAdjustments: false // Disable weather adjustments for poultry
+            });
+
+            if (calendarResult.success && calendarResult.data.length > 0) {
+              setDynamicPoultryData(calendarResult.data);
               setIsUsingDynamicData(true);
-              setDataSourceInfo(`Using uploaded data (${poultryResult.total} records)`);
+              const sourceInfo = `Using ${calendarResult.metadata?.source || 'dynamic'} data (${calendarResult.data.length} calendars)`;
+              setDataSourceInfo(sourceInfo);
+              console.log(`✅ Loaded poultry calendars: ${sourceInfo}`);
             } else {
               setDataSourceInfo('Using default calendar data');
             }
@@ -423,6 +387,21 @@ const PoultryCalendar = () => {
     };
 
     loadDynamicData();
+
+    // Initialize poultry calendars with dynamic offsets
+    const initializePoultryCalendars = async () => {
+      console.log('🐔 Initializing poultry calendars with dynamic offsets...');
+      try {
+        poultryCalendars = await generateRegionPoultryActivities();
+        console.log('✅ Poultry calendars initialized successfully');
+      } catch (error) {
+        console.error('❌ Failed to initialize poultry calendars:', error);
+        // Provide a fallback
+        poultryCalendars = {};
+      }
+    };
+
+    initializePoultryCalendars();
   }, []);
 
   // Convert dynamic data to calendar format
@@ -531,6 +510,10 @@ const PoultryCalendar = () => {
       <PageTitle title="Poultry Calendar" />
       <div className="bg-gradient-to-br from-blue-50 to-gray-200 min-h-screen p-0 lg:pt-20 pt-14">
       <div className="container mx-auto bg-white rounded-lg shadow-lg p-6">
+        <InlineOfflineWarning
+          message="Poultry calendar data may be limited while server is offline"
+          className="mb-6"
+        />
         <div className="flex flex-col md:flex-row justify-between items-center my-6 mb-10 gap-4">
           <div>
             <h1 className="text-gray-800 text-3xl font-bold text-center md:text-left">

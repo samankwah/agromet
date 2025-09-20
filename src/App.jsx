@@ -590,11 +590,12 @@ function App() {
 
         { path: "agro-advisory", element: <AgrometAdvisory /> },
         { path: "media-page", element: <MediaPage /> },
-        { path: "admin-login", element: <AdminLogin /> },
-        { path: "admin-signup", element: <AdminSignUp /> },
         { path: "*", element: <NotFound /> },
       ],
     },
+    // Auth pages without header/footer
+    { path: "/admin-login", element: <AdminLogin /> },
+    { path: "/admin-signup", element: <AdminSignUp /> },
     {
       path: "/dashboard",
       element: (
@@ -619,6 +620,10 @@ function App() {
     future: {
       v7_startTransition: true,
       v7_relativeSplatPath: true,
+      v7_fetcherPersist: true,
+      v7_normalizeFormMethod: true,
+      v7_partialHydration: true,
+      v7_skipActionErrorRevalidation: true,
     },
   });
 
