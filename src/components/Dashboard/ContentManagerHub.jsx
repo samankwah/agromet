@@ -17,6 +17,7 @@ import UniversalDataTable from "./UniversalDataTable";
 import EnhancedFileUploader from "./EnhancedFileUploader";
 import userService from "../../services/userService";
 import { logger } from "../../utils/logger";
+import toast from "react-hot-toast";
 
 const ContentManagerHub = ({ dataType, onClose }) => {
   const [data, setData] = useState([]);
@@ -199,8 +200,18 @@ const ContentManagerHub = ({ dataType, onClose }) => {
   const handleUploadSuccess = (uploadResult) => {
     logger.userAction('File upload completed successfully', uploadResult);
     setRefreshTrigger(prev => prev + 1);
-    
-    // Show success notification
+
+    // Show success toast notification
+    const recordCount = uploadResult.recordCount || 0;
+    const fileName = uploadResult.filename || 'file';
+    toast.success(
+      `✅ Calendar uploaded successfully!\n${fileName} - ${recordCount} records processed`,
+      {
+        duration: 5000,
+        icon: '📅',
+      }
+    );
+
     setTimeout(() => {
       setActiveView("table");
     }, 2000);

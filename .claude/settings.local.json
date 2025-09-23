@@ -53,7 +53,17 @@
       "Bash(echo $VITE_BASE_URL)",
       "Bash(start \"C:\\Users\\CRAFT\\Desktop\\future MEST projects\\Frontend\\triagro-ai\\test-health-monitor.html\")",
       "Bash(PORT=3003 node server.js)",
-      "Bash(start http://localhost:5176/production/poultry-calendar)"
+      "Bash(start http://localhost:5176/production/poultry-calendar)",
+      "Bash(start http://localhost:5178/crop-calendar)",
+      "Bash(findstr:*)",
+      "Bash(start http://localhost:5177/crop-calendar)",
+      "Bash(start http://localhost:5176/crop-calendar)",
+      "Bash(cmd /c:*)",
+      "Bash(start http://localhost:5179/crop-calendar)",
+      "Bash(start http://localhost:5180/crop-calendar)",
+      "Bash(AUTH_PORT=3003 node auth-server.js)",
+      "Bash(tasklist)",
+      "Bash(start http://localhost:5174/crop-calendar)"
     ],
     "deny": []
   }

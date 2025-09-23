@@ -20,6 +20,7 @@ import {
 import userService from "../../services/userService";
 import { validateFile, FileValidationError, formatFileSize } from "../../utils/fileValidation";
 import { logger } from "../../utils/logger";
+import toast from "react-hot-toast";
 
 const EnhancedFileUploader = ({ 
   dataType, 
@@ -227,11 +228,20 @@ const EnhancedFileUploader = ({
           };
           results.push(uploadResult);
 
-          setFiles(prev => prev.map(f => 
+          setFiles(prev => prev.map(f =>
             f.id === fileItem.id ? { ...f, status: 'success' } : f
           ));
 
           logger.userAction('File uploaded successfully', uploadResult);
+
+          // Show success toast notification
+          toast.success(
+            `🎉 ${fileItem.name} uploaded successfully!\n${result.data?.recordCount || 0} records processed`,
+            {
+              duration: 4000,
+              icon: '📄',
+            }
+          );
 
           if (onUploadSuccess) {
             onUploadSuccess({
@@ -254,11 +264,20 @@ const EnhancedFileUploader = ({
         };
         results.push(uploadError);
 
-        setFiles(prev => prev.map(f => 
+        setFiles(prev => prev.map(f =>
           f.id === fileItem.id ? { ...f, status: 'error' } : f
         ));
 
         logger.error('File upload failed', uploadError);
+
+        // Show error toast notification
+        toast.error(
+          `❌ Upload failed: ${fileItem.name}\n${error.message}`,
+          {
+            duration: 6000,
+            icon: '🚫',
+          }
+        );
 
         if (onUploadError) {
           onUploadError(uploadError);

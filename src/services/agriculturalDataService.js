@@ -8,8 +8,8 @@ import serverHealthCheck from '../utils/serverHealthCheck';
  */
 class AgriculturalDataService {
   constructor() {
-    // Use the correct server URL for agricultural data (port 3003)
-    this.baseURL = 'http://localhost:3003/api';
+    // Use the correct server URL for agricultural data (port 3002)
+    this.baseURL = 'http://localhost:3002/api';
     this.api = axios.create({
       baseURL: this.baseURL,
       timeout: 10000,
@@ -19,7 +19,7 @@ class AgriculturalDataService {
     });
 
     // Initialize server health monitoring
-    serverHealthCheck.updateServerURL('http://localhost:3003/api');
+    serverHealthCheck.updateServerURL('http://localhost:3002/api');
     serverHealthCheck.startMonitoring();
 
     // Add request interceptor for JWT authentication
@@ -234,9 +234,14 @@ class AgriculturalDataService {
   async getDistricts() {
     try {
       const response = await this.api.get('/agricultural-data/crop-calendar');
+      const data = response.data || [];
+
+      // Extract unique districts from uploaded calendars (each calendar has its assigned district)
+      const uniqueDistricts = [...new Set(data.map(item => item.district || item.districtCode).filter(Boolean))];
+
       return {
         success: true,
-        data: response.data || []
+        data: uniqueDistricts
       };
     } catch (error) {
       return {
@@ -253,9 +258,14 @@ class AgriculturalDataService {
   async getCrops() {
     try {
       const response = await this.api.get('/agricultural-data/crop-calendar');
+      const data = response.data || [];
+
+      // Extract unique crops from uploaded calendars
+      const uniqueCrops = [...new Set(data.map(item => item.crop || item.commodity).filter(Boolean))];
+
       return {
         success: true,
-        data: response.data || []
+        data: uniqueCrops
       };
     } catch (error) {
       return {

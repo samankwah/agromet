@@ -207,7 +207,7 @@ class WeatherCalendarIntegration {
     const adjustedActivities = [];
 
     for (const activity of activities) {
-      const adjustedActivity = { ...activity };
+      let adjustedActivity = { ...activity };
 
       // Apply rainfall adjustments
       if (options.enableRainfallAdjustment) {

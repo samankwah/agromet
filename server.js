@@ -170,7 +170,10 @@ app.use(
       "http://localhost:5174",
       "http://localhost:5175",
       "http://localhost:5176",
+      "http://localhost:5177",
       "http://localhost:5178",
+      "http://localhost:5179",
+      "http://localhost:5180",
       "http://localhost:3000",
     ],
     credentials: true,
@@ -1051,6 +1054,132 @@ app.get('/api/enhanced-calendars/:id/activities', (req, res) => {
   }
 });
 
+// Specific crop calendar endpoint for frontend filtering (must come before generic route)
+app.get('/api/agricultural-data/crop-calendar', (req, res) => {
+  try {
+    console.log('Crop calendar filter request:', req.query);
+
+    // Get all crop calendar data (includes both regular and enhanced calendars)
+    let allCropData = [...(agriculturalData['crop-calendar'] || [])];
+
+    // Apply filters
+    const { region, district, crop, season, regionCode, districtCode, commodityCode } = req.query;
+    let filteredData = allCropData;
+
+    // Filter by region
+    if (region && region !== 'All Regions') {
+      filteredData = filteredData.filter(item =>
+        (item.region && item.region.toLowerCase().includes(region.toLowerCase())) ||
+        (item.regionCode && item.regionCode.toLowerCase().includes(region.toLowerCase()))
+      );
+    }
+
+    // Filter by district
+    if (district && district !== 'All Districts') {
+      filteredData = filteredData.filter(item =>
+        (item.district && item.district.toLowerCase().includes(district.toLowerCase())) ||
+        (item.districtCode && item.districtCode.toLowerCase().includes(district.toLowerCase()))
+      );
+    }
+
+    // Filter by crop/commodity
+    if (crop && crop !== 'all') {
+      filteredData = filteredData.filter(item =>
+        (item.crop && item.crop.toLowerCase().includes(crop.toLowerCase())) ||
+        (item.commodity && item.commodity.toLowerCase().includes(crop.toLowerCase())) ||
+        (item.commodityCode && item.commodityCode.toLowerCase().includes(crop.toLowerCase()))
+      );
+    }
+
+    // Filter by season
+    if (season) {
+      const seasonLower = season.toLowerCase();
+      filteredData = filteredData.filter(item => {
+        // Check if season matches major/minor season data
+        if (seasonLower.includes('major') && item.majorSeason) {
+          return true;
+        }
+        if (seasonLower.includes('minor') && item.minorSeason) {
+          return true;
+        }
+        // For enhanced calendars, check season field
+        if (item.season && item.season.toLowerCase().includes(seasonLower)) {
+          return true;
+        }
+        return false;
+      });
+    }
+
+    // Transform data to include activities for frontend display
+    const transformedData = filteredData.map(item => {
+      // If it's an enhanced calendar with activities, return as-is
+      if (item.activities && Array.isArray(item.activities)) {
+        return {
+          ...item,
+          hasActivities: true,
+          totalActivities: item.activities.length
+        };
+      }
+
+      // For basic calendar data with fileData, extract activities from Excel sheets
+      let activities = [];
+      if (item.fileData && item.fileData.sheets) {
+        for (const [sheetName, sheet] of Object.entries(item.fileData.sheets)) {
+          if (sheet.data && Array.isArray(sheet.data)) {
+            // Find activity rows (rows that start with a number)
+            const activityRows = sheet.data.filter(row =>
+              row && row.length > 1 &&
+              typeof row[0] === 'number' &&
+              typeof row[1] === 'string' &&
+              row[1].trim().length > 0
+            );
+
+            // Convert to activity objects
+            const sheetActivities = activityRows.map((row, index) => ({
+              id: `${item.id}_activity_${index}`,
+              name: row[1].trim(),
+              week: row[0],
+              schedule: row.slice(2), // Timeline data
+              sheetName: sheetName
+            }));
+
+            activities.push(...sheetActivities);
+          }
+        }
+      }
+
+      return {
+        ...item,
+        activities: activities,
+        hasActivities: activities.length > 0,
+        totalActivities: activities.length
+      };
+    });
+
+    console.log(`Crop calendar filter: ${allCropData.length} total -> ${filteredData.length} filtered`);
+
+    res.json({
+      success: true,
+      data: transformedData,
+      total: transformedData.length,
+      filters: req.query,
+      metadata: {
+        totalRecords: allCropData.length,
+        filteredRecords: transformedData.length,
+        queryTime: new Date().toISOString()
+      }
+    });
+
+  } catch (error) {
+    console.error('Crop calendar filter error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error filtering crop calendar data',
+      error: error.message
+    });
+  }
+});
+
 // Get agricultural data (public access) - Legacy endpoint
 app.get('/api/agricultural-data/:dataType', (req, res) => {
   try {
@@ -1110,6 +1239,7 @@ app.get('/api/agricultural-data/:dataType', (req, res) => {
     });
   }
 });
+
 
 // Production cycle management for poultry
 app.post('/api/production-cycles', authenticateToken, (req, res) => {
