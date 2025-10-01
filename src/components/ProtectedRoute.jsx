@@ -1,44 +1,9 @@
-import { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import userService from '../services/userService';
+import { useAuth } from '../hooks/useAuth';
 
 const ProtectedRoute = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
-
-  useEffect(() => {
-    const checkAuthentication = async () => {
-      try {
-        const token = userService.getAuthToken();
-        
-        if (!token) {
-          setIsAuthenticated(false);
-          setIsLoading(false);
-          return;
-        }
-
-        // Verify token is still valid by making a request to user profile
-        const result = await userService.getUserProfile();
-        
-        if (result.success) {
-          setIsAuthenticated(true);
-        } else {
-          // Token is invalid, clear auth data
-          userService.clearAuthData();
-          setIsAuthenticated(false);
-        }
-      } catch (error) {
-        console.error('Authentication check failed:', error);
-        userService.clearAuthData();
-        setIsAuthenticated(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAuthentication();
-  }, []);
 
   if (isLoading) {
     return (

@@ -49,7 +49,7 @@
 // import Cassava from "./assets/images/cassava.png";
 // import Sorghum from "./assets/images/sorghum.png";
 // import Modal from "./components/Modal";
-// import AgrometAdvisory from "./pages/AgroMetAdvisory ";
+// import AgrometAdvisory from "./pages/AgroMetAdvisory";
 // import { RouterProvider } from "react-router-dom";
 // import RootLayout from "./layouts/RootLayout";
 // import AdminLayout from "./layouts/AdminLayout.jsx";
@@ -326,6 +326,8 @@ import BlogNationalAssemblyVisit from "./blog/BlogNationalAssemblyVisit";
 import BlogSonForecast from "./blog/BlogSonForecast";
 import PoultryAdvisory from "./pages/PoultryAdvisory";
 import CropAdvisory from "./pages/CropAdvisory";
+import CalendarPreviewPage from "./pages/CalendarPreviewPage";
+import PoultryCalendarPreviewPage from "./pages/PoultryCalendarPreviewPage";
 import NotFound from "./components/NotFound";
 
 import OurServices from "./pages/OurServices";
@@ -353,12 +355,14 @@ import Beans from "./assets/images/beans.png";
 import Plantain from "./assets/images/plantain.png";
 import Cassava from "./assets/images/cassava.png";
 import Sorghum from "./assets/images/sorghum.png";
-import AgrometAdvisory from "./pages/AgroMetAdvisory ";
+import AgrometAdvisory from "./pages/AgroMetAdvisory";
 import { RouterProvider } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 import RootLayout from "./layouts/RootLayout";
 import AdminLayout from "./layouts/AdminLayout.jsx";
 import AdminLogin from "./pages/AdminLogin.jsx";
 import CreateCropCalendar from "./components/Dashboard/CreateCalendar.jsx";
+import CreatePoultryCalendarPage from "./pages/CreatePoultryCalendarPage.jsx";
 import MediaPage from "./pages/MediaPage.jsx";
 import AdminSignUp from "./pages/AdminSignUp.jsx";
 import CropDiagnosticTool from "./components/CropDiagnosticTool.jsx";
@@ -558,6 +562,7 @@ function App() {
         { path: "about", element: <About /> },
         { path: "weather", element: <Weather /> },
         { path: "crop-calendar", element: <CropCalendar /> },
+        { path: "calendar-preview", element: <CalendarPreviewPage /> },
         { path: "news", element: <NewsUpdates /> },
         { path: "7-days-forecast", element: <SevenDaysForecast /> },
         { path: "agro-bulletins", element: <AgroBulletins /> },
@@ -586,11 +591,12 @@ function App() {
 
         { path: "agro-advisory", element: <AgrometAdvisory /> },
         { path: "media-page", element: <MediaPage /> },
-        { path: "admin-login", element: <AdminLogin /> },
-        { path: "admin-signup", element: <AdminSignUp /> },
         { path: "*", element: <NotFound /> },
       ],
     },
+    // Auth pages without header/footer
+    { path: "/admin-login", element: <AdminLogin /> },
+    { path: "/admin-signup", element: <AdminSignUp /> },
     {
       path: "/dashboard",
       element: (
@@ -600,13 +606,56 @@ function App() {
       ),
       children: [{ index: true, element: <DashboardPage /> }],
     },
-    { path: "/production/provisional", element: <CreateCropCalendar /> },
+    // Protected Production Routes - Admin Only
+    { path: "/production/provisional", element: <ProtectedRoute><CreateCropCalendar /></ProtectedRoute> },
+    { path: "/production/calendar-preview", element: <ProtectedRoute><CalendarPreviewPage /></ProtectedRoute> },
+    { path: "/production/poultry-calendar-preview", element: <ProtectedRoute><PoultryCalendarPreviewPage /></ProtectedRoute> },
 
-    { path: "/production/2024-minor", element: <CreateCropCalendar /> },
-    { path: "/production/2025-major", element: <CreateCropCalendar /> },
-  ]);
+    { path: "/production/2024-minor", element: <ProtectedRoute><CreateCropCalendar /></ProtectedRoute> },
+    { path: "/production/2025-major", element: <ProtectedRoute><CreateCropCalendar /></ProtectedRoute> },
 
-  return <RouterProvider router={router} />;
+    // Protected Poultry Production Routes - Admin Only
+    { path: "/production/poultry/provisional", element: <ProtectedRoute><CreatePoultryCalendarPage /></ProtectedRoute> },
+    { path: "/production/poultry/current", element: <ProtectedRoute><CreatePoultryCalendarPage /></ProtectedRoute> },
+    { path: "/production/poultry/2025", element: <ProtectedRoute><CreatePoultryCalendarPage /></ProtectedRoute> },
+  ], {
+    future: {
+      v7_startTransition: true,
+      v7_relativeSplatPath: true,
+      v7_fetcherPersist: true,
+      v7_normalizeFormMethod: true,
+      v7_partialHydration: true,
+      v7_skipActionErrorRevalidation: true,
+    },
+  });
+
+  return (
+    <>
+      <RouterProvider router={router} />
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            borderRadius: '8px',
+            padding: '16px',
+          },
+          success: {
+            style: {
+              background: '#10B981',
+              color: '#ffffff',
+            },
+          },
+          error: {
+            style: {
+              background: '#EF4444',
+              color: '#ffffff',
+            },
+          },
+        }}
+      />
+    </>
+  );
 }
 
 export default App;

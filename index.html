@@ -13,11 +13,35 @@
     <link
       href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
       rel="stylesheet"
+      id="tailwind-cdn"
     />
-    <title>Weather - Agricultural Information Services</title>
+    <title>TriAgro AI - Agricultural Information Services for Ghana</title>
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // CDN fallback for Tailwind CSS
+      document.getElementById('tailwind-cdn').onerror = function() {
+        console.warn('Tailwind CSS CDN failed, app will use Tailwind CSS built into the React components');
+        // Remove the failed link to prevent further errors
+        this.remove();
+        // Add a basic fallback CSS for critical styles if needed
+        const fallbackCSS = document.createElement('style');
+        fallbackCSS.textContent = `
+          /* Basic fallback styles */
+          .hidden { display: none !important; }
+          .block { display: block !important; }
+          .flex { display: flex !important; }
+          .grid { display: grid !important; }
+          .text-center { text-align: center !important; }
+          .text-white { color: white !important; }
+          .bg-blue-500 { background-color: #3b82f6 !important; }
+          .p-4 { padding: 1rem !important; }
+          .m-4 { margin: 1rem !important; }
+        `;
+        document.head.appendChild(fallbackCSS);
+      };
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

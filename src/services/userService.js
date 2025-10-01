@@ -2,18 +2,28 @@ import axios from 'axios';
 
 class UserService {
   constructor() {
-    // Use local authentication server
-    this.baseURL = 'http://localhost:3001';
-    this.api = axios.create({
-      baseURL: this.baseURL,
+    // Auth server for authentication and user management
+    this.authBaseURL = 'http://localhost:3003';
+    this.authAPI = axios.create({
+      baseURL: this.authBaseURL,
       timeout: 15000,
       headers: {
         'Content-Type': 'application/json',
       },
     });
 
-    // Add request interceptor to include auth token
-    this.api.interceptors.request.use(
+    // Main server for agricultural data and AI services
+    this.dataBaseURL = 'http://localhost:3002';
+    this.dataAPI = axios.create({
+      baseURL: this.dataBaseURL,
+      timeout: 15000,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    // Add request interceptor for auth API
+    this.authAPI.interceptors.request.use(
       (config) => {
         const token = localStorage.getItem('token') || localStorage.getItem('donatrakAccessToken');
         if (token) {
@@ -26,8 +36,22 @@ class UserService {
       }
     );
 
-    // Add response interceptor for error handling
-    this.api.interceptors.response.use(
+    // Add request interceptor for data API
+    this.dataAPI.interceptors.request.use(
+      (config) => {
+        const token = localStorage.getItem('token') || localStorage.getItem('donatrakAccessToken');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
+      }
+    );
+
+    // Add response interceptor for auth API
+    this.authAPI.interceptors.response.use(
       (response) => response,
       (error) => {
         if (error.response?.status === 401) {
@@ -37,18 +61,43 @@ class UserService {
         return Promise.reject(error);
       }
     );
+
+    // Add response interceptor for data API
+    this.dataAPI.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          this.clearAuthData();
+          window.location.href = '/admin-login';
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    // Legacy support - keep this.api pointing to authAPI for backward compatibility
+    this.api = this.authAPI;
+    this.baseURL = this.authBaseURL;
   }
 
   // Authentication methods
   async signUp(userData) {
     try {
+      console.log('🔐 Attempting sign-up to:', this.authBaseURL + '/sign-up');
+      console.log('📝 Sign-up data:', userData);
+
       const response = await this.api.post('/sign-up', userData);
+      console.log('✅ Sign-up response received:', response.status);
+
       return {
         success: true,
         data: response.data,
         message: 'Account created successfully'
       };
     } catch (error) {
+      console.error('❌ Sign-up error:', error);
+      console.error('📊 Error response:', error.response?.data);
+      console.error('🔍 Error status:', error.response?.status);
+
       return {
         success: false,
         error: error.response?.data?.message || error.message,
@@ -59,9 +108,14 @@ class UserService {
 
   async signIn(credentials) {
     try {
+      console.log('🔐 Attempting sign-in to:', this.authBaseURL + '/sign-in');
+      console.log('📧 Email:', credentials.email);
+
       const response = await this.api.post('/sign-in', credentials);
-      
+      console.log('✅ Sign-in response received:', response.status);
+
       if (response.data?.accessToken) {
+        console.log('🎟️ Access token received, storing auth data');
         this.setAuthData(response.data.accessToken, response.data.user);
         return {
           success: true,
@@ -69,12 +123,35 @@ class UserService {
           message: 'Login successful'
         };
       } else {
+        console.error('❌ No access token in response:', response.data);
         throw new Error('No access token received');
       }
     } catch (error) {
+      console.error('❌ Sign-in error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message,
+        url: error.config?.url
+      });
+
+      let errorMessage = 'Login failed';
+      if (error.response?.status === 401) {
+        errorMessage = 'Invalid email or password';
+      } else if (error.response?.status === 403) {
+        errorMessage = 'Account access denied';
+      } else if (error.response?.status >= 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (error.code === 'NETWORK_ERROR' || error.message.includes('Network Error')) {
+        errorMessage = 'Network connection failed. Please check your internet connection.';
+      } else {
+        errorMessage = error.response?.data?.message || error.message;
+      }
+
       return {
         success: false,
-        error: error.response?.data?.message || error.message
+        error: errorMessage,
+        statusCode: error.response?.status
       };
     }
   }
@@ -92,38 +169,70 @@ class UserService {
   // User profile methods
   async getUserProfile() {
     try {
-      // Since the backend might not have a dedicated profile endpoint,
-      // we'll check if user data exists in localStorage first
-      const user = this.getCurrentUser();
-      if (user) {
+      const token = this.getAuthToken();
+      console.log('👤 Getting user profile, token exists:', !!token);
+
+      if (!token) {
+        console.log('❌ No token found in localStorage');
         return {
-          success: true,
-          data: user
+          success: false,
+          error: 'No authentication token found'
         };
       }
-      
-      // If no local user data, try to fetch from server
-      // Note: This endpoint may not exist on the backend yet
+
+      // Try to fetch fresh profile from server
+      console.log('🌐 Fetching profile from server:', this.authBaseURL + '/user/profile');
       const response = await this.api.get('/user/profile');
+      console.log('✅ Profile fetched successfully:', response.status);
+
       return {
         success: true,
-        data: response.data
+        data: response.data.data || response.data
       };
     } catch (error) {
-      // If endpoint doesn't exist but we have a token, assume user is valid
-      const token = this.getAuthToken();
-      const user = this.getCurrentUser();
-      
-      if (token && user) {
+      console.error('❌ Get profile error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message
+      });
+
+      // Handle specific error cases
+      if (error.response?.status === 401) {
+        console.log('🔄 Token expired or invalid, clearing auth data');
+        this.clearAuthData();
         return {
-          success: true,
-          data: user
+          success: false,
+          error: 'Authentication expired. Please log in again.',
+          shouldRedirect: true
         };
       }
-      
+
+      if (error.response?.status === 403) {
+        console.log('🚫 Access forbidden');
+        return {
+          success: false,
+          error: 'Access denied'
+        };
+      }
+
+      // If server is unreachable but we have local user data, try to use it
+      const localUser = this.getCurrentUser();
+      const token = this.getAuthToken();
+
+      if (token && localUser && (error.code === 'NETWORK_ERROR' || error.response?.status >= 500)) {
+        console.log('🔌 Server unreachable, using cached user data');
+        return {
+          success: true,
+          data: localUser,
+          cached: true
+        };
+      }
+
       return {
         success: false,
-        error: error.response?.data?.message || error.message
+        error: error.response?.data?.message || error.message,
+        statusCode: error.response?.status
       };
     }
   }
@@ -491,7 +600,7 @@ class UserService {
         formData.append('dataType', dataType);
       }
 
-      const response = await this.api.post('/api/agricultural-data/upload', formData, {
+      const response = await this.dataAPI.post('/api/agricultural-data/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -525,22 +634,45 @@ class UserService {
         }
       });
 
-      const response = await this.api.get(`/api/agricultural-data/${dataType}?${params.toString()}`);
-      
-      // Clean the data to extract only agricultural records and flatten complex objects
+      const response = await this.dataAPI.get(`/api/agricultural-data/${dataType}?${params.toString()}`);
+
+      // Ensure data is always an array, regardless of backend response format
       let cleanData = response.data;
+
+      // Handle different response formats from backend
       if (Array.isArray(cleanData)) {
+        // Normal array response - clean each item
         cleanData = cleanData.map(item => this.cleanDataItem(item));
+      } else if (cleanData && typeof cleanData === 'object') {
+        // Check if it's a structured API response with data property
+        if (cleanData.success && cleanData.data && Array.isArray(cleanData.data)) {
+          // Extract the data array from structured response
+          cleanData = cleanData.data.map(item => this.cleanDataItem(item));
+        } else if (cleanData.data && Array.isArray(cleanData.data)) {
+          // Extract the data array from object response
+          cleanData = cleanData.data.map(item => this.cleanDataItem(item));
+        } else {
+          // Object response without valid data array - return empty array
+          console.warn(`${dataType}: Backend returned object without valid data array`);
+          cleanData = [];
+        }
+      } else {
+        // Any other response type - return empty array
+        console.warn(`${dataType}: Backend returned unexpected data type: ${typeof cleanData}`);
+        cleanData = [];
       }
-      
+
       return {
         success: true,
         data: cleanData
       };
     } catch (error) {
+      console.error(`Error fetching ${dataType} data:`, error.message);
+
       return {
         success: false,
-        error: error.response?.data?.message || error.message
+        error: error.response?.data?.message || error.message,
+        data: [] // Ensure we always return an empty array on error
       };
     }
   }
@@ -592,7 +724,7 @@ class UserService {
 
   async deleteAgriculturalData(dataType, recordId) {
     try {
-      await this.api.delete(`/api/agricultural-data/${dataType}/${recordId}`);
+      await this.dataAPI.delete(`/api/agricultural-data/${dataType}/${recordId}`);
       return {
         success: true,
         message: 'Agricultural data deleted successfully'
@@ -602,6 +734,52 @@ class UserService {
         success: false,
         error: error.response?.data?.message || error.message
       };
+    }
+  }
+
+  // Create crop calendar manually (without file upload)
+  async createCropCalendar(calendarData) {
+    try {
+      const response = await this.dataAPI.post('/api/crop-calendars/create', calendarData);
+      return response.data;
+    } catch (error) {
+      console.error('Create crop calendar error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to create crop calendar');
+    }
+  }
+
+  // Get crop calendars by district
+  async getCropCalendarsByDistrict(district, filters = {}) {
+    try {
+      const params = new URLSearchParams(filters);
+      const response = await this.dataAPI.get(`/api/crop-calendars/district/${district}?${params}`);
+      return response.data;
+    } catch (error) {
+      console.error('Get district calendars error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to retrieve district calendars');
+    }
+  }
+
+  // Search crop calendars
+  async searchCropCalendars(filters = {}) {
+    try {
+      const params = new URLSearchParams(filters);
+      const response = await this.dataAPI.get(`/api/crop-calendars/search?${params}`);
+      return response.data;
+    } catch (error) {
+      console.error('Search calendars error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to search calendars');
+    }
+  }
+
+  // Get calendar statistics
+  async getCropCalendarStats() {
+    try {
+      const response = await this.dataAPI.get('/api/crop-calendars/stats');
+      return response.data;
+    } catch (error) {
+      console.error('Get calendar stats error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to retrieve calendar statistics');
     }
   }
 }

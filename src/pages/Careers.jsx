@@ -1,3 +1,5 @@
+import PageTitle from '../components/PageTitle';
+
 // Sample job data tailored to the Ghanaian market
 const jobListings = [
   {
@@ -40,7 +42,9 @@ const jobListings = [
 
 const Careers = () => {
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-blue-100 min-h-screen p-8 ">
+    <>
+      <PageTitle title="Careers" />
+      <div className="bg-gradient-to-br from-blue-50 to-blue-100 min-h-screen p-8 ">
       <div className="max-w-7xl mx-auto bg-white rounded-lg shadow-lg p-6 pt-20">
         <h1 className="text-3xl font-bold text-blue-900 mb-6">
           Careers in Ghana
@@ -101,7 +105,8 @@ const Careers = () => {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

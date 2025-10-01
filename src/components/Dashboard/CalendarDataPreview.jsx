@@ -31,18 +31,27 @@ const CalendarDataPreview = ({ dataType, title, onAddNew }) => {
       setLoading(true);
       const result = await userService.getAgriculturalData(dataType);
       if (result.success) {
-        setData(result.data || []);
+        // Ensure data is always an array with defensive programming
+        const responseData = result.data || [];
+        const finalData = Array.isArray(responseData) ? responseData : [];
+        setData(finalData);
       } else {
-        setError("Failed to load data");
+        setError(result.error || "Failed to load data");
+        setData([]); // Ensure empty array on error
       }
     } catch (err) {
+      console.error('CalendarDataPreview loadData error:', err);
       setError(err.message || "An error occurred while loading data");
+      setData([]); // Ensure empty array on exception
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredData = data.filter((item) => {
+  // Ensure data is always an array before filtering
+  const safeData = Array.isArray(data) ? data : [];
+
+  const filteredData = safeData.filter((item) => {
     const matchesSearch =
       searchTerm === "" ||
       Object.values(item).some((value) =>
@@ -59,7 +68,7 @@ const CalendarDataPreview = ({ dataType, title, onAddNew }) => {
   );
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const uniqueRegions = [...new Set(data.map((item) => item.region))];
+  const uniqueRegions = [...new Set(safeData.map((item) => item.region))];
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this record?")) {
@@ -154,7 +163,7 @@ const CalendarDataPreview = ({ dataType, title, onAddNew }) => {
       </div>
 
       {/* Filters */}
-      <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+<div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
         <div className="flex flex-wrap items-center space-x-4">
           <div className="flex items-center space-x-2">
             <FaSearch className="text-gray-400" />

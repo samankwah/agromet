@@ -1,8 +1,11 @@
 import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt } from "react-icons/fa";
+import PageTitle from "../components/PageTitle";
 
 const Contact = () => {
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-blue-100 min-h-screen py-16">
+    <>
+      <PageTitle title="Contact Us" />
+      <div className="bg-gradient-to-br from-blue-50 to-blue-100 min-h-screen py-16">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-1 lg:pt-16">
         {/* Header Section */}
         <div className="text-center mb-12">
@@ -128,6 +131,7 @@ const Contact = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

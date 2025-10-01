@@ -299,6 +299,93 @@ export const GHANA_REGIONS = {
       "DS231": "Nkwanta North",
       "DS232": "Nkwanta South Municipal"
     }
+  },
+  "REG12": {
+    name: "Ahafo Region",
+    code: "REG12",
+    districts: {
+      "DS233": "Asunafo North Municipal",
+      "DS234": "Asunafo South Municipal",
+      "DS235": "Asutifi North",
+      "DS236": "Asutifi South",
+      "DS237": "Tano North Municipal",
+      "DS238": "Tano South Municipal"
+    }
+  },
+  "REG13": {
+    name: "Bono Region", 
+    code: "REG13",
+    districts: {
+      "DS239": "Banda",
+      "DS240": "Berekum East Municipal",
+      "DS241": "Berekum West Municipal",
+      "DS242": "Dormaa Central Municipal",
+      "DS243": "Dormaa East",
+      "DS244": "Dormaa West",
+      "DS245": "Jaman North",
+      "DS246": "Jaman South Municipal",
+      "DS247": "Sunyani Municipal",
+      "DS248": "Sunyani West",
+      "DS249": "Tain",
+      "DS250": "Wenchi Municipal"
+    }
+  },
+  "REG14": {
+    name: "Bono East Region",
+    code: "REG14", 
+    districts: {
+      "DS251": "Atebubu Amantin Municipal",
+      "DS252": "Kintampo North Municipal",
+      "DS253": "Kintampo South Municipal",
+      "DS254": "Nkoranza North",
+      "DS255": "Nkoranza South Municipal",
+      "DS256": "Pru East",
+      "DS257": "Pru West Municipal",
+      "DS258": "Sene East",
+      "DS259": "Sene West",
+      "DS260": "Techiman North",
+      "DS261": "Techiman South Municipal"
+    }
+  },
+  "REG15": {
+    name: "North East Region",
+    code: "REG15",
+    districts: {
+      "DS262": "Bunkpurugu Nakpanduri",
+      "DS263": "Chereponi",
+      "DS264": "East Mamprusi Municipal",
+      "DS265": "Mamprugu Moagduri",
+      "DS266": "West Mamprusi Municipal",
+      "DS267": "Yunyoo Nasuan"
+    }
+  },
+  "REG16": {
+    name: "Savannah Region",
+    code: "REG16", 
+    districts: {
+      "DS268": "Bole",
+      "DS269": "Central Gonja",
+      "DS270": "East Gonja Municipal",
+      "DS271": "North Gonja",
+      "DS272": "Sawla Tuna Kalba",
+      "DS273": "West Gonja Municipal",
+      "DS274": "Yapei Kusawgu"
+    }
+  },
+  "REG17": {
+    name: "Western North Region",
+    code: "REG17",
+    districts: {
+      "DS275": "Aowin Municipal",
+      "DS276": "Bia East",
+      "DS277": "Bia West", 
+      "DS278": "Bibiani Anhwiaso Bekwai Municipal",
+      "DS279": "Bodi",
+      "DS280": "Juaboso",
+      "DS281": "Sefwi Akontombra",
+      "DS282": "Sefwi Wiawso Municipal",
+      "DS283": "Suaman"
+    }
   }
 };
 
@@ -514,3 +601,195 @@ export const parseUniqueId = (uniqueId) => {
   }
   return null;
 };
+
+// Enhanced utility functions for easier regional data access
+export const getAllRegions = () => {
+  return Object.values(GHANA_REGIONS).map(region => ({
+    code: region.code,
+    name: region.name
+  }));
+};
+
+export const getAllRegionNames = () => {
+  return Object.values(GHANA_REGIONS).map(region => region.name);
+};
+
+export const getDistrictsByRegionName = (regionName) => {
+  const region = Object.values(GHANA_REGIONS).find(r => r.name === regionName);
+  return region ? Object.entries(region.districts).map(([code, name]) => ({code, name})) : [];
+};
+
+export const getDistrictsByRegionCode = (regionCode) => {
+  const region = GHANA_REGIONS[regionCode];
+  return region ? Object.values(region.districts) : [];
+};
+
+export const getRegionByName = (regionName) => {
+  return Object.values(GHANA_REGIONS).find(region => region.name === regionName);
+};
+
+export const convertToRegionDistrictFormat = () => {
+  const formatted = {};
+  Object.values(GHANA_REGIONS).forEach(region => {
+    formatted[region.name] = Object.values(region.districts);
+  });
+  return formatted;
+};
+
+export const getRegionDistrictMapping = () => {
+  return convertToRegionDistrictFormat();
+};
+
+export const validateRegionDistrict = (regionName, districtName) => {
+  const region = getRegionByName(regionName);
+  if (!region) return false;
+  return Object.values(region.districts).includes(districtName);
+};
+
+export const getTotalRegionCount = () => {
+  return Object.keys(GHANA_REGIONS).length;
+};
+
+export const getTotalDistrictCount = () => {
+  return Object.values(GHANA_REGIONS).reduce((total, region) => {
+    return total + Object.keys(region.districts).length;
+  }, 0);
+};
+
+// Helper functions for calendar viewer
+export const getRegionName = (regionCode) => {
+  if (typeof regionCode === 'string' && GHANA_REGIONS[regionCode]) {
+    return GHANA_REGIONS[regionCode].name;
+  }
+  // If it's already a region name, return it
+  const region = Object.values(GHANA_REGIONS).find(r => r.name === regionCode);
+  return region ? region.name : regionCode;
+};
+
+export const getDistrictName = (districtCode) => {
+  // Search through all regions for the district
+  for (const region of Object.values(GHANA_REGIONS)) {
+    if (region.districts[districtCode]) {
+      return region.districts[districtCode];
+    }
+    // Also check by name if it's already a district name
+    const districtEntry = Object.entries(region.districts).find(
+      ([code, name]) => name === districtCode || code === districtCode
+    );
+    if (districtEntry) {
+      return districtEntry[1]; // Return the name
+    }
+  }
+  return districtCode; // Return as-is if not found
+};
+
+export const getRegionCode = (regionName) => {
+  const region = Object.values(GHANA_REGIONS).find(r => r.name === regionName);
+  return region ? region.code : regionName;
+};
+
+export const getDistrictCode = (districtName) => {
+  // Search through all regions for the district
+  for (const region of Object.values(GHANA_REGIONS)) {
+    const districtEntry = Object.entries(region.districts).find(
+      ([code, name]) => name === districtName
+    );
+    if (districtEntry) {
+      return districtEntry[0]; // Return the code
+    }
+  }
+  return districtName; // Return as-is if not found
+};
+
+/**
+ * Development and debugging utilities
+ */
+export const getSystemStats = () => {
+  return {
+    totalRegions: Object.keys(GHANA_REGIONS).length,
+    totalDistricts: Object.values(GHANA_REGIONS).reduce((total, region) => 
+      total + Object.keys(region.districts).length, 0
+    ),
+    totalCommodities: Object.keys(COMMODITY_CODES).length,
+    totalPoultryTypes: Object.keys(POULTRY_TYPES).length,
+    dataVersion: '2.0.0',
+    lastUpdated: new Date().toISOString()
+  };
+};
+
+/**
+ * Validates the entire GHANA_REGIONS data structure
+ * @returns {Object} Validation report
+ */
+export const validateDataIntegrity = () => {
+  const report = {
+    isValid: true,
+    errors: [],
+    warnings: [],
+    stats: getSystemStats()
+  };
+  
+  try {
+    // Check for duplicate region names
+    const regionNames = [];
+    const regionCodes = [];
+    
+    Object.entries(GHANA_REGIONS).forEach(([key, region]) => {
+      // Validate region structure
+      if (!region.name || !region.code || !region.districts) {
+        report.errors.push(`Invalid region structure for key ${key}`);
+        report.isValid = false;
+      }
+      
+      // Check for duplicate names
+      if (regionNames.includes(region.name)) {
+        report.errors.push(`Duplicate region name: ${region.name}`);
+        report.isValid = false;
+      }
+      regionNames.push(region.name);
+      
+      // Check for duplicate codes
+      if (regionCodes.includes(region.code)) {
+        report.errors.push(`Duplicate region code: ${region.code}`);
+        report.isValid = false;
+      }
+      regionCodes.push(region.code);
+      
+      // Validate districts
+      const districtNames = [];
+      Object.entries(region.districts).forEach(([districtCode, districtName]) => {
+        if (!districtName || typeof districtName !== 'string') {
+          report.errors.push(`Invalid district name for code ${districtCode} in ${region.name}`);
+          report.isValid = false;
+        }
+        
+        if (districtNames.includes(districtName)) {
+          report.warnings.push(`Duplicate district name "${districtName}" in ${region.name}`);
+        }
+        districtNames.push(districtName);
+      });
+    });
+    
+  } catch (error) {
+    report.errors.push(`Data integrity check failed: ${error.message}`);
+    report.isValid = false;
+  }
+  
+  return report;
+};
+
+// Development mode initialization
+if (process.env.NODE_ENV === 'development') {
+  console.log('🏛️ Ghana Codes System initialized');
+  
+  // Run integrity check
+  const integrity = validateDataIntegrity();
+  if (!integrity.isValid) {
+    console.error('⚠️ Data integrity issues found:', integrity.errors);
+  }
+  if (integrity.warnings.length > 0) {
+    console.warn('⚠️ Data warnings:', integrity.warnings);
+  }
+  
+  console.log('📊 System Stats:', integrity.stats);
+}

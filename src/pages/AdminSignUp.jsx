@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PageTitle from '../components/PageTitle';
 import { Link, useNavigate } from "react-router-dom";
 import hero from "../assets/images/register.png";
 import googlelogo from "../assets/images/googlelogo.svg";
@@ -113,7 +114,9 @@ const AdminSignUp = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:grid lg:grid-cols-5 bg-gray-50">
+    <>
+      <PageTitle title="Admin Sign Up" />
+      <div className="min-h-screen flex flex-col lg:grid lg:grid-cols-5 bg-gray-50">
       {/* Left Section (Hero) */}
       <div
         className="lg:col-span-2 flex flex-col justify-center items-center bg-cover bg-center p-6 sm:p-8 lg:p-10 text-white relative"
@@ -296,7 +299,8 @@ const AdminSignUp = () => {
           </div>
         </form>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

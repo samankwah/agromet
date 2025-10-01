@@ -8,6 +8,7 @@ import {
 } from "react-icons/fa";
 
 import Modal from "./Modal";
+import PageTitle from "../components/PageTitle";
 import {
   FaTractor,
   FaBug,
@@ -318,7 +319,9 @@ const AdvisoryPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-blue-50 mt-16">
+    <>
+      <PageTitle title="Crop Advisory Services" />
+      <div className="min-h-screen bg-blue-50 mt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center py-8">
           <h1 className="text-3xl md:text-4xl lg:text-6xl font-bold text-blue-700 mb-2">
@@ -536,6 +539,7 @@ const AdvisoryPage = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

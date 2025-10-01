@@ -1,3 +1,4 @@
+import PageTitle from '../components/PageTitle';
 import {
   FaFileContract,
   FaUserShield,
@@ -7,7 +8,9 @@ import {
 
 const TermsOfService = () => {
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-blue-100 min-h-screen p-8">
+    <>
+      <PageTitle title="Terms of Service" />
+      <div className="bg-gradient-to-br from-blue-50 to-blue-100 min-h-screen p-8">
       <div className="max-w-7xl mx-auto bg-white rounded-lg shadow-lg p-8 pt-20">
         <h1 className="text-4xl font-bold text-blue-900 mb-6 text-center">
           Terms of Service
@@ -90,7 +93,8 @@ const TermsOfService = () => {
           <p className="text-gray-600">Phone: +233 243 999 631</p>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

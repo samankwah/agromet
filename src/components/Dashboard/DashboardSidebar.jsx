@@ -8,37 +8,31 @@ import {
   FaChevronRight,
   FaSeedling,
   FaDatabase,
+  FaCalendarAlt,
+  FaEgg,
+  FaEye,
+  FaChartBar,
+  FaCog,
+  FaStar,
+  FaFileAlt
 } from "react-icons/fa";
 import PropTypes from "prop-types";
-import CreateCropCalendar from "./CreateCalendar";
 
 const Sidebar = ({ activePage, onNavigate }) => {
-  const [weatherExpanded, setWeatherExpanded] = useState(false);
-  const [agriculturalExpanded, setAgriculturalExpanded] = useState(false);
-  const [contentManagementExpanded, setContentManagementExpanded] =
-    useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [calendarManagementExpanded, setCalendarManagementExpanded] = useState(true);
+  const [advisoryManagementExpanded, setAdvisoryManagementExpanded] = useState(false);
 
-  const toggleWeather = () => {
-    setWeatherExpanded(!weatherExpanded);
+  const toggleCalendarManagement = () => {
+    setCalendarManagementExpanded(!calendarManagementExpanded);
   };
 
-  const toggleAgricultural = () => {
-    setAgriculturalExpanded(!agriculturalExpanded);
-  };
-
-  const toggleContentManagement = () => {
-    setContentManagementExpanded(!contentManagementExpanded);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    onNavigate("dashboard");
+  const toggleAdvisoryManagement = () => {
+    setAdvisoryManagementExpanded(!advisoryManagementExpanded);
   };
 
   return (
     <>
-      <div className="h-screen w-64 bg-green-800 text-white flex flex-col fixed left-0 top-0 shadow-lg">
+      <div className="h-screen w-72 bg-green-800 text-white flex flex-col fixed left-0 top-0 shadow-lg">
         <div className="p-4 border-b border-green-700">
           <h1 className="text-xl font-bold">TriAgro AI Admin</h1>
         </div>
@@ -49,252 +43,116 @@ const Sidebar = ({ activePage, onNavigate }) => {
             <li>
               <button
                 onClick={() => onNavigate("dashboard")}
-                className={`w-full flex items-center px-4 py-3 text-sm rounded-lg ${
+                className={`w-full flex items-center px-4 py-3 text-sm rounded-lg transition-all ${
                   activePage === "dashboard"
-                    ? "bg-green-700"
-                    : "hover:bg-green-700"
+                    ? "bg-green-700 shadow-md"
+                    : "hover:bg-green-700 hover:shadow-sm"
                 }`}
               >
                 <FaTachometerAlt className="mr-3" />
-                <span>Dashboard</span>
+                <span>Dashboard Overview</span>
               </button>
             </li>
 
-            {/* Emergency Alert */}
+            {/* Calendar Management */}
             <li>
               <button
-                onClick={() => onNavigate("emergency")}
-                className={`w-full flex items-center px-4 py-3 text-sm rounded-lg ${
-                  activePage === "emergency"
-                    ? "bg-green-700"
-                    : "hover:bg-green-700"
+                onClick={toggleCalendarManagement}
+                className={`w-full flex items-center justify-between px-4 py-3 text-sm rounded-lg transition-all ${
+                  activePage.startsWith("calendar") || activePage.startsWith("agricultural-crop") || activePage.startsWith("agricultural-poultry") || activePage.startsWith("enhanced-calendar")
+                    ? "bg-green-700 shadow-md"
+                    : "hover:bg-green-700 hover:shadow-sm"
                 }`}
               >
-                <FaBell className="mr-3" />
-                <span>Emergency Alert</span>
+                <div className="flex items-center">
+                  <FaCalendarAlt className="mr-3" />
+                  <span>Calendar Management</span>
+                </div>
+                {calendarManagementExpanded ? (
+                  <FaChevronDown className="ml-2" />
+                ) : (
+                  <FaChevronRight className="ml-2" />
+                )}
               </button>
+
+              {calendarManagementExpanded && (
+                <ul className="ml-4 mt-2 space-y-1">
+                  <li>
+                    <button
+                      onClick={() => onNavigate("content-management-crop-calendar")}
+                      className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all ${
+                        activePage === "content-management-crop-calendar"
+                          ? "bg-green-600"
+                          : "hover:bg-green-600"
+                      }`}
+                    >
+                      <FaSeedling className="mr-3 text-sm" />
+                      <span>Crop Calendars</span>
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => onNavigate("content-management-poultry-calendar")}
+                      className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all ${
+                        activePage === "content-management-poultry-calendar"
+                          ? "bg-green-600"
+                          : "hover:bg-green-600"
+                      }`}
+                    >
+                      <FaEgg className="mr-3 text-sm" />
+                      <span>Poultry Calendars</span>
+                    </button>
+                  </li>
+                </ul>
+              )}
             </li>
 
-            {/* Weather Reports */}
+            {/* Advisory Management */}
             <li>
               <button
-                onClick={toggleWeather}
-                className={`w-full flex items-center justify-between px-4 py-3 text-sm rounded-lg ${
-                  activePage.startsWith("weather")
-                    ? "bg-green-700"
-                    : "hover:bg-green-700"
+                onClick={toggleAdvisoryManagement}
+                className={`w-full flex items-center justify-between px-4 py-3 text-sm rounded-lg transition-all ${
+                  activePage.startsWith("advisory") || activePage.startsWith("agricultural-agromet") || activePage.startsWith("content-management-agromet") || activePage.startsWith("content-management-poultry-advisory")
+                    ? "bg-green-700 shadow-md"
+                    : "hover:bg-green-700 hover:shadow-sm"
                 }`}
               >
                 <div className="flex items-center">
                   <FaCloudSun className="mr-3" />
-                  <span>Weather Reports</span>
+                  <span>Advisory Management</span>
                 </div>
-                {weatherExpanded ? (
+                {advisoryManagementExpanded ? (
                   <FaChevronDown className="ml-2" />
                 ) : (
                   <FaChevronRight className="ml-2" />
                 )}
               </button>
 
-              {weatherExpanded && (
+              {advisoryManagementExpanded && (
                 <ul className="ml-4 mt-2 space-y-1">
                   <li>
                     <button
-                      onClick={() => onNavigate("weather-agro")}
-                      className={`w-full flex items-center px-4 py-2 text-sm rounded-lg ${
-                        activePage === "weather-agro"
-                          ? "bg-green-700"
-                          : "hover:bg-green-700"
-                      }`}
-                    >
-                      <span>Agromet Bulletins</span>
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      onClick={() => onNavigate("weather-flood")}
-                      className={`w-full flex items-center px-4 py-2 text-sm rounded-lg ${
-                        activePage === "weather-flood"
-                          ? "bg-green-700"
-                          : "hover:bg-green-700"
-                      }`}
-                    >
-                      <span>Flood & Drought Bulletins</span>
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      onClick={() => onNavigate("weather-seasonal")}
-                      className={`w-full flex items-center px-4 py-2 text-sm rounded-lg ${
-                        activePage === "weather-seasonal"
-                          ? "bg-green-700"
-                          : "hover:bg-green-700"
-                      }`}
-                    >
-                      <span>Seasonal Forecast</span>
-                    </button>
-                  </li>
-                </ul>
-              )}
-            </li>
-
-            {/* Agricultural Data Upload */}
-            <li>
-              <button
-                onClick={toggleAgricultural}
-                className={`w-full flex items-center justify-between px-4 py-3 text-sm rounded-lg ${
-                  activePage.startsWith("agricultural")
-                    ? "bg-green-700"
-                    : "hover:bg-green-700"
-                }`}
-              >
-                <div className="flex items-center">
-                  <FaSeedling className="mr-3" />
-                  <span>Agricultural Data</span>
-                </div>
-                {agriculturalExpanded ? (
-                  <FaChevronDown className="ml-2" />
-                ) : (
-                  <FaChevronRight className="ml-2" />
-                )}
-              </button>
-
-              {agriculturalExpanded && (
-                <ul className="ml-4 mt-2 space-y-1">
-                  <li>
-                    <button
-                      onClick={() => onNavigate("agricultural-crop-calendar")}
-                      className={`w-full flex items-center px-4 py-2 text-sm rounded-lg ${
-                        activePage === "agricultural-crop-calendar"
-                          ? "bg-green-700"
-                          : "hover:bg-green-700"
-                      }`}
-                    >
-                      <span>Crop Calendars</span>
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      onClick={() =>
-                        onNavigate("agricultural-agromet-advisory")
-                      }
-                      className={`w-full flex items-center px-4 py-2 text-sm rounded-lg ${
-                        activePage === "agricultural-agromet-advisory"
-                          ? "bg-green-700"
-                          : "hover:bg-green-700"
-                      }`}
-                    >
-                      <span>Agromet Advisories</span>
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      onClick={() =>
-                        onNavigate("agricultural-poultry-calendar")
-                      }
-                      className={`w-full flex items-center px-4 py-2 text-sm rounded-lg ${
-                        activePage === "agricultural-poultry-calendar"
-                          ? "bg-green-700"
-                          : "hover:bg-green-700"
-                      }`}
-                    >
-                      <span>Poultry Calendars</span>
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      onClick={() =>
-                        onNavigate("agricultural-poultry-advisory")
-                      }
-                      className={`w-full flex items-center px-4 py-2 text-sm rounded-lg ${
-                        activePage === "agricultural-poultry-advisory"
-                          ? "bg-green-700"
-                          : "hover:bg-green-700"
-                      }`}
-                    >
-                      <span>Upload Poultry Advisories</span>
-                    </button>
-                  </li>
-                </ul>
-              )}
-            </li>
-
-            {/* Content Management */}
-            <li>
-              <button
-                onClick={toggleContentManagement}
-                className={`w-full flex items-center justify-between px-4 py-3 text-sm rounded-lg ${
-                  activePage.startsWith("content-management")
-                    ? "bg-green-700"
-                    : "hover:bg-green-700"
-                }`}
-              >
-                <div className="flex items-center">
-                  <FaDatabase className="mr-3" />
-                  <span>Content Management</span>
-                </div>
-                {contentManagementExpanded ? (
-                  <FaChevronDown className="ml-2" />
-                ) : (
-                  <FaChevronRight className="ml-2" />
-                )}
-              </button>
-
-              {contentManagementExpanded && (
-                <ul className="ml-4 mt-2 space-y-1">
-                  <li>
-                    <button
-                      onClick={() =>
-                        onNavigate("content-management-crop-calendar")
-                      }
-                      className={`w-full flex items-center px-4 py-2 text-sm rounded-lg ${
-                        activePage === "content-management-crop-calendar"
-                          ? "bg-green-700"
-                          : "hover:bg-green-700"
-                      }`}
-                    >
-                      <span>Crop Calendars</span>
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      onClick={() =>
-                        onNavigate("content-management-agromet-advisory")
-                      }
-                      className={`w-full flex items-center px-4 py-2 text-sm rounded-lg ${
+                      onClick={() => onNavigate("content-management-agromet-advisory")}
+                      className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all ${
                         activePage === "content-management-agromet-advisory"
-                          ? "bg-green-700"
-                          : "hover:bg-green-700"
+                          ? "bg-green-600"
+                          : "hover:bg-green-600"
                       }`}
                     >
+                      <FaCloudSun className="mr-3 text-sm" />
                       <span>Agromet Advisories</span>
                     </button>
                   </li>
                   <li>
                     <button
-                      onClick={() =>
-                        onNavigate("content-management-poultry-calendar")
-                      }
-                      className={`w-full flex items-center px-4 py-2 text-sm rounded-lg ${
-                        activePage === "content-management-poultry-calendar"
-                          ? "bg-green-700"
-                          : "hover:bg-green-700"
-                      }`}
-                    >
-                      <span>Poultry Calendars</span>
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      onClick={() =>
-                        onNavigate("content-management-poultry-advisory")
-                      }
-                      className={`w-full flex items-center px-4 py-2 text-sm rounded-lg ${
+                      onClick={() => onNavigate("content-management-poultry-advisory")}
+                      className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all ${
                         activePage === "content-management-poultry-advisory"
-                          ? "bg-green-700"
-                          : "hover:bg-green-700"
+                          ? "bg-green-600"
+                          : "hover:bg-green-600"
                       }`}
                     >
+                      <FaSeedling className="mr-3 text-sm" />
                       <span>Poultry Advisories</span>
                     </button>
                   </li>
@@ -302,16 +160,34 @@ const Sidebar = ({ activePage, onNavigate }) => {
               )}
             </li>
 
-            {/* News */}
+            <div className="border-t border-green-700 my-2"></div>
+
+            {/* System Tools */}
+            <li>
+              <button
+                onClick={() => onNavigate("emergency")}
+                className={`w-full flex items-center px-4 py-3 text-sm rounded-lg transition-all ${
+                  activePage === "emergency"
+                    ? "bg-green-700 shadow-md"
+                    : "hover:bg-green-700 hover:shadow-sm"
+                }`}
+              >
+                <FaBell className="mr-3" />
+                <span>Emergency Alerts</span>
+              </button>
+            </li>
+
             <li>
               <button
                 onClick={() => onNavigate("news")}
-                className={`w-full flex items-center px-4 py-3 text-sm rounded-lg ${
-                  activePage === "news" ? "bg-green-700" : "hover:bg-green-700"
+                className={`w-full flex items-center px-4 py-3 text-sm rounded-lg transition-all ${
+                  activePage === "news"
+                    ? "bg-green-700 shadow-md" 
+                    : "hover:bg-green-700 hover:shadow-sm"
                 }`}
               >
                 <FaNewspaper className="mr-3" />
-                <span>News</span>
+                <span>News Management</span>
               </button>
             </li>
           </ul>
@@ -322,9 +198,6 @@ const Sidebar = ({ activePage, onNavigate }) => {
           <p>Agricultural Intelligence Platform</p>
         </div>
       </div>
-
-      {/* Modal */}
-      <CreateCropCalendar isOpen={isModalOpen} onClose={closeModal} />
     </>
   );
 };

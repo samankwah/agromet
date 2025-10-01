@@ -1,28 +1,14 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FaTimes, FaEye, FaTrash, FaPlus, FaDownload } from 'react-icons/fa';
 import PropTypes from 'prop-types';
 import userService from '../../services/userService';
 import TemplateGenerationService from '../../services/templateGenerationService';
-
-// Ghana regions and districts data
-const ghanaRegionsDistricts = {
-  "Ahafo Region": ["Asunafo North", "Asunafo South", "Asutifi North", "Asutifi South", "Tano North", "Tano South"],
-  "Ashanti Region": ["Adansi North", "Adansi South", "Afigya Kwabre North", "Afigya Kwabre South", "Afigya Sekyere East", "Ahafo Ano North", "Ahafo Ano South East", "Ahafo Ano South West", "Amansie Central", "Amansie South", "Amansie West", "Atwima Kwanwoma", "Atwima Mponua", "Atwima Nwabiagya North", "Atwima Nwabiagya South", "Bekwai", "Bosome Freho", "Bosomtwe", "Ejisu", "Ejura Sekyedumase", "Juaben", "Kwabre East", "Kumasi", "Mampong", "Nsuta Kwamang Beposo", "Obuasi East", "Obuasi West", "Offinso North", "Offinso South", "Oforikrom", "Old Tafo", "Sekyere Afram Plains", "Sekyere Central", "Sekyere East", "Sekyere Kumawu", "Sekyere South"],
-  "Bono Region": ["Banda", "Berekum East", "Berekum West", "Dormaa Central", "Dormaa East", "Dormaa West", "Jaman North", "Jaman South", "Sunyani", "Sunyani West", "Tain", "Wenchi"],
-  "Bono East Region": ["Atebubu Amantin", "Kintampo North", "Kintampo South", "Nkoranza North", "Nkoranza South", "Pru East", "Pru West", "Sene East", "Sene West", "Techiman North", "Techiman South"],
-  "Central Region": ["Abura Asebu Kwamankese", "Agona East", "Agona West", "Ajumako Enyan Essiam", "Asikuma Odoben Brakwa", "Assin Central", "Assin North", "Assin South", "Awutu Senya", "Awutu Senya East", "Cape Coast", "Effutu", "Ekumfi", "Gomoa Central", "Gomoa East", "Gomoa West", "Kasoa", "Komenda Edina Eguafo Abirem", "Mfantsiman", "Twifo Ati Morkwa", "Twifo Hemang Lower Denkyira", "Upper Denkyira East", "Upper Denkyira West"],
-  "Eastern Region": ["Abuakwa North", "Abuakwa South", "Achiase", "Afram Plains North", "Afram Plains South", "Akim East", "Akim West", "Akuapim North", "Akuapim South", "Asene Manso Akroso", "Atiwa East", "Atiwa West", "Ayensuano", "Birim Central", "Birim North", "Birim South", "Denkyembour", "East Akim", "Fanteakwa North", "Fanteakwa South", "Kwaebibirem", "Kwahu Afram Plains South", "Kwahu East", "Kwahu South", "Kwahu West", "Lower Manya Krobo", "New Juaben North", "New Juaben South", "Nsawam Adoagyir", "Okere", "Suhum", "Upper Manya Krobo", "Upper West Akim", "West Akim", "Yilo Krobo"],
-  "Greater Accra Region": ["Ablekuma Central", "Ablekuma North", "Ablekuma West", "Accra", "Ada East", "Ada West", "Adenta", "Ashaiman", "Ayawaso Central", "Ayawaso East", "Ayawaso North", "Ayawaso West Wuogon", "Ga Central", "Ga East", "Ga North", "Ga South", "Ga West", "Kpone Katamanso", "Krowor", "La Dade Kotopon", "La Nkwantanang Madina", "Ledzokuku", "Okaikwei North", "Okaikwei South", "Shai Osudoku", "Tema East", "Tema West", "Weija Gbawe"],
-  "North East Region": ["Bunkpurugu Nakpanduri", "Chereponi", "East Mamprusi", "Mamprugu Moagduri", "West Mamprusi", "Yunyoo Nasuan"],
-  "Northern Region": ["Bole", "Central Gonja", "East Gonja", "Gushegu", "Karaga", "Kpandai", "Kumbungu", "Mion", "Nanumba North", "Nanumba South", "North Gonja", "Saboba", "Savelugu", "Sawla Tuna Kalba", "Tamale", "Tatale Sanguli", "Tolon", "West Gonja", "Yendi", "Zabzugu"],
-  "Oti Region": ["Biakoye", "Jasikan", "Kadjebi", "Krachi East", "Krachi Nchumuru", "Krachi West", "Nkwanta North", "Nkwanta South"],
-  "Savannah Region": ["Bole", "Central Gonja", "East Gonja", "North Gonja", "Sawla Tuna Kalba", "West Gonja", "Yapei Kusawgu"],
-  "Upper East Region": ["Bawku", "Bawku West", "Binduri", "Bolgatanga", "Builsa North", "Builsa South", "Garu", "Kassena Nankana East", "Kassena Nankana West", "Nabdam", "Pusiga", "Talensi", "Tempane"],
-  "Upper West Region": ["Daffiama Bussie Issa", "Jirapa", "Lambussie Karni", "Lawra", "Nadowli Kaleo", "Nandom", "Sissala East", "Sissala West", "Wa East", "Wa West"],
-  "Volta Region": ["Adaklu", "Agotime Ziope", "Akatsi North", "Akatsi South", "Central Tongu", "Ho", "Ho West", "Hohoe", "Keta", "Ketu North", "Ketu South", "North Dayi", "North Tongu", "South Dayi", "South Tongu", "Volta Region"],
-  "Western Region": ["Ahanta West", "Ellembelle", "Jomoro", "Mpohor", "Nzema East", "Prestea Huni Valley", "Sekondi Takoradi", "Shama", "Tarkwa Nsuaem", "Wassa Amenfi Central", "Wassa Amenfi East", "Wassa Amenfi West", "Wassa East", "Wiawso"],
-  "Western North Region": ["Aowin", "Bia East", "Bia West", "Bibiani Anhwiaso Bekwai", "Bodi", "Juaboso", "Sefwi Akontombra", "Sefwi Wiawso", "Suaman"]
-};
+import { toast } from 'react-hot-toast';
+import { getRegionDistrictMapping, getAllRegionNames, getDistrictsByRegionName } from '../../data/ghanaCodes';
+import { getSafeDistrictsByRegion, getSafeRegions } from '../../utils/regionDistrictHelpers';
+import { SafeDistrictOptions } from '../../components/common/SafeSelectOptions';
+import calendarPreviewParser from '../../utils/calendarPreviewParser';
 
 // Common crops in Ghana
 const ghanaCommonCrops = [
@@ -40,6 +26,7 @@ const months = [
 ];
 
 const CropCalendarForm = ({ isOpen, onClose, onSave }) => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     region: '',
     district: '',
@@ -56,19 +43,90 @@ const CropCalendarForm = ({ isOpen, onClose, onSave }) => {
     }
   });
 
-  const [districts, setDistricts] = useState([]);
+  const [districtData, setDistrictData] = useState({ districts: [], meta: {} });
   const [loading, setLoading] = useState(false);
   const [previewData, setPreviewData] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
   const [errors, setErrors] = useState({});
+  const [parsingPreview, setParsingPreview] = useState(false);
+  const [previewError, setPreviewError] = useState(null);
 
-  // Update districts when region changes
+  // Get regions using safe helpers with error handling
+  const { regions: safeRegions } = getSafeRegions();
+  const regionNames = safeRegions.map(r => r.name);
+  const regionDistrictMapping = getRegionDistrictMapping();
+
+  // Update districts when region changes using safe helper
   useEffect(() => {
-    if (formData.region && ghanaRegionsDistricts[formData.region]) {
-      setDistricts(ghanaRegionsDistricts[formData.region]);
-      setFormData(prev => ({ ...prev, district: '' }));
+    if (formData.region) {
+      try {
+        const result = getSafeDistrictsByRegion(formData.region, {
+          preferNewData: true,
+          fallbackToLegacy: true,
+          enableCaching: true
+        });
+        
+        setDistrictData(result);
+        setFormData(prev => ({ ...prev, district: '' }));
+        
+        // Log any data source issues in development
+        if (process.env.NODE_ENV === 'development' && result.meta.hasErrors) {
+          console.warn('District data has errors:', result.meta);
+        }
+      } catch (error) {
+        console.error('Error loading districts for region:', formData.region, error);
+        setDistrictData({ districts: [], meta: { error: error.message } });
+      }
+    } else {
+      setDistrictData({ districts: [], meta: {} });
     }
   }, [formData.region]);
+
+  // RESTORE FORM DATA: Only restore if returning from preview (with session flag)
+  useEffect(() => {
+    const storedFormData = localStorage.getItem('calendarFormData');
+    const isReturningFromPreview = sessionStorage.getItem('returningFromCalendarPreview');
+    
+    if (storedFormData && isReturningFromPreview) {
+      try {
+        const restored = JSON.parse(storedFormData);
+        console.log('🔄 Restoring form data from preview:', restored);
+        
+        setFormData(prev => ({
+          ...prev,
+          region: restored.region || '',
+          district: restored.district || '', 
+          crop: restored.crop || '',
+          majorSeason: {
+            ...prev.majorSeason,
+            // Don't restore file object, but show filename
+            startMonth: restored.majorSeason?.startMonth || '',
+            startWeek: restored.majorSeason?.startWeek || ''
+          },
+          minorSeason: {
+            ...prev.minorSeason,
+            startMonth: restored.minorSeason?.startMonth || '',
+            startWeek: restored.minorSeason?.startWeek || ''
+          }
+        }));
+        
+        // Clear both storage items after restoring
+        localStorage.removeItem('calendarFormData');
+        sessionStorage.removeItem('returningFromCalendarPreview');
+        
+        console.log('✅ Form data restored from preview');
+        
+      } catch (error) {
+        console.error('Error restoring form data:', error);
+        localStorage.removeItem('calendarFormData');
+        sessionStorage.removeItem('returningFromCalendarPreview');
+      }
+    } else if (storedFormData) {
+      // Clean up old stored data if not returning from preview
+      console.log('🧹 Cleaning up old form data (not from preview)');
+      localStorage.removeItem('calendarFormData');
+    }
+  }, []); // Run only on component mount
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -115,66 +173,130 @@ const CropCalendarForm = ({ isOpen, onClose, onSave }) => {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.region) newErrors.region = 'Region is required';
     if (!formData.district) newErrors.district = 'District is required';
     if (!formData.crop) newErrors.crop = 'Crop is required';
-    
+
     if (!formData.majorSeason.file) newErrors.majorSeasonFile = 'Major season file is required';
-    if (!formData.majorSeason.startMonth) newErrors.majorSeasonMonth = 'Major season start month is required';
-    
+    // Make start month optional for easier testing
+    // if (!formData.majorSeason.startMonth) newErrors.majorSeasonMonth = 'Major season start month is required';
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const generatePreviewData = () => {
-    const baseData = {
-      region: formData.region,
-      district: formData.district,
-      crop: formData.crop,
-      commodityCode: `CT${Math.random().toString().substring(2, 12)}`, // Generate sample commodity code
-    };
-
-    const previewRows = [];
-    
-    if (formData.majorSeason.file) {
-      previewRows.push({
-        ...baseData,
-        season: 'Major',
-        startMonth: formData.majorSeason.startMonth,
-        startWeek: formData.majorSeason.startWeek || 'TBD',
-        type: 'General',
-        activities: 'Sample activities from uploaded file',
-        recommendations: 'Sample recommendations from uploaded file'
-      });
+  const generatePreviewData = async () => {
+    if (!formData.majorSeason.file) {
+      setPreviewError('Please upload a major season Excel file first.');
+      return null;
     }
 
-    if (formData.minorSeason.file) {
-      previewRows.push({
-        ...baseData,
-        season: 'Minor',
-        startMonth: formData.minorSeason.startMonth,
-        startWeek: formData.minorSeason.startWeek || 'TBD',
-        type: 'General',
-        activities: 'Sample activities from uploaded file',
-        recommendations: 'Sample recommendations from uploaded file'
-      });
-    }
+    setParsingPreview(true);
+    setPreviewError(null);
 
-    return previewRows;
+    try {
+      // Parse the major season file with enhanced parser
+      const majorSeasonData = await calendarPreviewParser.parseCalendarForPreview(
+        formData.majorSeason.file,
+        { region: formData.region, district: formData.district, crop: formData.crop }
+      );
+
+      let minorSeasonData = null;
+      if (formData.minorSeason.file) {
+        minorSeasonData = await calendarPreviewParser.parseCalendarForPreview(
+          formData.minorSeason.file,
+          { region: formData.region, district: formData.district, crop: formData.crop }
+        );
+      }
+
+      // Combine the data for preview
+      const combinedPreview = {
+        majorSeason: majorSeasonData,
+        minorSeason: minorSeasonData,
+        metadata: {
+          region: formData.region,
+          district: formData.district,
+          crop: formData.crop,
+          totalFiles: minorSeasonData ? 2 : 1,
+          parseDate: new Date().toISOString()
+        }
+      };
+
+      return combinedPreview;
+
+    } catch (error) {
+      console.error('Error parsing calendar preview:', error);
+      setPreviewError(`Error parsing Excel file: ${error.message}`);
+      return null;
+    } finally {
+      setParsingPreview(false);
+    }
   };
 
-  const handlePreview = () => {
+  const handlePreview = async () => {
     if (validateForm()) {
-      const preview = generatePreviewData();
-      setPreviewData(preview);
-      setShowPreview(true);
+      const preview = await generatePreviewData();
+      if (preview) {
+        // Store preview data in localStorage for the preview page
+        localStorage.setItem('calendarPreviewData', JSON.stringify(preview.majorSeason));
+        
+        // PRESERVE FORM DATA: Store form data for when user returns from preview
+        const formDataForRestore = {
+          region: formData.region,
+          district: formData.district,
+          crop: formData.crop,
+          majorSeason: {
+            ...formData.majorSeason,
+            // Don't store File object, just metadata
+            fileName: formData.majorSeason.file?.name,
+            startMonth: formData.majorSeason.startMonth,
+            startWeek: formData.majorSeason.startWeek
+          },
+          minorSeason: {
+            ...formData.minorSeason,
+            // Don't store File object, just metadata  
+            fileName: formData.minorSeason.file?.name,
+            startMonth: formData.minorSeason.startMonth,
+            startWeek: formData.minorSeason.startWeek
+          }
+        };
+        localStorage.setItem('calendarFormData', JSON.stringify(formDataForRestore));
+        
+        // Set session flag to indicate we're going to preview
+        sessionStorage.setItem('returningFromCalendarPreview', 'true');
+        
+        // Navigate to the full-page preview
+        navigate('/production/calendar-preview');
+      }
     }
   };
 
   const handleSave = async () => {
-    if (!validateForm()) return;
+    console.log('🌾 CropCalendar: Save button clicked - BUTTON IS WORKING!');
+    console.log('🌾 CropCalendar: Current form state:', {
+      region: formData.region || 'NOT SET',
+      district: formData.district || 'NOT SET',
+      crop: formData.crop || 'NOT SET',
+      hasFile: !!formData.majorSeason.file,
+      fileName: formData.majorSeason.file?.name || 'NO FILE',
+      startMonth: formData.majorSeason.startMonth || 'NOT SET'
+    });
 
+    const validationResult = validateForm();
+    console.log('🌾 CropCalendar: Validation result:', validationResult);
+
+    if (!validationResult) {
+      console.log('❌ CropCalendar: VALIDATION FAILED - This is why save appears broken!');
+      console.log('❌ CropCalendar: Validation errors:', errors);
+      console.log('❌ CropCalendar: Please fill ALL required fields and try again');
+
+      // Show user feedback
+      alert('Please fill all required fields:\n- Region\n- District\n- Crop\n- Excel file\n\n(Start month is optional)');
+      return;
+    }
+
+    console.log('🌾 CropCalendar: Starting save process...');
     setLoading(true);
     try {
       // Create form data for submission
@@ -202,7 +324,17 @@ const CropCalendarForm = ({ isOpen, onClose, onSave }) => {
       const result = await userService.uploadAgriculturalData(submitData, 'crop-calendar');
       
       if (result.success) {
-        alert('Crop calendar saved successfully!');
+        toast.success(`🌾 ${formData.crop} calendar for ${formData.district}, ${formData.region} created successfully!`, {
+          duration: 4000,
+          position: 'top-right',
+          icon: '✅',
+          style: {
+            background: '#10B981',
+            color: '#ffffff',
+            borderRadius: '8px',
+            padding: '16px',
+          }
+        });
         onSave(result.data);
         onClose();
         
@@ -217,11 +349,33 @@ const CropCalendarForm = ({ isOpen, onClose, onSave }) => {
         setPreviewData(null);
         setShowPreview(false);
       } else {
-        throw new Error(result.error || 'Failed to save crop calendar');
+        throw new Error(result.error || result.message || 'Failed to save crop calendar');
       }
     } catch (error) {
       console.error('Error saving crop calendar:', error);
-      alert('Error saving crop calendar: ' + error.message);
+
+      // More detailed error handling
+      let errorMessage = 'Failed to create calendar';
+      if (error.response?.status === 401) {
+        errorMessage = 'Authentication required. Please log in again.';
+      } else if (error.response?.status === 403) {
+        errorMessage = 'Access denied. Please check your permissions.';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      toast.error(`❌ ${errorMessage}`, {
+        duration: 5000,
+        position: 'top-right',
+        style: {
+          background: '#EF4444',
+          color: '#ffffff',
+          borderRadius: '8px',
+          padding: '16px',
+        }
+      });
     } finally {
       setLoading(false);
     }
@@ -236,7 +390,16 @@ const CropCalendarForm = ({ isOpen, onClose, onSave }) => {
       });
     } catch (error) {
       console.error('Error downloading template:', error);
-      alert('Error generating template. Please try again.');
+      toast.error('❌ Error generating template. Please try again.', {
+        duration: 4000,
+        position: 'top-right',
+        style: {
+          background: '#EF4444',
+          color: '#ffffff',
+          borderRadius: '8px',
+          padding: '16px',
+        }
+      });
     }
   };
 
@@ -257,8 +420,6 @@ const CropCalendarForm = ({ isOpen, onClose, onSave }) => {
         </div>
 
         <div className="p-6">
-          {!showPreview ? (
-            <>
               {/* Basic Information */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div>
@@ -273,7 +434,7 @@ const CropCalendarForm = ({ isOpen, onClose, onSave }) => {
                     }`}
                   >
                     <option value="">Select Region...</option>
-                    {Object.keys(ghanaRegionsDistricts).map(region => (
+                    {regionNames.map(region => (
                       <option key={region} value={region}>{region}</option>
                     ))}
                   </select>
@@ -293,13 +454,21 @@ const CropCalendarForm = ({ isOpen, onClose, onSave }) => {
                     }`}
                     disabled={!formData.region}
                   >
-                    <option value="">Select District...</option>
-                    {districts.map(district => (
-                      <option key={district} value={district}>{district}</option>
-                    ))}
+                    <SafeDistrictOptions 
+                      districts={districtData.districts}
+                      placeholder="Select District..."
+                      includeEmpty={true}
+                    />
                   </select>
                   {errors.district && <p className="text-red-500 text-xs mt-1">{errors.district}</p>}
-                  <p className="text-gray-500 text-xs mt-1">Enter the district</p>
+                  {districtData.meta.hasErrors && (
+                    <p className="text-orange-500 text-xs mt-1">
+                      ⚠️ Using fallback data source
+                    </p>
+                  )}
+                  <p className="text-gray-500 text-xs mt-1">
+                    Enter the district {process.env.NODE_ENV === 'development' && districtData.meta.dataSource && `(${districtData.meta.dataSource})`}
+                  </p>
                 </div>
 
                 <div>
@@ -471,10 +640,19 @@ const CropCalendarForm = ({ isOpen, onClose, onSave }) => {
                   <button
                     onClick={handlePreview}
                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center"
-                    disabled={loading}
+                    disabled={loading || parsingPreview}
                   >
-                    <FaEye className="mr-2" />
-                    Preview
+                    {parsingPreview ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Parsing...
+                      </>
+                    ) : (
+                      <>
+                        <FaEye className="mr-2" />
+                        Preview Calendar
+                      </>
+                    )}
                   </button>
                 </div>
                 
@@ -496,76 +674,7 @@ const CropCalendarForm = ({ isOpen, onClose, onSave }) => {
                   )}
                 </button>
               </div>
-            </>
-          ) : (
-            /* Preview Section */
-            <>
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Calendar Data Preview</h3>
-                <button
-                  onClick={() => setShowPreview(false)}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
-                >
-                  Back to Edit
-                </button>
-              </div>
 
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Region</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">District</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Crop</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Season</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Start Month</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Start Week</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Activities</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {previewData?.map((row, index) => (
-                      <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                        <td className="px-4 py-3 text-sm text-gray-900">{row.region}</td>
-                        <td className="px-4 py-3 text-sm text-gray-900">{row.district}</td>
-                        <td className="px-4 py-3 text-sm text-gray-900">{row.crop}</td>
-                        <td className="px-4 py-3 text-sm text-gray-900">
-                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                            row.season === 'Major' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
-                          }`}>
-                            {row.season}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-900">{row.startMonth}</td>
-                        <td className="px-4 py-3 text-sm text-gray-900">{row.startWeek}</td>
-                        <td className="px-4 py-3 text-sm text-gray-900">{row.activities}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="flex justify-end mt-6">
-                <button
-                  onClick={handleSave}
-                  className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <FaPlus className="mr-2" />
-                      Confirm & Save
-                    </>
-                  )}
-                </button>
-              </div>
-            </>
-          )}
         </div>
       </div>
     </div>

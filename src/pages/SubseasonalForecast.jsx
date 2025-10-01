@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import PageTitle from '../components/PageTitle';
 import {
   TrendingUp,
   TrendingDown,
@@ -271,7 +272,9 @@ const SubseasonalForecast = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-16">
+    <>
+      <PageTitle title="Subseasonal Forecast" />
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-16">
       <div className="mb-8 text-center">
         <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 flex items-center justify-center">
           {/* <BarChart3 className="mr-2 text-blue-600" /> */}
@@ -795,7 +798,8 @@ const SubseasonalForecast = () => {
           })}
         </p>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

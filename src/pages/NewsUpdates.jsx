@@ -1,3 +1,5 @@
+import PageTitle from '../components/PageTitle';
+
 const NewsUpdates = () => {
   const newsArticles = [
     {
@@ -22,7 +24,9 @@ const NewsUpdates = () => {
   ];
 
   return (
-    <div className="bg-gradient-to-br from-green-50 to-green-100 min-h-screen p-8">
+    <>
+      <PageTitle title="News & Updates" />
+      <div className="bg-gradient-to-br from-green-50 to-green-100 min-h-screen p-8">
       <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6">
         <h1 className="text-green-800 text-3xl font-bold mb-4 text-center">
           Latest News Updates
@@ -50,6 +54,7 @@ const NewsUpdates = () => {
         </div>
       </div>
     </div>
+    </>  
   );
 };
 

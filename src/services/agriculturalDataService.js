@@ -1,4 +1,5 @@
 import axios from 'axios';
+import serverHealthCheck from '../utils/serverHealthCheck';
 
 /**
  * Agricultural Data Service
@@ -7,7 +8,7 @@ import axios from 'axios';
  */
 class AgriculturalDataService {
   constructor() {
-    // Use the same backend URL as the auth system
+    // Use the correct server URL for agricultural data (port 3002)
     this.baseURL = 'http://localhost:3002/api';
     this.api = axios.create({
       baseURL: this.baseURL,
@@ -17,43 +18,127 @@ class AgriculturalDataService {
       },
     });
 
+    // Initialize server health monitoring
+    serverHealthCheck.updateServerURL('http://localhost:3002/api');
+    serverHealthCheck.startMonitoring();
+
+    // Add request interceptor for JWT authentication
+    this.api.interceptors.request.use(
+      (config) => {
+        const token = localStorage.getItem('token') || localStorage.getItem('donatrakAccessToken');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
+      }
+    );
+
     // Add response interceptor for error handling
     this.api.interceptors.response.use(
       (response) => response,
       (error) => {
         console.error('Agricultural Data API Error:', error);
+        // Don't redirect on 401 errors - let components handle authentication gracefully
+        // This allows public access to agricultural data while preserving admin functionality
         return Promise.reject(error);
       }
     );
   }
 
   /**
-   * Get crop calendar data with optional filtering
+   * Check if API call should be attempted based on server health
+   * @param {string} endpoint - Optional specific endpoint to check
+   * @returns {Promise<boolean>} Should attempt the API call
    */
-  async getCropCalendar(filters = {}) {
-    try {
-      const params = new URLSearchParams();
-      Object.keys(filters).forEach(key => {
-        if (filters[key]) {
-          params.append(key, filters[key]);
-        }
-      });
+  async shouldAttemptCall(endpoint = null) {
+    const recommendation = await serverHealthCheck.shouldAttemptAPICall(endpoint);
 
-      const response = await this.api.get(`/crop-calendar?${params.toString()}`);
+    if (!recommendation.shouldAttempt) {
+      console.warn(`🚫 Skipping API call due to server health: ${recommendation.reason}`);
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Enhanced API call wrapper with health checking and fallback handling
+   * @param {Function} apiCall - The API call function
+   * @param {string} endpoint - Endpoint being called (for health checking)
+   * @param {Object} fallbackData - Fallback data structure
+   * @returns {Promise<Object>} API result with health metadata
+   */
+  async healthAwareAPICall(apiCall, endpoint, fallbackData = {}) {
+    // Check server health before making the call
+    const shouldAttempt = await this.shouldAttemptCall(endpoint);
+
+    if (!shouldAttempt) {
       return {
-        success: true,
-        data: response.data.data || [],
-        total: response.data.total || 0,
-        filters: response.data.filters || {}
+        success: false,
+        error: 'Server temporarily unavailable',
+        ...fallbackData,
+        metadata: {
+          skippedDueToHealth: true,
+          serverHealthy: false,
+          timestamp: new Date().toISOString()
+        }
+      };
+    }
+
+    try {
+      const result = await apiCall();
+      return {
+        ...result,
+        metadata: {
+          ...result.metadata,
+          serverHealthy: true,
+          timestamp: new Date().toISOString()
+        }
       };
     } catch (error) {
+      // Update health status on error
+      await serverHealthCheck.forceHealthCheck();
+
       return {
         success: false,
         error: error.response?.data?.error || error.message,
-        data: [],
-        total: 0
+        ...fallbackData,
+        metadata: {
+          serverHealthy: false,
+          errorType: error.code || 'unknown',
+          timestamp: new Date().toISOString()
+        }
       };
     }
+  }
+
+  /**
+   * Get crop calendar data with optional filtering
+   */
+  async getCropCalendar(filters = {}) {
+    return this.healthAwareAPICall(
+      async () => {
+        const params = new URLSearchParams();
+        Object.keys(filters).forEach(key => {
+          if (filters[key]) {
+            params.append(key, filters[key]);
+          }
+        });
+
+        const response = await this.api.get(`/agricultural-data/crop-calendar?${params.toString()}`);
+        return {
+          success: true,
+          data: response.data.data || [],
+          total: response.data.total || 0,
+          filters: response.data.filters || {}
+        };
+      },
+      '/agricultural-data/crop-calendar',
+      { data: [], total: 0, filters: {} }
+    );
   }
 
   /**
@@ -68,7 +153,7 @@ class AgriculturalDataService {
         }
       });
 
-      const response = await this.api.get(`/production-calendar?${params.toString()}`);
+      const response = await this.api.get(`/agricultural-data/production-calendar?${params.toString()}`);
       return {
         success: true,
         data: response.data.data || [],
@@ -97,7 +182,7 @@ class AgriculturalDataService {
         }
       });
 
-      const response = await this.api.get(`/agromet-advisory?${params.toString()}`);
+      const response = await this.api.get(`/agricultural-data/agromet-advisory?${params.toString()}`);
       return {
         success: true,
         data: response.data.data || [],
@@ -126,7 +211,7 @@ class AgriculturalDataService {
         }
       });
 
-      const response = await this.api.get(`/poultry-calendar?${params.toString()}`);
+      const response = await this.api.get(`/agricultural-data/poultry-calendar?${params.toString()}`);
       return {
         success: true,
         data: response.data.data || [],
@@ -148,10 +233,15 @@ class AgriculturalDataService {
    */
   async getDistricts() {
     try {
-      const response = await this.api.get('/districts');
+      const response = await this.api.get('/agricultural-data/crop-calendar');
+      const data = response.data || [];
+
+      // Extract unique districts from uploaded calendars (each calendar has its assigned district)
+      const uniqueDistricts = [...new Set(data.map(item => item.district || item.districtCode).filter(Boolean))];
+
       return {
         success: true,
-        data: response.data.data || []
+        data: uniqueDistricts
       };
     } catch (error) {
       return {
@@ -167,10 +257,15 @@ class AgriculturalDataService {
    */
   async getCrops() {
     try {
-      const response = await this.api.get('/crops');
+      const response = await this.api.get('/agricultural-data/crop-calendar');
+      const data = response.data || [];
+
+      // Extract unique crops from uploaded calendars
+      const uniqueCrops = [...new Set(data.map(item => item.crop || item.commodity).filter(Boolean))];
+
       return {
         success: true,
-        data: response.data.data || []
+        data: uniqueCrops
       };
     } catch (error) {
       return {
@@ -186,17 +281,28 @@ class AgriculturalDataService {
    */
   async getStatistics() {
     try {
-      const response = await this.api.get('/statistics');
+      // Since the main server doesn't have a statistics endpoint, 
+      // we'll determine statistics by checking each data type
+      const [cropCalendars, agrometAdvisories, poultryCalendars] = await Promise.all([
+        this.getCropCalendar(),
+        this.getAgrometAdvisory(),
+        this.getPoultryCalendar()
+      ]);
+
+      const stats = {
+        cropCalendars: cropCalendars.success ? (cropCalendars.data?.length || 0) : 0,
+        productionCalendars: 0, // Not implemented yet
+        agrometAdvisories: agrometAdvisories.success ? (agrometAdvisories.data?.length || 0) : 0,
+        poultryCalendars: poultryCalendars.success ? (poultryCalendars.data?.length || 0) : 0,
+        totalRecords: 0,
+        lastUpdated: new Date().toISOString()
+      };
+
+      stats.totalRecords = stats.cropCalendars + stats.agrometAdvisories + stats.poultryCalendars;
+
       return {
         success: true,
-        data: response.data.data || {
-          cropCalendars: 0,
-          productionCalendars: 0,
-          agrometAdvisories: 0,
-          poultryCalendars: 0,
-          totalRecords: 0,
-          lastUpdated: null
-        }
+        data: stats
       };
     } catch (error) {
       return {
@@ -436,6 +542,549 @@ class AgriculturalDataService {
         }
       };
     }
+  }
+
+  // ========================================================================
+  // ENHANCED CALENDAR METHODS - Phase 1.1 Implementation
+  // ========================================================================
+
+  /**
+   * Get enhanced calendars with advanced filtering and intelligent data source selection
+   * @param {Object} filters - Filter parameters (calendarType, commodity, regionCode, districtCode, season, year, breedType)
+   * @returns {Promise<Object>} Enhanced calendar data with metadata
+   */
+  async getEnhancedCalendars(filters = {}) {
+    return this.healthAwareAPICall(
+      async () => {
+        const params = new URLSearchParams();
+        Object.keys(filters).forEach(key => {
+          if (filters[key] !== null && filters[key] !== undefined && filters[key] !== '') {
+            params.append(key, filters[key]);
+          }
+        });
+
+        const response = await this.api.get(`/enhanced-calendars?${params.toString()}`);
+        console.log('🔍 Enhanced calendars API response:', response.data);
+
+        return {
+          success: true,
+          data: response.data.data || [],  // Backend sends data in response.data.data
+          total: response.data.total || 0,
+          filters: response.data.filters || {},
+          summary: response.data.summary || {},
+          emptyResult: response.data.emptyResult || null,  // New empty result information
+          metadata: {
+            dataSource: 'enhanced-calendars',
+            hasUploadedData: (response.data.data || []).length > 0,
+            queryTime: new Date().toISOString(),
+            isEmpty: (response.data.data || []).length === 0,
+            hasEmptyResultInfo: !!response.data.emptyResult,
+            ...response.data.metadata
+          }
+        };
+      },
+      '/enhanced-calendars',
+      {
+        data: [],
+        total: 0,
+        filters: {},
+        summary: {},
+        emptyResult: {
+          hasFilters: true,
+          message: 'Server unavailable - cannot retrieve calendar data',
+          suggestedCommodities: [],
+          totalAvailableCalendars: 0,
+          appliedFilters: {}
+        },
+        metadata: {
+          dataSource: 'offline',
+          hasUploadedData: false,
+          isEmpty: true,
+          hasEmptyResultInfo: true,
+          queryTime: new Date().toISOString()
+        }
+      }
+    );
+  }
+
+  /**
+   * Get calendar activities for a specific calendar with week/month filtering
+   * @param {string} calendarId - Calendar ID
+   * @param {Object} filters - Activity filters (currentWeek, startWeek, endWeek)
+   * @returns {Promise<Object>} Calendar activities data
+   */
+  async getCalendarActivities(calendarId, filters = {}) {
+    try {
+      const params = new URLSearchParams();
+      Object.keys(filters).forEach(key => {
+        if (filters[key] !== null && filters[key] !== undefined && filters[key] !== '') {
+          params.append(key, filters[key]);
+        }
+      });
+
+      const response = await this.api.get(`/enhanced-calendars/${calendarId}/activities?${params.toString()}`);
+      return {
+        success: true,
+        data: response.data.data || {},
+        filters: response.data.filters || {},
+        metadata: {
+          calendarId,
+          activitiesCount: response.data.data?.activities?.length || 0,
+          scheduleCount: response.data.data?.schedule?.length || 0
+        }
+      };
+    } catch (error) {
+      console.error('Calendar activities fetch error:', error);
+      return {
+        success: false,
+        error: error.response?.data?.error || error.message,
+        data: {},
+        metadata: { calendarId, activitiesCount: 0, scheduleCount: 0 }
+      };
+    }
+  }
+
+  /**
+   * Get production cycles with filtering
+   * @param {Object} filters - Production cycle filters (status, commodity, limit)
+   * @returns {Promise<Object>} Production cycles data
+   */
+  async getProductionCycles(filters = {}) {
+    try {
+      const params = new URLSearchParams();
+      Object.keys(filters).forEach(key => {
+        if (filters[key] !== null && filters[key] !== undefined && filters[key] !== '') {
+          params.append(key, filters[key]);
+        }
+      });
+
+      const response = await this.api.get(`/production-cycles?${params.toString()}`);
+      return {
+        success: true,
+        data: response.data.data || [],
+        total: response.data.total || 0,
+        summary: response.data.summary || {},
+        metadata: {
+          dataSource: 'production-cycles',
+          queryTime: new Date().toISOString()
+        }
+      };
+    } catch (error) {
+      console.error('Production cycles fetch error:', error);
+      return {
+        success: false,
+        error: error.response?.data?.error || error.message,
+        data: [],
+        total: 0,
+        metadata: {
+          dataSource: 'error',
+          queryTime: new Date().toISOString()
+        }
+      };
+    }
+  }
+
+
+  /**
+   * Get calendar data by specific region and district with intelligent data source selection
+   * @param {string} regionCode - Region code
+   * @param {string} districtCode - District code
+   * @param {Object} additionalFilters - Additional filters (commodity, season, year)
+   * @returns {Promise<Object>} Calendar data with data source information
+   */
+  async getCalendarByLocation(regionCode, districtCode, additionalFilters = {}) {
+    try {
+      const filters = {
+        regionCode,
+        districtCode,
+        ...additionalFilters
+      };
+
+      // First try to get enhanced calendars
+      const enhancedResult = await this.getEnhancedCalendars(filters);
+
+      if (enhancedResult.success && enhancedResult.data.length > 0) {
+        return {
+          ...enhancedResult,
+          metadata: {
+            ...enhancedResult.metadata,
+            dataSource: 'uploaded',
+            priority: 'high',
+            hasRegionalData: true
+          }
+        };
+      }
+
+      // If no uploaded data, try legacy endpoints
+      const legacyResult = await this.getCropCalendar({ region: regionCode, district: districtCode });
+
+      return {
+        ...legacyResult,
+        metadata: {
+          dataSource: 'legacy',
+          priority: 'medium',
+          hasRegionalData: legacyResult.success && legacyResult.data.length > 0,
+          queryTime: new Date().toISOString()
+        }
+      };
+    } catch (error) {
+      console.error('Calendar by location fetch error:', error);
+      return {
+        success: false,
+        error: error.message,
+        data: [],
+        metadata: {
+          dataSource: 'error',
+          priority: 'none',
+          hasRegionalData: false,
+          queryTime: new Date().toISOString()
+        }
+      };
+    }
+  }
+
+  /**
+   * Get available commodities from enhanced calendars
+   * @returns {Promise<Object>} Available commodities list
+   */
+  async getAvailableCommodities() {
+    try {
+      const response = await this.getEnhancedCalendars();
+      if (response.success) {
+        const commodities = [...new Set(response.data.map(item => item.commodity).filter(Boolean))];
+        return {
+          success: true,
+          data: commodities.sort(),
+          total: commodities.length
+        };
+      }
+      return response;
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+        data: [],
+        total: 0
+      };
+    }
+  }
+
+  /**
+   * Get available regions from enhanced calendars
+   * @returns {Promise<Object>} Available regions list
+   */
+  async getAvailableRegions() {
+    try {
+      const response = await this.getEnhancedCalendars();
+      if (response.success) {
+        const regions = [...new Set(response.data.map(item => item.regionCode).filter(Boolean))];
+        return {
+          success: true,
+          data: regions.sort(),
+          total: regions.length
+        };
+      }
+      return response;
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+        data: [],
+        total: 0
+      };
+    }
+  }
+
+  /**
+   * Get available districts for a specific region from enhanced calendars
+   * @param {string} regionCode - Region code
+   * @returns {Promise<Object>} Available districts list
+   */
+  async getAvailableDistricts(regionCode) {
+    try {
+      const response = await this.getEnhancedCalendars({ regionCode });
+      if (response.success) {
+        const districts = [...new Set(response.data.map(item => item.districtCode).filter(Boolean))];
+        return {
+          success: true,
+          data: districts.sort(),
+          total: districts.length,
+          regionCode
+        };
+      }
+      return response;
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+        data: [],
+        total: 0,
+        regionCode
+      };
+    }
+  }
+
+  /**
+   * Get current week activities for a production cycle
+   * @param {string} cycleId - Production cycle ID
+   * @returns {Promise<Object>} Current week activities
+   */
+  async getCurrentCycleActivities(cycleId) {
+    try {
+      const response = await this.api.get(`/production-cycles/${cycleId}/current-activities`);
+      return {
+        success: true,
+        data: response.data.data || {},
+        metadata: {
+          cycleId,
+          currentWeek: response.data.data?.currentWeek || 0,
+          totalWeeks: response.data.data?.totalWeeks || 0,
+          progressPercent: response.data.data?.progressPercent || 0
+        }
+      };
+    } catch (error) {
+      console.error('Current cycle activities fetch error:', error);
+      return {
+        success: false,
+        error: error.response?.data?.error || error.message,
+        data: {},
+        metadata: { cycleId, currentWeek: 0, totalWeeks: 0, progressPercent: 0 }
+      };
+    }
+  }
+
+  /**
+   * Enhanced search across all calendar types with intelligent ranking
+   * @param {string} searchTerm - Search term
+   * @param {Object} filters - Additional filters
+   * @returns {Promise<Object>} Ranked search results
+   */
+  async searchEnhancedCalendars(searchTerm, filters = {}) {
+    try {
+      const enhancedFilters = {
+        ...filters,
+        search: searchTerm
+      };
+
+      const response = await this.getEnhancedCalendars(enhancedFilters);
+
+      if (response.success) {
+        // Rank results by relevance
+        const rankedResults = response.data.map(item => ({
+          ...item,
+          relevanceScore: this.calculateRelevanceScore(item, searchTerm)
+        })).sort((a, b) => b.relevanceScore - a.relevanceScore);
+
+        return {
+          ...response,
+          data: rankedResults,
+          metadata: {
+            ...response.metadata,
+            searchTerm,
+            resultCount: rankedResults.length,
+            maxRelevance: rankedResults[0]?.relevanceScore || 0
+          }
+        };
+      }
+
+      return response;
+    } catch (error) {
+      console.error('Enhanced calendar search error:', error);
+      return {
+        success: false,
+        error: error.message,
+        data: [],
+        metadata: {
+          searchTerm,
+          resultCount: 0,
+          maxRelevance: 0
+        }
+      };
+    }
+  }
+
+  /**
+   * Calculate relevance score for search results
+   * @param {Object} item - Calendar item
+   * @param {string} searchTerm - Search term
+   * @returns {number} Relevance score (0-100)
+   */
+  calculateRelevanceScore(item, searchTerm) {
+    if (!searchTerm || !item) return 0;
+
+    const term = searchTerm.toLowerCase();
+    let score = 0;
+
+    // Exact matches get highest score
+    if (item.commodity && item.commodity.toLowerCase() === term) score += 50;
+    if (item.title && item.title.toLowerCase().includes(term)) score += 30;
+
+    // Partial matches get medium score
+    if (item.commodity && item.commodity.toLowerCase().includes(term)) score += 25;
+    if (item.regionCode && item.regionCode.toLowerCase().includes(term)) score += 15;
+    if (item.districtCode && item.districtCode.toLowerCase().includes(term)) score += 15;
+
+    // Activity matches get lower score
+    if (item.activities && Array.isArray(item.activities)) {
+      const activityMatches = item.activities.filter(activity =>
+        activity.name && activity.name.toLowerCase().includes(term)
+      ).length;
+      score += Math.min(activityMatches * 5, 20);
+    }
+
+    return Math.min(score, 100);
+  }
+
+  /**
+   * Get computed calendar data (backend-generated calendars)
+   * @param {Object} filters - Filtering criteria
+   * @returns {Promise<Object>} Computed calendar data
+   */
+  async getComputedCalendars(filters = {}) {
+    console.log('🚫 Computed calendars disabled in Excel-only system');
+    return {
+      success: false,
+      data: [],
+      message: 'Computed calendars disabled - Excel-only system',
+      metadata: {
+        source: 'disabled',
+        timestamp: new Date().toISOString()
+      }
+    };
+  }
+
+  /**
+   * Get calendar metadata for filtering capabilities
+   * @returns {Promise<Object>} Available metadata for filters
+   */
+  async getCalendarMetadata() {
+    return this.healthAwareAPICall(
+      async () => {
+        const response = await this.api.get('/enhanced-calendars/metadata');
+
+        return {
+          success: true,
+          data: {
+            commodities: response.data.commodities || [],
+            regions: response.data.regions || [],
+            districts: response.data.districts || [],
+            calendarTypes: response.data.calendarTypes || ['seasonal', 'production'],
+            totalCalendars: response.data.totalCalendars || 0
+          }
+        };
+      },
+      '/enhanced-calendars/metadata',
+      {
+        success: false,
+        data: {
+          commodities: ['maize', 'rice', 'sorghum', 'tomato', 'soybean'],
+          regions: [],
+          districts: [],
+          calendarTypes: ['seasonal', 'production'],
+          totalCalendars: 0
+        }
+      }
+    );
+  }
+
+  /**
+   * Get current activities for a production cycle
+   * @param {string} cycleId - Production cycle ID
+   * @returns {Promise<Object>} Current activities data
+   */
+  async getCurrentActivities(cycleId) {
+    return this.healthAwareAPICall(
+      async () => {
+        const response = await this.api.get(`/production-cycles/${cycleId}/current-activities`);
+
+        return {
+          success: true,
+          data: response.data.data || [],
+          metadata: {
+            cycleId,
+            timestamp: new Date().toISOString()
+          }
+        };
+      },
+      `/production-cycles/${cycleId}/current-activities`,
+      { success: false, data: [] }
+    );
+  }
+
+  /**
+   * Create a new production cycle
+   * @param {Object} cycleData - Production cycle data
+   * @returns {Promise<Object>} Created production cycle
+   */
+  async createProductionCycle(cycleData) {
+    return this.healthAwareAPICall(
+      async () => {
+        const response = await this.api.post('/production-cycles', cycleData);
+
+        return {
+          success: true,
+          data: response.data.data || response.data,
+          message: 'Production cycle created successfully'
+        };
+      },
+      '/production-cycles',
+      { success: false, message: 'Failed to create production cycle' }
+    );
+  }
+
+  /**
+   * Update a production cycle
+   * @param {string} cycleId - Production cycle ID
+   * @param {Object} updateData - Data to update
+   * @returns {Promise<Object>} Updated production cycle
+   */
+  async updateProductionCycle(cycleId, updateData) {
+    return this.healthAwareAPICall(
+      async () => {
+        const response = await this.api.put(`/production-cycles/${cycleId}`, updateData);
+
+        return {
+          success: true,
+          data: response.data.data || response.data,
+          message: 'Production cycle updated successfully'
+        };
+      },
+      `/production-cycles/${cycleId}`,
+      { success: false, message: 'Failed to update production cycle' }
+    );
+  }
+
+  /**
+   * Get specific enhanced calendar by ID
+   * @param {string} calendarId - Calendar ID
+   * @param {Object} options - Additional options
+   * @returns {Promise<Object>} Calendar data
+   */
+  async getEnhancedCalendar(calendarId, options = {}) {
+    return this.healthAwareAPICall(
+      async () => {
+        const params = new URLSearchParams();
+        Object.keys(options).forEach(key => {
+          if (options[key] !== undefined && options[key] !== null) {
+            params.append(key, options[key]);
+          }
+        });
+
+        const queryString = params.toString() ? `?${params.toString()}` : '';
+        const response = await this.api.get(`/enhanced-calendars/${calendarId}${queryString}`);
+
+        return {
+          success: true,
+          data: response.data.data || response.data,
+          metadata: {
+            calendarId,
+            timestamp: new Date().toISOString()
+          }
+        };
+      },
+      `/enhanced-calendars/${calendarId}`,
+      { success: false, data: null }
+    );
   }
 }
 

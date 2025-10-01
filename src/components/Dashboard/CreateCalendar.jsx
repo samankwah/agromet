@@ -1,9 +1,11 @@
 import React, { useState } from "react";
-import { FaCalendarAlt, FaFileExcel, FaTimes } from "react-icons/fa";
+import { FaCalendarAlt, FaFileExcel, FaTimes, FaCheckCircle } from "react-icons/fa";
 import { useSpring, animated } from "react-spring";
 import { districtOfGhana } from "../../districts";
 import { logger } from "../../utils/logger";
 import { validateFile, FileValidationError } from "../../utils/fileValidation";
+import userService from "../../services/userService";
+import { toast } from "react-hot-toast";
 
 const CreateCropCalendar = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
@@ -106,7 +108,7 @@ const CreateCropCalendar = ({ isOpen, onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     logger.userAction('Crop calendar form submitted');
 
     if (!validateForm()) {
@@ -117,16 +119,26 @@ const CreateCropCalendar = ({ isOpen, onClose }) => {
     setIsSubmitting(true);
 
     try {
-      logger.info('Crop calendar data', formData);
-      
-      // TODO: Add API call here when backend endpoint is ready
-      // const result = await userService.createCropCalendar(formData);
-      
-      // Simulate processing time
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      logger.info('Crop calendar created successfully');
-      
+      logger.info('Creating crop calendar with data:', formData);
+
+      // Call the new API endpoint
+      const result = await userService.createCropCalendar(formData);
+
+      logger.info('Crop calendar created successfully:', result.data);
+
+      // Show success toast
+      toast.success(`🌾 ${formData.crop} calendar for ${formData.district}, ${formData.region} created successfully!`, {
+        duration: 4000,
+        position: 'top-right',
+        icon: '✅',
+        style: {
+          background: '#10B981',
+          color: '#ffffff',
+          borderRadius: '8px',
+          padding: '16px',
+        }
+      });
+
       // Reset form and close modal
       setFormData({
         region: "",
@@ -141,12 +153,28 @@ const CreateCropCalendar = ({ isOpen, onClose }) => {
         minorStartWeek: "",
         minorType: "",
       });
-      
+
+      // Clear any existing errors
+      setErrors({});
+
       onClose();
-      
+
     } catch (error) {
       logger.error('Error creating crop calendar', error);
-      setErrors({ submit: 'Failed to create crop calendar. Please try again.' });
+
+      // Show error toast
+      toast.error(`❌ Failed to create calendar: ${error.message}`, {
+        duration: 5000,
+        position: 'top-right',
+        style: {
+          background: '#EF4444',
+          color: '#ffffff',
+          borderRadius: '8px',
+          padding: '16px',
+        }
+      });
+
+      setErrors({ submit: error.message || 'Failed to create crop calendar. Please try again.' });
     } finally {
       setIsSubmitting(false);
     }

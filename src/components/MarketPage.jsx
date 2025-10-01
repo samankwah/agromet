@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Search, ShoppingCart, Check } from "lucide-react";
 import PropTypes from "prop-types";
+import PageTitle from "./PageTitle";
 import YellowMaizeImage from "../assets/images/yellow maize.png";
 import WhiteMaizeImage from "../assets/images/white maize.png";
 import YellowSoyaImage from "../assets/images/yellow soya.png";
@@ -403,18 +404,20 @@ const Marketplace = () => {
     ).isRequired,
   };
   return (
-    <div
-      className="min-h-screen bg-gray-950 mx-auto px-4 py-1 md:px-8 lg:px-12"
-      style={{
-        backgroundImage: `url(${backgroundImage})`,
-        backgroundSize: "1400px 1200px",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-        backgroundAttachment: "fixed",
-        WebkitBackgroundSize: "1200px 800px", // For Safari compatibility
-        MozBackgroundSize: "1200px 800px", // For Firefox compatibility
-      }}
-    >
+    <>
+      <PageTitle title="Agricultural Market" />
+      <div
+        className="min-h-screen bg-gray-950 mx-auto px-4 py-1 md:px-8 lg:px-12"
+        style={{
+          backgroundImage: `url(${backgroundImage})`,
+          backgroundSize: "1400px 1200px",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          backgroundAttachment: "fixed",
+          WebkitBackgroundSize: "1200px 800px", // For Safari compatibility
+          MozBackgroundSize: "1200px 800px", // For Firefox compatibility
+        }}
+      >
       <div className="max-w-[1440px] mx-auto px-0 sm:px-6 lg:px-8 pt-20">
         {/* Back Button */}
         <button
@@ -473,6 +476,7 @@ const Marketplace = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

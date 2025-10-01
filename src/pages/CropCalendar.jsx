@@ -1,7 +1,15 @@
 import { useState, useEffect } from "react";
 import { districtOfGhana } from "../districts";
-import { FaDownload, FaShareAlt, FaSpinner } from "react-icons/fa";
+import { FaDownload, FaShareAlt, FaSpinner, FaExclamationTriangle, FaSync, FaFolder } from "react-icons/fa";
 import agriculturalDataService from '../services/agriculturalDataService';
+import dynamicCalendarManager from '../services/dynamicCalendarManager';
+import PageTitle from '../components/PageTitle';
+import { InlineOfflineWarning } from '../components/common/OfflineNotification';
+import SmartCalendarRenderer from '../components/common/SmartCalendarRenderer';
+import { getSafeDistrictsByRegion } from '../utils/regionDistrictHelpers';
+import { SafeDistrictOptions } from '../components/common/SafeSelectOptions';
+import { getAllRegionNames } from '../data/ghanaCodes';
+import toast from 'react-hot-toast';
 
 // DownloadButton Component
 const DownloadButton = ({ onDownload }) => {
@@ -81,464 +89,75 @@ const ShareButton = ({ onShare }) => {
   );
 };
 
-// Maize farming activities (default for Major Season: February to October)
-const maizeActivities = [
-  {
-    activity: "Site Selection",
-    start: "January",
-    end: "January",
-    color: "bg-[#00B0F0]",
-    advisory:
-      "Clear your arable site purchase certified seed \nfrom registered input dealers. \nUse recommended maize varieties \nsuch as Abontem for short-duration \ngrowth (80-90 days) or Obaatampa \nfor long-duration growth (105-120 days).",
-  },
-  {
-    activity: "Land Preparation",
-    start: "February",
-    end: "February",
-    color: "bg-[#BF9000]",
-    advisory:
-      "Plow the land to aerate the soil. \nUse minimum tillage, and ensure \nthe land is clear from debris. \nSpot burning may be used to clear \norganic matter. \nPrepare the land before the rains.",
-  },
-  {
-    activity: "Planting / Sowing",
-    start: "March",
-    end: "March",
-    color: "bg-[#000000]",
-    advisory:
-      "Plant seeds at the \nrecommended depth and \nspacing for optimal growth.",
-  },
-  {
-    activity: "1st Fertilizer Application",
-    start: "April",
-    end: "April",
-    color: "bg-[#FFFF00]",
-    advisory:
-      "Apply NPK 20:10:10 at \nthe rate of 2 bags per acre, \n14 days after planting. \nEnsure the field is moist \nbefore application. \nUse side placement at 3-5 cm \naway from the plant. \nBroadcast evenly for healthy growth.",
-  },
-  {
-    activity: "1st Weeding & control of fall army worm",
-    start: "April",
-    end: "April",
-    color: "bg-[#FF0000]",
-    advisory:
-      "Control weeds early, using \nmanual weeding or recommended \nselective herbicides. \nApply herbicides such as \nNico or Nomini Rice Pro. \nWeeding should be done \nwithin 3 weeks after planting \nto avoid crop competition.",
-  },
-  {
-    activity: "2nd Fertilizer Application (Urea&SOA)",
-    start: "May",
-    end: "May",
-    color: "bg-[#FFFF00]",
-    advisory:
-      "Apply NPK 20:10:10 at \nthe rate of 2 bags per acre, \n14 days after planting. \nEnsure the field is moist \nbefore application. \nUse side placement at 3-5 cm \naway from the plant. \nBroadcast evenly for healthy growth.",
-  },
-  {
-    activity: "2nd Weeding & Pest Control",
-    start: "May",
-    end: "May",
-    color: "bg-[#FF0000]",
-    advisory:
-      "Control weeds early, using \nmanual weeding or recommended \nselective herbicides. \nApply herbicides such as \nNico or Nomini Rice Pro. \nWeeding should be done \nwithin 3 weeks after planting \nto avoid crop competition. Apply pesticides to control \nFall Armyworm and other pests early. \nCommon pests like Fall Armyworm \ncan be controlled using pesticides \nsuch as Warrior, Super Viper, \nor Bypel Attack. \nApply early in the morning or \nlate in the evening for best results.",
-  },
-  {
-    activity: "Harvesting",
-    start: "July",
-    end: "July",
-    color: "bg-[#008000]",
-    advisory:
-      "Harvest when the maize is mature, \nand store in well-ventilated areas. \nHarvesting should be done early \nwhen the maize silk turns dry and brown. \nStore in hermetic bags to avoid \npest attacks during storage.",
-  },
-  {
-    activity: "Post harvest handling",
-    start: "August",
-    end: "August",
-    color: "bg-[#993366]",
-    advisory:
-      "Utilize drip irrigation for \nbetter moisture retention. \nGiven the urban nature of Greater Accra, \nconsider efficient irrigation systems \nto manage water use effectively.",
-  },
-];
+// All hardcoded activities removed - now using dynamic calendar manager
 
-// Rice farming activities (default for Major Season: February to October)
-const riceActivities = [
-  {
-    activity: "Site Selection",
-    start: "February",
-    end: "February",
-    color: "bg-[#00B0F0]",
-    advisory:
-      "Choose a well-drained site with access to irrigation or rainfall. \nSelect certified rice varieties such as Jasmine or Nerica for optimal yield. \nEnsure the land is suitable for paddy cultivation.",
-  },
-  {
-    activity: "Land Preparation",
-    start: "March",
-    end: "March",
-    color: "bg-[#BF9000]",
-    advisory:
-      "Plow and level the land to create a smooth seedbed. \nFlood the field with water for puddling if practicing lowland rice farming. \nRemove weeds and debris before planting.",
-  },
-  {
-    activity: "Seed selection and treatment",
-    start: "March",
-    end: "March",
-    color: "bg-[#808080]",
-    advisory:
-      "Select high-quality seeds with good germination rates. \nTreat seeds with fungicides to prevent seed-borne diseases. \nSoak seeds in water for 24 hours before sowing.",
-  },
-  {
-    activity: "Nursery Sowing",
-    start: "April",
-    end: "April",
-    color: "bg-[#800080]",
-    advisory:
-      "Sow seeds in a prepared nursery bed. \nMaintain adequate moisture and protect from pests. \nEnsure proper spacing to avoid overcrowding.",
-  },
-  {
-    activity: "Transplanting",
-    start: "April",
-    end: "April",
-    color: "bg-[#000000]",
-    advisory:
-      "Transplant seedlings 21-30 days old into the prepared field. \nMaintain a spacing of 20x20 cm for optimal growth. \nEnsure adequate water levels during planting.",
-  },
-  {
-    activity: "1st Weed management",
-    start: "May",
-    end: "May",
-    color: "bg-[#FF0000]",
-    advisory:
-      "Control weeds manually or with selective herbicides like Nominee Gold. \nWeed within 3 weeks of transplanting to reduce competition. \nMaintain water levels to suppress weed growth.",
-  },
-  {
-    activity: "2nd Weed management",
-    start: "June",
-    end: "June",
-    color: "bg-[#FF0000]",
-    advisory:
-      "Perform a second weeding to reduce competition. \nApply herbicides if necessary. \nMaintain water levels to minimize weed growth.",
-  },
-  {
-    activity: "1st Fertilizer Application",
-    start: "May",
-    end: "May",
-    color: "bg-[#FFFF00]",
-    advisory:
-      "Apply NPK 15:15:15 at the rate of 2 bags per acre, 10-14 days after transplanting. \nApply in a broadcast method over the flooded field. \nEnsure water is present to aid nutrient uptake.",
-  },
-  {
-    activity: "2nd Fertilizer Application",
-    start: "June",
-    end: "June",
-    color: "bg-[#FFFF00]",
-    advisory:
-      "Apply urea at the rate of 1 bag per acre, 30-35 days after transplanting. \nSpread evenly over the flooded field. \nEnsure water management to prevent nutrient loss.",
-  },
-  {
-    activity: "3rd Fertilizer Application",
-    start: "July",
-    end: "July",
-    color: "bg-[#FF00FF]",
-    advisory:
-      "Apply a top dressing of urea at the rate of 1 bag per acre. \nApply during the panicle initiation stage. \nEnsure even distribution for uniform growth.",
-  },
-  {
-    activity: "Booting",
-    start: "July",
-    end: "July",
-    color: "bg-[#FF00FF]",
-    advisory:
-      "Monitor the crop for the booting stage. \nEnsure adequate water supply to support grain development. \nProtect the crop from pests and diseases.",
-  },
-  {
-    activity: "Ripening",
-    start: "August",
-    end: "August",
-    color: "bg-[#FF00FF]",
-    advisory:
-      "Reduce water levels as the crop reaches the ripening stage. \nMonitor for pests like birds that may damage the grains. \nPrepare for harvest as grains mature.",
-  },
-  {
-    activity: "Harvesting",
-    start: "September",
-    end: "September",
-    color: "bg-[#008000]",
-    advisory:
-      "Harvest when 80-85% of grains are straw-colored. \nUse a sickle or combine harvester. \nDry the paddy to 12-14% moisture content before storage.",
-  },
-  {
-    activity: "Post-harvest Handling",
-    start: "October",
-    end: "October",
-    color: "bg-[#993366]",
-    advisory:
-      "Thresh and clean the rice promptly to avoid quality loss. \nStore in airtight containers or silos to protect from pests. \nConsider milling within a week of drying.",
-  },
-];
+// Hardcoded activity arrays removed - now using dynamic calendar manager
 
-// Sorghum farming activities (default for Major Season: February to October)
-const sorghumActivities = [
-  {
-    activity: "Site Selection",
-    start: "February",
-    end: "February",
-    color: "bg-[#00B0F0]",
-    advisory:
-      "Select a site with well-drained sandy loam soil. \nChoose drought-tolerant sorghum varieties like Kapaala or Dorado. \nEnsure the site has good sunlight exposure.",
-  },
-  {
-    activity: "Land Preparation",
-    start: "March",
-    end: "March",
-    color: "bg-[#BF9000]",
-    advisory:
-      "Plow and harrow the land to create a fine seedbed. \nRemove weeds and debris. \nIncorporate organic matter to improve soil fertility.",
-  },
-  {
-    activity: "Planting / Sowing",
-    start: "April",
-    end: "April",
-    color: "bg-[#000000]",
-    advisory:
-      "Sow seeds at a depth of 2-3 cm with a spacing of 60x20 cm. \nPlant at the onset of rains for rainfed systems. \nEnsure good seed-to-soil contact.",
-  },
-  {
-    activity: "1st Fertilizer Application",
-    start: "May",
-    end: "May",
-    color: "bg-[#FFFF00]",
-    advisory:
-      "Apply NPK 15:15:15 at the rate of 2 bags per acre, 2-3 weeks after planting. \nUse a side placement method near the plant base. \nEnsure the soil is moist for better uptake.",
-  },
-  {
-    activity: "1st Weeding & Pest Control",
-    start: "May",
-    end: "May",
-    color: "bg-[#FF0000]",
-    advisory:
-      "Weed manually or use selective herbicides. \nMonitor for pests like shoot fly and apply insecticides if needed. \nWeed within 3 weeks of planting to reduce competition.",
-  },
-  {
-    activity: "2nd Fertilizer Application (Urea)",
-    start: "June",
-    end: "June",
-    color: "bg-[#FFFF00]",
-    advisory:
-      "Apply urea at the rate of 1 bag per acre, 5-6 weeks after planting. \nBroadcast evenly around the plants. \nEnsure adequate moisture for nutrient absorption.",
-  },
-  {
-    activity: "2nd Weeding & Disease Control",
-    start: "June",
-    end: "June",
-    color: "bg-[#FF0000]",
-    advisory:
-      "Perform a second weeding to control late-emerging weeds. \nMonitor for diseases like anthracnose and apply fungicides if necessary. \nMaintain crop health through proper spacing.",
-  },
-  {
-    activity: "Harvesting",
-    start: "August",
-    end: "August",
-    color: "bg-[#008000]",
-    advisory:
-      "Harvest when grains are hard and dry (about 20% moisture). \nCut the heads with a sickle and dry them under shade. \nThresh and clean the grains before storage.",
-  },
-  {
-    activity: "Post-harvest Handling",
-    start: "September",
-    end: "September",
-    color: "bg-[#993366]",
-    advisory:
-      "Dry the grains to 12-14% moisture content to prevent mold. \nStore in airtight containers to protect from pests. \nUse treated storage bags to reduce insect damage.",
-  },
-];
+// Get regions dynamically from ghanaCodes to ensure consistency
+const regionsOfGhana = getAllRegionNames();
 
-// Tomato farming activities (default for Major Season: April to August)
-const tomatoActivities = [
-  {
-    activity: "Site selection",
-    start: "April",
-    end: "April",
-    color: "bg-[#00B0F0]",
-    advisory:
-      "Choose a sunny, well-drained site with loamy soil. \nTest soil pH (ideal 6.0-6.8). \nAvoid fields with a history of tomato diseases.",
-  },
-  {
-    activity: "land preparation",
-    start: "April",
-    end: "April",
-    color: "bg-[#BF9000]",
-    advisory:
-      "Plow and harrow the land to a fine tilth. \nIncorporate organic manure or compost. \nPrepare raised beds for better drainage.",
-  },
-  {
-    activity: "germination test",
-    start: "April",
-    end: "April",
-    color: "bg-[#FF7F00]",
-    advisory:
-      "Test seed germination by placing 100 seeds in a moist cloth. \nCheck germination rate after 5-7 days. \nUse seeds with at least 80% germination rate.",
-  },
-  {
-    activity: "nursery",
-    start: "April",
-    end: "April",
-    color: "bg-[#808080]",
-    advisory:
-      "Prepare a nursery bed with fine soil. \nSow seeds thinly and cover lightly with soil. \nWater regularly and protect from direct sunlight.",
-  },
-  {
-    activity: "transplanting",
-    start: "May",
-    end: "May",
-    color: "bg-[#000000]",
-    advisory:
-      "Transplant seedlings 4-6 weeks old to the main field. \nSpace plants 60x45 cm apart. \nWater immediately after transplanting.",
-  },
-  {
-    activity: "addition of starter solution",
-    start: "May",
-    end: "May",
-    color: "bg-[#87CEEB]",
-    advisory:
-      "Apply a starter solution of NPK 10:20:10 to boost early growth. \nMix with water and apply around the plant base. \nAvoid over-application to prevent root burn.",
-  },
-  {
-    activity: "pest and disease management",
-    start: "May",
-    end: "July",
-    color: "bg-[#FF0000]",
-    advisory:
-      "Monitor for pests like aphids and diseases like blight. \nApply insecticides and fungicides as needed. \nUse integrated pest management practices.",
-  },
-  {
-    activity: "1st fertilizer application (NPK)",
-    start: "May",
-    end: "May",
-    color: "bg-[#FFFF00]",
-    advisory:
-      "Apply NPK 15:15:15 at the rate of 1 bag per acre, 2 weeks after transplanting. \nApply in a ring around the plant. \nWater after application to aid uptake.",
-  },
-  {
-    activity: "earthing-up/staking/trellising/pruning",
-    start: "June",
-    end: "June",
-    color: "bg-[#87CEEB]",
-    advisory:
-      "Earth up soil around the plant base to support roots. \nStake or trellis plants to prevent lodging. \nPrune suckers to improve air circulation.",
-  },
-  {
-    activity: "2nd fertilizer application (NPK)",
-    start: "June",
-    end: "June",
-    color: "bg-[#FFFF00]",
-    advisory:
-      "Apply NPK 15:15:15 at the rate of 1 bag per acre during flowering. \nApply in a ring around the plant. \nWater after application to aid uptake.",
-  },
-  {
-    activity: "harvesting",
-    start: "August",
-    end: "August",
-    color: "bg-[#008000]",
-    advisory:
-      "Harvest when fruits are firm and fully colored. \nPick fruits early in the morning to maintain freshness. \nHandle gently to avoid bruising.",
-  },
-  {
-    activity: "post-harvest",
-    start: "August",
-    end: "August",
-    color: "bg-[#993366]",
-    advisory:
-      "Sort and grade tomatoes for market. \nStore in a cool, shaded place to extend shelf life. \nPack in ventilated crates for transport.",
-  },
-];
+// Helper function to generate user-friendly error messages
+const getUserFriendlyErrorMessage = (error, context) => {
+  const errorMessage = error?.message?.toLowerCase() || '';
+  const errorCode = error?.code || error?.response?.status;
 
-// Soybean farming activities (default for Major Season: February to September)
-const soybeanActivities = [
-  {
-    activity: "Site Selection",
-    start: "February",
-    end: "February",
-    color: "bg-[#00B0F0]",
-    advisory:
-      "Select a site with well-drained loam or sandy loam soil. \nChoose soybean varieties like Jenguma or Anidaso suited to your region. \nEnsure good sunlight and avoid waterlogged areas.",
-  },
-  {
-    activity: "Land Preparation",
-    start: "March",
-    end: "March",
-    color: "bg-[#BF9000]",
-    advisory:
-      "Plow and harrow the land to a fine tilth. \nIncorporate organic matter or lime if soil is acidic. \nRemove weeds and ensure proper drainage.",
-  },
-  {
-    activity: "Planting / Sowing",
-    start: "April",
-    end: "April",
-    color: "bg-[#000000]",
-    advisory:
-      "Sow seeds at a depth of 3-5 cm with a spacing of 50x10 cm. \nInoculate seeds with Rhizobium bacteria for nitrogen fixation. \nPlant at the onset of the rainy season.",
-  },
-  {
-    activity: "1st Fertilizer Application",
-    start: "May",
-    end: "May",
-    color: "bg-[#FFFF00]",
-    advisory:
-      "Apply phosphorus-based fertilizer (e.g., SSP) at 50 kg/ha, 2-3 weeks after planting. \nAvoid excess nitrogen to encourage nodulation. \nApply near the plant base and water lightly.",
-  },
-  {
-    activity: "1st Weeding & Pest Control",
-    start: "May",
-    end: "May",
-    color: "bg-[#FF0000]",
-    advisory:
-      "Weed manually or use pre-emergence herbicides like Pendimethalin. \nMonitor for pests like pod borers and apply insecticides if needed. \nWeed within 3 weeks of planting.",
-  },
-  {
-    activity: "2nd Weeding & Disease Control",
-    start: "June",
-    end: "June",
-    color: "bg-[#FF0000]",
-    advisory:
-      "Perform a second weeding to control late weeds. \nWatch for diseases like soybean rust and apply fungicides if detected. \nMaintain plant health with proper spacing.",
-  },
-  {
-    activity: "Harvesting",
-    start: "August",
-    end: "August",
-    color: "bg-[#008000]",
-    advisory:
-      "Harvest when pods turn yellow-brown and seeds are hard (about 14% moisture). \nCut plants and dry them in the field. \nThresh and clean seeds promptly.",
-  },
-  {
-    activity: "Post-harvest Handling",
-    start: "September",
-    end: "September",
-    color: "bg-[#993366]",
-    advisory:
-      "Dry seeds to 12% moisture content to prevent mold. \nStore in airtight containers or silos to protect from pests. \nUse fumigation if storing for long periods.",
-  },
-];
+  const commonSuggestions = [
+    "Please check your internet connection",
+    "Try refreshing the page",
+    "Contact support if the problem persists"
+  ];
 
-// Regions of Ghana
-const regionsOfGhana = [
-  "Greater Accra",
-  "Ashanti",
-  "Northern",
-  "Eastern",
-  "Western",
-  "Volta",
-  "Upper East",
-  "Upper West",
-  "Central",
-  "Bono",
-  "Western North",
-  "Ahafo",
-  "Savannah",
-  "Oti",
-  "Bono East",
-  "North East",
-];
+  switch (context) {
+    case 'calendar_fetch':
+      if (errorMessage.includes('network') || errorCode === 'NETWORK_ERROR') {
+        return {
+          message: "Unable to connect to the server",
+          details: "Please check your internet connection and try again",
+          suggestions: ["Check your internet connection", "Try again in a few moments"]
+        };
+      }
+      if (errorCode === 404) {
+        return {
+          message: "No calendar data found",
+          details: "No calendar data is available for the selected filters",
+          suggestions: ["Try different crop or location selections", "Upload calendar data in the dashboard"]
+        };
+      }
+      if (errorCode >= 500) {
+        return {
+          message: "Server is temporarily unavailable",
+          details: "The server is experiencing issues. Please try again later",
+          suggestions: ["Try again in a few minutes", "Contact support if the issue persists"]
+        };
+      }
+      return {
+        message: "Failed to load calendar data",
+        details: errorMessage || "An unexpected error occurred",
+        suggestions: commonSuggestions
+      };
 
-// List of crops for the slider
-const cropsForSlider = ["Maize", "Rice", "Sorghum", "Tomato", "Soybean"];
+    case 'region_fetch':
+      return {
+        message: "Failed to load regions",
+        details: "Unable to load the list of regions",
+        suggestions: ["Refresh the page", "Try selecting a specific region manually"]
+      };
+
+    case 'district_fetch':
+      return {
+        message: "Failed to load districts",
+        details: "Unable to load districts for the selected region",
+        suggestions: ["Try selecting a different region", "Refresh the page"]
+      };
+
+    default:
+      return {
+        message: "An unexpected error occurred",
+        details: errorMessage || "Please try again",
+        suggestions: commonSuggestions
+      };
+  }
+};
 
 // Year and season options
 const yearSeasonOptions = [
@@ -554,8 +173,8 @@ const generateWeeks = (season) => {
 
   let startMonth, endMonth;
   if (season === "Major") {
-    startMonth = 1; // February (month index 1)
-    endMonth = 9; // October (month index 9)
+    startMonth = 0; // January (month index 0) - match Excel JAN start
+    endMonth = 8; // September (month index 8) - match Excel SEPT end
   } else {
     startMonth = 8; // September (month index 8)
     endMonth = 11; // December (month index 11)
@@ -650,41 +269,6 @@ const adjustActivitiesForSeason = (baseActivities, season) => {
   });
 };
 
-// Function to generate region-specific activity times based on climate (offsetting activity months)
-const generateRegionActivities = (baseActivities, offset) => {
-  const regions = {};
-
-  const months = [
-    { month: "January", monthNo: 1 },
-    { month: "February", monthNo: 2 },
-    { month: "March", monthNo: 3 },
-    { month: "April", monthNo: 4 },
-    { month: "May", monthNo: 5 },
-    { month: "June", monthNo: 6 },
-    { month: "July", monthNo: 7 },
-    { month: "August", monthNo: 8 },
-    { month: "September", monthNo: 9 },
-    { month: "October", monthNo: 10 },
-    { month: "November", monthNo: 11 },
-    { month: "December", monthNo: 12 },
-  ];
-
-  const adjustMonth = (monthName, offset) => {
-    const monthIndex = months.findIndex((m) => m?.month === monthName);
-    const adjustedIndex = (monthIndex + offset + 12) % 12;
-    return months[adjustedIndex]?.month;
-  };
-
-  regionsOfGhana.forEach((region) => {
-    regions[region] = baseActivities.map((activity) => ({
-      ...activity,
-      start: adjustMonth(activity.start, offset),
-      end: adjustMonth(activity.end, offset),
-    }));
-  });
-
-  return regions;
-};
 
 const CropCalendar = () => {
   const [selectedCrop, setSelectedCrop] = useState("all");
@@ -695,9 +279,9 @@ const CropCalendar = () => {
   const [farmingActivities, setFarmingActivities] = useState([]); // Default state for activities
   const [loading, setLoading] = useState(false); // Loading state for filtering
   const [initialLoad, setInitialLoad] = useState(true); // Track if initial load
+  const [districtData, setDistrictData] = useState({ districts: [], meta: {} }); // Safe district data
   const [hoveredActivity, setHoveredActivity] = useState(null); // To track the hovered activity
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 }); // Track position of the tooltip
-  const [currentSlide, setCurrentSlide] = useState(0); // State for the slider
   const [weeksData, setWeeksData] = useState([]); // Dynamic weeks data based on season
   
   // New state for dynamic data from backend
@@ -706,6 +290,11 @@ const CropCalendar = () => {
   const [availableCrops, setAvailableCrops] = useState([]);
   const [isUsingDynamicData, setIsUsingDynamicData] = useState(false);
   const [apiStats, setApiStats] = useState(null);
+  const [regionDistrictMapping, setRegionDistrictMapping] = useState({});
+  const [calendarMetadata, setCalendarMetadata] = useState({});
+  const [error, setError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const maxRetries = 3;
 
   // Get the selected year and season details
   const selectedOption = yearSeasonOptions.find(
@@ -720,70 +309,176 @@ const CropCalendar = () => {
     setWeeksData(weeks);
   }, [selectedSeason]);
 
-  // Load dynamic data from backend on component mount
+  // Initialize dynamic calendar manager on component mount
+  useEffect(() => {
+    const initializeCalendarManager = async () => {
+      try {
+        // Excel-only calendar system - no template initialization needed
+        console.log('📄 Excel-only calendar system - no template initialization');
+        console.log('✅ Dynamic Calendar Manager initialized successfully');
+        setError(null); // Clear any previous errors
+      } catch (error) {
+        // Only log in development mode to reduce console noise
+        if (process.env.NODE_ENV === 'development') {
+          console.error('❌ Failed to initialize Dynamic Calendar Manager:', error);
+        }
+        setError({
+          type: 'initialization',
+          message: 'Failed to initialize calendar system',
+          details: error.message,
+          timestamp: new Date().toISOString()
+        });
+      }
+    };
+
+    initializeCalendarManager();
+  }, []); // Run once on mount
+
+  // Load dynamic data from backend on component mount with caching and optimization
   useEffect(() => {
     const loadDynamicData = async () => {
       setLoading(true);
+      setError(null);
+
       try {
-        // Fetch available districts and crops
-        const [districtsResult, cropsResult, statsResult] = await Promise.all([
+        // Use Promise.allSettled for better error handling and partial success
+        const apiCalls = [
           agriculturalDataService.getDistricts(),
-          agriculturalDataService.getCrops(), 
+          agriculturalDataService.getCrops(),
           agriculturalDataService.getStatistics()
+        ];
+
+        const results = await Promise.race([
+          Promise.allSettled(apiCalls),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Request timeout')), 15000) // Increased timeout
+          )
         ]);
-        
-        if (districtsResult.success) {
-          setAvailableDistricts(districtsResult.data);
+
+        const [districtsResult, cropsResult, statsResult] = results;
+
+        // Handle districts result (even if partially successful)
+        if (districtsResult.status === 'fulfilled' && districtsResult.value.success) {
+          const districts = districtsResult.value.data;
+          setAvailableDistricts(districts);
+
+          // Build region-district mapping more efficiently
+          const mapping = districts.reduce((acc, item) => {
+            if (item.region && item.district) {
+              if (!acc[item.region]) {
+                acc[item.region] = new Set();
+              }
+              acc[item.region].add(item.district);
+            }
+            return acc;
+          }, {});
+
+          // Convert Sets to arrays for final storage
+          const finalMapping = {};
+          Object.keys(mapping).forEach(region => {
+            finalMapping[region] = Array.from(mapping[region]);
+          });
+          setRegionDistrictMapping(finalMapping);
+        } else if (districtsResult.status === 'rejected') {
+          console.warn('Districts API failed:', districtsResult.reason);
         }
-        
-        if (cropsResult.success) {
-          setAvailableCrops(cropsResult.data);
+
+        // Handle crops result
+        if (cropsResult.status === 'fulfilled' && cropsResult.value.success) {
+          setAvailableCrops(cropsResult.value.data);
+        } else if (cropsResult.status === 'rejected') {
+          console.warn('Crops API failed:', cropsResult.reason);
         }
-        
-        if (statsResult.success) {
-          setApiStats(statsResult.data);
-          // If we have uploaded data, use dynamic data instead of static
-          if (statsResult.data.cropCalendars > 0) {
+
+        // Handle stats result
+        if (statsResult.status === 'fulfilled' && statsResult.value.success) {
+          const stats = statsResult.value.data;
+          setApiStats(stats);
+          // Only use dynamic data if we have uploaded calendars
+          if (stats.cropCalendars > 0) {
             setIsUsingDynamicData(true);
           }
+        } else if (statsResult.status === 'rejected') {
+          console.warn('Stats API failed:', statsResult.reason);
         }
+
+        // Check if all requests failed
+        const allFailed = results.every(result =>
+          result.status === 'rejected' || !result.value?.success
+        );
+
+        if (allFailed) {
+          throw new Error('All API requests failed');
+        }
+
+        setRetryCount(0);
       } catch (error) {
-        console.error('Error loading dynamic agricultural data:', error);
+        // Only log API errors in development to reduce console noise
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error loading dynamic agricultural data:', error);
+        }
+
+        const userFriendlyMessage = getUserFriendlyErrorMessage(error, 'calendar_fetch');
+        setError({
+          type: 'data_loading',
+          message: userFriendlyMessage.message,
+          details: userFriendlyMessage.details,
+          suggestions: userFriendlyMessage.suggestions,
+          timestamp: new Date().toISOString(),
+          retryable: retryCount < maxRetries
+        });
+
+        if (retryCount < maxRetries) {
+          toast.error(`Loading failed, retrying... (${retryCount + 1}/${maxRetries})`);
+        } else {
+          toast.error(userFriendlyMessage.message);
+        }
       } finally {
         setLoading(false);
       }
     };
-    
-    loadDynamicData();
-  }, []);
+
+    // Add debouncing for retry attempts
+    const timeoutId = setTimeout(loadDynamicData, retryCount * 1000);
+    return () => clearTimeout(timeoutId);
+  }, [retryCount]);
 
   // Fetch dynamic crop calendar data when filters change
   useEffect(() => {
     const loadCropCalendarData = async () => {
       if (!isUsingDynamicData) return;
-      
+
       setLoading(true);
+      setError(null); // Clear filter-specific errors
+
       try {
         const filters = {};
-        
+
         if (selectedDistrict !== 'All Districts') {
           filters.district = selectedDistrict;
         }
-        
+
         if (selectedCrop !== 'all') {
-          filters.crop = selectedCrop;
+          filters.commodity = selectedCrop;
         }
-        
+
         if (selectedSeason) {
           filters.season = selectedSeason;
         }
-        
+
         if (selectedYear) {
           filters.year = selectedYear;
         }
-        
-        const result = await agriculturalDataService.getCropCalendar(filters);
-        
+
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Calendar data request timeout')), 8000)
+        );
+
+        const result = await Promise.race([
+          agriculturalDataService.getCropCalendar(filters),
+          timeoutPromise
+        ]);
+
         if (result.success && result.data.length > 0) {
           // Transform backend data to match the expected format
           const transformedData = transformBackendDataToActivities(result.data);
@@ -792,68 +487,597 @@ const CropCalendar = () => {
           setDynamicData([]);
         }
       } catch (error) {
-        console.error('Error loading crop calendar data:', error);
+        // Only log in development to reduce production console noise
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error loading crop calendar data:', error);
+        }
+        setError({
+          type: 'calendar_data',
+          message: 'Failed to load calendar data for current filters',
+          details: error.message,
+          timestamp: new Date().toISOString(),
+          retryable: true
+        });
         setDynamicData([]);
       } finally {
         setLoading(false);
       }
     };
-    
+
     if (isUsingDynamicData) {
       loadCropCalendarData();
     }
   }, [selectedCrop, selectedDistrict, selectedSeason, selectedYear, isUsingDynamicData]);
 
-  // Function to transform backend crop calendar data to activity format
-  const transformBackendDataToActivities = (cropCalendarData) => {
+  // Load districts safely when region changes
+  useEffect(() => {
+    if (selectedRegion && selectedRegion !== "All Regions") {
+      try {
+        const result = getSafeDistrictsByRegion(selectedRegion, {
+          preferNewData: true,
+          excelDataOnly: true,
+          enableCaching: true
+        });
+
+        setDistrictData(result);
+
+        // Log any data source issues in development
+        if (process.env.NODE_ENV === 'development' && result.meta.hasErrors) {
+          console.warn('District data has errors:', result.meta);
+        }
+      } catch (error) {
+        console.error('Error loading districts for region:', selectedRegion, error);
+        setDistrictData({ districts: [], meta: { error: error.message } });
+
+        const userFriendlyMessage = getUserFriendlyErrorMessage(error, 'district_fetch');
+        setError({
+          type: 'district_loading',
+          message: `Failed to load districts for ${selectedRegion}`,
+          details: userFriendlyMessage.details,
+          suggestions: userFriendlyMessage.suggestions,
+          timestamp: new Date().toISOString(),
+          retryable: false
+        });
+        toast.error(`Failed to load districts for ${selectedRegion}`);
+      }
+    } else {
+      setDistrictData({ districts: [], meta: {} });
+    }
+  }, [selectedRegion]);
+
+  // Function to parse Excel data from backend into activities
+  const parseExcelDataToActivities = (calendar) => {
     const activities = [];
-    const monthColors = [
-      'bg-[#00B0F0]', 'bg-[#BF9000]', 'bg-[#000000]', 'bg-[#FFFF00]',
-      'bg-[#FF0000]', 'bg-[#008000]', 'bg-[#993366]', 'bg-[#800080]',
-      'bg-[#FF00FF]', 'bg-[#87CEEB]', 'bg-[#FF7F00]', 'bg-[#808080]'
-    ];
-    
-    cropCalendarData.forEach((crop, index) => {
-      // Create planting activity
-      if (crop.plantingStart && crop.plantingEnd) {
-        activities.push({
-          activity: `Planting ${crop.crop} - ${crop.district}`,
-          start: crop.plantingStart,
-          end: crop.plantingEnd,
-          color: monthColors[index % monthColors.length],
-          advisory: `Plant ${crop.crop} in ${crop.district} during ${crop.season} season. ${crop.variety ? `Recommended variety: ${crop.variety}.` : ''} ${crop.notes || ''}`
-        });
+    const sheets = calendar.fileData.sheets;
+
+    if (!sheets || typeof sheets !== 'object') {
+      console.error('Invalid sheets data for calendar:', calendar.id);
+      return activities;
+    }
+
+    // Process each sheet
+    Object.keys(sheets).forEach(sheetName => {
+      const sheet = sheets[sheetName];
+
+      if (!sheet || !sheet.data || !Array.isArray(sheet.data)) {
+        console.warn(`Sheet "${sheetName}" has no data array`);
+        return;
       }
-      
-      // Create harvesting activity
-      if (crop.harvestStart && crop.harvestEnd) {
-        activities.push({
-          activity: `Harvesting ${crop.crop} - ${crop.district}`,
-          start: crop.harvestStart,
-          end: crop.harvestEnd,
-          color: 'bg-[#008000]', // Green for harvest
-          advisory: `Harvest ${crop.crop} in ${crop.district} during ${crop.season} season. ${crop.notes || ''}`
-        });
+
+      // Find activity column and month columns
+      const { activityColumnIndex, monthColumns } = findColumnsInExcelData(sheet.data);
+
+      if (activityColumnIndex === -1) {
+        console.warn(`Could not find activity column in sheet: ${sheetName}`);
+        return;
       }
+
+      // Extract activities from rows
+      sheet.data.forEach((row, rowIndex) => {
+        if (!Array.isArray(row) || rowIndex < 3) {
+          return; // Skip headers and invalid rows
+        }
+
+        const activityName = row[activityColumnIndex];
+        if (!activityName || typeof activityName !== 'string') {
+          return;
+        }
+
+        // Skip row numbers and headers
+        const lowerActivityName = activityName.toLowerCase();
+        if (lowerActivityName.includes('s/n') ||
+            lowerActivityName.includes('stage') ||
+            lowerActivityName.includes('activity') ||
+            /^\d+$/.test(activityName.toString().trim())) {
+          return;
+        }
+
+        // Find which months this activity spans
+        const { startMonth, endMonth } = findActivityTimespan(row, monthColumns);
+
+        // Skip activities with no timing data
+        if (!startMonth || !endMonth) {
+          return;
+        }
+
+        const normalizedName = normalizeActivityName(activityName);
+        const activity = {
+          activity: normalizedName,
+          start: startMonth,
+          end: endMonth,
+          color: generateColorFromActivityName(normalizedName),
+          advisory: `Follow best practices for ${normalizedName.toLowerCase()}`,
+          calendarId: calendar.id,
+          commodity: calendar.crop || calendar.commodity,
+          regionCode: calendar.region,
+          districtCode: calendar.district,
+          season: 'Major',
+          metadata: {
+            source: 'uploaded',
+            sheet: sheetName,
+            row: rowIndex,
+            timingSource: 'excel'
+          }
+        };
+
+        activities.push(activity);
+      });
     });
-    
+
     return activities;
   };
 
-  // Slider effect to cycle through crops
-  useEffect(() => {
-    const slideInterval = setInterval(() => {
-      setCurrentSlide((prevSlide) => (prevSlide + 1) % cropsForSlider.length);
-    }, 3000); // Change slide every 3 seconds
+  // Helper functions for Excel parsing
+  const findColumnsInExcelData = (data) => {
+    let activityColumnIndex = -1;
+    const monthColumns = [];
+    const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 
-    return () => clearInterval(slideInterval); // Cleanup interval on component unmount
-  }, []);
+    // Look in the first 3 rows for Excel structure
+    for (let rowIndex = 0; rowIndex < Math.min(3, data.length); rowIndex++) {
+      const row = data[rowIndex];
+      if (!Array.isArray(row)) continue;
+
+      row.forEach((cell, colIndex) => {
+        if (!cell) return;
+        const cellLower = String(cell).toLowerCase().trim();
+
+        // Find activity column
+        if (cellLower.includes('activity') || cellLower.includes('stage') ||
+            cellLower === 'stage of activity' || cellLower === 'activity') {
+          activityColumnIndex = colIndex;
+        }
+
+        // Find month columns
+        const matchingMonth = months.find(month => {
+          return cellLower === month || cellLower === month.toUpperCase() ||
+                 cellLower === getFullMonthName(month).toLowerCase();
+        });
+
+        if (matchingMonth && !monthColumns.find(m => m.index === colIndex)) {
+          const fullMonthName = getFullMonthName(matchingMonth);
+          monthColumns.push({
+            index: colIndex,
+            month: fullMonthName,
+            monthIndex: months.indexOf(matchingMonth),
+            abbreviation: matchingMonth.toUpperCase()
+          });
+        }
+      });
+    }
+
+    // Sort month columns by their position in the year
+    monthColumns.sort((a, b) => a.monthIndex - b.monthIndex);
+
+    return { activityColumnIndex, monthColumns };
+  };
+
+  const findActivityTimespan = (row, monthColumns) => {
+    const filledMonths = [];
+
+    monthColumns.forEach(monthInfo => {
+      if (monthInfo.index < row.length) {
+        const cellValue = row[monthInfo.index];
+        const hasContent = cellValue !== null && cellValue !== undefined &&
+                           cellValue !== '' && String(cellValue).trim() !== '';
+
+        if (hasContent) {
+          // Look for timing markers: X, x, ✓, •, 1, dates, etc.
+          const valueStr = String(cellValue).trim().toLowerCase();
+          if (valueStr === 'x' || valueStr === '✓' || valueStr === '•' ||
+              valueStr === '1' || valueStr.includes('-') ||
+              /^\d+$/.test(valueStr) || valueStr.length === 1) {
+            filledMonths.push(monthInfo.month);
+          }
+        }
+      }
+    });
+
+    if (filledMonths.length === 0) {
+      return { startMonth: null, endMonth: null };
+    }
+
+    return {
+      startMonth: filledMonths[0],
+      endMonth: filledMonths[filledMonths.length - 1]
+    };
+  };
+
+  const getFullMonthName = (monthAbbr) => {
+    const monthMap = {
+      'jan': 'January', 'feb': 'February', 'mar': 'March', 'apr': 'April',
+      'may': 'May', 'jun': 'June', 'jul': 'July', 'aug': 'August',
+      'sep': 'September', 'oct': 'October', 'nov': 'November', 'dec': 'December'
+    };
+    return monthMap[monthAbbr.toLowerCase()] || monthAbbr;
+  };
+
+
+
+  // Function to normalize and clean activity names
+  const normalizeActivityName = (rawName) => {
+    if (!rawName || typeof rawName !== 'string') {
+      return 'Unknown Activity';
+    }
+
+    let cleanName = rawName.trim();
+
+    // Handle numeric activity names - convert to meaningful names
+    if (/^\d+$/.test(cleanName)) {
+      const activityNumber = parseInt(cleanName);
+      const numericMapping = {
+        1: 'Site Selection',
+        2: 'Land Preparation',
+        3: 'Planting/Sowing',
+        4: 'First Fertilizer Application',
+        5: 'First Weeding',
+        6: 'Second Fertilizer Application',
+        7: 'Second Weeding/Pest Control',
+        8: 'Harvesting',
+        9: 'Post-Harvest Activities',
+        10: 'Marketing',
+        11: 'Storage',
+        12: 'Processing'
+      };
+
+      if (numericMapping[activityNumber]) {
+        return numericMapping[activityNumber];
+      }
+    }
+
+    // Handle common Excel formatting issues
+    cleanName = cleanName
+      .replace(/^\d+\.?\s*/, '') // Remove leading numbers and dots
+      .replace(/^\|?\s*/, '')    // Remove leading pipes
+      .replace(/^[-_\s]+/, '')   // Remove leading dashes, underscores, spaces
+      .replace(/[_-]+/g, ' ')    // Replace underscores and dashes with spaces
+      .trim();
+
+    // Handle common abbreviations and expand them
+    const abbreviationMap = {
+      'prep': 'Preparation',
+      'fert': 'Fertilizer',
+      'fertil': 'Fertilizer',
+      'harv': 'Harvest',
+      'weed': 'Weeding',
+      'pest': 'Pest Control',
+      'irrig': 'Irrigation',
+      'maint': 'Maintenance',
+      'mgmt': 'Management',
+      'ctrl': 'Control',
+      'app': 'Application',
+      'applic': 'Application'
+    };
+
+    // Apply abbreviation expansions
+    let expandedName = cleanName.toLowerCase();
+    Object.entries(abbreviationMap).forEach(([abbrev, full]) => {
+      const regex = new RegExp(`\\b${abbrev}\\b`, 'gi');
+      expandedName = expandedName.replace(regex, full);
+    });
+
+    // Capitalize first letter of each word
+    cleanName = expandedName.replace(/\w\S*/g, (word) =>
+      word.charAt(0).toUpperCase() + word.substr(1).toLowerCase()
+    );
+
+    // Handle specific agricultural activity patterns
+    const patterns = [
+      { pattern: /(\d+)(?:st|nd|rd|th)?\s*(weed|fertilizer|spray)/i,
+        replacement: (match, num, activity) => `${getOrdinal(num)} ${activity.charAt(0).toUpperCase() + activity.slice(1)}` },
+      { pattern: /land\s+prep/i, replacement: 'Land Preparation' },
+      { pattern: /site\s+select/i, replacement: 'Site Selection' },
+      { pattern: /post\s*harvest/i, replacement: 'Post-Harvest Activities' },
+      { pattern: /pest\s+control/i, replacement: 'Pest Control' },
+      { pattern: /weed\s+control/i, replacement: 'Weed Control' }
+    ];
+
+    patterns.forEach(({ pattern, replacement }) => {
+      if (typeof replacement === 'function') {
+        cleanName = cleanName.replace(pattern, replacement);
+      } else {
+        cleanName = cleanName.replace(pattern, replacement);
+      }
+    });
+
+    return cleanName || 'Unknown Activity';
+  };
+
+  // Helper function to get ordinal numbers
+  const getOrdinal = (num) => {
+    const n = parseInt(num);
+    const suffix = ['th', 'st', 'nd', 'rd'];
+    const v = n % 100;
+    return n + (suffix[(v - 20) % 10] || suffix[v] || suffix[0]);
+  };
+
+  // Function to normalize and fix activity colors
+  const normalizeActivityColor = (color, activityName) => {
+    // If no color provided, generate one based on activity type
+    if (!color) {
+      return generateColorFromActivityName(activityName);
+    }
+
+    // Convert string color to consistent format
+    const normalizedColor = String(color).trim();
+
+    // Fix problematic colors
+    const problematicColors = [
+      '#000000', '#000', 'black', 'Black', 'BLACK',
+      '#FFFFFF', '#FFF', 'white', 'White', 'WHITE'
+    ];
+
+    if (problematicColors.includes(normalizedColor)) {
+      return generateColorFromActivityName(activityName);
+    }
+
+    // Ensure color has # prefix if it's a hex color
+    if (/^[0-9A-Fa-f]{6}$/.test(normalizedColor)) {
+      return `#${normalizedColor}`;
+    }
+
+    // Return as-is if it's already a valid color format
+    return normalizedColor;
+  };
+
+  // Generate appropriate colors based on activity name
+  const generateColorFromActivityName = (activityName) => {
+    if (!activityName) return '#6B7280'; // Default gray
+
+    const name = activityName.toLowerCase();
+
+    // Define color mapping for different activity types
+    const colorMap = {
+      // Site and preparation activities
+      'site': '#3B82F6',      // Blue
+      'selection': '#3B82F6',  // Blue
+      'preparation': '#F59E0B', // Amber
+      'land': '#F59E0B',       // Amber
+      'clearing': '#F59E0B',   // Amber
+
+      // Planting activities
+      'plant': '#10B981',      // Emerald
+      'sowing': '#10B981',     // Emerald
+      'seed': '#10B981',       // Emerald
+
+      // Fertilizer activities
+      'fertil': '#FBBF24',     // Yellow
+      'nutrient': '#FBBF24',   // Yellow
+      'compost': '#FBBF24',    // Yellow
+      'manure': '#FBBF24',     // Yellow
+
+      // Weeding and pest control
+      'weed': '#EF4444',       // Red
+      'pest': '#DC2626',       // Dark red
+      'spray': '#DC2626',      // Dark red
+      'control': '#DC2626',    // Dark red
+
+      // Water management
+      'water': '#06B6D4',      // Cyan
+      'irrigat': '#06B6D4',    // Cyan
+      'drain': '#0891B2',      // Dark cyan
+
+      // Harvesting
+      'harvest': '#059669',    // Dark green
+      'pick': '#059669',       // Dark green
+      'collect': '#059669',    // Dark green
+
+      // Post-harvest
+      'dry': '#D97706',        // Orange
+      'stor': '#D97706',       // Orange
+      'process': '#D97706',    // Orange
+      'market': '#7C3AED',     // Purple
+
+      // General maintenance
+      'maintain': '#6B7280',   // Gray
+      'check': '#6B7280',      // Gray
+      'monitor': '#6B7280'     // Gray
+    };
+
+    // Find matching color based on activity name
+    for (const [key, color] of Object.entries(colorMap)) {
+      if (name.includes(key)) {
+        return color;
+      }
+    }
+
+    // Default color based on hash of activity name for consistency
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      const char = name.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+
+    const colors = ['#8B5CF6', '#F59E0B', '#10B981', '#EF4444', '#3B82F6', '#F97316'];
+    return colors[Math.abs(hash) % colors.length];
+  };
+
+  // Function to transform backend crop calendar data to activity format
+  const transformBackendDataToActivities = (cropCalendarData) => {
+    // Return the raw calendar data for processing
+    return cropCalendarData || [];
+  };
+
+  // Convert backend pre-parsed activities to calendar format
+  const transformBackendActivitiesToCalendarFormat = (backendActivities) => {
+    const convertedActivities = backendActivities.map((activity, index) => {
+      // Handle both possible activity structures
+      const rawActivityName = activity.activityName || activity.activity || activity.name || `Activity ${index + 1}`;
+
+      // Normalize and clean activity name
+      let activityName = normalizeActivityName(rawActivityName);
+
+      const activityId = activity.activityId || activity.id || `activity_${index}`;
+
+      // Extract and normalize primary background color from Excel data
+      let primaryBackgroundColor = activity.backgroundColor ||
+                                    activity.color ||
+                                    activity.periods?.[0]?.backgroundColor;
+
+      // Normalize and fix problematic colors
+      primaryBackgroundColor = normalizeActivityColor(primaryBackgroundColor, activityName);
+
+      // Build timeline from periods data
+      const timeline = [];
+      const activeWeeks = new Set();
+      let startMonth = null;
+      let endMonth = null;
+
+      // Process periods to build timeline
+      if (activity.periods && Array.isArray(activity.periods) && activity.periods.length > 0) {
+        activity.periods.forEach((period, periodIndex) => {
+          const weekIndex = period.timelineIndex || periodIndex;
+          const month = period.month || 'Unknown';
+          let backgroundColor = period.backgroundColor || period.color || primaryBackgroundColor;
+
+          // Normalize color for timeline
+          backgroundColor = normalizeActivityColor(backgroundColor, activityName);
+
+          activeWeeks.add(weekIndex);
+
+          // Track month range
+          if (!startMonth) startMonth = month;
+          endMonth = month;
+
+          // Ensure timeline array is large enough
+          while (timeline.length <= weekIndex) {
+            timeline.push({
+              active: false,
+              background: 'transparent',
+              content: '',
+              week: timeline.length + 1,
+              backgroundColor: null
+            });
+          }
+
+          // Set active period with converted color
+          timeline[weekIndex] = {
+            active: true,
+            background: backgroundColor,
+            backgroundColor: backgroundColor,
+            content: period.cellValue || period.content || '●',
+            week: weekIndex + 1,
+            month: month,
+            monthIndex: period.monthIndex || 0
+          };
+        });
+      } else {
+        // Fallback: create a simple activity spanning first few weeks
+        for (let i = 0; i < 4; i++) {
+          timeline.push({
+            active: i < 2, // Active for first 2 weeks as fallback
+            background: i < 2 ? primaryBackgroundColor : 'transparent',
+            backgroundColor: i < 2 ? primaryBackgroundColor : null,
+            content: i < 2 ? '●' : '',
+            week: i + 1,
+            month: 'January',
+            monthIndex: 0
+          });
+          if (i < 2) activeWeeks.add(i);
+        }
+        startMonth = 'January';
+        endMonth = 'January';
+      }
+
+      // Fill remaining timeline slots up to 36 weeks if needed
+      while (timeline.length < 36) {
+        timeline.push({
+          active: false,
+          background: 'transparent',
+          content: '',
+          week: timeline.length + 1,
+          backgroundColor: null
+        });
+      }
+
+      const convertedActivity = {
+        id: activityId,
+        activity: activityName,
+        name: activityName,
+        type: activityName.toLowerCase().includes('harvest') ? 'harvest' :
+              activityName.toLowerCase().includes('plant') ? 'planting' :
+              activityName.toLowerCase().includes('weed') ? 'weeding' :
+              activityName.toLowerCase().includes('fertil') ? 'fertilizer' : 'general',
+        start: startMonth || 'January',
+        end: endMonth || startMonth || 'January',
+        color: primaryBackgroundColor,
+        backgroundColor: primaryBackgroundColor,
+        exactColor: primaryBackgroundColor,
+        description: activityName,
+        source: 'enhanced-excel-extraction',
+        timeline: timeline,
+        periods: activity.periods,
+        activeWeeks: Array.from(activeWeeks).sort((a, b) => a - b),
+        calendarType: 'seasonal'
+      };
+
+      return convertedActivity;
+    });
+
+    return convertedActivities;
+  };
+
 
   useEffect(() => {
-    const updateFarmingActivities = () => {
-      // Use dynamic data if available, otherwise fall back to static data
-      if (isUsingDynamicData && dynamicData.length > 0) {
-        setFarmingActivities(dynamicData);
+    const updateFarmingActivities = async () => {
+      // Excel-only calendar system - only show uploaded Excel data
+      if (isUsingDynamicData) {
+        // Only show calendar if specific district is selected
+        if (selectedDistrict === 'All Districts' || !selectedDistrict) {
+          setFarmingActivities([]);
+          return;
+        }
+
+        // Process the backend-filtered dynamic data directly
+        if (dynamicData && dynamicData.length > 0) {
+          const allActivities = [];
+
+          dynamicData.forEach((calendar, index) => {
+            // Add null checks for calendar object
+            if (!calendar || typeof calendar !== 'object') {
+              console.warn(`Invalid calendar object at index ${index}:`, calendar);
+              return;
+            }
+
+            // Use enhanced parser schedule data (Priority 1)
+            if (calendar.schedule && Array.isArray(calendar.schedule) && calendar.schedule.length > 0) {
+              const enhancedActivities = transformBackendActivitiesToCalendarFormat(calendar.schedule);
+              allActivities.push(...enhancedActivities);
+            }
+            // Fallback: Use backend pre-parsed activities (Priority 2)
+            else if (calendar.activities && Array.isArray(calendar.activities) && calendar.activities.length > 0) {
+              const backendActivities = transformBackendActivitiesToCalendarFormat(calendar.activities);
+              allActivities.push(...backendActivities);
+            } else {
+              console.warn(`Calendar ${calendar.id || 'Unknown'} has no pre-parsed activities or schedule data`);
+            }
+          });
+
+          setFarmingActivities(allActivities);
+        } else {
+          setFarmingActivities([]); // Show "no data" message
+        }
         return;
       }
       
@@ -861,20 +1085,81 @@ const CropCalendar = () => {
 
       let baseActivities = [];
       let adjustedActivities = [];
-      let regionCalendars = {};
-      let offset = 0;
 
-      // Determine the base activities based on the selected crop
-      if (selectedCrop === "maize" || selectedCrop === "all") {
-        baseActivities = maizeActivities;
-      } else if (selectedCrop === "rice") {
-        baseActivities = riceActivities;
-      } else if (selectedCrop === "sorghum") {
-        baseActivities = sorghumActivities;
-      } else if (selectedCrop === "tomato") {
-        baseActivities = tomatoActivities;
-      } else if (selectedCrop === "soybean") {
-        baseActivities = soybeanActivities;
+      // Get dynamic calendar data based on the selected crop and location
+      try {
+        const filters = {
+          commodity: selectedCrop === "all" ? "maize" : selectedCrop, // Default to maize for "all"
+          regionCode: selectedRegion !== "All Regions" ? selectedRegion : undefined,
+          districtCode: selectedDistrict !== "All Districts" ? selectedDistrict : undefined,
+          season: selectedSeason
+        };
+
+        // Excel-only mode - only show uploaded calendar data
+        const options = {
+          strictMode: isUsingDynamicData
+        };
+
+        const calendarResult = await dynamicCalendarManager.getCalendarData(filters, options);
+
+        if (calendarResult.success && calendarResult.data.length > 0) {
+          baseActivities = calendarResult.data;
+
+          // Map metadata field names for compatibility
+          const mappedMetadata = {
+            ...calendarResult.metadata,
+            dataSourceUsed: calendarResult.metadata.dataSourceUsed || calendarResult.metadata.source,
+            priority: calendarResult.metadata.priority || calendarResult.metadata.dataSourcePriority,
+            hasUploadedData: (calendarResult.metadata.dataSourceUsed || calendarResult.metadata.source) === 'uploaded'
+          };
+          setCalendarMetadata(mappedMetadata);
+        } else {
+          // Handle strict mode "no data" vs general "no data"
+          const isStrictModeNoData = calendarResult.metadata && calendarResult.metadata.strictMode;
+
+          if (isStrictModeNoData) {
+            baseActivities = [];
+            setCalendarMetadata({
+              dataSourceUsed: 'no-data',
+              priority: 0,
+              hasUploadedData: false,
+              strictMode: true,
+              message: calendarResult.message || 'No Excel calendar data uploaded for selected filters',
+              queryTime: new Date().toISOString()
+            });
+          } else {
+            baseActivities = [];
+            setCalendarMetadata({
+              dataSourceUsed: 'no-data',
+              priority: 0,
+              hasUploadedData: false,
+              strictMode: false,
+              message: 'No Excel calendar data available for this selection',
+              queryTime: new Date().toISOString()
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching dynamic calendar data:', error);
+        baseActivities = [];
+        setCalendarMetadata({
+          dataSourceUsed: 'no-data',
+          priority: 0,
+          hasUploadedData: false,
+          strictMode: isUsingDynamicData,
+          queryTime: new Date().toISOString(),
+          error: error.message
+        });
+        const userFriendlyMessage = getUserFriendlyErrorMessage(error, 'calendar_fetch');
+        setError({
+          type: 'calendar_manager',
+          message: userFriendlyMessage.message,
+          details: userFriendlyMessage.details,
+          suggestions: userFriendlyMessage.suggestions,
+          timestamp: new Date().toISOString(),
+          retryable: true
+        });
+        toast.error(userFriendlyMessage.message);
       }
 
       // Adjust activities for the selected season
@@ -883,77 +1168,17 @@ const CropCalendar = () => {
         selectedSeason
       );
 
-      // Determine offset based on region or district
-      if (selectedDistrict !== "All Districts") {
-        const district = districtOfGhana.find(
-          (d) => d.name === selectedDistrict
-        );
-        if (district) {
-          const climateOffsets = {
-            "Greater Accra": 2,
-            Ashanti: 0,
-            Northern: 3,
-            Eastern: 2,
-            Western: 3,
-            Volta: 2,
-            "Upper East": 4,
-            "Upper West": 4,
-            Central: 2,
-            Bono: 3,
-            "Western North": 2,
-            Ahafo: 2,
-            Savannah: 4,
-            Oti: 2,
-            "Bono East": 3,
-            "North East": 4,
-          };
-          offset = climateOffsets[district.region] || 0;
-        }
-      } else if (selectedRegion !== "All Regions") {
-        const climateOffsets = {
-          "Greater Accra": 1,
-          Ashanti: 1,
-          Northern: 2,
-          Eastern: 1,
-          Western: 1,
-          Volta: 1,
-          "Upper East": 2,
-          "Upper West": 2,
-          Central: 1,
-          Bono: 2,
-          "Western North": 1,
-          Ahafo: 1,
-          Savannah: 1,
-          Oti: 1,
-          "Bono East": 2,
-          "North East": 1,
-        };
-        offset = climateOffsets[selectedRegion] || 0;
-      }
-
-      // Generate region-specific activities with the determined offset
-      regionCalendars = generateRegionActivities(adjustedActivities, offset);
-
       if (initialLoad) {
-        setFarmingActivities(adjustedActivities); // Default to adjusted activities on initial load
-        setInitialLoad(false);
-      } else if (
-        selectedRegion === "All Regions" &&
-        selectedDistrict === "All Districts"
-      ) {
         setFarmingActivities(adjustedActivities);
+        setInitialLoad(false);
       } else {
-        setFarmingActivities(regionCalendars[selectedRegion] || []);
+        setFarmingActivities(adjustedActivities);
       }
 
-      console.log(
-        "Updated activities for crop, region, district, and season:",
-        adjustedActivities
-      );
       setLoading(false);
     };
 
-    updateFarmingActivities();
+    updateFarmingActivities().catch(console.error);
   }, [
     selectedCrop,
     selectedRegion,
@@ -984,6 +1209,7 @@ const CropCalendar = () => {
     setSelectedYearSeason(e.target.value);
   };
 
+
   const handleMouseEnter = (activity, e) => {
     setHoveredActivity(activity);
     setTooltipPosition({ x: e.pageX, y: e.pageY });
@@ -994,113 +1220,261 @@ const CropCalendar = () => {
   };
 
   const handleDownload = () => {
-    const headers = [
-      "Activity",
-      ...weeksData.map(
-        (week) => `${week?.month} ${week.week} (${week.dateRange})`
-      ),
-    ];
-    const csvRows = [headers.join(",")];
-
-    farmingActivities.forEach((activity) => {
-      const row = [
-        activity.activity,
-        ...weeksData.map((week) => {
-          const month = week?.month;
-          const isActive = month >= activity.start && month <= activity.end;
-          return isActive ? "✔️" : "";
-        }),
-      ];
-      csvRows.push(row.join(","));
-    });
-    const csvString = csvRows.join("\n");
-    const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", `crop_calendar_${selectedYearSeason}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const handleShare = async () => {
-    const shareData = {
-      title: `Crop Calendar - ${selectedYearSeason} (${selectedYear})`,
-      text: `Check out this crop calendar for ${selectedYearSeason} in ${selectedYear}!`,
-      url: "https://your-website-url.com",
-    };
-
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-        console.log("Share successful!");
-      } catch (error) {
-        console.error("Error sharing:", error);
+    try {
+      if (!farmingActivities.length) {
+        setError({
+          type: 'download',
+          message: 'No calendar data available to download',
+          details: 'Please select different filters to see calendar activities',
+          timestamp: new Date().toISOString(),
+          retryable: false
+        });
+        return;
       }
-    } else {
-      alert("Sharing not supported in this browser.");
+
+      const headers = [
+        "Activity",
+        ...weeksData.map(
+          (week) => `${week?.month} ${week.week} (${week.dateRange})`
+        ),
+      ];
+      const csvRows = [headers.join(",")];
+
+      farmingActivities.forEach((activity) => {
+        const row = [
+          activity.activity,
+          ...weeksData.map((week) => {
+            const month = week?.month;
+            const isActive = month >= activity.start && month <= activity.end;
+            return isActive ? "✔️" : "";
+          }),
+        ];
+        csvRows.push(row.join(","));
+      });
+      const csvString = csvRows.join("\n");
+      const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `crop_calendar_${selectedYearSeason}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Clear any download-related errors on success
+      if (error?.type === 'download') {
+        setError(null);
+      }
+    } catch (error) {
+      console.error('Download error:', error);
+      setError({
+        type: 'download',
+        message: 'Failed to download calendar data',
+        details: error.message,
+        timestamp: new Date().toISOString(),
+        retryable: true
+      });
     }
   };
 
-  return (
-    <div className="bg-gradient-to-br from-blue-50 to-gray-200 min-h-screen p-0 lg:pt-20 pt-14">
-      <div className="container mx-auto bg-white rounded-lg shadow-lg p-6">
-        <div className="flex flex-col md:flex-row justify-between items-center my-6 mb-10 gap-4">
-          <div>
-            <h1 className="text-gray-800 text-3xl font-bold text-center md:text-left">
-              Production Calendar
-            </h1>
-            {isUsingDynamicData && apiStats && (
-              <div className="mt-2 text-sm text-gray-600">
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                  <span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
-                  Dynamic Data: {apiStats.cropCalendars} records
-                </span>
-                {apiStats.lastUpdated && (
-                  <div className="text-xs mt-1">
-                    Last updated: {new Date(apiStats.lastUpdated).toLocaleDateString()}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-          {/* Slider with year and season */}
-          <div className="relative overflow-hidden w-full md:w-1/2 h-16">
-            <div
-              className="flex transition-transform duration-500 ease-in-out"
-              style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-            >
-              {cropsForSlider.map((crop, index) => (
-                <div
-                  key={index}
-                  className="min-w-full text-red-600 text-2xl font-bold text-center"
-                >
-                  Crop Calendar for {selectedRegion} ({selectedDistrict}) -{" "}
-                  {selectedCrop}
+  const handleShare = async () => {
+    try {
+      const shareData = {
+        title: `Crop Calendar - ${selectedYearSeason} (${selectedYear})`,
+        text: `Check out this crop calendar for ${selectedYearSeason} in ${selectedYear}!`,
+        url: window.location.href,
+      };
+
+      if (navigator.share) {
+        await navigator.share(shareData);
+        console.log("Share successful!");
+        // Clear any share-related errors on success
+        if (error?.type === 'share') {
+          setError(null);
+        }
+      } else {
+        // Fallback to clipboard
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success("Calendar link copied to clipboard!");
+      }
+    } catch (error) {
+      console.error("Error sharing:", error);
+      setError({
+        type: 'share',
+        message: 'Failed to share calendar',
+        details: error.message,
+        timestamp: new Date().toISOString(),
+        retryable: true
+      });
+    }
+  };
+
+  // Retry function for failed operations
+  const handleRetry = () => {
+    if (error?.retryable) {
+      setError(null);
+      if (error.type === 'data_loading') {
+        setRetryCount(prev => prev + 1);
+      } else if (error.type === 'download') {
+        handleDownload();
+      } else if (error.type === 'share') {
+        handleShare();
+      }
+    }
+  };
+
+  // Clear error function
+  const clearError = () => {
+    setError(null);
+  };
+
+  // Error Display Component
+  const ErrorDisplay = ({ error, onRetry, onClear }) => {
+    if (!error) return null;
+
+    const getErrorIcon = (type) => {
+      switch (type) {
+        case 'initialization':
+        case 'calendar_manager':
+          return <FaExclamationTriangle className="text-red-500" />;
+        case 'data_loading':
+        case 'calendar_data':
+          return <FaSpinner className="text-yellow-500" />;
+        case 'download':
+          return <FaDownload className="text-blue-500" />;
+        case 'share':
+          return <FaShareAlt className="text-purple-500" />;
+        default:
+          return <FaExclamationTriangle className="text-gray-500" />;
+      }
+    };
+
+    const getErrorColor = (type) => {
+      switch (type) {
+        case 'initialization':
+        case 'calendar_manager':
+          return 'border-red-200 bg-red-50';
+        case 'data_loading':
+        case 'calendar_data':
+          return 'border-yellow-200 bg-yellow-50';
+        case 'download':
+          return 'border-blue-200 bg-blue-50';
+        case 'share':
+          return 'border-purple-200 bg-purple-50';
+        default:
+          return 'border-gray-200 bg-gray-50';
+      }
+    };
+
+    return (
+      <div className={`border rounded-lg p-4 mb-6 ${getErrorColor(error.type)}`}>
+        <div className="flex items-start justify-between">
+          <div className="flex items-start space-x-3">
+            <div className="mt-1">{getErrorIcon(error.type)}</div>
+            <div className="flex-1">
+              <h4 className="font-semibold text-gray-800 mb-1">{error.message}</h4>
+              <p className="text-sm text-gray-600 mb-2">{error.details}</p>
+
+              {/* Show suggestions if available */}
+              {error.suggestions && error.suggestions.length > 0 && (
+                <div className="mb-3">
+                  <p className="text-sm font-medium text-gray-700 mb-1">Try these solutions:</p>
+                  <ul className="text-sm text-gray-600 list-disc list-inside space-y-1">
+                    {error.suggestions.map((suggestion, index) => (
+                      <li key={index}>{suggestion}</li>
+                    ))}
+                  </ul>
                 </div>
-              ))}
+              )}
+
+              <div className="text-xs text-gray-500">
+                {new Date(error.timestamp).toLocaleString()}
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            {error.retryable && (
+              <button
+                onClick={onRetry}
+                className="flex items-center space-x-1 px-3 py-1 bg-gray-600 text-white rounded text-xs hover:bg-gray-700 transition-colors"
+                title="Retry operation"
+              >
+                <FaSync size={12} />
+                <span>Retry</span>
+              </button>
+            )}
+            <button
+              onClick={onClear}
+              className="px-3 py-1 bg-gray-200 text-gray-600 rounded text-xs hover:bg-gray-300 transition-colors"
+              title="Dismiss error"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <>
+      <PageTitle title="Crop Calendar" />
+      <div className="min-h-screen bg-gray-100 pt-20 lg:pt-24">
+        {/* Main Container */}
+        <div className="px-4 md:px-8 py-6 md:py-8">
+          <InlineOfflineWarning
+            message="Calendar data may be limited while server is offline"
+            className="mb-6"
+          />
+
+          {/* Error Display */}
+          <ErrorDisplay
+            error={error}
+            onRetry={handleRetry}
+            onClear={clearError}
+          />
+
+          {/* Header Card - Separate White Container */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 px-4 md:px-8 py-6 md:py-8 mb-6">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+              <div className="flex-1">
+                <h1 className="text-3xl md:text-5xl font-bold mb-3">
+                  <span className="text-green-600">Agricultural </span>
+                  <span className="text-blue-600">Calendar</span>
+                </h1>
+                <p className="text-gray-500 text-base md:text-lg">
+                  Select your location and crop to view farming activities
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 md:gap-4 justify-center md:justify-start">
+                <div>
+                  <DownloadButton onDownload={handleDownload} />
+                </div>
+                <div>
+                  <ShareButton onShare={handleShare} />
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <DownloadButton onDownload={handleDownload} />
-            <ShareButton onShare={handleShare} />
-          </div>
-        </div>
-
-        {/* Dropdowns for Region, District, Crop, and Year/Season */}
-        <div className="flex flex-col md:flex-row mb-4 justify-between my-10 gap-4">
-          <div className="w-full md:w-1/4">
-            <label className="text-lg font-semibold block mb-1">
-              Select Year & Season
-            </label>
-            <select
-              value={selectedYearSeason}
-              onChange={handleYearSeasonChange}
-              className="border border-gray-300 rounded p-2 w-full"
-            >
+          {/* Filter Card - Separate White Container */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 px-4 md:px-8 py-6 md:py-8 mb-6">
+            <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-4 md:mb-6 flex items-center">
+              <span className="text-blue-600 mr-2">•</span>
+              Filter Options
+            </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Year & Season
+              </label>
+              <select
+                value={selectedYearSeason}
+                onChange={handleYearSeasonChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+              >
               {yearSeasonOptions.map((option) => (
                 <option key={option.label} value={option.label}>
                   {option.label}
@@ -1109,15 +1483,15 @@ const CropCalendar = () => {
             </select>
           </div>
 
-          <div className="w-full md:w-1/4">
-            <label className="text-lg font-semibold block mb-1">
-              Select Crop
-            </label>
-            <select
-              value={selectedCrop}
-              onChange={handleCropChange}
-              className="border border-gray-300 rounded p-2 w-full"
-            >
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Crop Type
+              </label>
+              <select
+                value={selectedCrop}
+                onChange={handleCropChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+              >
               <option value="all">All Crops</option>
               {/* Show dynamic crops if available */}
               {isUsingDynamicData && availableCrops.length > 0 ? (
@@ -1139,15 +1513,15 @@ const CropCalendar = () => {
             </select>
           </div>
 
-          <div className="w-full md:w-1/4">
-            <label className="text-lg font-semibold block mb-1">
-              Select Region
-            </label>
-            <select
-              value={selectedRegion}
-              onChange={handleRegionChange}
-              className="border border-gray-300 rounded p-2 w-full"
-            >
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Region <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={selectedRegion}
+                onChange={handleRegionChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+              >
               <option value="All Regions">All Regions</option>
               {regionsOfGhana.map((region) => (
                 <option key={region} value={region}>
@@ -1157,17 +1531,18 @@ const CropCalendar = () => {
             </select>
           </div>
 
-          <div className="w-full md:w-1/4">
-            <label className="text-lg font-semibold block mb-1">
-              Select District
-            </label>
-            <select
-              value={selectedDistrict}
-              onChange={handleDistrictChange}
-              className="border border-gray-300 rounded p-2 w-full"
-            >
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                District <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={selectedDistrict}
+                onChange={handleDistrictChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
+                disabled={selectedRegion === "All Regions"}
+              >
               <option value="All Districts">All Districts</option>
-              {/* Show dynamic districts if available, otherwise use static */}
+              {/* Show dynamic districts if available */}
               {isUsingDynamicData && availableDistricts.length > 0 ? (
                 availableDistricts.map((district) => (
                   <option key={district} value={district}>
@@ -1175,156 +1550,144 @@ const CropCalendar = () => {
                   </option>
                 ))
               ) : (
-                districtOfGhana
-                  .filter(
-                    (d) =>
-                      d.region === selectedRegion ||
-                      selectedRegion === "All Regions"
-                  )
-                  .map((district, index) => (
-                    <option key={index} value={district.name}>
-                      {district.name}
-                    </option>
-                  ))
+                // Fallback to static districts
+                <SafeDistrictOptions
+                  districts={districtData.districts}
+                  placeholder=""
+                  includeEmpty={false}
+                />
               )}
             </select>
+            </div>
+          </div>
+          <div className="mt-4">
+            <p className="text-red-500 text-sm">
+              <span className="text-red-500">*</span> Both region and district must be selected to view calendar data
+            </p>
           </div>
         </div>
 
-        {/* Loading state */}
-        {loading && (
-          <div className="flex items-center justify-center py-8">
-            <FaSpinner className="animate-spin mr-2" />
-            <span className="text-blue-500">Loading agricultural data...</span>
-          </div>
-        )}
-        
-        {/* Data source indicator */}
-        {!loading && (
-          <div className="mb-4 text-sm text-gray-600">
-            {isUsingDynamicData ? (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                <span className="font-medium text-green-800">📊 Displaying data from uploaded Excel/CSV files</span>
-                <div className="mt-1 text-xs text-green-600">
-                  {farmingActivities.length} activities found for current filters
-                </div>
-              </div>
-            ) : (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <span className="font-medium text-blue-800">📚 Displaying default crop calendar templates</span>
-                <div className="mt-1 text-xs text-blue-600">
-                  Upload Excel/CSV files through the dashboard to see dynamic data
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-        
-        {/* No data message */}
-        {!loading && isUsingDynamicData && farmingActivities.length === 0 && (
-          <div className="text-center py-8">
-            <div className="text-gray-500 text-lg mb-2">No crop calendar data found</div>
-            <p className="text-gray-400">Try adjusting your filters or upload crop calendar data through the dashboard.</p>
-          </div>
-        )}
+          {/* Content Area - Gray Background (No Card) */}
 
-        {/* Calendar Table */}
-        <div className="overflow-x-auto">
-          <table className="min-w-max border-collapse border border-gray-300">
-            <thead>
-              {/* Row 1: Months */}
-              <tr className="bg-gray-200">
-                <th
-                  className="border border-gray-300 p-2 text-left left-0 bg-gray-200 z-20"
-                  rowSpan="2"
-                >
-                  Stage of Activity
-                </th>
-                {Array.from(
-                  {
-                    length:
-                      selectedSeason === "Major"
-                        ? 9 // February to October (9 months)
-                        : 4, // September to December (4 months)
-                  },
-                  (_, i) => {
-                    const monthIndex =
-                      selectedSeason === "Major" ? i + 1 : i + 8; // Start from February (1) or September (8)
-                    const month = new Date(0, monthIndex).toLocaleString(
-                      "default",
-                      { month: "long" }
-                    );
-                    const weeksInMonth = weeksData.filter(
-                      (week) => week?.month === month
-                    );
-                    return (
-                      <th
-                        key={i}
-                        className="border border-gray-300 p-2"
-                        colSpan={weeksInMonth.length}
-                      >
-                        {month}
-                      </th>
-                    );
-                  }
+          {/* Clean Loading state */}
+          {loading && (
+            <div className="flex items-center justify-center py-16">
+              <div className="text-center">
+                <div className="relative mx-auto mb-4">
+                  <div className="w-8 h-8 rounded-full border-2 border-gray-200"></div>
+                  <div className="absolute top-0 left-0 w-8 h-8 rounded-full border-2 border-transparent border-t-blue-600 animate-spin"></div>
+                </div>
+                <p className="text-gray-600">Loading agricultural data...</p>
+              </div>
+            </div>
+          )}
+
+          {/* No Data State - Gray Background */}
+          {!loading && farmingActivities.length === 0 && (
+            <div className="py-8 md:py-16 text-center px-4">
+              <div className="max-w-md mx-auto">
+                {/* Simple Plant Icon - Matching Target */}
+                <div className="w-16 h-16 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+                  <div className="text-2xl">🌱</div>
+                </div>
+
+                <h3 className="text-xl md:text-2xl font-semibold text-gray-900 mb-3">No Calendar Data</h3>
+
+                {/* Enhanced messaging based on user selection and server status */}
+                {error && error.type === 'calendar_manager' ? (
+                  <div className="text-gray-600 mb-6 text-sm md:text-base">
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                      <p className="text-red-800 font-medium mb-2">🚨 Server Connection Issue</p>
+                      <p className="text-red-700 mb-2">{error.message}</p>
+                      {error.suggestions && (
+                        <div className="mt-3">
+                          <p className="text-red-700 font-medium text-xs">Troubleshooting Steps:</p>
+                          <ul className="list-disc list-inside space-y-1 mt-1 text-xs text-red-600">
+                            {error.suggestions.map((suggestion, index) => (
+                              <li key={index}>{suggestion}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      <div className="mt-3 p-2 bg-red-100 rounded text-xs text-red-700">
+                        <p className="font-medium">🔧 Quick Fix:</p>
+                        <p>Ensure server is running on port 3002, check network connection, or contact system administrator.</p>
+                      </div>
+                    </div>
+                  </div>
+                ) : selectedDistrict === 'All Districts' ? (
+                  <div className="text-gray-600 mb-6 text-sm md:text-base">
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                      <p className="text-amber-800 font-medium mb-2">📍 District Selection Required</p>
+                      <p className="text-amber-700 mb-2">Please select a specific district to view calendar data.</p>
+                      <p className="text-amber-600 text-sm">
+                        Calendar data is organized by individual districts. Choose any district from the dropdown above to see available farming activities.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-gray-600 mb-6 text-sm md:text-base">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                      <p className="text-blue-800 font-medium mb-2">📊 No Data for {selectedDistrict}</p>
+                      <p className="text-blue-700 mb-3">
+                        No Excel calendar file has been uploaded for <strong>{selectedDistrict}</strong> district.
+                      </p>
+                      <div className="bg-white border border-blue-300 rounded p-3 text-blue-800 text-sm">
+                        <p className="font-medium mb-2">💡 Available Options:</p>
+                        <ul className="list-disc list-inside space-y-1 ml-2">
+                          <li>Upload calendar data via the <strong>Dashboard → Create Calendar</strong></li>
+                          <li>Try different districts (some may have existing data)</li>
+                          <li>Check other crop types or seasons</li>
+                          <li>Contact your agricultural extension officer</li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    {/* Server Status Indicator */}
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-green-800 text-xs">
+                      <div className="flex items-center mb-1">
+                        <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                        <span className="font-medium">Server Status: Connected</span>
+                      </div>
+                      <p className="text-green-600">System is online and ready to display calendar data when available.</p>
+                    </div>
+                  </div>
                 )}
-              </tr>
-              {/* Row 2: Weeks and Dates */}
-              <tr className="bg-gray-100">
-                {weeksData.map((week, index) => (
-                  <th
-                    key={index}
-                    className="border border-gray-300 p-0 text-justify text-xs"
-                  >
-                    <div>{week.week}</div>
-                    <div>{week.dateRange}</div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {farmingActivities.map((activity, index) => (
-                <tr key={index}>
-                  <td className="border border-gray-300 p-3">
-                    {activity.activity}
-                  </td>
-                  {weeksData.map((week, weekIndex) => {
-                    const month = week?.month;
-                    const isActive =
-                      month >= activity.start && month <= activity.end;
-                    return (
-                      <td
-                        key={weekIndex}
-                        className={`border border-gray-300 p-2 ${
-                          isActive ? activity.color : ""
-                        }`}
-                        onMouseEnter={(e) => handleMouseEnter(activity, e)}
-                        onMouseLeave={handleMouseLeave}
-                      ></td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {/* Tooltip for crop advisory */}
-          {hoveredActivity && (
-            <div
-              className="absolute bg-gray-800 w-[220px] text-white text-sm p-2 rounded"
-              style={{
-                top: tooltipPosition.y + 10,
-                left: tooltipPosition.x + 10,
-              }}
-            >
-              <p className="font-semibold">{hoveredActivity.activity}</p>
-              <p>{`Start: ${hoveredActivity.start}`}</p>
-              <p>{`End: ${hoveredActivity.end}`}</p>
-              <p className="mt-2 text-white">{hoveredActivity.advisory}</p>
+
+              </div>
+            </div>
+          )}
+
+          {/* Calendar Content - Gray Background */}
+          {farmingActivities.length > 0 && (
+            <div className="mt-8">
+              <SmartCalendarRenderer
+                activities={farmingActivities}
+                weeksData={weeksData}
+                metadata={{
+                  ...calendarMetadata,
+                  activitiesCount: farmingActivities.length,
+                  selectedCrop,
+                  selectedRegion,
+                  selectedDistrict,
+                  selectedSeason
+                }}
+                loading={loading}
+                error={calendarMetadata.error}
+                onActivityHover={handleMouseEnter}
+                onActivityLeave={handleMouseLeave}
+                onDownload={handleDownload}
+                viewMode="fullpage"
+                showDataSourceIndicator={true}
+                showMetadata={true}
+                className="w-full"
+                calendarTitle={`${selectedCrop?.toUpperCase() || 'CROP'} PRODUCTION-${selectedSeason === 'Major' ? 'MAJOR SEASON' : 'PRODUCTION CYCLE'}`}
+              />
             </div>
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

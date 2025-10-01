@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from "react";
+import PageTitle from '../components/PageTitle';
 import prismaImage from "../assets/images/prisma.png";
 import { districtOfGhana } from "../district";
 import { FaEye, FaDownload } from "react-icons/fa";
@@ -437,8 +438,10 @@ const AgroMetAdvisory = () => {
   };
 
   return (
-    <div
-      className="min-h-screen bg-gray-950 mx-auto px-4 py-2 md:px-8 lg:px-12"
+    <>
+      <PageTitle title="Agro-Meteorological Advisory" />
+      <div
+        className="min-h-screen bg-gray-950 mx-auto px-4 py-2 md:px-8 lg:px-12"
       style={{
         backgroundImage: `url(${prismaImage})`,
         backgroundSize: "1400px 1200px",
@@ -742,7 +745,8 @@ const AgroMetAdvisory = () => {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

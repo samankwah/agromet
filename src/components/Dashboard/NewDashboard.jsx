@@ -3,8 +3,6 @@ import {
   FaBell,
   FaSignOutAlt,
   FaSeedling,
-  FaChartLine,
-  FaMapMarkerAlt,
   FaCalendarAlt,
   FaFileAlt,
   FaUsers,
@@ -15,8 +13,8 @@ import CropCalendarForm from "./CropCalendarForm";
 import PoultryCalendarForm from "./PoultryCalendarForm";
 import CalendarDataPreview from "./CalendarDataPreview";
 import AgrometAdvisoryManager from "./AgrometAdvisoryManager";
+import ProfileDropdown from "../common/ProfileDropdown";
 import userService from "../../services/userService";
-import TemplateGenerationService from "../../services/templateGenerationService";
 
 const NewDashboard = () => {
   const [activePage, setActivePage] = useState("dashboard");
@@ -176,11 +174,6 @@ const NewDashboard = () => {
     }
   };
 
-  const currentDate = new Date().toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -236,24 +229,10 @@ const NewDashboard = () => {
                     <span className="absolute -top-1 -right-1 block h-3 w-3 rounded-full bg-red-500"></span>
                   )}
                 </div>
-                <div className="flex items-center">
-                  <div className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center text-white font-semibold mr-3">
-                    {currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'A'}
-                  </div>
-                  <div className="hidden sm:block">
-                    <div className="text-sm font-medium text-gray-700">
-                      {currentUser?.name || 'Admin'}
-                    </div>
-                    <div className="text-xs text-gray-500">{currentDate}</div>
-                  </div>
-                </div>
-                <button
-                  onClick={handleLogout}
-                  className="p-2 rounded-full text-gray-400 hover:text-gray-500 hover:bg-gray-100 transition-colors"
-                  title="Logout"
-                >
-                  <FaSignOutAlt className="h-5 w-5" />
-                </button>
+                <ProfileDropdown
+                  user={currentUser}
+                  onLogout={handleLogout}
+                />
               </div>
             </div>
           </div>

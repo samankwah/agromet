@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect, useRef } from "react";
+import PageTitle from '../components/PageTitle';
 import prismaImage from "../assets/images/prisma.png";
 import { districtOfGhana } from "../district";
 import { FaEye, FaDownload } from "react-icons/fa";
@@ -376,8 +377,10 @@ Overall assessment: Current weather conditions are particularly important for we
   };
 
   return (
-    <div
-      className="min-h-screen bg-gray-950 mx-auto px-4 py-2 md:px-8 lg:px-12"
+    <>
+      <PageTitle title="Media" />
+      <div
+        className="min-h-screen bg-gray-950 mx-auto px-4 py-2 md:px-8 lg:px-12"
       style={{
         backgroundImage: `url(${prismaImage})`,
         backgroundSize: "1400px 1200px",
@@ -586,7 +589,8 @@ Overall assessment: Current weather conditions are particularly important for we
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

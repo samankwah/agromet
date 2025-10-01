@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { FaTimes, FaUser, FaMapMarkerAlt, FaSeedling, FaBullseye } from 'react-icons/fa';
 import PropTypes from 'prop-types';
 import personalizedFarmingService from '../../services/personalizedFarmingService';
+import { getAllRegionNames, getDistrictsByRegionName } from '../../data/ghanaCodes';
 
 const FarmProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
   const [step, setStep] = useState(1);
@@ -46,11 +47,8 @@ const FarmProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
 
-  const ghanaRegions = [
-    'Greater Accra', 'Ashanti', 'Western', 'Central', 'Eastern', 'Volta',
-    'Northern', 'Upper East', 'Upper West', 'Brong-Ahafo', 'Western North',
-    'Ahafo', 'Bono', 'Bono East', 'Oti', 'North East', 'Savannah'
-  ];
+  // Get regions from centralized data
+  const ghanaRegions = getAllRegionNames();
 
   const commonCrops = [
     'maize', 'rice', 'cassava', 'yam', 'plantain', 'cocoyam', 'tomatoes',

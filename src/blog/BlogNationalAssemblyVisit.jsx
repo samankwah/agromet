@@ -1,8 +1,11 @@
+import PageTitle from '../components/PageTitle';
 import nationalAssemblyVisitImage from "../assets/images/image2.png";
 
 const BlogNationalAssemblyVisit = () => {
   return (
-    <div className="pt-24 pb-16 px-4 md:px-0 max-w-5xl mx-auto bg-white shadow-lg rounded-lg">
+    <>
+      <PageTitle title="National Assembly Visit Blog" />
+      <div className="pt-24 pb-16 px-4 md:px-0 max-w-5xl mx-auto bg-white shadow-lg rounded-lg">
       {/* Blog Header */}
       <header className="mb-12">
         {/* Featured Image */}
@@ -131,7 +134,8 @@ const BlogNationalAssemblyVisit = () => {
           </div>
         </div>
       </section>
-    </div>
+      </div>
+    </>
   );
 };
 

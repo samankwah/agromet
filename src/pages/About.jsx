@@ -159,6 +159,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { motion, useInView, useScroll, useTransform } from "framer-motion";
+import PageTitle from "../components/PageTitle";
 import {
   Github,
   Linkedin,
@@ -350,7 +351,9 @@ const InnovatorsAbout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-green-100">
+    <>
+      <PageTitle title="About Us - Meet the Innovators" />
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-green-100">
       {/* Hero Section */}
       <motion.section
         ref={heroRef}
@@ -718,7 +721,8 @@ const InnovatorsAbout = () => {
           </motion.div>
         </div>
       </section>
-    </div>
+      </div>
+    </>
   );
 };
 

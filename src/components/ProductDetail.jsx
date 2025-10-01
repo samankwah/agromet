@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
+import PageTitle from "./PageTitle";
 
 const ProductDetail = ({ products }) => {
   const { id } = useParams();
@@ -32,9 +33,11 @@ const ProductDetail = ({ products }) => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-blue-100 min-h-screen p-8">
-      {" "}
-      {/* Gradient Background */}
+    <>
+      <PageTitle title={`${product.name} - Product Details`} />
+      <div className="bg-gradient-to-br from-blue-50 to-blue-100 min-h-screen p-8">
+        {" "}
+        {/* Gradient Background */}
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-8">
         {/* Back Button */}
         <button
@@ -110,6 +113,7 @@ const ProductDetail = ({ products }) => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 
