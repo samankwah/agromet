@@ -18,6 +18,7 @@ const SmartCalendarRenderer = ({
   activities = [],
   weeksData = [],
   metadata = {},
+  emptyResult = null,  // New prop for enhanced empty state information
   loading = false,
   error = null,
   onActivityHover = null,
@@ -81,11 +82,11 @@ const SmartCalendarRenderer = ({
     } else if (activity.includes('land preparation') || activity.includes('land prep')) {
       return '#BF9000'; // Dark orange/gold
     } else if (activity.includes('planting') || activity.includes('sowing')) {
-      return '#000000'; // Black
+      return '#228B22'; // Forest Green - visible and appropriate for planting
     } else if (activity.includes('1st fertilizer') || activity.includes('first fertilizer')) {
       return '#FFFF00'; // Yellow
     } else if (activity.includes('2nd fertilizer') || activity.includes('second fertilizer') || activity.includes('urea') || activity.includes('soa')) {
-      return '#000000'; // Black
+      return '#8B4513'; // Saddle Brown - visible color for fertilizer activities
     } else if (activity.includes('first weed') || (activity.includes('weed') && (activity.includes('first') || activity.includes('1st') || activity.includes('army worm')))) {
       return '#FF0000'; // Red
     } else if (activity.includes('second weed') || (activity.includes('weed') && (activity.includes('second') || activity.includes('2nd') || activity.includes('pest') || activity.includes('disease')))) {
@@ -378,52 +379,71 @@ const SmartCalendarRenderer = ({
   };
 
   // Check if activity is active for given time period
-  const isActivityActive = (activity, timeUnit) => {
-    const { start, end, calendarType } = activity;
+  const isActivityActive = (activity, timeUnit, weekIndex = null) => {
+    const { start, end, calendarType, timeline, activeWeeks } = activity;
 
+    // PRIORITY 1: Use exact timeline data if available (enhanced Excel extraction)
+    if (timeline && Array.isArray(timeline) && weekIndex !== null && timeline[weekIndex]) {
+      const timelineData = timeline[weekIndex];
+      const isActive = timelineData.active === true;
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`📊 Timeline check for week ${weekIndex}: ${isActive ? 'ACTIVE' : 'inactive'} (color: ${timelineData.backgroundColor})`);
+      }
+      return isActive;
+    }
+
+    // PRIORITY 2: Use activeWeeks array if available
+    if (activeWeeks && Array.isArray(activeWeeks) && weekIndex !== null) {
+      const isActive = activeWeeks.includes(weekIndex);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`📊 ActiveWeeks check for week ${weekIndex}: ${isActive ? 'ACTIVE' : 'inactive'} (weeks: [${activeWeeks.join(', ')}])`);
+      }
+      return isActive;
+    }
+
+    // PRIORITY 3: Week-based production cycle
     if (calendarType === 'production' || typeof start === 'number') {
-      // Production cycle (week-based)
       const weekNum = timeUnit.weekNum || timeUnit.week;
       return weekNum >= start && weekNum <= end;
+    }
+
+    // PRIORITY 4: Month-based seasonal crop (fallback)
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    // Get the month name from timeUnit (could be in timeUnit.month or derived from monthIndex)
+    let currentMonth = timeUnit.month;
+    if (!currentMonth && typeof timeUnit.monthIndex !== 'undefined') {
+      currentMonth = monthNames[timeUnit.monthIndex];
+    }
+
+    if (!currentMonth) return false;
+
+    // Check if activity should be active in this month
+    const startMonth = typeof start === 'string' ? start : monthNames[start - 1] || start;
+    const endMonth = typeof end === 'string' ? end : monthNames[end - 1] || end;
+
+    // Simple month name comparison for single month activities
+    if (startMonth === endMonth) {
+      return currentMonth === startMonth;
+    }
+
+    // For multi-month activities, check if current month is in range
+    const startIndex = monthNames.indexOf(startMonth);
+    const endIndex = monthNames.indexOf(endMonth);
+    const currentIndex = monthNames.indexOf(currentMonth);
+
+    if (startIndex === -1 || endIndex === -1 || currentIndex === -1) {
+      return false;
+    }
+
+    // Handle year-crossing activities (e.g., December to February)
+    if (startIndex <= endIndex) {
+      return currentIndex >= startIndex && currentIndex <= endIndex;
     } else {
-      // Seasonal crop (month-based) - work with month names
-      const monthNames = [
-        'January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'
-      ];
-
-      // Get the month name from timeUnit (could be in timeUnit.month or derived from monthIndex)
-      let currentMonth = timeUnit.month;
-      if (!currentMonth && typeof timeUnit.monthIndex !== 'undefined') {
-        currentMonth = monthNames[timeUnit.monthIndex];
-      }
-
-      if (!currentMonth) return false;
-
-      // Check if activity should be active in this month
-      const startMonth = typeof start === 'string' ? start : monthNames[start - 1] || start;
-      const endMonth = typeof end === 'string' ? end : monthNames[end - 1] || end;
-
-      // Simple month name comparison for single month activities
-      if (startMonth === endMonth) {
-        return currentMonth === startMonth;
-      }
-
-      // For multi-month activities, check if current month is in range
-      const startIndex = monthNames.indexOf(startMonth);
-      const endIndex = monthNames.indexOf(endMonth);
-      const currentIndex = monthNames.indexOf(currentMonth);
-
-      if (startIndex === -1 || endIndex === -1 || currentIndex === -1) {
-        return false;
-      }
-
-      // Handle year-crossing activities (e.g., December to February)
-      if (startIndex <= endIndex) {
-        return currentIndex >= startIndex && currentIndex <= endIndex;
-      } else {
-        return currentIndex >= startIndex || currentIndex <= endIndex;
-      }
+      return currentIndex >= startIndex || currentIndex <= endIndex;
     }
   };
 
@@ -469,21 +489,68 @@ const SmartCalendarRenderer = ({
     );
   }
 
-  // No data state
+  // Enhanced no data state with empty result information
   if (!processedActivities.length) {
     return (
       <div className={`border border-gray-200 rounded-lg p-8 ${className}`}>
         <div className="text-center">
           <FaCalendarAlt className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Calendar Data Available</h3>
-          <p className="text-gray-600 mb-4">
-            No calendar activities found for the selected criteria.
-            {metadata.dataSourceUsed === 'no-data' &&
-              ' Upload Excel calendar data through the dashboard to see calendar activities.'}
-          </p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            {emptyResult?.message?.includes('No') ? emptyResult.message.split('.')[0] : 'No Calendar Data Available'}
+          </h3>
+
+          {/* Enhanced message with specific commodity information */}
+          <div className="text-gray-600 mb-4 space-y-2">
+            <p>
+              {emptyResult?.message || 'No calendar activities found for the selected criteria.'}
+              {metadata.dataSourceUsed === 'no-data' &&
+                ' Upload Excel calendar data through the dashboard to see calendar activities.'}
+            </p>
+
+            {/* Show suggested commodities if available */}
+            {emptyResult?.suggestedCommodities?.length > 0 && (
+              <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+                <p className="text-sm font-medium text-blue-900 mb-2">Available commodities:</p>
+                <div className="flex flex-wrap gap-1">
+                  {emptyResult.suggestedCommodities.map((commodity, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800"
+                    >
+                      {commodity}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Show filter information */}
+            {emptyResult?.appliedFilters && Object.values(emptyResult.appliedFilters).some(v => v) && (
+              <div className="mt-3 p-3 bg-gray-50 rounded-lg text-left">
+                <p className="text-sm font-medium text-gray-900 mb-2">Applied filters:</p>
+                <div className="text-xs text-gray-600 space-y-1">
+                  {Object.entries(emptyResult.appliedFilters).map(([key, value]) =>
+                    value && (
+                      <div key={key} className="flex justify-between">
+                        <span className="capitalize">{key}:</span>
+                        <span className="font-medium">{value}</span>
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Data source indicator */}
           {showDataSourceIndicator && metadata.dataSourceUsed && (
             <div className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-gray-100 text-gray-700">
               <span>Data source: {metadata.dataSourceUsed}</span>
+              {emptyResult?.totalAvailableCalendars > 0 && (
+                <span className="ml-2 text-gray-500">
+                  • {emptyResult.totalAvailableCalendars} calendars available
+                </span>
+              )}
             </div>
           )}
         </div>
@@ -563,25 +630,34 @@ const SmartCalendarRenderer = ({
                 {activity.activity}
               </td>
               {weeksData.map((week, weekIndex) => {
-                const isActive = isActivityActive(activity, week);
+                const isActive = isActivityActive(activity, week, weekIndex);
 
                 // Check for exact color from timeline data (for exact color support)
                 let cellStyle = {};
                 let cellClassName = `border border-gray-300 p-2 cursor-pointer min-w-[80px] w-[80px]`;
 
                 if (isActive) {
-                  // Check if activity has timeline data with exact colors
+                  // PRIORITY 1: Check if activity has timeline data with exact colors
                   if (activity.timeline && activity.timeline[weekIndex]) {
                     const weekData = activity.timeline[weekIndex];
-                    if (weekData.backgroundColor && weekData.backgroundColor !== '#FFFFFF') {
+                    if (weekData.backgroundColor && weekData.backgroundColor !== '#FFFFFF' && weekData.backgroundColor !== 'transparent') {
                       cellStyle.backgroundColor = weekData.backgroundColor;
+                      if (process.env.NODE_ENV === 'development') {
+                        console.log(`🎨 Using timeline color for week ${weekIndex}: ${weekData.backgroundColor}`);
+                      }
                     } else {
-                      cellClassName += ` ${activity.color}`;
+                      cellStyle.backgroundColor = activity.color || activity.exactColor;
                     }
                   } else if (activity.exactColor && activity.exactColor !== '#FFFFFF') {
                     cellStyle.backgroundColor = activity.exactColor;
                   } else {
-                    cellClassName += ` ${activity.color}`;
+                    cellStyle.backgroundColor = activity.color;
+                  }
+
+                  // Add text contrast for better visibility
+                  if (cellStyle.backgroundColor) {
+                    cellStyle.color = '#FFFFFF';
+                    cellStyle.fontWeight = 'bold';
                   }
                 }
 
@@ -738,8 +814,17 @@ const SmartCalendarRenderer = ({
                   const cells = [];
 
                   for (let i = 0; i < totalCells; i++) {
-                    const isActive = isActivityActive(activity, weeksData[i] || { week: i + 1 });
-                    const cellData = { active: isActive, value: '', background: null };
+                    const isActive = isActivityActive(activity, weeksData[i] || { week: i + 1 }, i);
+
+                    // Get background color from timeline if available
+                    let backgroundColor = null;
+                    if (isActive && activity.timeline && activity.timeline[i]) {
+                      backgroundColor = activity.timeline[i].backgroundColor || activity.color;
+                    } else if (isActive) {
+                      backgroundColor = activity.color;
+                    }
+
+                    const cellData = { active: isActive, value: '', background: backgroundColor };
                     cells.push(cellData);
                   }
 
@@ -944,6 +1029,13 @@ SmartCalendarRenderer.propTypes = {
   activities: PropTypes.array,
   weeksData: PropTypes.array,
   metadata: PropTypes.object,
+  emptyResult: PropTypes.shape({
+    hasFilters: PropTypes.bool,
+    message: PropTypes.string,
+    suggestedCommodities: PropTypes.array,
+    totalAvailableCalendars: PropTypes.number,
+    appliedFilters: PropTypes.object
+  }),
   loading: PropTypes.bool,
   error: PropTypes.string,
   onActivityHover: PropTypes.func,

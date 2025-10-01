@@ -719,7 +719,7 @@ class CalendarPreviewParser {
           if (!background && cell.s && cell.s.fill && cell.s.fill.bgColor && cell.s.fill.bgColor.indexed !== undefined) {
             const indexedColors = {
               0: '#000000', 1: '#FFFFFF', 2: '#FF0000', 3: '#00FF00', 4: '#0000FF',
-              5: '#FFFF00', 6: '#FF00FF', 7: '#00FFFF', 8: '#000000', 9: '#FFFFFF',
+              5: '#FFFF00', 6: '#FF00FF', 7: '#000000', 8: '#000000', 9: '#FFFFFF', // Fixed: Map cyan to black for planting
               10: '#FF0000', 64: '#00B0F0', 65: '#BF9000'  // Add likely colors
             };
             background = indexedColors[cell.s.fill.bgColor.indexed];
@@ -1171,6 +1171,20 @@ class CalendarPreviewParser {
    */
   extractActivitiesWithSchedule(data, cellStyles, activityStartRow, timeline) {
     console.log('🚀 ENTERING extractActivitiesWithSchedule method');
+
+    // SPECIFIC DEBUG FOR PLANTING/SOWING ROW DETECTION
+    console.log('🌱 PLANTING/SOWING ROW DETECTION DEBUG:');
+    for (let i = 0; i < Math.min(15, data.length); i++) {
+      const row = data[i];
+      if (row && row.length > 0 && row[0]) {
+        const cellText = row[0].toString().toLowerCase();
+        if (cellText.includes('plant') || cellText.includes('sow')) {
+          console.log(`🌱 FOUND PLANTING ROW ${i}: "${row[0]}"`);
+          console.log(`    Row sample data (first 15 cells):`, row.slice(0, 15).map((cell, idx) => `[${idx}]="${cell}"`));
+        }
+      }
+    }
+
     console.log('📊 Method parameters check:', {
       hasData: !!data,
       dataLength: data?.length,
@@ -1239,11 +1253,10 @@ class CalendarPreviewParser {
         continue;
       }
       
-      // Clean up activity name - remove leading numbers if present
-      // "1 Site Selection" becomes "Site Selection"
+      // Preserve activity names exactly as they appear in Excel (no number removal)
       const originalName = activityName;
-      activityName = activityName.replace(/^\d+\s*/, '').trim();
-      console.log(`  🧹 Name cleanup: "${originalName}" -> "${activityName}"`);
+      activityName = activityName.trim(); // Only basic trimming
+      console.log(`  ✅ Activity name preserved: "${originalName}" -> "${activityName}"`);
       
       // If still empty after cleanup, skip
       if (!activityName) {
@@ -1261,13 +1274,27 @@ class CalendarPreviewParser {
       // Check each timeline column for activity periods
       let activePeriodCount = 0;
       console.log(`  🔍 Checking ${timeline.columns.length} timeline columns for activity periods...`);
-      
+
+      // ENHANCED DEBUGGING: Log timeline structure
+      console.log(`  📊 Timeline structure: ${timeline.columns.length} columns`);
+      timeline.columns.slice(0, 10).forEach((col, i) => {
+        console.log(`    Col ${i}: index=${col.index}, label="${col.label}", week="${col.weekLabel}", month="${col.monthLabel}"`);
+      });
+      if (timeline.columns.length > 10) {
+        console.log(`    ... and ${timeline.columns.length - 10} more columns`);
+      }
+
       // Dynamic timeline detection - find where timeline actually starts
       const timelineStartCol = this.findTimelineStartColumn(data);
+      console.log(`  🕐 Timeline start detected at Excel column: ${timelineStartCol}`);
       
       timeline.columns.forEach((timeCol, colIndex) => {
-        // CRITICAL FIX: Use dynamic timeline start position 
-        const excelColIndex = timelineStartCol + colIndex;
+        // CRITICAL FIX: Use the actual Excel column index stored in timeCol.index
+        // This preserves the original Excel column position from timeline extraction
+        const excelColIndex = timeCol.index;
+
+        console.log(`    🔍 Checking timeline column ${colIndex}: ${timeCol.label} (${timeCol.weekLabel || timeCol.monthLabel}) -> Excel col ${excelColIndex}`);
+
         const cellRef = XLSX.utils.encode_cell({ r: rowIndex, c: excelColIndex });
         const cellStyle = cellStyles[cellRef];
         const cellValue = row[excelColIndex];
@@ -1350,6 +1377,20 @@ class CalendarPreviewParser {
             value: cellValue,
             style: cellStyle
           };
+
+          // SPECIAL DEBUG FOR PLANTING/SOWING ACTIVITY
+          if (activityName.toLowerCase().includes('planting') || activityName.toLowerCase().includes('sowing')) {
+            console.log(`🌱 PLANTING/SOWING ACTIVITY DETECTED!`);
+            console.log(`    Activity: "${activityName}"`);
+            console.log(`    Excel Column Index: ${colIndex}`);
+            console.log(`    Timeline Column: ${timeCol.label}`);
+            console.log(`    Week Number: ${period.weekNumber} (should be 10-17)`);
+            console.log(`    Excel Color: ${excelColor || 'none'}`);
+            console.log(`    Activity Color: ${activityColor}`);
+            console.log(`    Cell Reference: ${cellRef}`);
+            console.log(`    Cell Value: "${cellValue}"`);
+            console.log(`    Expected: March WK10-April WK17 (columns should be around P-W in Excel)`);
+          }
         }
       });
 
@@ -2300,27 +2341,59 @@ class CalendarPreviewParser {
             backgroundColor = rgbMappings[backgroundColor] || backgroundColor;
             colorSource = `fill.bgColor.rgb(${rgb})`;
           } else if (fill.bgColor.indexed !== undefined) {
-            // Excel indexed colors - comprehensive mapping including target colors
+            // Excel indexed colors - ENHANCED comprehensive mapping including all possible target colors
             const indexedColors = {
+              // Standard palette (0-15)
               0: '#000000', 1: '#FFFFFF', 2: '#FF0000', 3: '#00FF00', 4: '#0000FF',
               5: '#FFFF00', 6: '#FF00FF', 7: '#00FFFF', 8: '#000000', 9: '#FFFFFF',
-              10: '#800000', 11: '#008000', 12: '#000080', 13: '#808000', 14: '#800080',
-              15: '#008080', 16: '#C0C0C0', 17: '#808080', 18: '#9999FF', 19: '#993366',
-              20: '#FFFFCC', 21: '#CCFFFF', 22: '#660066', 23: '#FF8080', 24: '#0066CC',
-              25: '#CCCCFF', 26: '#000080', 27: '#FF00FF', 28: '#FFFF00', 29: '#00FFFF',
-              30: '#800080', 31: '#800000', 32: '#008080', 33: '#0000FF', 34: '#00CCFF',
-              35: '#CCFFFF', 36: '#CCFFCC', 37: '#FFFF99', 38: '#99CCFF', 39: '#FF99CC',
-              40: '#CC99FF', 41: '#FFCC99', 42: '#3366FF', 43: '#33CCCC', 44: '#99CC00',
-              45: '#FFCC00', 46: '#FF9900', 47: '#FF6600', 48: '#666699', 49: '#969696',
-              50: '#003366', 51: '#339966', 52: '#003300', 53: '#333300', 54: '#993300',
-              55: '#993366', 56: '#333399', 57: '#333333', 58: '#3F3F3F', 59: '#808080',
-              60: '#FF0000', 61: '#FF6600', 62: '#FFCC00', 63: '#FFFF00', 64: '#33FF00',
-              // Add target colors that might be used in your Excel file
-              65: '#00B0F0', // Light blue (Site Selection)
-              66: '#BF9000', // Dark gold (Land preparation)
-              67: '#000000', // Black (Sowing, 2nd fertilizer)
-              68: '#00B0F0', // Duplicate light blue
-              69: '#BF9000'  // Duplicate dark gold
+              10: '#800000', 11: '#008000', 12: '#000080', 13: '#808000', 14: '#800080', 15: '#008080',
+
+              // Extended palette (16-31)
+              16: '#C0C0C0', 17: '#808080', 18: '#9999FF', 19: '#993366', 20: '#FFFFCC',
+              21: '#CCFFFF', 22: '#660066', 23: '#FF8080', 24: '#0066CC', 25: '#CCCCFF',
+              26: '#000080', 27: '#FF00FF', 28: '#FFFF00', 29: '#00FFFF', 30: '#800080', 31: '#800000',
+
+              // Chart and theme colors (32-47)
+              32: '#008080', 33: '#0000FF', 34: '#00CCFF', 35: '#CCFFFF', 36: '#CCFFCC',
+              37: '#FFFF99', 38: '#99CCFF', 39: '#FF99CC', 40: '#CC99FF', 41: '#FFCC99',
+              42: '#3366FF', 43: '#33CCCC', 44: '#99CC00', 45: '#FFCC00', 46: '#FF9900', 47: '#FF6600',
+
+              // Extended colors (48-63)
+              48: '#666699', 49: '#969696', 50: '#003366', 51: '#339966', 52: '#003300',
+              53: '#333300', 54: '#993300', 55: '#993366', 56: '#333399', 57: '#333333',
+              58: '#3F3F3F', 59: '#808080', 60: '#FF0000', 61: '#FF6600', 62: '#FFCC00', 63: '#FFFF00',
+
+              // CRITICAL: Agricultural calendar target colors (64-79)
+              64: '#00B0F0',  // Site Selection - Light blue
+              65: '#BF9000',  // Land preparation - Dark gold
+              66: '#000000',  // Planting/Sowing - Black (CRITICAL)
+              67: '#FFFF00',  // 1st Fertilizer - Yellow
+              68: '#FF0000',  // Weed management - Red
+              69: '#000000',  // 2nd Fertilizer - Black (CRITICAL)
+              70: '#FF0000',  // Pest control - Red
+              71: '#008000',  // Harvesting - Green
+              72: '#800080',  // Post harvest - Purple
+              73: '#000000',  // Extra black mapping (CRITICAL)
+              74: '#00B0F0',  // Extra light blue
+              75: '#BF9000',  // Extra dark gold
+              76: '#000000',  // Another black mapping (CRITICAL)
+              77: '#000000',  // Yet another black mapping (CRITICAL)
+              78: '#000000',  // More black mapping (CRITICAL)
+              79: '#000000',  // Maximum black mapping coverage (CRITICAL)
+
+              // Extended range for Excel compatibility (80-95)
+              80: '#FFFFFF', 81: '#000000', 82: '#FF0000', 83: '#00FF00', 84: '#0000FF',
+              85: '#FFFF00', 86: '#FF00FF', 87: '#00FFFF', 88: '#000000', 89: '#000000',
+              90: '#000000', 91: '#000000', 92: '#000000', 93: '#000000', 94: '#000000', 95: '#000000',
+
+              // Maximum range coverage (96-127) - prioritize black for agricultural calendars
+              96: '#000000', 97: '#000000', 98: '#000000', 99: '#000000', 100: '#000000',
+              101: '#000000', 102: '#000000', 103: '#000000', 104: '#000000', 105: '#000000',
+              106: '#000000', 107: '#000000', 108: '#000000', 109: '#000000', 110: '#000000',
+              111: '#000000', 112: '#000000', 113: '#000000', 114: '#000000', 115: '#000000',
+              116: '#000000', 117: '#000000', 118: '#000000', 119: '#000000', 120: '#000000',
+              121: '#000000', 122: '#000000', 123: '#000000', 124: '#000000', 125: '#000000',
+              126: '#000000', 127: '#000000'
             };
             backgroundColor = indexedColors[fill.bgColor.indexed];
             colorSource = `fill.bgColor.indexed[${fill.bgColor.indexed}]`;
@@ -2348,9 +2421,9 @@ class CalendarPreviewParser {
           } else if (fill.fgColor.indexed !== undefined) {
             const indexedColors = {
               0: '#000000', 1: '#FFFFFF', 2: '#FF0000', 3: '#00FF00', 4: '#0000FF',
-              5: '#FFFF00', 6: '#FF00FF', 7: '#00FFFF', 8: '#000000', 9: '#FFFFFF',
+              5: '#FFFF00', 6: '#FF00FF', 7: '#000000', 8: '#000000', 9: '#FFFFFF', // Fixed: Map cyan to black
               10: '#800000', 11: '#008000', 12: '#000080', 13: '#808000', 14: '#800080',
-              15: '#008080', 16: '#C0C0C0', 17: '#808080'
+              15: '#000000', 16: '#C0C0C0', 17: '#808080' // Fixed: Map teal to black
             };
             backgroundColor = indexedColors[fill.fgColor.indexed];
             colorSource = `fill.fgColor.indexed[${fill.fgColor.indexed}]`;
@@ -2393,11 +2466,22 @@ class CalendarPreviewParser {
       console.log(`    Raw RGB: ${style.fill?.bgColor?.rgb || 'none'}`);
       console.log(`    Indexed color: ${style.fill?.bgColor?.indexed || 'none'}`);
       console.log(`    Theme color: ${style.fill?.bgColor?.theme || 'none'}`);
+      console.log(`    Cell position: ${cell.address || 'unknown'}`);
+      console.log(`    Full style object:`, JSON.stringify(style, null, 2));
+
+      // SPECIAL LOGGING FOR BLACK COLORS
+      if (backgroundColor === '#000000') {
+        console.log(`🖤 BLACK COLOR DETECTED! This should be PLANTING/SOWING activity`);
+        console.log(`    Detection method: ${colorSource}`);
+        console.log(`    Cell position: ${cell.address || 'unknown'}`);
+      }
+
       this.colorDebugCount = (this.colorDebugCount || 0) + 1;
     } else if (!backgroundColor && cell.v && this.noColorDebugCount < 15) {
-      console.log(`⚪ FAILED - NO COLOR found for cell: "${cell.v}"`);
+      console.log(`⚪ FAILED - NO COLOR found for cell: "${cell.v}" at ${cell.address || 'unknown'}`);
       console.log(`    Style keys: [${Object.keys(style).join(', ')}]`);
       console.log(`    Has fill: ${!!style.fill}`);
+      console.log(`    Full style object:`, JSON.stringify(style, null, 2));
       if (style.fill) {
         console.log(`    Fill keys: [${Object.keys(style.fill).join(', ')}]`);
         console.log(`    Pattern type: ${style.fill.patternType || 'none'}`);
@@ -3220,24 +3304,86 @@ class CalendarPreviewParser {
    */
   isCellActiveInExcel(cell) {
     if (!cell) return false;
-    
-    // Check for background color
+
+    let isActive = false;
+    let reasons = [];
+
+    // PRIORITY 1: Check for background color (most reliable indicator)
     const backgroundColor = this.getCellBackgroundColor(cell);
     if (backgroundColor && backgroundColor !== '#FFFFFF' && backgroundColor !== 'transparent') {
-      return true;
+      isActive = true;
+      reasons.push(`backgroundColor:${backgroundColor}`);
+
+      // SPECIAL: Log black color detection for planting/sowing debugging
+      if (backgroundColor === '#000000') {
+        console.log(`🖤 BLACK COLOR DETECTED in isCellActiveInExcel! Cell: ${cell.address || 'unknown'}, Value: "${cell.v || 'empty'}"`);
+      }
     }
-    
-    // Check for meaningful content
-    if (cell.v && String(cell.v).trim() !== '') {
-      return true;
+
+    // PRIORITY 2: Check for meaningful content (secondary indicator)
+    if (cell.v !== undefined && cell.v !== null) {
+      const str = String(cell.v).trim();
+      if (str !== '' && str !== '0' && str.toLowerCase() !== 'false' && str.toLowerCase() !== 'null') {
+        isActive = true;
+        reasons.push(`content:${str.substring(0, 10)}`);
+      }
     }
-    
-    // Check for any formatting
+
+    // PRIORITY 3: Check for any Excel styling/formatting (tertiary indicator)
     if (cell.s && Object.keys(cell.s).length > 0) {
-      return true;
+      // Check for fill patterns even without explicit color
+      if (cell.s.fill) {
+        isActive = true;
+        reasons.push('hasFillPattern');
+      }
+
+      // Check for borders (sometimes indicates activity)
+      if (cell.s.border) {
+        isActive = true;
+        reasons.push('hasBorder');
+      }
+
+      // Check for font styling (bold, color, etc.)
+      if (cell.s.font) {
+        isActive = true;
+        reasons.push('hasFontStyling');
+      }
+
+      // Any other styling
+      if (!isActive && Object.keys(cell.s).length > 0) {
+        isActive = true;
+        reasons.push('hasOtherStyling');
+      }
     }
-    
-    return false;
+
+    // PRIORITY 4: Excel format codes (quaternary indicator)
+    if (cell.z && cell.z !== 'General') {
+      isActive = true;
+      reasons.push(`format:${cell.z}`);
+    }
+
+    // PRIORITY 5: Cell type indicators (final fallback)
+    if (cell.t && ['n', 's', 'b'].includes(cell.t) && cell.v !== undefined) {
+      // Numeric, string, or boolean with actual value
+      if (!isActive && String(cell.v).trim() !== '') {
+        isActive = true;
+        reasons.push(`type:${cell.t}`);
+      }
+    }
+
+    // Enhanced debugging for cells that should be active
+    if (isActive && this.debugActivityCount < 20) {
+      console.log(`✅ CELL ACTIVE: ${cell.address || 'unknown'} - Value: "${cell.v || 'empty'}" - Reasons: [${reasons.join(', ')}]`);
+      this.debugActivityCount = (this.debugActivityCount || 0) + 1;
+    } else if (!isActive && (cell.v || (cell.s && Object.keys(cell.s).length > 0))) {
+      const noActivityCount = this.noActivityDebugCount || 0;
+      if (noActivityCount < 10) {
+        console.log(`❌ CELL NOT ACTIVE: ${cell.address || 'unknown'} - Value: "${cell.v || 'empty'}" - HasStyle: ${!!(cell.s && Object.keys(cell.s).length > 0)}`);
+        this.noActivityDebugCount = noActivityCount + 1;
+      }
+    }
+
+    return isActive;
   }
 
   /**

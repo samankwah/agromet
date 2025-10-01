@@ -37,7 +37,7 @@ class SophisticatedCalendarParser {
         canonical: 'Planting/sowing',
         patterns: ['planting', 'sowing', 'seeding', 'plant', 'seed', 'planting/sowing'],
         keywords: ['plant', 'sow', 'seed', 'planting', 'sowing', 'germinate'],
-        color: '#FFFF00', // Yellow
+        color: '#000000', // Black (fixed from yellow)
         fuzzyThreshold: 0.8
       },
       {
@@ -459,7 +459,7 @@ class SophisticatedCalendarParser {
       {
         name: 'Planting/sowing',
         rowIndex: 3,
-        activePeriods: this.createSchedule([8, 9, 10, 11], '#FFFF00', timeline) // Mar
+        activePeriods: this.createSchedule([8, 9, 10, 11], '#000000', timeline) // Mar
       },
       {
         name: '1st fertilizer application',
@@ -959,8 +959,67 @@ class SophisticatedCalendarParser {
       'calendar date', 'date', 's/n', 'stage of activity',
       'activity', 'month', 'week', 'total', 'summary'
     ];
-    
-    return nonActivityPatterns.some(pattern => str.includes(pattern));
+
+    // First check for obvious header patterns
+    if (nonActivityPatterns.some(pattern => str.includes(pattern))) {
+      return true;
+    }
+
+    // ENHANCED: Check if it's a pure number or serial number (should be excluded)
+    // Pure numbers like "1", "2", "3", "10", etc.
+    if (/^\d+$/.test(str)) return true;
+
+    // Serial numbers like "1.", "2.", "3.", etc.
+    if (/^\d+\.$/.test(str)) return true;
+
+    // Roman numerals like "I", "II", "III", "IV", etc.
+    if (/^[IVX]+$/.test(str.toUpperCase())) return true;
+
+    // ENHANCED: However, if it's a numbered agricultural activity, it should NOT be excluded
+    const agriculturalKeywords = [
+      'site', 'land', 'plant', 'sow', 'harvest', 'weed', 'fertilizer', 'fertiliser',
+      'pest', 'disease', 'control', 'management', 'spray', 'application', 'preparation',
+      'selection', 'treatment', 'handling', 'processing', 'storage'
+    ];
+
+    // Pattern for numbered activities: "1st", "2nd", "3rd", "first", "second", etc. + agricultural terms
+    const numberedActivityPatterns = [
+      /^\d+(st|nd|rd|th)\s+(weed|fertilizer|fertiliser|application|spray|pest|disease|control|management)/i,
+      /^(first|second|third|1st|2nd|3rd)\s+(weed|fertilizer|fertiliser|application|spray|pest|disease|control|management)/i,
+      /^\d+\.\s+(weed|fertilizer|fertiliser|application|spray|pest|disease|control|management)/i,
+      /^\d+\)\s+(weed|fertilizer|fertiliser|application|spray|pest|disease|control|management)/i
+    ];
+
+    // Check if it matches numbered activity patterns - these should NOT be headers
+    for (const pattern of numberedActivityPatterns) {
+      if (pattern.test(text)) {
+        console.log(`✅ Detected numbered agricultural activity (not header): "${text}"`);
+        return false; // This is a valid numbered activity, not a header
+      }
+    }
+
+    // If it starts with a number/ordinal but contains agricultural keywords, it's likely an activity
+    if (/^\d+(st|nd|rd|th|\.|)\s+/i.test(text)) {
+      for (const keyword of agriculturalKeywords) {
+        if (str.includes(keyword)) {
+          console.log(`✅ Detected numbered activity with agricultural keyword "${keyword}": "${text}"`);
+          return false; // This is a valid numbered activity, not a header
+        }
+      }
+    }
+
+    // If it starts with ordinal words + agricultural terms
+    if (/^(first|second|third|fourth|fifth)\s+/i.test(text)) {
+      for (const keyword of agriculturalKeywords) {
+        if (str.includes(keyword)) {
+          console.log(`✅ Detected ordinal activity with agricultural keyword "${keyword}": "${text}"`);
+          return false; // This is a valid numbered activity, not a header
+        }
+      }
+    }
+
+    // If none of the above header patterns match, it's likely an activity
+    return false;
   }
 
   /**
@@ -1137,7 +1196,7 @@ class SophisticatedCalendarParser {
     // Map activity names to colors based on common patterns
     if (name.includes('site') || name.includes('selection')) return '#8B4513'; // Brown
     if (name.includes('land') || name.includes('preparation')) return '#FFA500'; // Orange
-    if (name.includes('plant') || name.includes('sowing')) return '#FFFF00'; // Yellow
+    if (name.includes('plant') || name.includes('sowing')) return '#000000'; // Black
     if (name.includes('fertilizer') || name.includes('fertiliser')) return '#FF0000'; // Red
     if (name.includes('weed') && (name.includes('first') || name.includes('1st'))) return '#FF4500'; // Red-Orange
     if (name.includes('weed') && (name.includes('second') || name.includes('2nd'))) return '#DC143C'; // Crimson

@@ -63,7 +63,15 @@
       "Bash(start http://localhost:5180/crop-calendar)",
       "Bash(AUTH_PORT=3003 node auth-server.js)",
       "Bash(tasklist)",
-      "Bash(start http://localhost:5174/crop-calendar)"
+      "Bash(start http://localhost:5174/crop-calendar)",
+      "Bash(PORT=3002 node server.js)",
+      "Bash(start http://localhost:5176/dashboard)",
+      "Bash(start http://localhost:5176/dashboard?openModal=poultry-calendar)",
+      "Bash(tasklist:*)",
+      "Bash(start http://localhost:5174)",
+      "Bash(start http://localhost:5174/poultry-calendar)",
+      "Bash(npm run dev:main:*)",
+      "Bash(npm run:*)"
     ],
     "deny": []
   }

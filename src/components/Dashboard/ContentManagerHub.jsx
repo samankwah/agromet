@@ -11,13 +11,18 @@ import {
   FaCalendarAlt,
   FaLeaf,
   FaCloudSun,
-  FaEgg
+  FaEgg,
+  FaTimes,
+  FaEdit,
+  FaSave,
+  FaEye
 } from "react-icons/fa";
 import UniversalDataTable from "./UniversalDataTable";
 import EnhancedFileUploader from "./EnhancedFileUploader";
 import userService from "../../services/userService";
 import { logger } from "../../utils/logger";
 import toast from "react-hot-toast";
+import * as XLSX from 'xlsx';
 
 const ContentManagerHub = ({ dataType, onClose }) => {
   const [data, setData] = useState([]);
@@ -26,6 +31,11 @@ const ContentManagerHub = ({ dataType, onClose }) => {
   const [activeView, setActiveView] = useState("table"); // "table", "upload", "stats"
   const [stats, setStats] = useState(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Modal states
+  const [viewModal, setViewModal] = useState({ isOpen: false, data: null });
+  const [editModal, setEditModal] = useState({ isOpen: false, data: null });
+  const [editFormData, setEditFormData] = useState({});
 
   // Data type configuration
   const dataTypeConfig = {
@@ -223,14 +233,29 @@ const ContentManagerHub = ({ dataType, onClose }) => {
 
   const handleView = (row) => {
     logger.userAction('View data record', { dataType, id: row.id });
-    // TODO: Implement view modal
-    console.log('View:', row);
+    setViewModal({ isOpen: true, data: row });
   };
 
   const handleEdit = (row) => {
     logger.userAction('Edit data record', { dataType, id: row.id });
-    // TODO: Implement edit modal
-    console.log('Edit:', row);
+    setEditModal({ isOpen: true, data: row });
+    setEditFormData({ ...row });
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      // TODO: Backend API endpoint for updating records needs to be implemented
+      // For now, we'll show an honest message to users
+      toast.error('Edit functionality not yet implemented - backend API required');
+      console.log('Edit data that would be saved:', editFormData);
+
+      // Don't close modal or refresh since nothing was actually saved
+      // setEditModal({ isOpen: false, data: null });
+      // setRefreshTrigger(prev => prev + 1);
+    } catch (error) {
+      console.error('Edit save error:', error);
+      toast.error('Failed to update record');
+    }
   };
 
   const handleDelete = async (row) => {
@@ -248,10 +273,116 @@ const ContentManagerHub = ({ dataType, onClose }) => {
 
   const handleExport = (format, exportData) => {
     logger.userAction('Data export requested', { dataType, format, count: exportData.length });
-    
+
     if (format === 'excel') {
-      // TODO: Implement Excel export via backend
-      console.log('Export to Excel:', exportData);
+      exportToExcel(exportData);
+    } else if (format === 'csv') {
+      exportToCSV(exportData);
+    }
+  };
+
+  const exportToExcel = (data) => {
+    try {
+      // Create workbook and worksheet
+      const wb = XLSX.utils.book_new();
+
+      // Clean data for Excel export - flatten complex objects
+      const cleanData = data.map(row => {
+        const cleanRow = {};
+        Object.entries(row).forEach(([key, value]) => {
+          if (typeof value === 'object' && value !== null) {
+            cleanRow[key] = JSON.stringify(value);
+          } else {
+            cleanRow[key] = value;
+          }
+        });
+        return cleanRow;
+      });
+
+      const ws = XLSX.utils.json_to_sheet(cleanData);
+
+      // Auto-size columns
+      const colWidths = [];
+      Object.keys(cleanData[0] || {}).forEach((key, index) => {
+        const maxLength = Math.max(
+          key.length,
+          ...cleanData.map(row => String(row[key] || '').length)
+        );
+        colWidths.push({ width: Math.min(Math.max(maxLength + 2, 10), 50) });
+      });
+      ws['!cols'] = colWidths;
+
+      XLSX.utils.book_append_sheet(wb, ws, 'Data');
+
+      // Generate filename with timestamp
+      const timestamp = new Date().toISOString().split('T')[0];
+      const filename = `${config.title.replace(/\s+/g, '_')}_${timestamp}.xlsx`;
+
+      XLSX.writeFile(wb, filename);
+      toast.success(`Excel file exported: ${filename}`);
+
+    } catch (error) {
+      console.error('Excel export error:', error);
+      toast.error('Failed to export Excel file');
+    }
+  };
+
+  const exportToCSV = (data) => {
+    try {
+      // Clean data for CSV export
+      const cleanData = data.map(row => {
+        const cleanRow = {};
+        Object.entries(row).forEach(([key, value]) => {
+          if (typeof value === 'object' && value !== null) {
+            cleanRow[key] = JSON.stringify(value);
+          } else {
+            cleanRow[key] = value;
+          }
+        });
+        return cleanRow;
+      });
+
+      if (cleanData.length === 0) {
+        toast.error('No data to export');
+        return;
+      }
+
+      // Create CSV content
+      const headers = Object.keys(cleanData[0]);
+      const csvContent = [
+        headers.join(','),
+        ...cleanData.map(row =>
+          headers.map(header => {
+            const value = row[header];
+            // Escape commas and quotes in CSV
+            if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
+              return `"${value.replace(/"/g, '""')}"`;
+            }
+            return value;
+          }).join(',')
+        )
+      ].join('\n');
+
+      // Download CSV
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+
+      const timestamp = new Date().toISOString().split('T')[0];
+      const filename = `${config.title.replace(/\s+/g, '_')}_${timestamp}.csv`;
+
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success(`CSV file exported: ${filename}`);
+
+    } catch (error) {
+      console.error('CSV export error:', error);
+      toast.error('Failed to export CSV file');
     }
   };
 
@@ -430,6 +561,139 @@ const ContentManagerHub = ({ dataType, onClose }) => {
           showViewToggle={true}
           itemsPerPage={15}
         />
+      )}
+
+      {/* View Modal */}
+      {viewModal.isOpen && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" onClick={() => setViewModal({ isOpen: false, data: null })}>
+          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                <FaEye className="inline mr-2" />
+                View {config.title}
+              </h3>
+              <button
+                onClick={() => setViewModal({ isOpen: false, data: null })}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <FaTimes className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="max-h-96 overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {viewModal.data && Object.entries(viewModal.data).map(([key, value]) => {
+                  if (key === 'id' || value === null || value === undefined) return null;
+
+                  return (
+                    <div key={key} className="border-b border-gray-200 pb-2">
+                      <dt className="text-sm font-medium text-gray-500 capitalize">
+                        {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                      </dt>
+                      <dd className="text-sm text-gray-900 mt-1">
+                        {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
+                      </dd>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                onClick={() => setViewModal({ isOpen: false, data: null })}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  setViewModal({ isOpen: false, data: null });
+                  handleEdit(viewModal.data);
+                }}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                <FaEdit className="inline mr-1" />
+                Edit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editModal.isOpen && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" onClick={() => setEditModal({ isOpen: false, data: null })}>
+          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                <FaEdit className="inline mr-2" />
+                Edit {config.title}
+              </h3>
+              <button
+                onClick={() => setEditModal({ isOpen: false, data: null })}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <FaTimes className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="max-h-96 overflow-y-auto">
+              <div className="grid grid-cols-1 gap-4">
+                {editModal.data && Object.entries(editModal.data).map(([key, value]) => {
+                  if (key === 'id' || key === 'createdAt' || key === 'updatedAt') return null;
+
+                  return (
+                    <div key={key}>
+                      <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">
+                        {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                      </label>
+                      {typeof value === 'object' ? (
+                        <textarea
+                          value={JSON.stringify(editFormData[key] || value, null, 2)}
+                          onChange={(e) => {
+                            try {
+                              const parsedValue = JSON.parse(e.target.value);
+                              setEditFormData(prev => ({ ...prev, [key]: parsedValue }));
+                            } catch {
+                              // Keep as string if invalid JSON
+                              setEditFormData(prev => ({ ...prev, [key]: e.target.value }));
+                            }
+                          }}
+                          className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                          rows={3}
+                        />
+                      ) : (
+                        <input
+                          type="text"
+                          value={editFormData[key] || value || ''}
+                          onChange={(e) => setEditFormData(prev => ({ ...prev, [key]: e.target.value }))}
+                          className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                onClick={() => setEditModal({ isOpen: false, data: null })}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+              >
+                <FaSave className="inline mr-1" />
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

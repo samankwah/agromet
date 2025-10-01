@@ -27,14 +27,24 @@ class DynamicCalendarManager {
   /**
    * Initialize the manager with fallback templates
    * @param {Object} templates - Default template data
+   * @returns {Promise<Object>} Initialization result with success status
    */
   async initialize(templates = null) {
-    if (this.isInitialized) return;
+    try {
+      if (this.isInitialized) {
+        console.log('🚀 Dynamic Calendar Manager already initialized');
+        return { success: true, message: 'Already initialized' };
+      }
 
-    this.fallbackTemplates = templates;
-    this.isInitialized = true;
+      this.fallbackTemplates = templates;
+      this.isInitialized = true;
 
-    console.log('🚀 Dynamic Calendar Manager initialized');
+      console.log('🚀 Dynamic Calendar Manager initialized');
+      return { success: true, message: 'Successfully initialized' };
+    } catch (error) {
+      console.error('❌ Failed to initialize Dynamic Calendar Manager:', error);
+      return { success: false, error: error.message };
+    }
   }
 
   /**

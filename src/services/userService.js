@@ -82,13 +82,22 @@ class UserService {
   // Authentication methods
   async signUp(userData) {
     try {
+      console.log('🔐 Attempting sign-up to:', this.authBaseURL + '/sign-up');
+      console.log('📝 Sign-up data:', userData);
+
       const response = await this.api.post('/sign-up', userData);
+      console.log('✅ Sign-up response received:', response.status);
+
       return {
         success: true,
         data: response.data,
         message: 'Account created successfully'
       };
     } catch (error) {
+      console.error('❌ Sign-up error:', error);
+      console.error('📊 Error response:', error.response?.data);
+      console.error('🔍 Error status:', error.response?.status);
+
       return {
         success: false,
         error: error.response?.data?.message || error.message,
@@ -626,21 +635,44 @@ class UserService {
       });
 
       const response = await this.dataAPI.get(`/api/agricultural-data/${dataType}?${params.toString()}`);
-      
-      // Clean the data to extract only agricultural records and flatten complex objects
+
+      // Ensure data is always an array, regardless of backend response format
       let cleanData = response.data;
+
+      // Handle different response formats from backend
       if (Array.isArray(cleanData)) {
+        // Normal array response - clean each item
         cleanData = cleanData.map(item => this.cleanDataItem(item));
+      } else if (cleanData && typeof cleanData === 'object') {
+        // Check if it's a structured API response with data property
+        if (cleanData.success && cleanData.data && Array.isArray(cleanData.data)) {
+          // Extract the data array from structured response
+          cleanData = cleanData.data.map(item => this.cleanDataItem(item));
+        } else if (cleanData.data && Array.isArray(cleanData.data)) {
+          // Extract the data array from object response
+          cleanData = cleanData.data.map(item => this.cleanDataItem(item));
+        } else {
+          // Object response without valid data array - return empty array
+          console.warn(`${dataType}: Backend returned object without valid data array`);
+          cleanData = [];
+        }
+      } else {
+        // Any other response type - return empty array
+        console.warn(`${dataType}: Backend returned unexpected data type: ${typeof cleanData}`);
+        cleanData = [];
       }
-      
+
       return {
         success: true,
         data: cleanData
       };
     } catch (error) {
+      console.error(`Error fetching ${dataType} data:`, error.message);
+
       return {
         success: false,
-        error: error.response?.data?.message || error.message
+        error: error.response?.data?.message || error.message,
+        data: [] // Ensure we always return an empty array on error
       };
     }
   }
@@ -702,6 +734,52 @@ class UserService {
         success: false,
         error: error.response?.data?.message || error.message
       };
+    }
+  }
+
+  // Create crop calendar manually (without file upload)
+  async createCropCalendar(calendarData) {
+    try {
+      const response = await this.dataAPI.post('/api/crop-calendars/create', calendarData);
+      return response.data;
+    } catch (error) {
+      console.error('Create crop calendar error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to create crop calendar');
+    }
+  }
+
+  // Get crop calendars by district
+  async getCropCalendarsByDistrict(district, filters = {}) {
+    try {
+      const params = new URLSearchParams(filters);
+      const response = await this.dataAPI.get(`/api/crop-calendars/district/${district}?${params}`);
+      return response.data;
+    } catch (error) {
+      console.error('Get district calendars error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to retrieve district calendars');
+    }
+  }
+
+  // Search crop calendars
+  async searchCropCalendars(filters = {}) {
+    try {
+      const params = new URLSearchParams(filters);
+      const response = await this.dataAPI.get(`/api/crop-calendars/search?${params}`);
+      return response.data;
+    } catch (error) {
+      console.error('Search calendars error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to search calendars');
+    }
+  }
+
+  // Get calendar statistics
+  async getCropCalendarStats() {
+    try {
+      const response = await this.dataAPI.get('/api/crop-calendars/stats');
+      return response.data;
+    } catch (error) {
+      console.error('Get calendar stats error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to retrieve calendar statistics');
     }
   }
 }

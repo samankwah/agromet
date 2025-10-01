@@ -9,6 +9,7 @@ import SmartCalendarRenderer from '../components/common/SmartCalendarRenderer';
 import { getSafeDistrictsByRegion } from '../utils/regionDistrictHelpers';
 import { SafeDistrictOptions } from '../components/common/SafeSelectOptions';
 import { getAllRegionNames } from '../data/ghanaCodes';
+import toast from 'react-hot-toast';
 
 // DownloadButton Component
 const DownloadButton = ({ onDownload }) => {
@@ -95,6 +96,68 @@ const ShareButton = ({ onShare }) => {
 // Get regions dynamically from ghanaCodes to ensure consistency
 const regionsOfGhana = getAllRegionNames();
 
+// Helper function to generate user-friendly error messages
+const getUserFriendlyErrorMessage = (error, context) => {
+  const errorMessage = error?.message?.toLowerCase() || '';
+  const errorCode = error?.code || error?.response?.status;
+
+  const commonSuggestions = [
+    "Please check your internet connection",
+    "Try refreshing the page",
+    "Contact support if the problem persists"
+  ];
+
+  switch (context) {
+    case 'calendar_fetch':
+      if (errorMessage.includes('network') || errorCode === 'NETWORK_ERROR') {
+        return {
+          message: "Unable to connect to the server",
+          details: "Please check your internet connection and try again",
+          suggestions: ["Check your internet connection", "Try again in a few moments"]
+        };
+      }
+      if (errorCode === 404) {
+        return {
+          message: "No calendar data found",
+          details: "No calendar data is available for the selected filters",
+          suggestions: ["Try different crop or location selections", "Upload calendar data in the dashboard"]
+        };
+      }
+      if (errorCode >= 500) {
+        return {
+          message: "Server is temporarily unavailable",
+          details: "The server is experiencing issues. Please try again later",
+          suggestions: ["Try again in a few minutes", "Contact support if the issue persists"]
+        };
+      }
+      return {
+        message: "Failed to load calendar data",
+        details: errorMessage || "An unexpected error occurred",
+        suggestions: commonSuggestions
+      };
+
+    case 'region_fetch':
+      return {
+        message: "Failed to load regions",
+        details: "Unable to load the list of regions",
+        suggestions: ["Refresh the page", "Try selecting a specific region manually"]
+      };
+
+    case 'district_fetch':
+      return {
+        message: "Failed to load districts",
+        details: "Unable to load districts for the selected region",
+        suggestions: ["Try selecting a different region", "Refresh the page"]
+      };
+
+    default:
+      return {
+        message: "An unexpected error occurred",
+        details: errorMessage || "Please try again",
+        suggestions: commonSuggestions
+      };
+  }
+};
 
 // Year and season options
 const yearSeasonOptions = [
@@ -255,7 +318,10 @@ const CropCalendar = () => {
         console.log('✅ Dynamic Calendar Manager initialized successfully');
         setError(null); // Clear any previous errors
       } catch (error) {
-        console.error('❌ Failed to initialize Dynamic Calendar Manager:', error);
+        // Only log in development mode to reduce console noise
+        if (process.env.NODE_ENV === 'development') {
+          console.error('❌ Failed to initialize Dynamic Calendar Manager:', error);
+        }
         setError({
           type: 'initialization',
           message: 'Failed to initialize calendar system',
@@ -268,75 +334,114 @@ const CropCalendar = () => {
     initializeCalendarManager();
   }, []); // Run once on mount
 
-  // Load dynamic data from backend on component mount
+  // Load dynamic data from backend on component mount with caching and optimization
   useEffect(() => {
     const loadDynamicData = async () => {
       setLoading(true);
-      setError(null); // Clear previous errors
+      setError(null);
 
       try {
-        // Fetch available districts and crops with timeout
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), 10000)
-        );
+        // Use Promise.allSettled for better error handling and partial success
+        const apiCalls = [
+          agriculturalDataService.getDistricts(),
+          agriculturalDataService.getCrops(),
+          agriculturalDataService.getStatistics()
+        ];
 
-        const [districtsResult, cropsResult, statsResult] = await Promise.race([
-          Promise.all([
-            agriculturalDataService.getDistricts(),
-            agriculturalDataService.getCrops(),
-            agriculturalDataService.getStatistics()
-          ]),
-          timeoutPromise
+        const results = await Promise.race([
+          Promise.allSettled(apiCalls),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Request timeout')), 15000) // Increased timeout
+          )
         ]);
 
-        if (districtsResult.success) {
-          setAvailableDistricts(districtsResult.data);
+        const [districtsResult, cropsResult, statsResult] = results;
 
-          // Build region-district mapping from uploaded data
-          const mapping = {};
-          districtsResult.data.forEach(item => {
+        // Handle districts result (even if partially successful)
+        if (districtsResult.status === 'fulfilled' && districtsResult.value.success) {
+          const districts = districtsResult.value.data;
+          setAvailableDistricts(districts);
+
+          // Build region-district mapping more efficiently
+          const mapping = districts.reduce((acc, item) => {
             if (item.region && item.district) {
-              if (!mapping[item.region]) {
-                mapping[item.region] = [];
+              if (!acc[item.region]) {
+                acc[item.region] = new Set();
               }
-              if (!mapping[item.region].includes(item.district)) {
-                mapping[item.region].push(item.district);
-              }
+              acc[item.region].add(item.district);
             }
+            return acc;
+          }, {});
+
+          // Convert Sets to arrays for final storage
+          const finalMapping = {};
+          Object.keys(mapping).forEach(region => {
+            finalMapping[region] = Array.from(mapping[region]);
           });
-          setRegionDistrictMapping(mapping);
+          setRegionDistrictMapping(finalMapping);
+        } else if (districtsResult.status === 'rejected') {
+          console.warn('Districts API failed:', districtsResult.reason);
         }
 
-        if (cropsResult.success) {
-          setAvailableCrops(cropsResult.data);
+        // Handle crops result
+        if (cropsResult.status === 'fulfilled' && cropsResult.value.success) {
+          setAvailableCrops(cropsResult.value.data);
+        } else if (cropsResult.status === 'rejected') {
+          console.warn('Crops API failed:', cropsResult.reason);
         }
 
-        if (statsResult.success) {
-          setApiStats(statsResult.data);
-          // If we have uploaded data, use dynamic data instead of static
-          if (statsResult.data.cropCalendars > 0) {
+        // Handle stats result
+        if (statsResult.status === 'fulfilled' && statsResult.value.success) {
+          const stats = statsResult.value.data;
+          setApiStats(stats);
+          // Only use dynamic data if we have uploaded calendars
+          if (stats.cropCalendars > 0) {
             setIsUsingDynamicData(true);
           }
+        } else if (statsResult.status === 'rejected') {
+          console.warn('Stats API failed:', statsResult.reason);
         }
 
-        // Reset retry count on success
+        // Check if all requests failed
+        const allFailed = results.every(result =>
+          result.status === 'rejected' || !result.value?.success
+        );
+
+        if (allFailed) {
+          throw new Error('All API requests failed');
+        }
+
         setRetryCount(0);
       } catch (error) {
-        console.error('Error loading dynamic agricultural data:', error);
+        // Only log API errors in development to reduce console noise
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error loading dynamic agricultural data:', error);
+        }
+
+        const userFriendlyMessage = getUserFriendlyErrorMessage(error, 'calendar_fetch');
         setError({
           type: 'data_loading',
-          message: 'Failed to load agricultural data',
-          details: error.message,
+          message: userFriendlyMessage.message,
+          details: userFriendlyMessage.details,
+          suggestions: userFriendlyMessage.suggestions,
           timestamp: new Date().toISOString(),
           retryable: retryCount < maxRetries
         });
+
+        if (retryCount < maxRetries) {
+          toast.error(`Loading failed, retrying... (${retryCount + 1}/${maxRetries})`);
+        } else {
+          toast.error(userFriendlyMessage.message);
+        }
       } finally {
         setLoading(false);
       }
     };
 
-    loadDynamicData();
-  }, [retryCount]); // Include retryCount to allow retries
+    // Add debouncing for retry attempts
+    const timeoutId = setTimeout(loadDynamicData, retryCount * 1000);
+    return () => clearTimeout(timeoutId);
+  }, [retryCount]);
 
   // Fetch dynamic crop calendar data when filters change
   useEffect(() => {
@@ -382,7 +487,10 @@ const CropCalendar = () => {
           setDynamicData([]);
         }
       } catch (error) {
-        console.error('Error loading crop calendar data:', error);
+        // Only log in development to reduce production console noise
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error loading crop calendar data:', error);
+        }
         setError({
           type: 'calendar_data',
           message: 'Failed to load calendar data for current filters',
@@ -420,13 +528,17 @@ const CropCalendar = () => {
       } catch (error) {
         console.error('Error loading districts for region:', selectedRegion, error);
         setDistrictData({ districts: [], meta: { error: error.message } });
+
+        const userFriendlyMessage = getUserFriendlyErrorMessage(error, 'district_fetch');
         setError({
           type: 'district_loading',
           message: `Failed to load districts for ${selectedRegion}`,
-          details: error.message,
+          details: userFriendlyMessage.details,
+          suggestions: userFriendlyMessage.suggestions,
           timestamp: new Date().toISOString(),
           retryable: false
         });
+        toast.error(`Failed to load districts for ${selectedRegion}`);
       }
     } else {
       setDistrictData({ districts: [], meta: {} });
@@ -435,37 +547,30 @@ const CropCalendar = () => {
 
   // Function to parse Excel data from backend into activities
   const parseExcelDataToActivities = (calendar) => {
-    console.log('🔧 parseExcelDataToActivities called for calendar:', calendar.id);
-
     const activities = [];
     const sheets = calendar.fileData.sheets;
 
     if (!sheets || typeof sheets !== 'object') {
-      console.error('❌ Invalid sheets data:', sheets);
+      console.error('Invalid sheets data for calendar:', calendar.id);
       return activities;
     }
 
     // Process each sheet
     Object.keys(sheets).forEach(sheetName => {
-      console.log(`📋 Processing sheet: "${sheetName}"`);
       const sheet = sheets[sheetName];
 
       if (!sheet || !sheet.data || !Array.isArray(sheet.data)) {
-        console.warn('⚠️ Sheet has no data array:', sheetName);
+        console.warn(`Sheet "${sheetName}" has no data array`);
         return;
       }
-
-      console.log(`📊 Sheet "${sheetName}" has ${sheet.data.length} rows`);
 
       // Find activity column and month columns
       const { activityColumnIndex, monthColumns } = findColumnsInExcelData(sheet.data);
 
       if (activityColumnIndex === -1) {
-        console.warn('❌ Could not find activity column in sheet:', sheetName);
+        console.warn(`Could not find activity column in sheet: ${sheetName}`);
         return;
       }
-
-      console.log(`✅ Found activity column at index ${activityColumnIndex}, ${monthColumns.length} month columns`);
 
       // Extract activities from rows
       sheet.data.forEach((row, rowIndex) => {
@@ -487,21 +592,21 @@ const CropCalendar = () => {
           return;
         }
 
-        // Find which months this activity spans - pure Excel parsing only
+        // Find which months this activity spans
         const { startMonth, endMonth } = findActivityTimespan(row, monthColumns);
 
-        // Skip activities with no timing data - NO FALLBACKS
+        // Skip activities with no timing data
         if (!startMonth || !endMonth) {
-          console.log(`⚠️ No timing data found for "${activityName}" in Excel - skipping (no fallbacks)`);
           return;
         }
 
+        const normalizedName = normalizeActivityName(activityName);
         const activity = {
-          activity: cleanActivityName(activityName),
+          activity: normalizedName,
           start: startMonth,
           end: endMonth,
-          color: generateActivityColor(activityName),
-          advisory: `Follow best practices for ${activityName.toLowerCase()}`,
+          color: generateColorFromActivityName(normalizedName),
+          advisory: `Follow best practices for ${normalizedName.toLowerCase()}`,
           calendarId: calendar.id,
           commodity: calendar.crop || calendar.commodity,
           regionCode: calendar.region,
@@ -511,16 +616,14 @@ const CropCalendar = () => {
             source: 'uploaded',
             sheet: sheetName,
             row: rowIndex,
-            timingSource: startMonth ? 'excel' : 'fallback'
+            timingSource: 'excel'
           }
         };
 
         activities.push(activity);
-        console.log(`✅ Added activity: ${activity.activity} (${finalStartMonth} → ${finalEndMonth}) [${startMonth ? 'excel' : 'fallback'} timing]`);
       });
     });
 
-    console.log(`🎯 Total extracted ${activities.length} activities from calendar ${calendar.id}`);
     return activities;
   };
 
@@ -530,7 +633,7 @@ const CropCalendar = () => {
     const monthColumns = [];
     const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 
-    // Look primarily in the first 3 rows for Excel structure
+    // Look in the first 3 rows for Excel structure
     for (let rowIndex = 0; rowIndex < Math.min(3, data.length); rowIndex++) {
       const row = data[rowIndex];
       if (!Array.isArray(row)) continue;
@@ -539,16 +642,14 @@ const CropCalendar = () => {
         if (!cell) return;
         const cellLower = String(cell).toLowerCase().trim();
 
-        // Find activity column - more precise matching
+        // Find activity column
         if (cellLower.includes('activity') || cellLower.includes('stage') ||
             cellLower === 'stage of activity' || cellLower === 'activity') {
           activityColumnIndex = colIndex;
-          console.log(`🎯 Found activity column "${cell}" at index ${colIndex}`);
         }
 
-        // Find month columns - exact month matching
+        // Find month columns
         const matchingMonth = months.find(month => {
-          // Exact match for month abbreviations
           return cellLower === month || cellLower === month.toUpperCase() ||
                  cellLower === getFullMonthName(month).toLowerCase();
         });
@@ -561,15 +662,12 @@ const CropCalendar = () => {
             monthIndex: months.indexOf(matchingMonth),
             abbreviation: matchingMonth.toUpperCase()
           });
-          console.log(`🗓️ Found month "${cell}" (${fullMonthName}) at column ${colIndex}`);
         }
       });
     }
 
-    // Sort month columns by their position in the year (not Excel column order)
+    // Sort month columns by their position in the year
     monthColumns.sort((a, b) => a.monthIndex - b.monthIndex);
-
-    console.log(`🔍 Final structure: Activity column at ${activityColumnIndex}, ${monthColumns.length} month columns found`);
 
     return { activityColumnIndex, monthColumns };
   };
@@ -577,15 +675,11 @@ const CropCalendar = () => {
   const findActivityTimespan = (row, monthColumns) => {
     const filledMonths = [];
 
-    console.log(`🔍 Checking activity timing for row with ${row.length} columns:`, row);
-
     monthColumns.forEach(monthInfo => {
       if (monthInfo.index < row.length) {
         const cellValue = row[monthInfo.index];
         const hasContent = cellValue !== null && cellValue !== undefined &&
                            cellValue !== '' && String(cellValue).trim() !== '';
-
-        console.log(`   📅 ${monthInfo.month} (col ${monthInfo.index}): "${cellValue}" - ${hasContent ? 'HAS CONTENT' : 'empty'}`);
 
         if (hasContent) {
           // Look for timing markers: X, x, ✓, •, 1, dates, etc.
@@ -594,13 +688,10 @@ const CropCalendar = () => {
               valueStr === '1' || valueStr.includes('-') ||
               /^\d+$/.test(valueStr) || valueStr.length === 1) {
             filledMonths.push(monthInfo.month);
-            console.log(`   ✅ ${monthInfo.month}: Found timing marker "${cellValue}"`);
           }
         }
       }
     });
-
-    console.log(`🎯 Activity spans ${filledMonths.length} months:`, filledMonths);
 
     if (filledMonths.length === 0) {
       return { startMonth: null, endMonth: null };
@@ -621,147 +712,329 @@ const CropCalendar = () => {
     return monthMap[monthAbbr.toLowerCase()] || monthAbbr;
   };
 
-  const cleanActivityName = (name) => {
-    return name.toString().trim()
-      .replace(/^\d+\.?\s*/, '') // Remove leading numbers
-      .replace(/^\|?\s*/, '')    // Remove leading pipes
-      .trim();
-  };
 
-  const generateActivityColor = (activityName) => {
-    const colorMap = {
-      'site': '#3B82F6',      // Site selection - Blue 500
-      'land': '#D97706',      // Land preparation - Yellow 600
-      'plant': '#059669',     // Planting/sowing - Green 600
-      'sowing': '#059669',    // Planting/sowing - Green 600
-      'fertil': '#FBBF24',    // Fertilizer application - Yellow 400
-      'weed': '#EF4444',      // Weed control - Red 500
-      'pest': '#DC2626',      // Pest management - Red 600
-      'harvest': '#22C55E',   // Harvesting - Green 500
-      'water': '#60A5FA',     // Water management - Blue 400
-      'post': '#8B5CF6',      // Post-harvest - Purple 500
-      'handling': '#8B5CF6'   // Post-harvest handling - Purple 500
+
+  // Function to normalize and clean activity names
+  const normalizeActivityName = (rawName) => {
+    if (!rawName || typeof rawName !== 'string') {
+      return 'Unknown Activity';
+    }
+
+    let cleanName = rawName.trim();
+
+    // Handle numeric activity names - convert to meaningful names
+    if (/^\d+$/.test(cleanName)) {
+      const activityNumber = parseInt(cleanName);
+      const numericMapping = {
+        1: 'Site Selection',
+        2: 'Land Preparation',
+        3: 'Planting/Sowing',
+        4: 'First Fertilizer Application',
+        5: 'First Weeding',
+        6: 'Second Fertilizer Application',
+        7: 'Second Weeding/Pest Control',
+        8: 'Harvesting',
+        9: 'Post-Harvest Activities',
+        10: 'Marketing',
+        11: 'Storage',
+        12: 'Processing'
+      };
+
+      if (numericMapping[activityNumber]) {
+        return numericMapping[activityNumber];
+      }
+    }
+
+    // Handle common Excel formatting issues
+    cleanName = cleanName
+      .replace(/^\d+\.?\s*/, '') // Remove leading numbers and dots
+      .replace(/^\|?\s*/, '')    // Remove leading pipes
+      .replace(/^[-_\s]+/, '')   // Remove leading dashes, underscores, spaces
+      .replace(/[_-]+/g, ' ')    // Replace underscores and dashes with spaces
+      .trim();
+
+    // Handle common abbreviations and expand them
+    const abbreviationMap = {
+      'prep': 'Preparation',
+      'fert': 'Fertilizer',
+      'fertil': 'Fertilizer',
+      'harv': 'Harvest',
+      'weed': 'Weeding',
+      'pest': 'Pest Control',
+      'irrig': 'Irrigation',
+      'maint': 'Maintenance',
+      'mgmt': 'Management',
+      'ctrl': 'Control',
+      'app': 'Application',
+      'applic': 'Application'
     };
 
+    // Apply abbreviation expansions
+    let expandedName = cleanName.toLowerCase();
+    Object.entries(abbreviationMap).forEach(([abbrev, full]) => {
+      const regex = new RegExp(`\\b${abbrev}\\b`, 'gi');
+      expandedName = expandedName.replace(regex, full);
+    });
+
+    // Capitalize first letter of each word
+    cleanName = expandedName.replace(/\w\S*/g, (word) =>
+      word.charAt(0).toUpperCase() + word.substr(1).toLowerCase()
+    );
+
+    // Handle specific agricultural activity patterns
+    const patterns = [
+      { pattern: /(\d+)(?:st|nd|rd|th)?\s*(weed|fertilizer|spray)/i,
+        replacement: (match, num, activity) => `${getOrdinal(num)} ${activity.charAt(0).toUpperCase() + activity.slice(1)}` },
+      { pattern: /land\s+prep/i, replacement: 'Land Preparation' },
+      { pattern: /site\s+select/i, replacement: 'Site Selection' },
+      { pattern: /post\s*harvest/i, replacement: 'Post-Harvest Activities' },
+      { pattern: /pest\s+control/i, replacement: 'Pest Control' },
+      { pattern: /weed\s+control/i, replacement: 'Weed Control' }
+    ];
+
+    patterns.forEach(({ pattern, replacement }) => {
+      if (typeof replacement === 'function') {
+        cleanName = cleanName.replace(pattern, replacement);
+      } else {
+        cleanName = cleanName.replace(pattern, replacement);
+      }
+    });
+
+    return cleanName || 'Unknown Activity';
+  };
+
+  // Helper function to get ordinal numbers
+  const getOrdinal = (num) => {
+    const n = parseInt(num);
+    const suffix = ['th', 'st', 'nd', 'rd'];
+    const v = n % 100;
+    return n + (suffix[(v - 20) % 10] || suffix[v] || suffix[0]);
+  };
+
+  // Function to normalize and fix activity colors
+  const normalizeActivityColor = (color, activityName) => {
+    // If no color provided, generate one based on activity type
+    if (!color) {
+      return generateColorFromActivityName(activityName);
+    }
+
+    // Convert string color to consistent format
+    const normalizedColor = String(color).trim();
+
+    // Fix problematic colors
+    const problematicColors = [
+      '#000000', '#000', 'black', 'Black', 'BLACK',
+      '#FFFFFF', '#FFF', 'white', 'White', 'WHITE'
+    ];
+
+    if (problematicColors.includes(normalizedColor)) {
+      return generateColorFromActivityName(activityName);
+    }
+
+    // Ensure color has # prefix if it's a hex color
+    if (/^[0-9A-Fa-f]{6}$/.test(normalizedColor)) {
+      return `#${normalizedColor}`;
+    }
+
+    // Return as-is if it's already a valid color format
+    return normalizedColor;
+  };
+
+  // Generate appropriate colors based on activity name
+  const generateColorFromActivityName = (activityName) => {
+    if (!activityName) return '#6B7280'; // Default gray
+
     const name = activityName.toLowerCase();
+
+    // Define color mapping for different activity types
+    const colorMap = {
+      // Site and preparation activities
+      'site': '#3B82F6',      // Blue
+      'selection': '#3B82F6',  // Blue
+      'preparation': '#F59E0B', // Amber
+      'land': '#F59E0B',       // Amber
+      'clearing': '#F59E0B',   // Amber
+
+      // Planting activities
+      'plant': '#10B981',      // Emerald
+      'sowing': '#10B981',     // Emerald
+      'seed': '#10B981',       // Emerald
+
+      // Fertilizer activities
+      'fertil': '#FBBF24',     // Yellow
+      'nutrient': '#FBBF24',   // Yellow
+      'compost': '#FBBF24',    // Yellow
+      'manure': '#FBBF24',     // Yellow
+
+      // Weeding and pest control
+      'weed': '#EF4444',       // Red
+      'pest': '#DC2626',       // Dark red
+      'spray': '#DC2626',      // Dark red
+      'control': '#DC2626',    // Dark red
+
+      // Water management
+      'water': '#06B6D4',      // Cyan
+      'irrigat': '#06B6D4',    // Cyan
+      'drain': '#0891B2',      // Dark cyan
+
+      // Harvesting
+      'harvest': '#059669',    // Dark green
+      'pick': '#059669',       // Dark green
+      'collect': '#059669',    // Dark green
+
+      // Post-harvest
+      'dry': '#D97706',        // Orange
+      'stor': '#D97706',       // Orange
+      'process': '#D97706',    // Orange
+      'market': '#7C3AED',     // Purple
+
+      // General maintenance
+      'maintain': '#6B7280',   // Gray
+      'check': '#6B7280',      // Gray
+      'monitor': '#6B7280'     // Gray
+    };
+
+    // Find matching color based on activity name
     for (const [key, color] of Object.entries(colorMap)) {
       if (name.includes(key)) {
         return color;
       }
     }
-    return '#9CA3AF'; // Default fallback - Gray 400
-  };
 
+    // Default color based on hash of activity name for consistency
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      const char = name.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+
+    const colors = ['#8B5CF6', '#F59E0B', '#10B981', '#EF4444', '#3B82F6', '#F97316'];
+    return colors[Math.abs(hash) % colors.length];
+  };
 
   // Function to transform backend crop calendar data to activity format
   const transformBackendDataToActivities = (cropCalendarData) => {
-    console.log('🔧 transformBackendDataToActivities called with data:', cropCalendarData);
-    console.log('🔄 Returning raw calendar data for updateFarmingActivities to process');
-
-    // Simply return the raw calendar data - let updateFarmingActivities do the processing
+    // Return the raw calendar data for processing
     return cropCalendarData || [];
   };
 
   // Convert backend pre-parsed activities to calendar format
   const transformBackendActivitiesToCalendarFormat = (backendActivities) => {
-    console.log('🔄 Converting backend activities to calendar format:', backendActivities);
-
-    // Excel structure: JAN-SEPT, WK1-WK37 (from API data analysis)
-    // Backend activities have week 1-9, need to map to exact Excel week positions
-    const excelWeekToMonthMap = {
-      // January: WK1-WK5 (weeks 1-5)
-      1: 'January',   // WK1 - Site Selection
-      2: 'January',   // WK2 - Land Preparation
-      3: 'January',   // WK3
-      4: 'January',   // WK4
-      5: 'January',   // WK5
-      // February: WK6-WK9 (weeks 6-9)
-      6: 'February',  // WK6 - Planting/Sowing
-      7: 'February',  // WK7 - 1st Fertilizer
-      8: 'February',  // WK8
-      9: 'February',  // WK9
-      // March: WK10-WK13 (weeks 10-13)
-      10: 'March',    // WK10 - Weed Control
-      11: 'March',    // WK11 - 2nd Fertilizer
-      12: 'March',    // WK12
-      13: 'March',    // WK13
-      // April: WK14-WK17 (weeks 14-17)
-      14: 'April',    // WK14
-      15: 'April',    // WK15
-      16: 'April',    // WK16
-      17: 'April',    // WK17
-      // May: WK18-WK22 (weeks 18-22)
-      18: 'May',      // WK18 - Harvesting
-      19: 'May',      // WK19 - Post-harvest
-      20: 'May',      // WK20
-      21: 'May',      // WK21
-      22: 'May',      // WK22
-      // June: WK23-WK26 (weeks 23-26)
-      23: 'June',     // WK23
-      24: 'June',     // WK24
-      25: 'June',     // WK25
-      26: 'June',     // WK26
-      // July: WK27-WK31 (weeks 27-31)
-      27: 'July',     // WK27
-      28: 'July',     // WK28
-      29: 'July',     // WK29
-      30: 'July',     // WK30
-      31: 'July',     // WK31
-      // August: WK32-WK35 (weeks 32-35)
-      32: 'August',   // WK32
-      33: 'August',   // WK33
-      34: 'August',   // WK34
-      35: 'August',   // WK35
-      // September: WK36-WK37 (weeks 36-37)
-      36: 'September', // WK36
-      37: 'September'  // WK37
-    };
-
     const convertedActivities = backendActivities.map((activity, index) => {
-      // Map backend activity week (1-9) to Excel week position
-      const excelWeekPosition = activity.week; // Direct mapping since backend uses 1-9
-      const monthName = excelWeekToMonthMap[excelWeekPosition] || 'January';
-      const activityColor = generateActivityColor(activity.name);
+      // Handle both possible activity structures
+      const rawActivityName = activity.activityName || activity.activity || activity.name || `Activity ${index + 1}`;
 
-      console.log(`📋 EXACT EXCEL: "${activity.name}" (Backend Week ${activity.week}) -> Excel WK${excelWeekPosition} (${monthName}) with color ${activityColor}`);
+      // Normalize and clean activity name
+      let activityName = normalizeActivityName(rawActivityName);
 
-      // Generate timeline for 36 weeks (JAN-SEPT, 4 weeks per month)
-      const timeline = Array.from({ length: 36 }, (_, weekIndex) => {
-        // Check if this calendar week matches the activity's Excel week
-        const calendarWeekNumber = weekIndex + 1; // 1-36
-        const isActiveWeek = calendarWeekNumber === excelWeekPosition;
+      const activityId = activity.activityId || activity.id || `activity_${index}`;
 
-        return {
-          active: isActiveWeek,
-          background: isActiveWeek ? activityColor : 'transparent',
-          content: isActiveWeek ? '●' : '',
-          week: calendarWeekNumber
-        };
-      });
+      // Extract and normalize primary background color from Excel data
+      let primaryBackgroundColor = activity.backgroundColor ||
+                                    activity.color ||
+                                    activity.periods?.[0]?.backgroundColor;
 
-      return {
-        id: activity.id || `activity_${index}`,
-        activity: activity.name, // SmartCalendarRenderer expects 'activity' property
-        name: activity.name,     // Keep name for compatibility
-        type: activity.name.toLowerCase().includes('harvest') ? 'harvest' :
-              activity.name.toLowerCase().includes('plant') ? 'planting' :
-              activity.name.toLowerCase().includes('weed') ? 'weeding' :
-              activity.name.toLowerCase().includes('fertil') ? 'fertilizer' : 'general',
-        month: monthName,
-        week: excelWeekPosition,
-        duration: 1,
-        start: monthName,        // Start month for isActivityActive function
-        end: monthName,          // End month for isActivityActive function
-        color: activityColor,
-        backgroundColor: activityColor, // Add backgroundColor for SmartCalendarRenderer
-        description: activity.name,
-        priority: activity.week,
-        source: 'exact-excel-content', // Mark as exact Excel content
-        timeline: timeline // Add timeline data for calendar cells
+      // Normalize and fix problematic colors
+      primaryBackgroundColor = normalizeActivityColor(primaryBackgroundColor, activityName);
+
+      // Build timeline from periods data
+      const timeline = [];
+      const activeWeeks = new Set();
+      let startMonth = null;
+      let endMonth = null;
+
+      // Process periods to build timeline
+      if (activity.periods && Array.isArray(activity.periods) && activity.periods.length > 0) {
+        activity.periods.forEach((period, periodIndex) => {
+          const weekIndex = period.timelineIndex || periodIndex;
+          const month = period.month || 'Unknown';
+          let backgroundColor = period.backgroundColor || period.color || primaryBackgroundColor;
+
+          // Normalize color for timeline
+          backgroundColor = normalizeActivityColor(backgroundColor, activityName);
+
+          activeWeeks.add(weekIndex);
+
+          // Track month range
+          if (!startMonth) startMonth = month;
+          endMonth = month;
+
+          // Ensure timeline array is large enough
+          while (timeline.length <= weekIndex) {
+            timeline.push({
+              active: false,
+              background: 'transparent',
+              content: '',
+              week: timeline.length + 1,
+              backgroundColor: null
+            });
+          }
+
+          // Set active period with converted color
+          timeline[weekIndex] = {
+            active: true,
+            background: backgroundColor,
+            backgroundColor: backgroundColor,
+            content: period.cellValue || period.content || '●',
+            week: weekIndex + 1,
+            month: month,
+            monthIndex: period.monthIndex || 0
+          };
+        });
+      } else {
+        // Fallback: create a simple activity spanning first few weeks
+        for (let i = 0; i < 4; i++) {
+          timeline.push({
+            active: i < 2, // Active for first 2 weeks as fallback
+            background: i < 2 ? primaryBackgroundColor : 'transparent',
+            backgroundColor: i < 2 ? primaryBackgroundColor : null,
+            content: i < 2 ? '●' : '',
+            week: i + 1,
+            month: 'January',
+            monthIndex: 0
+          });
+          if (i < 2) activeWeeks.add(i);
+        }
+        startMonth = 'January';
+        endMonth = 'January';
+      }
+
+      // Fill remaining timeline slots up to 36 weeks if needed
+      while (timeline.length < 36) {
+        timeline.push({
+          active: false,
+          background: 'transparent',
+          content: '',
+          week: timeline.length + 1,
+          backgroundColor: null
+        });
+      }
+
+      const convertedActivity = {
+        id: activityId,
+        activity: activityName,
+        name: activityName,
+        type: activityName.toLowerCase().includes('harvest') ? 'harvest' :
+              activityName.toLowerCase().includes('plant') ? 'planting' :
+              activityName.toLowerCase().includes('weed') ? 'weeding' :
+              activityName.toLowerCase().includes('fertil') ? 'fertilizer' : 'general',
+        start: startMonth || 'January',
+        end: endMonth || startMonth || 'January',
+        color: primaryBackgroundColor,
+        backgroundColor: primaryBackgroundColor,
+        exactColor: primaryBackgroundColor,
+        description: activityName,
+        source: 'enhanced-excel-extraction',
+        timeline: timeline,
+        periods: activity.periods,
+        activeWeeks: Array.from(activeWeeks).sort((a, b) => a - b),
+        calendarType: 'seasonal'
       };
+
+      return convertedActivity;
     });
 
-    console.log(`✅ Converted ${convertedActivities.length} backend activities to calendar format`);
     return convertedActivities;
   };
 
@@ -770,58 +1043,39 @@ const CropCalendar = () => {
     const updateFarmingActivities = async () => {
       // Excel-only calendar system - only show uploaded Excel data
       if (isUsingDynamicData) {
-        console.log('🔧 Processing dynamic calendar data - EXCEL-ONLY MODE (No Fallbacks):', dynamicData);
-
         // Only show calendar if specific district is selected
         if (selectedDistrict === 'All Districts' || !selectedDistrict) {
-          console.log('🚫 No specific district selected - hiding calendar');
           setFarmingActivities([]);
           return;
         }
 
         // Process the backend-filtered dynamic data directly
         if (dynamicData && dynamicData.length > 0) {
-          console.log(`🎯 Processing ${dynamicData.length} backend-filtered calendars for district: ${selectedDistrict}`);
           const allActivities = [];
 
           dynamicData.forEach((calendar, index) => {
             // Add null checks for calendar object
             if (!calendar || typeof calendar !== 'object') {
-              console.warn(`⚠️ Invalid calendar object at index ${index}:`, calendar);
+              console.warn(`Invalid calendar object at index ${index}:`, calendar);
               return;
             }
 
-            console.log(`📊 Processing calendar ${index + 1}: ${calendar.id || 'Unknown ID'} for district: ${calendar.district}`);
-
-            // USE BACKEND PRE-PARSED ACTIVITIES (Priority 1)
-            if (calendar.activities && Array.isArray(calendar.activities) && calendar.activities.length > 0) {
-              console.log(`🎯 Using backend pre-parsed activities (${calendar.activities.length} activities)`);
+            // Use enhanced parser schedule data (Priority 1)
+            if (calendar.schedule && Array.isArray(calendar.schedule) && calendar.schedule.length > 0) {
+              const enhancedActivities = transformBackendActivitiesToCalendarFormat(calendar.schedule);
+              allActivities.push(...enhancedActivities);
+            }
+            // Fallback: Use backend pre-parsed activities (Priority 2)
+            else if (calendar.activities && Array.isArray(calendar.activities) && calendar.activities.length > 0) {
               const backendActivities = transformBackendActivitiesToCalendarFormat(calendar.activities);
               allActivities.push(...backendActivities);
-              console.log(`✅ Converted ${backendActivities.length} backend activities from calendar ${calendar.id}`);
-
-              // Debug: Log first converted activity to verify structure
-              if (backendActivities.length > 0) {
-                console.log(`🔍 DEBUG: First converted activity:`, {
-                  activity: backendActivities[0].activity,
-                  month: backendActivities[0].month,
-                  start: backendActivities[0].start,
-                  end: backendActivities[0].end,
-                  color: backendActivities[0].color,
-                  hasTimeline: !!backendActivities[0].timeline,
-                  timelineLength: backendActivities[0].timeline?.length
-                });
-              }
             } else {
-              console.warn(`⚠️ Calendar ${calendar.id || 'Unknown'} has no pre-parsed activities`);
+              console.warn(`Calendar ${calendar.id || 'Unknown'} has no pre-parsed activities or schedule data`);
             }
           });
 
-          console.log(`🎯 Total activities processed: ${allActivities.length}`);
-          console.log(`🎨 DEBUG: All activity colors:`, allActivities.map(a => ({ name: a.activity, color: a.color, month: a.month })));
           setFarmingActivities(allActivities);
         } else {
-          console.log('📭 No calendar data available for selected filters');
           setFarmingActivities([]); // Show "no data" message
         }
         return;
@@ -834,8 +1088,6 @@ const CropCalendar = () => {
 
       // Get dynamic calendar data based on the selected crop and location
       try {
-        console.log(`🔍 Fetching dynamic calendar data for crop: ${selectedCrop}, region: ${selectedRegion}, district: ${selectedDistrict}`);
-
         const filters = {
           commodity: selectedCrop === "all" ? "maize" : selectedCrop, // Default to maize for "all"
           regionCode: selectedRegion !== "All Regions" ? selectedRegion : undefined,
@@ -851,7 +1103,6 @@ const CropCalendar = () => {
         const calendarResult = await dynamicCalendarManager.getCalendarData(filters, options);
 
         if (calendarResult.success && calendarResult.data.length > 0) {
-          console.log(`✅ Using ${calendarResult.metadata.source || 'unknown'} calendar data (priority: ${calendarResult.metadata.dataSourcePriority || 0})`);
           baseActivities = calendarResult.data;
 
           // Map metadata field names for compatibility
@@ -867,7 +1118,6 @@ const CropCalendar = () => {
           const isStrictModeNoData = calendarResult.metadata && calendarResult.metadata.strictMode;
 
           if (isStrictModeNoData) {
-            console.log('🚫 Strict mode: No uploaded/computed data found for filters');
             baseActivities = [];
             setCalendarMetadata({
               dataSourceUsed: 'no-data',
@@ -878,7 +1128,6 @@ const CropCalendar = () => {
               queryTime: new Date().toISOString()
             });
           } else {
-            console.log('⚠️ No calendar data found, using empty activities');
             baseActivities = [];
             setCalendarMetadata({
               dataSourceUsed: 'no-data',
@@ -891,7 +1140,7 @@ const CropCalendar = () => {
           }
         }
       } catch (error) {
-        console.error('❌ Error fetching dynamic calendar data:', error);
+        console.error('Error fetching dynamic calendar data:', error);
         baseActivities = [];
         setCalendarMetadata({
           dataSourceUsed: 'no-data',
@@ -901,13 +1150,16 @@ const CropCalendar = () => {
           queryTime: new Date().toISOString(),
           error: error.message
         });
+        const userFriendlyMessage = getUserFriendlyErrorMessage(error, 'calendar_fetch');
         setError({
           type: 'calendar_manager',
-          message: 'Failed to fetch calendar activities',
-          details: error.message,
+          message: userFriendlyMessage.message,
+          details: userFriendlyMessage.details,
+          suggestions: userFriendlyMessage.suggestions,
           timestamp: new Date().toISOString(),
           retryable: true
         });
+        toast.error(userFriendlyMessage.message);
       }
 
       // Adjust activities for the selected season
@@ -916,19 +1168,13 @@ const CropCalendar = () => {
         selectedSeason
       );
 
-      // Excel-only calendar system - no climate offset calculations
-
       if (initialLoad) {
-        setFarmingActivities(adjustedActivities); // Default to adjusted activities on initial load
+        setFarmingActivities(adjustedActivities);
         setInitialLoad(false);
       } else {
-        setFarmingActivities(adjustedActivities); // Always use Excel data without climate adjustments
+        setFarmingActivities(adjustedActivities);
       }
 
-      console.log(
-        "Updated activities for crop, region, district, and season:",
-        adjustedActivities
-      );
       setLoading(false);
     };
 
@@ -1050,7 +1296,7 @@ const CropCalendar = () => {
       } else {
         // Fallback to clipboard
         await navigator.clipboard.writeText(window.location.href);
-        alert("Calendar link copied to clipboard!");
+        toast.success("Calendar link copied to clipboard!");
       }
     } catch (error) {
       console.error("Error sharing:", error);
@@ -1129,6 +1375,19 @@ const CropCalendar = () => {
             <div className="flex-1">
               <h4 className="font-semibold text-gray-800 mb-1">{error.message}</h4>
               <p className="text-sm text-gray-600 mb-2">{error.details}</p>
+
+              {/* Show suggestions if available */}
+              {error.suggestions && error.suggestions.length > 0 && (
+                <div className="mb-3">
+                  <p className="text-sm font-medium text-gray-700 mb-1">Try these solutions:</p>
+                  <ul className="text-sm text-gray-600 list-disc list-inside space-y-1">
+                    {error.suggestions.map((suggestion, index) => (
+                      <li key={index}>{suggestion}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
               <div className="text-xs text-gray-500">
                 {new Date(error.timestamp).toLocaleString()}
               </div>
@@ -1333,12 +1592,68 @@ const CropCalendar = () => {
                 </div>
 
                 <h3 className="text-xl md:text-2xl font-semibold text-gray-900 mb-3">No Calendar Data</h3>
-                <p className="text-gray-600 mb-6 text-sm md:text-base">
-                  No farming activities found for your current selection.
-                </p>
-                <p className="text-blue-600 cursor-pointer text-sm md:text-base">
-                  📁 Try adjusting your filters or upload calendar data through the dashboard
-                </p>
+
+                {/* Enhanced messaging based on user selection and server status */}
+                {error && error.type === 'calendar_manager' ? (
+                  <div className="text-gray-600 mb-6 text-sm md:text-base">
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                      <p className="text-red-800 font-medium mb-2">🚨 Server Connection Issue</p>
+                      <p className="text-red-700 mb-2">{error.message}</p>
+                      {error.suggestions && (
+                        <div className="mt-3">
+                          <p className="text-red-700 font-medium text-xs">Troubleshooting Steps:</p>
+                          <ul className="list-disc list-inside space-y-1 mt-1 text-xs text-red-600">
+                            {error.suggestions.map((suggestion, index) => (
+                              <li key={index}>{suggestion}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      <div className="mt-3 p-2 bg-red-100 rounded text-xs text-red-700">
+                        <p className="font-medium">🔧 Quick Fix:</p>
+                        <p>Ensure server is running on port 3002, check network connection, or contact system administrator.</p>
+                      </div>
+                    </div>
+                  </div>
+                ) : selectedDistrict === 'All Districts' ? (
+                  <div className="text-gray-600 mb-6 text-sm md:text-base">
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                      <p className="text-amber-800 font-medium mb-2">📍 District Selection Required</p>
+                      <p className="text-amber-700 mb-2">Please select a specific district to view calendar data.</p>
+                      <p className="text-amber-600 text-sm">
+                        Calendar data is organized by individual districts. Choose any district from the dropdown above to see available farming activities.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-gray-600 mb-6 text-sm md:text-base">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                      <p className="text-blue-800 font-medium mb-2">📊 No Data for {selectedDistrict}</p>
+                      <p className="text-blue-700 mb-3">
+                        No Excel calendar file has been uploaded for <strong>{selectedDistrict}</strong> district.
+                      </p>
+                      <div className="bg-white border border-blue-300 rounded p-3 text-blue-800 text-sm">
+                        <p className="font-medium mb-2">💡 Available Options:</p>
+                        <ul className="list-disc list-inside space-y-1 ml-2">
+                          <li>Upload calendar data via the <strong>Dashboard → Create Calendar</strong></li>
+                          <li>Try different districts (some may have existing data)</li>
+                          <li>Check other crop types or seasons</li>
+                          <li>Contact your agricultural extension officer</li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    {/* Server Status Indicator */}
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-green-800 text-xs">
+                      <div className="flex items-center mb-1">
+                        <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                        <span className="font-medium">Server Status: Connected</span>
+                      </div>
+                      <p className="text-green-600">System is online and ready to display calendar data when available.</p>
+                    </div>
+                  </div>
+                )}
+
               </div>
             </div>
           )}

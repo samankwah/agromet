@@ -6,14 +6,17 @@
  */
 class ServerHealthCheck {
   constructor() {
-    this.baseURL = 'http://localhost:3003/api';
+    this.baseURL = 'http://localhost:3002/api'; // Fixed: Use port 3002, not 3003
     this.isServerHealthy = null; // null = unknown, true = healthy, false = unhealthy
     this.lastHealthCheck = null;
     this.healthCheckInterval = 30 * 1000; // 30 seconds
     this.quickCheckTimeout = 5000; // 5 seconds for health checks
     this.retryDelay = 10 * 1000; // 10 seconds before retrying after failure
-    this.maxConsecutiveFailures = 3;
+    this.maxConsecutiveFailures = 5; // Increased: Allow more failures before circuit break
     this.consecutiveFailures = 0;
+    this.circuitBreakerOpen = false; // New: Circuit breaker state
+    this.circuitBreakerTimeout = null;
+    this.circuitBreakerResetDelay = 60 * 1000; // 1 minute before trying again after circuit break
     this.subscribers = new Set(); // Components that want to be notified of health changes
     this.healthCheckCache = new Map();
     this.cacheExpiry = 60 * 1000; // 1 minute cache for endpoint-specific health
@@ -73,6 +76,16 @@ class ServerHealthCheck {
       };
     }
 
+    // Circuit breaker: Don't attempt if circuit is open
+    if (this.circuitBreakerOpen) {
+      console.log('⏸️ Health check skipped - circuit breaker open');
+      return {
+        isHealthy: false,
+        lastCheck: this.lastHealthCheck,
+        circuitBreakerOpen: true
+      };
+    }
+
     console.log('🔍 Performing server health check...');
 
     try {
@@ -103,7 +116,10 @@ class ServerHealthCheck {
 
       this.updateHealthStatus(isHealthy, now);
 
-      console.log(`✅ Server health check: ${isHealthy ? 'HEALTHY' : 'UNHEALTHY'} - ${serverInfo.service || 'TriAgro Server'}`);
+      // Only log health changes, not every check
+      if (this.isServerHealthy !== isHealthy) {
+        console.log(`✅ Server health status changed: ${isHealthy ? 'HEALTHY' : 'UNHEALTHY'} - ${serverInfo.service || 'TriAgro Server'}`);
+      }
 
       return {
         isHealthy,
@@ -141,8 +157,30 @@ class ServerHealthCheck {
 
     if (isHealthy) {
       this.consecutiveFailures = 0;
+      // Reset circuit breaker if server becomes healthy
+      if (this.circuitBreakerOpen) {
+        console.log('✅ Circuit breaker reset - server is healthy again');
+        this.circuitBreakerOpen = false;
+        if (this.circuitBreakerTimeout) {
+          clearTimeout(this.circuitBreakerTimeout);
+          this.circuitBreakerTimeout = null;
+        }
+      }
     } else {
       this.consecutiveFailures++;
+
+      // Engage circuit breaker after max consecutive failures
+      if (this.consecutiveFailures >= this.maxConsecutiveFailures && !this.circuitBreakerOpen) {
+        console.log(`🚨 Circuit breaker engaged - ${this.consecutiveFailures} consecutive failures`);
+        this.circuitBreakerOpen = true;
+
+        // Set timeout to reset circuit breaker
+        this.circuitBreakerTimeout = setTimeout(() => {
+          console.log('🔄 Circuit breaker reset timeout - will attempt health check again');
+          this.circuitBreakerOpen = false;
+          this.circuitBreakerTimeout = null;
+        }, this.circuitBreakerResetDelay);
+      }
     }
 
     // Notify subscribers if status changed

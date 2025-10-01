@@ -572,10 +572,13 @@ class AgriculturalDataService {
           total: response.data.total || 0,
           filters: response.data.filters || {},
           summary: response.data.summary || {},
+          emptyResult: response.data.emptyResult || null,  // New empty result information
           metadata: {
             dataSource: 'enhanced-calendars',
             hasUploadedData: (response.data.data || []).length > 0,
             queryTime: new Date().toISOString(),
+            isEmpty: (response.data.data || []).length === 0,
+            hasEmptyResultInfo: !!response.data.emptyResult,
             ...response.data.metadata
           }
         };
@@ -586,9 +589,18 @@ class AgriculturalDataService {
         total: 0,
         filters: {},
         summary: {},
+        emptyResult: {
+          hasFilters: true,
+          message: 'Server unavailable - cannot retrieve calendar data',
+          suggestedCommodities: [],
+          totalAvailableCalendars: 0,
+          appliedFilters: {}
+        },
         metadata: {
           dataSource: 'offline',
           hasUploadedData: false,
+          isEmpty: true,
+          hasEmptyResultInfo: true,
           queryTime: new Date().toISOString()
         }
       }

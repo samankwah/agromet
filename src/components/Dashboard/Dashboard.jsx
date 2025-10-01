@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
-  FaBell,
   FaSignOutAlt,
   FaSeedling,
   FaCalendarAlt,
@@ -18,6 +17,7 @@ import PoultryAdvisoryManager from "./PoultryAdvisoryManager";
 import EnhancedCalendarUpload from "../EnhancedCalendarUpload";
 import EnhancedCalendarViewer from "../EnhancedCalendarViewer";
 import ProductionCycleManager from "../ProductionCycleManager";
+import ProfileDropdown from "../common/ProfileDropdown";
 import userService from "../../services/userService";
 
 const Dashboard = () => {
@@ -142,8 +142,11 @@ const Dashboard = () => {
   const loadAgriculturalStats = async () => {
     try {
       const dataTypes = ['crop-calendar', 'agromet-advisory', 'poultry-calendar', 'poultry-advisory'];
+
+      // Add cache-busting parameter to ensure fresh data
+      const timestamp = Date.now();
       const results = await Promise.allSettled(
-        dataTypes.map(type => userService.getAgriculturalData(type))
+        dataTypes.map(type => userService.getAgriculturalData(type, { _t: timestamp }))
       );
       
       const [cropCalendarData, agrometAdvisoryData, poultryCalendarData, poultryAdvisoryData] = results.map(result => 
@@ -228,18 +231,32 @@ const Dashboard = () => {
     }
   };
 
-  const handleCropCalendarSave = (data) => {
-    console.log('Crop calendar saved:', data);
-    loadAgriculturalStats();
-    loadRecentUploads(); // Refresh recent uploads
+  const handleCropCalendarSave = async (data) => {
     setShowCropCalendarForm(false);
+
+    // Force immediate refresh of agricultural stats and recent uploads
+    try {
+      await Promise.all([
+        loadAgriculturalStats(),
+        loadRecentUploads()
+      ]);
+    } catch (error) {
+      console.error('Error refreshing dashboard data:', error);
+    }
   };
 
-  const handlePoultryCalendarSave = (data) => {
-    console.log('Poultry calendar saved:', data);
-    loadAgriculturalStats();
-    loadRecentUploads(); // Refresh recent uploads
+  const handlePoultryCalendarSave = async (data) => {
     setShowPoultryCalendarForm(false);
+
+    // Force immediate refresh of agricultural stats and recent uploads
+    try {
+      await Promise.all([
+        loadAgriculturalStats(),
+        loadRecentUploads()
+      ]);
+    } catch (error) {
+      console.error('Error refreshing dashboard data:', error);
+    }
   };
 
   // Refresh dashboard data when returning to dashboard page
@@ -281,11 +298,6 @@ const Dashboard = () => {
     }
   };
 
-  const currentDate = new Date().toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -328,39 +340,23 @@ const Dashboard = () => {
         </div>
 
         {/* Desktop Header */}
-        <div className="hidden lg:block bg-white shadow-sm sticky top-0 z-10">
+        <div className="hidden lg:block bg-white shadow-sm sticky top-0 z-10 relative">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16">
+            <div className="flex justify-between items-center h-16 w-full">
               <div className="flex items-center">
                 <h1 className="text-xl font-bold text-green-800">TriAgro AI Admin</h1>
               </div>
-              <div className="flex items-center space-x-4">
-                <div className="relative">
-                  <FaBell className="h-6 w-6 text-gray-400 hover:text-gray-500 cursor-pointer" />
-                  {notifications.length > 0 && (
-                    <span className="absolute -top-1 -right-1 block h-3 w-3 rounded-full bg-red-500"></span>
-                  )}
-                </div>
-                <div className="flex items-center">
-                  <div className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center text-white font-semibold mr-3">
-                    {currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'A'}
-                  </div>
-                  <div className="hidden sm:block">
-                    <div className="text-sm font-medium text-gray-700">
-                      {currentUser?.name || 'Admin'}
-                    </div>
-                    <div className="text-xs text-gray-500">{currentDate}</div>
-                  </div>
-                </div>
-                <button
-                  onClick={handleLogout}
-                  className="p-2 rounded-full text-gray-400 hover:text-gray-500 hover:bg-gray-100 transition-colors"
-                  title="Logout"
-                >
-                  <FaSignOutAlt className="h-5 w-5" />
-                </button>
+              <div className="flex items-center">
+                {/* Spacer to maintain layout */}
               </div>
             </div>
+          </div>
+          {/* Absolutely positioned ProfileDropdown at screen edge */}
+          <div className="absolute top-0 right-4 h-16 flex items-center">
+            <ProfileDropdown
+              user={currentUser}
+              onLogout={handleLogout}
+            />
           </div>
         </div>
 
