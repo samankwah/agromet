@@ -206,7 +206,7 @@ export const initializeDatabase = async () => {
       SELECT table_name
       FROM information_schema.tables
       WHERE table_schema = 'public'
-      AND table_name IN ('crop_calendars', 'calendar_seasons', 'calendar_timelines', 'calendar_activities', 'calendar_grids')
+      AND table_name IN ('crop_calendars', 'calendar_seasons', 'calendar_timelines', 'calendar_activities', 'calendar_grids', 'weekly_advisories')
     `);
 
     const existingTables = tablesResult.rows.map(row => row.table_name);
@@ -214,7 +214,7 @@ export const initializeDatabase = async () => {
 
     if (existingTables.length === 0) {
       console.log('⚠️ No tables found. Database schema needs to be created.');
-      console.log('💡 Run: npm run db:setup or manually execute database/schema.sql');
+      console.log('💡 Run: npm run db:setup or manually execute database/schema.sql and weekly_advisories_schema.sql');
     } else {
       console.log('✅ Database tables found:', existingTables.length);
     }

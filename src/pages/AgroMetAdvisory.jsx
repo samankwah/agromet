@@ -1,9 +1,17 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import PageTitle from '../components/PageTitle';
-import prismaImage from "../assets/images/prisma.png";
 import { districtOfGhana } from "../district";
-import { FaEye, FaDownload } from "react-icons/fa";
+import { FaEye, FaDownload, FaArrowLeft, FaSpinner, FaDatabase } from "react-icons/fa";
 import html2pdf from "html2pdf.js";
+import axios from 'axios';
+
+// Weekly Advisory Components
+import ActivitySidebar from '../components/WeeklyAdvisory/ActivitySidebar';
+import AdvisoryHeader from '../components/WeeklyAdvisory/AdvisoryHeader';
+import WeatherForecastTable from '../components/WeeklyAdvisory/WeatherForecastTable';
+import AdvisoryGrid from '../components/WeeklyAdvisory/AdvisoryGrid';
+import SummarySection from '../components/WeeklyAdvisory/SummarySection';
+import SMSSection from '../components/WeeklyAdvisory/SMSSection';
 
 const AgroMetAdvisory = () => {
   // Define region-specific crops mapping
@@ -48,42 +56,20 @@ const AgroMetAdvisory = () => {
       "BONO EAST",
       "CENTRAL",
     ],
-    month: [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ],
-    year: ["2024", "2025"],
-    week: [
-      "1st – 7th",
-      "8th – 14th",
-      "15th – 21st",
-      "22nd – 28th",
-      "29th – 31st",
-    ],
+    year: ["2024", "2025", "2026"],
+    season: ["Dry Season", "Rainy Season", "Harmattan"],
   };
 
   const [selected, setSelected] = useState({
     crop: "",
     region: "",
     district: "",
-    variety: "",
-    month: "",
     year: "",
-    week: "",
+    season: "",
   });
   const [showAdvisory, setShowAdvisory] = useState(false);
   const pdfExportRef = useRef(null);
-  
+
   // New state for dynamic data from backend
   const [dynamicAdvisories, setDynamicAdvisories] = useState([]);
   const [availableDistricts, setAvailableDistricts] = useState([]);
@@ -92,7 +78,17 @@ const AgroMetAdvisory = () => {
   const [apiStats, setApiStats] = useState(null);
   const [loadingDynamic, setLoadingDynamic] = useState(false);
 
+  // Weekly Advisory states
+  const [viewMode, setViewMode] = useState('list'); // 'list' or 'detail'
+  const [weeklyAdvisories, setWeeklyAdvisories] = useState([]);
+  const [selectedAdvisory, setSelectedAdvisory] = useState(null);
+  const [activitiesList, setActivitiesList] = useState([]);
+  const [loadingWeekly, setLoadingWeekly] = useState(false);
+  const [hasWeeklyData, setHasWeeklyData] = useState(false);
+
   // Load dynamic data from backend on component mount
+  // NOTE: Commented out until agriculturalDataService is implemented
+  /*
   useEffect(() => {
     const loadDynamicData = async () => {
       setLoadingDynamic(true);
@@ -103,15 +99,15 @@ const AgroMetAdvisory = () => {
           agriculturalDataService.getCrops(),
           agriculturalDataService.getStatistics()
         ]);
-        
+
         if (districtsResult.success) {
           setAvailableDistricts(districtsResult.data);
         }
-        
+
         if (cropsResult.success) {
           setAvailableCrops(cropsResult.data);
         }
-        
+
         if (statsResult.success) {
           setApiStats(statsResult.data);
           // If we have uploaded agromet advisory data, use dynamic data
@@ -125,29 +121,32 @@ const AgroMetAdvisory = () => {
         setLoadingDynamic(false);
       }
     };
-    
+
     loadDynamicData();
   }, []);
+  */
   
   // Fetch dynamic agromet advisory data when filters change
+  // NOTE: Commented out until agriculturalDataService is implemented
+  /*
   useEffect(() => {
     const loadAgrometData = async () => {
       if (!isUsingDynamicData || !selected.district || !selected.crop) return;
-      
+
       setLoadingDynamic(true);
       try {
         const filters = {};
-        
+
         if (selected.district) {
           filters.district = selected.district;
         }
-        
+
         if (selected.crop) {
           filters.crop = selected.crop;
         }
-        
+
         const result = await agriculturalDataService.getAgrometAdvisory(filters);
-        
+
         if (result.success) {
           setDynamicAdvisories(result.data);
         } else {
@@ -160,9 +159,73 @@ const AgroMetAdvisory = () => {
         setLoadingDynamic(false);
       }
     };
-    
+
     loadAgrometData();
   }, [selected.district, selected.crop, isUsingDynamicData]);
+  */
+
+  // Fetch weekly advisories when filters change
+  useEffect(() => {
+    const fetchWeeklyAdvisories = async () => {
+      if (!selected.crop || !selected.district || !selected.region) return;
+
+      setLoadingWeekly(true);
+      try {
+        const params = new URLSearchParams({
+          region: selected.region,
+          district: selected.district,
+          crop: selected.crop
+        });
+
+        if (selected.year) params.append('year', selected.year);
+
+        const response = await axios.get(`/api/weekly-advisories/activities?${params}`);
+
+        if (response.data.success) {
+          setActivitiesList(response.data.data);
+          setHasWeeklyData(response.data.data.length > 0);
+        }
+      } catch (error) {
+        console.error('Error fetching weekly advisories:', error);
+        setActivitiesList([]);
+        setHasWeeklyData(false);
+      } finally {
+        setLoadingWeekly(false);
+      }
+    };
+
+    fetchWeeklyAdvisories();
+  }, [selected.crop, selected.district, selected.region, selected.year]);
+
+  // Function to fetch full advisory by ID
+  const fetchAdvisoryById = async (advisoryId) => {
+    try {
+      const response = await axios.get(`/api/weekly-advisories/${advisoryId}`);
+      if (response.data.success) {
+        return response.data.data;
+      }
+    } catch (error) {
+      console.error('Error fetching advisory:', error);
+    }
+    return null;
+  };
+
+  // Handle selecting an activity
+  const handleSelectActivity = async (activity) => {
+    setLoadingWeekly(true);
+    const fullAdvisory = await fetchAdvisoryById(activity.advisory_id);
+    if (fullAdvisory) {
+      setSelectedAdvisory(fullAdvisory);
+      setViewMode('detail');
+    }
+    setLoadingWeekly(false);
+  };
+
+  // Handle back to list
+  const handleBackToList = () => {
+    setViewMode('list');
+    setSelectedAdvisory(null);
+  };
 
   // Get available crops based on selected region or dynamic data
   const availableCropsForDropdown = useMemo(() => {
@@ -285,13 +348,6 @@ const AgroMetAdvisory = () => {
     );
   }, [selected.crop, selected.district, selected.region, isUsingDynamicData, dynamicAdvisories]);
 
-  const handleViewAdvisories = () => {
-    if (!selected.crop || !selected.region || !selected.district) {
-      alert("Please select crop, region, and district.");
-      return;
-    }
-    setShowAdvisory(true);
-  };
 
   // PDF export with detailed information
   const downloadPDF = () => {
@@ -307,10 +363,11 @@ const AgroMetAdvisory = () => {
     document.body.appendChild(pdfContent);
 
     // Format the date for the header
-    const formattedDate =
-      selected.week && selected.month && selected.year
-        ? `${selected.week} ${selected.month} ${selected.year}`
-        : new Date().toLocaleDateString();
+    const formattedDate = selected.year && selected.season
+      ? `${selected.season}, ${selected.year}`
+      : selected.year
+      ? `Year ${selected.year}`
+      : new Date().getFullYear().toString();
 
     pdfContent.innerHTML = `
       <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
@@ -407,8 +464,8 @@ const AgroMetAdvisory = () => {
       margin: 10,
       filename: `agro_advisory_${selected.crop || "crop"}_${
         selected.region || "region"
-      }_${selected.district || "district"}_${selected.month || ""}_${
-        selected.year || ""
+      }_${selected.district || "district"}_${selected.year || "current"}_${
+        selected.season || "all-seasons"
       }.pdf`,
       image: { type: "jpeg", quality: 0.98 },
       html2canvas: { scale: 2, logging: true },
@@ -437,313 +494,210 @@ const AgroMetAdvisory = () => {
     }, 100);
   };
 
+  // Auto-display advisory when required filters are selected
+  useEffect(() => {
+    if (selected.crop && selected.region && selected.district) {
+      setShowAdvisory(true);
+    } else {
+      setShowAdvisory(false);
+    }
+  }, [selected.crop, selected.region, selected.district]);
+
   return (
     <>
       <PageTitle title="Agro-Meteorological Advisory" />
-      <div
-        className="min-h-screen bg-gray-950 mx-auto px-4 py-2 md:px-8 lg:px-12"
-      style={{
-        backgroundImage: `url(${prismaImage})`,
-        backgroundSize: "1400px 1200px",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-        backgroundAttachment: "fixed",
-        WebkitBackgroundSize: "1200px 800px",
-        MozBackgroundSize: "1200px 800px",
-      }}
-    >
-      <div className="container mx-auto p-3 md:p-5 shadow-xl rounded-lg mt-20 md:mt-28 mb-12 bg-white/90 backdrop-blur-md">
-        <div className="relative text-center mb-5 bg-gradient-to-r from-green-500 to-blue-600 py-5 rounded-t-lg shadow-lg">
-          <h1 className="text-2xl md:text-3xl font-bold uppercase text-white">
-            Agro-Meteorological Forecasts and Advisories
-          </h1>
-          <h2 className="text-md md:text-xl font-semibold text-gray-100"></h2>
-          {isUsingDynamicData && apiStats && (
-            <div className="mt-2">
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-white/20 text-white backdrop-blur-sm">
-                <FaDatabase className="mr-1" />
-                {apiStats.agrometAdvisories} Dynamic Advisories Available
-              </span>
-              {apiStats.lastUpdated && (
-                <div className="text-sm mt-1 text-white/80">
-                  Last updated: {new Date(apiStats.lastUpdated).toLocaleDateString()}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+      <div className="min-h-screen bg-gray-100 pt-20 lg:pt-24">
+        {/* Main Container */}
+        <div className="px-4 md:px-8 py-4 md:py-6">
 
-        <div className="p-4 bg-gradient-to-br from-gray-50 to-gray-200 rounded-lg shadow-lg mb-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-            {/* Region selection first */}
-            <div className="flex flex-col">
-              <label className="text-sm font-medium mb-1 capitalize text-gray-800">
-                Region
-              </label>
-              <select
-                value={selected.region || ""}
-                onChange={(e) => handleFilterChange(e, "region")}
-                className="p-2 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 focus:ring-2 focus:ring-green-500 transition-all duration-300"
-              >
-                <option value="">Select Region</option>
-                {filterData.region.map((value) => (
-                  <option key={value} value={value}>
-                    {value}
-                  </option>
-                ))}
-              </select>
-            </div>
+          {/* Simple Page Title */}
+          <div className="mb-4">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+              Agro-Meteorological <span className="text-blue-600">Advisory</span>
+            </h1>
+            <p className="text-sm text-gray-600 mt-1">
+              Get weather-based farming recommendations for your region
+            </p>
+          </div>
 
-            {/* District selection - dependent on region */}
-            <div className="flex flex-col">
-              <label className="text-sm font-medium mb-1 capitalize text-gray-800">
-                District
-              </label>
-              <select
-                value={selected.district || ""}
-                onChange={(e) => handleFilterChange(e, "district")}
-                className="p-2 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 focus:ring-2 focus:ring-green-500 transition-all duration-300"
-                disabled={!selected.region}
-              >
-                <option value="">Select District</option>
-                {/* Show dynamic districts if available, otherwise use static */}
-                {isUsingDynamicData && availableDistricts.length > 0 ? (
-                  availableDistricts.map((district) => (
-                    <option key={district} value={district}>
-                      {district}
-                    </option>
-                  ))
-                ) : (
-                  selected.region &&
-                  districtOfGhana
-                    .filter(
-                      (d) =>
-                        d.region.toLowerCase() === selected.region.toLowerCase()
-                    )
-                    .map((district) => (
-                      <option key={district.name} value={district.name}>
-                        {district.name}
-                      </option>
-                    ))
-                )}
-              </select>
-            </div>
-
-            {/* Crop selection - dependent on region */}
-            <div className="flex flex-col">
-              <label className="text-sm font-medium mb-1 capitalize text-gray-800">
-                Commodity
-              </label>
-              <select
-                value={selected.crop || ""}
-                onChange={(e) => handleFilterChange(e, "crop")}
-                className="p-2 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 focus:ring-2 focus:ring-green-500 transition-all duration-300"
-                disabled={!selected.region}
-              >
-                <option value="">Select Crop</option>
-                {availableCrops.map((crop) => (
-                  <option key={crop} value={crop}>
-                    {crop}
-                  </option>
-                ))}
-              </select>
-              {selected.region && (
-                <p className="text-xs text-gray-600 mt-1">
-                  Showing crops specific to {selected.region} region
-                </p>
-              )}
-            </div>
-
-            {/* Other selections */}
-            {["month", "year", "week"].map((field) => (
-              <div key={field} className="flex flex-col">
-                <label className="text-sm font-medium mb-1 capitalize text-gray-800">
-                  {field.replace("_", " ")}
-                </label>
+          {/* Horizontal Filter Bar */}
+          <div className="bg-white rounded border border-gray-200 shadow-sm px-4 py-3 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              {/* Year */}
+              <div className="flex flex-col">
+                <label className="text-xs font-medium mb-1 text-gray-600">Year</label>
                 <select
-                  value={selected[field] || ""}
-                  onChange={(e) => handleFilterChange(e, field)}
-                  className="p-2 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 focus:ring-2 focus:ring-green-500 transition-all duration-300"
+                  value={selected.year || ""}
+                  onChange={(e) => handleFilterChange(e, "year")}
+                  className="text-sm p-2 border border-gray-300 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="">
-                    Select {field.charAt(0).toUpperCase() + field.slice(1)}
-                  </option>
-                  {filterData[field].map((value) => (
-                    <option key={value} value={value}>
-                      {value}
-                    </option>
+                  <option value="">2025</option>
+                  {filterData.year.map((value) => (
+                    <option key={value} value={value}>{value}</option>
                   ))}
                 </select>
               </div>
-            ))}
-          </div>
-          {/* Data source indicator */}
-          {isUsingDynamicData ? (
-            <div className="mb-3 bg-green-50 border border-green-200 rounded-lg p-3">
-              <span className="font-medium text-green-800">📊 Displaying advisories from uploaded Excel/CSV files</span>
-              <div className="mt-1 text-xs text-green-600">
-                {dynamicAdvisories.length} advisories found for current filters
+
+              {/* Season */}
+              <div className="flex flex-col">
+                <label className="text-xs font-medium mb-1 text-gray-600">Season</label>
+                <select
+                  value={selected.season || ""}
+                  onChange={(e) => handleFilterChange(e, "season")}
+                  className="text-sm p-2 border border-gray-300 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Select Season</option>
+                  {filterData.season.map((value) => (
+                    <option key={value} value={value}>{value}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Region */}
+              <div className="flex flex-col">
+                <label className="text-xs font-medium mb-1 text-gray-600">Region</label>
+                <select
+                  value={selected.region || ""}
+                  onChange={(e) => handleFilterChange(e, "region")}
+                  className="text-sm p-2 border border-gray-300 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Select Region</option>
+                  {filterData.region.map((value) => (
+                    <option key={value} value={value}>{value}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* District */}
+              <div className="flex flex-col">
+                <label className="text-xs font-medium mb-1 text-gray-600">District</label>
+                <select
+                  value={selected.district || ""}
+                  onChange={(e) => handleFilterChange(e, "district")}
+                  className="text-sm p-2 border border-gray-300 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  disabled={!selected.region}
+                >
+                  <option value="">{selected.region ? "Select District" : "Select Region First"}</option>
+                  {isUsingDynamicData && availableDistricts.length > 0 ? (
+                    availableDistricts.map((district) => (
+                      <option key={district} value={district}>{district}</option>
+                    ))
+                  ) : (
+                    selected.region &&
+                    districtOfGhana
+                      .filter((d) => d.region.toLowerCase() === selected.region.toLowerCase())
+                      .map((district) => (
+                        <option key={district.name} value={district.name}>{district.name}</option>
+                      ))
+                  )}
+                </select>
+              </div>
+
+              {/* Commodity/Crop */}
+              <div className="flex flex-col">
+                <label className="text-xs font-medium mb-1 text-gray-600">Commodity</label>
+                <select
+                  value={selected.crop || ""}
+                  onChange={(e) => handleFilterChange(e, "crop")}
+                  className="text-sm p-2 border border-gray-300 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  disabled={!selected.region}
+                >
+                  <option value="">Select Crop</option>
+                  {availableCropsForDropdown.map((crop) => (
+                    <option key={crop} value={crop}>{crop}</option>
+                  ))}
+                </select>
               </div>
             </div>
-          ) : (
-            <div className="mb-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <span className="font-medium text-blue-800">📚 Displaying default weather advisory templates</span>
-              <div className="mt-1 text-xs text-blue-600">
-                Upload Excel/CSV files through the dashboard to see dynamic data
-              </div>
+          </div>
+
+          {/* Weekly Advisory Views - Sidebar Layout */}
+          {showAdvisory && hasWeeklyData && activitiesList.length > 0 ? (
+            <>
+              {/* Activity List View */}
+              {viewMode === 'list' && (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+                  <div className="mb-6">
+                    <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                      Weekly Advisory for {selected.crop} in {selected.district}
+                    </h2>
+                    <p className="text-gray-600">
+                      {activitiesList.length} activity stages available. Click on an activity to view detailed advisory.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {activitiesList.map((activity, index) => (
+                      <button
+                        key={activity.id || activity.advisory_id || index}
+                        onClick={() => handleSelectActivity(activity)}
+                        disabled={loadingWeekly}
+                        className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-5 hover:border-green-500 hover:shadow-xl transition-all duration-300 text-left group disabled:opacity-50"
+                      >
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-lg font-semibold text-gray-800 group-hover:text-green-600 transition-colors">
+                            {activity.activity_stage || `Activity ${index + 1}`}
+                          </h3>
+                          <FaArrowLeft className="transform rotate-180 text-green-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                        <p className="text-sm text-gray-600 mt-2">Click to view full advisory</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Detail View with Sidebar */}
+              {viewMode === 'detail' && selectedAdvisory && (
+                <div className="flex gap-0 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-6">
+                  {/* Activity Sidebar */}
+                  <ActivitySidebar
+                    activities={activitiesList}
+                    currentActivity={selectedAdvisory}
+                    onSelectActivity={handleSelectActivity}
+                  />
+
+                  {/* Main Content Area */}
+                  <div className="flex-1 p-6 overflow-y-auto">
+                    {/* Back Button */}
+                    <button
+                      onClick={handleBackToList}
+                      className="flex items-center gap-2 mb-6 px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg transition-all duration-200"
+                    >
+                      <FaArrowLeft />
+                      <span>Back to Activities</span>
+                    </button>
+
+                    {/* Advisory Header */}
+                    <AdvisoryHeader advisory={selectedAdvisory} />
+
+                    {/* Weather Forecast Table */}
+                    <WeatherForecastTable advisory={selectedAdvisory} />
+
+                    {/* Advisory Grid */}
+                    <AdvisoryGrid advisory={selectedAdvisory} />
+
+                    {/* Summary Section (BEFORE SMS) */}
+                    <SummarySection summary={selectedAdvisory.overall_summary} />
+
+                    {/* SMS Section (AFTER Summary) */}
+                    <SMSSection smsText={selectedAdvisory.sms_text} />
+                  </div>
+                </div>
+              )}
+            </>
+          ) : showAdvisory && (
+            /* No Data Message */
+            <div className="text-center py-12 bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+              <div className="text-gray-500 text-lg mb-2 font-semibold">No advisory data found</div>
+              <p className="text-gray-400 mb-4">
+                No weekly advisory data available for <span className="font-medium text-gray-600">{selected.crop}</span> in <span className="font-medium text-gray-600">{selected.district}</span> district.
+              </p>
+              <p className="text-sm text-blue-600">
+                💡 Upload advisory Excel files through the dashboard to see data here.
+              </p>
             </div>
           )}
-          
-          <div className="flex justify-center mt-3">
-            <button
-              onClick={handleViewAdvisories}
-              disabled={
-                loadingDynamic || !selected.crop || !selected.region || !selected.district
-              }
-              className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 shadow-md ${
-                loadingDynamic || !selected.crop || !selected.region || !selected.district
-                  ? "bg-gray-400 cursor-not-allowed text-gray-100"
-                  : "bg-green-500 text-white hover:bg-green-600"
-              }`}
-            >
-              {loadingDynamic ? <FaSpinner className="animate-spin" /> : <FaEye className="text-lg" />}
-              {loadingDynamic ? 'Loading...' : 'View Advisories'}
-            </button>
-          </div>
-        </div>
-
-        {/* Show no data message for dynamic data */}
-        {showAdvisory && isUsingDynamicData && dynamicAdvisories.length === 0 && (
-          <div className="text-center py-8 bg-white rounded-lg shadow-md mb-5">
-            <div className="text-gray-500 text-lg mb-2">No agromet advisory data found</div>
-            <p className="text-gray-400">Try adjusting your filters or upload agromet advisory data through the dashboard.</p>
-          </div>
-        )}
-        
-        {showAdvisory && (
-          <div id="pdf-content">
-            {/* Show dynamic advisory data if available */}
-            {isUsingDynamicData && dynamicAdvisories.length > 0 && (
-              <div className="mb-5 bg-white rounded-lg shadow-md p-4">
-                <h3 className="text-lg font-semibold text-green-600 mb-3 flex items-center">
-                  <FaDatabase className="mr-2" />
-                  Current Agromet Advisories from Uploaded Data
-                </h3>
-                <div className="grid gap-4">
-                  {dynamicAdvisories.slice(0, 3).map((advisory, index) => (
-                    <div key={advisory.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-medium text-gray-800">{advisory.weatherCondition || 'Weather Advisory'}</h4>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          advisory.priority === 'High' ? 'bg-red-100 text-red-800' :
-                          advisory.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-green-100 text-green-800'
-                        }`}>
-                          {advisory.priority || 'Medium'} Priority
-                        </span>
-                      </div>
-                      <p className="text-gray-700 mb-2">{advisory.advisory}</p>
-                      {advisory.action && (
-                        <p className="text-sm text-blue-600 font-medium">
-                          Recommended Action: {advisory.action}
-                        </p>
-                      )}
-                      <div className="flex flex-wrap gap-2 mt-2 text-xs text-gray-500">
-                        {advisory.date && <span>Date: {new Date(advisory.date).toLocaleDateString()}</span>}
-                        {advisory.temperature && <span>Temp: {advisory.temperature}</span>}
-                        {advisory.rainfall && <span>Rainfall: {advisory.rainfall}</span>}
-                        {advisory.humidity && <span>Humidity: {advisory.humidity}</span>}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                {dynamicAdvisories.length > 3 && (
-                  <p className="text-sm text-gray-600 mt-2 text-center">
-                    Showing 3 of {dynamicAdvisories.length} advisories
-                  </p>
-                )}
-              </div>
-            )}
-            
-            <div className="mb-5 overflow-x-auto">
-              <table className="min-w-max mx-auto border-collapse bg-white rounded-lg shadow-md">
-                <thead>
-                  <tr className="bg-gradient-to-r from-green-500 to-blue-600 text-white">
-                    <th className="border border-gray-200 p-2.5"></th>
-                    {data.advisoryTable.parameters.map((param, index) => (
-                      <th
-                        key={index}
-                        className="border border-gray-200 p-2.5 text-center"
-                      >
-                        {param}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {["forecast", "implication", "advisory"].map((type) => (
-                    <tr
-                      key={type}
-                      className="hover:bg-gray-50 transition-colors duration-200"
-                    >
-                      <td className="border border-gray-200 p-3 bg-gray-100 font-semibold text-gray-800">
-                        {type.toUpperCase()}
-                      </td>
-                      {data.advisoryTable[type].map((item, index) => (
-                        <td
-                          key={index}
-                          className="border border-gray-200 p-3 text-left"
-                        >
-                          <p className="text-sm text-gray-800 whitespace-normal break-words leading-relaxed">
-                            {item}
-                          </p>
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="mt-5 p-4 bg-white rounded-lg shadow-lg border-2 border-gradient-to-br from-green-500 to-blue-600">
-              <p className="text-center text-base md:text-lg font-semibold text-gray-800 mb-2">
-                SUMMARY WEATHER OUTLOOK & ADVISORY FOR{" "}
-                <span className="text-green-600">
-                  {selected.crop.toUpperCase()}
-                </span>{" "}
-                FARMERS IN THE{" "}
-                <span className="text-green-600">
-                  {selected.district.toUpperCase()}
-                </span>{" "}
-                DISTRICT OF THE{" "}
-                <span className="text-green-600">{selected.region}</span> REGION
-                FOR THE WEEK OF{" "}
-                <span className="text-green-600">
-                  {selected.week || "CURRENT WEEK"}
-                </span>{" "}
-                <span className="text-green-600">
-                  {selected.month?.toUpperCase() || ""} {selected.year || ""}
-                </span>
-              </p>
-              <p className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
-                {summary}
-              </p>
-            </div>
-
-            {/* Hidden div for PDF export reference */}
-            <div ref={pdfExportRef} className="hidden"></div>
-
-            <div className="flex justify-center mt-4">
-              <button
-                onClick={downloadPDF}
-                className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition-all duration-300 shadow-md"
-              >
-                <FaDownload className="text-lg" />
-                Download PDF
-              </button>
-            </div>
-          </div>
-        )}
       </div>
       </div>
     </>

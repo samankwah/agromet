@@ -1,0 +1,309 @@
+/* Enhanced weather animations for live display */
+
+/* Global animation optimizations */
+.weather-section {
+  will-change: transform;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Smooth slider transitions */
+.slick-slide {
+  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+
+.slick-slide:hover {
+  transform: translateY(-5px);
+}
+
+/* Weather card entrance animations */
+@keyframes slideInUp {
+  0% {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.weather-card-enter {
+  animation: slideInUp 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* Staggered animation for multiple cards */
+.weather-card-enter:nth-child(1) { animation-delay: 0.1s; }
+.weather-card-enter:nth-child(2) { animation-delay: 0.2s; }
+.weather-card-enter:nth-child(3) { animation-delay: 0.3s; }
+.weather-card-enter:nth-child(4) { animation-delay: 0.4s; }
+.weather-card-enter:nth-child(5) { animation-delay: 0.5s; }
+
+/* Enhanced loading animations */
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.shimmer-effect {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 200px 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Floating animation for weather icons */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.weather-icon-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Pulsing glow effect */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+  }
+}
+
+.pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* Rain effect animation */
+@keyframes rainDrop {
+  0% {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100px);
+    opacity: 0;
+  }
+}
+
+.rain-drop {
+  animation: rainDrop 1s linear infinite;
+}
+
+.rain-drop:nth-child(1) { animation-delay: 0s; }
+.rain-drop:nth-child(2) { animation-delay: 0.1s; }
+.rain-drop:nth-child(3) { animation-delay: 0.2s; }
+.rain-drop:nth-child(4) { animation-delay: 0.3s; }
+.rain-drop:nth-child(5) { animation-delay: 0.4s; }
+
+/* Snow fall animation */
+@keyframes snowFall {
+  0% {
+    transform: translateY(-20px) translateX(0px) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100px) translateX(20px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.snow-flake {
+  animation: snowFall 3s linear infinite;
+}
+
+.snow-flake:nth-child(1) { animation-delay: 0s; animation-duration: 2.5s; }
+.snow-flake:nth-child(2) { animation-delay: 0.3s; animation-duration: 3s; }
+.snow-flake:nth-child(3) { animation-delay: 0.6s; animation-duration: 2.8s; }
+.snow-flake:nth-child(4) { animation-delay: 0.9s; animation-duration: 3.2s; }
+
+/* Lightning flash effect */
+@keyframes lightningFlash {
+  0%, 95%, 100% {
+    opacity: 0;
+  }
+  5%, 90% {
+    opacity: 1;
+  }
+  10%, 85% {
+    opacity: 0.8;
+  }
+}
+
+.lightning-flash {
+  animation: lightningFlash 0.3s ease-in-out;
+  animation-iteration-count: 3;
+  animation-delay: 2s;
+}
+
+/* Fog wave animation */
+@keyframes fogWave {
+  0%, 100% {
+    transform: translateX(0px) scale(1);
+    opacity: 0.3;
+  }
+  33% {
+    transform: translateX(15px) scale(1.05);
+    opacity: 0.6;
+  }
+  66% {
+    transform: translateX(-10px) scale(0.95);
+    opacity: 0.4;
+  }
+}
+
+.fog-layer {
+  animation: fogWave 6s ease-in-out infinite;
+}
+
+.fog-layer:nth-child(1) { animation-delay: 0s; }
+.fog-layer:nth-child(2) { animation-delay: 2s; }
+.fog-layer:nth-child(3) { animation-delay: 4s; }
+
+/* Sparkle animation */
+@keyframes sparkle {
+  0%, 100% {
+    transform: scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1) rotate(180deg);
+    opacity: 1;
+  }
+}
+
+.sparkle {
+  animation: sparkle 1.5s ease-in-out infinite;
+}
+
+.sparkle:nth-child(1) { animation-delay: 0s; }
+.sparkle:nth-child(2) { animation-delay: 0.3s; }
+.sparkle:nth-child(3) { animation-delay: 0.6s; }
+.sparkle:nth-child(4) { animation-delay: 0.9s; }
+
+/* Sun rotation */
+@keyframes sunRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.sun-rotate {
+  animation: sunRotate 20s linear infinite;
+}
+
+/* Cloud floating */
+@keyframes cloudFloat {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  25% {
+    transform: translateY(-3px) translateX(2px);
+  }
+  50% {
+    transform: translateY(-6px) translateX(0px);
+  }
+  75% {
+    transform: translateY(-3px) translateX(-2px);
+  }
+}
+
+.cloud-float {
+  animation: cloudFloat 4s ease-in-out infinite;
+}
+
+/* Responsive animation adjustments */
+@media (max-width: 768px) {
+  .weather-icon-float {
+    animation-duration: 4s; /* Slower on mobile */
+  }
+
+  .rain-drop {
+    animation-duration: 1.5s; /* Slower rain on mobile */
+  }
+
+  .snow-flake {
+    animation-duration: 4s; /* Slower snow on mobile */
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .weather-icon-float,
+  .rain-drop,
+  .snow-flake,
+  .lightning-flash,
+  .fog-layer,
+  .sparkle,
+  .sun-rotate,
+  .cloud-float {
+    animation: none !important;
+  }
+}
+
+/* High contrast mode adjustments */
+@media (prefers-contrast: high) {
+  .weather-card-enter {
+    border: 2px solid currentColor;
+  }
+
+  .pulse-glow {
+    animation: none;
+    box-shadow: 0 0 0 2px currentColor;
+  }
+}
+
+/* Performance optimizations */
+.weather-animation-container {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.weather-card {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* GPU acceleration for smooth animations */
+.hardware-accelerated {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}

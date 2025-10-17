@@ -17,24 +17,27 @@ const __dirname = path.dirname(__filename);
  */
 const runSchema = async () => {
   try {
+    // Execute main schema
     const schemaPath = path.join(__dirname, 'schema.sql');
     const schemaSql = fs.readFileSync(schemaPath, 'utf8');
 
-    console.log('📋 Executing database schema...');
+    console.log('📋 Executing main database schema...');
 
-    // Split the schema into individual statements (handle multi-line statements)
-    const statements = schemaSql
-      .split(';')
-      .map(stmt => stmt.trim())
-      .filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
+    // Execute the entire schema as a single query (it already has proper statement delimiters)
+    await query(schemaSql);
 
-    for (const statement of statements) {
-      if (statement.trim()) {
-        await query(statement);
-      }
-    }
+    console.log('✅ Main database schema created successfully');
 
-    console.log('✅ Database schema created successfully');
+    // Execute weekly advisories schema
+    const weeklyAdvisoriesSchemaPath = path.join(__dirname, 'weekly_advisories_schema.sql');
+    const weeklyAdvisoriesSchemaSql = fs.readFileSync(weeklyAdvisoriesSchemaPath, 'utf8');
+
+    console.log('📋 Executing weekly advisories schema...');
+
+    // Execute the entire weekly advisories schema as a single query
+    await query(weeklyAdvisoriesSchemaSql);
+
+    console.log('✅ Weekly advisories schema created successfully');
     return true;
   } catch (error) {
     console.error('❌ Error creating schema:', error.message);
@@ -51,11 +54,11 @@ const checkTables = async () => {
       SELECT table_name
       FROM information_schema.tables
       WHERE table_schema = 'public'
-      AND table_name IN ('crop_calendars', 'calendar_seasons', 'calendar_timelines', 'calendar_activities', 'calendar_grids')
+      AND table_name IN ('crop_calendars', 'calendar_seasons', 'calendar_timelines', 'calendar_activities', 'calendar_grids', 'weekly_advisories')
       ORDER BY table_name
     `);
 
-    const expectedTables = ['crop_calendars', 'calendar_seasons', 'calendar_timelines', 'calendar_activities', 'calendar_grids'];
+    const expectedTables = ['crop_calendars', 'calendar_seasons', 'calendar_timelines', 'calendar_activities', 'calendar_grids', 'weekly_advisories'];
     const existingTables = result.rows.map(row => row.table_name);
 
     console.log('📋 Expected tables:', expectedTables);
@@ -153,7 +156,7 @@ const showDatabaseInfo = async () => {
     console.log('\n📊 Database Information:');
 
     // Show table counts
-    const tables = ['crop_calendars', 'calendar_seasons', 'calendar_timelines', 'calendar_activities', 'calendar_grids'];
+    const tables = ['crop_calendars', 'calendar_seasons', 'calendar_timelines', 'calendar_activities', 'calendar_grids', 'weekly_advisories'];
 
     for (const table of tables) {
       const result = await query(`SELECT COUNT(*) as count FROM ${table}`);
@@ -172,6 +175,21 @@ const showDatabaseInfo = async () => {
       console.log('\n📅 Recent Calendars:');
       recentCalendars.rows.forEach(calendar => {
         console.log(`   ${calendar.region} > ${calendar.district} > ${calendar.crop} (${calendar.created_at})`);
+      });
+    }
+
+    // Show recent weekly advisories
+    const recentAdvisories = await query(`
+      SELECT region, district, crop_type, activity_stage, year, week_number, created_at
+      FROM weekly_advisories
+      ORDER BY created_at DESC
+      LIMIT 5
+    `);
+
+    if (recentAdvisories.rows.length > 0) {
+      console.log('\n📋 Recent Weekly Advisories:');
+      recentAdvisories.rows.forEach(advisory => {
+        console.log(`   ${advisory.region} > ${advisory.district} > ${advisory.crop_type} | ${advisory.activity_stage} (Week ${advisory.week_number}, ${advisory.year})`);
       });
     }
 
@@ -237,7 +255,7 @@ const dropTables = async () => {
   try {
     console.log('🗑️ Dropping all tables...');
 
-    const tables = ['calendar_grids', 'calendar_activities', 'calendar_timelines', 'calendar_seasons', 'crop_calendars'];
+    const tables = ['calendar_grids', 'calendar_activities', 'calendar_timelines', 'calendar_seasons', 'crop_calendars', 'weekly_advisories'];
 
     for (const table of tables) {
       await query(`DROP TABLE IF EXISTS ${table} CASCADE`);

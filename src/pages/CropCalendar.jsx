@@ -747,11 +747,14 @@ const CropCalendar = () => {
 
     // Handle common Excel formatting issues
     cleanName = cleanName
-      .replace(/^\d+\.?\s*/, '') // Remove leading numbers and dots
-      .replace(/^\|?\s*/, '')    // Remove leading pipes
-      .replace(/^[-_\s]+/, '')   // Remove leading dashes, underscores, spaces
-      .replace(/[_-]+/g, ' ')    // Replace underscores and dashes with spaces
+      .replace(/^(\d+)\.\s+/, '') // Remove ONLY standalone row numbers like "1. " or "2. " (NOT "1st" or "2nd")
+      .replace(/^\|?\s*/, '')     // Remove leading pipes
+      .replace(/^[-_\s]+/, '')    // Remove leading dashes, underscores, spaces
+      .replace(/[_-]+/g, ' ')     // Replace underscores and dashes with spaces
       .trim();
+
+    // Check if name contains ordinal numbers (1st, 2nd, 3rd, etc.) to preserve them
+    const hasOrdinal = /\b\d+(st|nd|rd|th)\b/i.test(cleanName);
 
     // Handle common abbreviations and expand them
     const abbreviationMap = {
@@ -769,17 +772,30 @@ const CropCalendar = () => {
       'applic': 'Application'
     };
 
-    // Apply abbreviation expansions
-    let expandedName = cleanName.toLowerCase();
+    // Apply abbreviation expansions (preserve case for ordinals)
+    let expandedName = hasOrdinal ? cleanName : cleanName.toLowerCase();
     Object.entries(abbreviationMap).forEach(([abbrev, full]) => {
       const regex = new RegExp(`\\b${abbrev}\\b`, 'gi');
       expandedName = expandedName.replace(regex, full);
     });
 
-    // Capitalize first letter of each word
-    cleanName = expandedName.replace(/\w\S*/g, (word) =>
-      word.charAt(0).toUpperCase() + word.substr(1).toLowerCase()
-    );
+    // Capitalize first letter of each word (but preserve ordinals like "1st", "2nd")
+    if (hasOrdinal) {
+      // Smart capitalization that preserves ordinals
+      cleanName = expandedName.replace(/\b(\w+)/g, (word) => {
+        // If it's an ordinal number (1st, 2nd, etc.), keep it as-is
+        if (/^\d+(st|nd|rd|th)$/i.test(word)) {
+          return word.toLowerCase(); // Lowercase the ordinal suffix
+        }
+        // Otherwise capitalize normally
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      });
+    } else {
+      // Normal capitalization for non-ordinal names
+      cleanName = expandedName.replace(/\w\S*/g, (word) =>
+        word.charAt(0).toUpperCase() + word.substr(1).toLowerCase()
+      );
+    }
 
     // Handle specific agricultural activity patterns
     const patterns = [
@@ -813,30 +829,93 @@ const CropCalendar = () => {
 
   // Function to normalize and fix activity colors
   const normalizeActivityColor = (color, activityName) => {
-    // If no color provided, generate one based on activity type
-    if (!color) {
+    const activityLower = activityName.toLowerCase();
+
+    // CRITICAL FIX: Override WRONG colors for weeding/pest activities
+    // This fixes database records that have incorrect colors (cyan/blue instead of red)
+    const isWeedingOrPest = activityLower.includes('weed') ||
+                            activityLower.includes('pest') ||
+                            (activityLower.includes('control') &&
+                             (activityLower.includes('fall') || activityLower.includes('army') ||
+                              activityLower.includes('disease') || activityLower.includes('management')));
+
+    if (isWeedingOrPest && color) {
+      const normalizedColor = String(color).trim().toUpperCase();
+
+      // List of WRONG colors that should be RED for weeding (cyan, light blue, etc.)
+      const wrongWeedingColors = [
+        '#00B0F0',  // Cyan (Site Selection color incorrectly applied)
+        '#00CCFF',  // Light blue
+        '#0099CC',  // Sky blue
+        '#5DADE2',  // Light blue variant
+        '#3498DB',  // Blue
+        '#00BFFF',  // Deep sky blue
+        '#87CEEB',  // Sky blue
+        '#ADD8E6',  // Light blue
+        '#B0E0E6',  // Powder blue
+        '#AFEEEE',  // Pale turquoise
+        '#00CED1',  // Dark turquoise
+        '#40E0D0',  // Turquoise
+        '#48D1CC',  // Medium turquoise
+        '#00FFFF',  // Cyan/Aqua
+        '#E0FFFF'   // Light cyan
+      ];
+
+      if (wrongWeedingColors.includes(normalizedColor)) {
+        console.warn(`🔴 [${activityName}] OVERRIDING WRONG COLOR ${normalizedColor} → #FF0000 (RED)`);
+
+        // Return different shades of red based on weeding type
+        if (activityLower.includes('1st') || activityLower.includes('first')) {
+          return '#FF0000'; // Pure red for 1st weeding
+        } else if (activityLower.includes('2nd') || activityLower.includes('second')) {
+          return '#DC143C'; // Crimson for 2nd weeding
+        } else if (activityLower.includes('3rd') || activityLower.includes('third')) {
+          return '#B22222'; // Fire brick for 3rd weeding
+        }
+        return '#FF0000'; // Default red for any other weeding
+      }
+    }
+
+    // QUICK FIX: Force RED color for weeding/pest activities if no Excel color provided
+    // This ensures weeding shows RED even when backend hasn't extracted colors from Excel
+    if (!color || color === 'undefined' || color === 'null' || color === null || color === undefined) {
+      if (isWeedingOrPest) {
+        console.warn(`🔴 [${activityName}] FORCING RED COLOR for weeding/pest activity (Excel color missing)`);
+
+        // Return different shades of red based on weeding type
+        if (activityLower.includes('1st') || activityLower.includes('first')) {
+          return '#FF0000';
+        } else if (activityLower.includes('2nd') || activityLower.includes('second')) {
+          return '#DC143C';
+        } else if (activityLower.includes('3rd') || activityLower.includes('third')) {
+          return '#B22222';
+        }
+        return '#FF0000';
+      }
+
+      console.warn(`⚠️ [${activityName}] No Excel color provided, generating from activity name`);
       return generateColorFromActivityName(activityName);
     }
 
     // Convert string color to consistent format
-    const normalizedColor = String(color).trim();
+    const normalizedColor = String(color).trim().toUpperCase();
 
-    // Fix problematic colors
+    // ONLY reject pure white backgrounds (keep black #000000 and all other colors from Excel)
     const problematicColors = [
-      '#000000', '#000', 'black', 'Black', 'BLACK',
-      '#FFFFFF', '#FFF', 'white', 'White', 'WHITE'
+      '#FFFFFF', '#FFF', 'WHITE'
     ];
 
     if (problematicColors.includes(normalizedColor)) {
+      console.warn(`⚠️ [${activityName}] White background detected, generating from activity name`);
       return generateColorFromActivityName(activityName);
     }
 
-    // Ensure color has # prefix if it's a hex color
+    // Ensure color has # prefix if it's a hex color without prefix
     if (/^[0-9A-Fa-f]{6}$/.test(normalizedColor)) {
       return `#${normalizedColor}`;
     }
 
-    // Return as-is if it's already a valid color format
+    // Return Excel color as-is (trust the source data including black #000000 and red #FF0000)
     return normalizedColor;
   };
 
@@ -930,13 +1009,25 @@ const CropCalendar = () => {
 
       const activityId = activity.activityId || activity.id || `activity_${index}`;
 
-      // Extract and normalize primary background color from Excel data
+      // Extract and normalize primary background color from Excel data with better fallback chain
       let primaryBackgroundColor = activity.backgroundColor ||
                                     activity.color ||
-                                    activity.periods?.[0]?.backgroundColor;
+                                    activity.periods?.[0]?.backgroundColor ||
+                                    null;
+
+      // DEBUG: Enhanced color extraction logging
+      console.log(`🎨 [${activityName}] Color extraction:`, {
+        activityBg: activity.backgroundColor || 'MISSING',
+        activityColor: activity.color || 'MISSING',
+        firstPeriodBg: activity.periods?.[0]?.backgroundColor || 'MISSING',
+        chosen: primaryBackgroundColor || 'NONE - WILL GENERATE FROM NAME',
+        periodsCount: activity.periods?.length || 0
+      });
 
       // Normalize and fix problematic colors
       primaryBackgroundColor = normalizeActivityColor(primaryBackgroundColor, activityName);
+
+      console.log(`🎨 [${activityName}] After normalization:`, primaryBackgroundColor);
 
       // Build timeline from periods data
       const timeline = [];
@@ -950,6 +1041,16 @@ const CropCalendar = () => {
           const weekIndex = period.timelineIndex || periodIndex;
           const month = period.month || 'Unknown';
           let backgroundColor = period.backgroundColor || period.color || primaryBackgroundColor;
+
+          // SPECIAL HANDLING: For planting activities, force use of primary color across ALL periods
+          // This prevents cyan or other secondary colors from appearing in planting/sowing timelines
+          if (activityName.toLowerCase().includes('plant') ||
+              activityName.toLowerCase().includes('sowing')) {
+            backgroundColor = primaryBackgroundColor;
+            if (periodIndex === 0) {
+              console.log(`🌱 [${activityName}] Forcing primary color for all planting periods:`, primaryBackgroundColor);
+            }
+          }
 
           // Normalize color for timeline
           backgroundColor = normalizeActivityColor(backgroundColor, activityName);

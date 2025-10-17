@@ -21,6 +21,7 @@ import {
   Eye,
   Gauge,
   MapPin,
+  RefreshCw,
 } from "lucide-react";
 
 // Ambee Weather API configuration
@@ -630,6 +631,69 @@ MapController.propTypes = {
   isMobile: PropTypes.bool.isRequired,
 };
 
+// Custom Unified Zoom Control Component (includes zoom in, zoom out, and reset)
+const UnifiedZoomControl = ({ initialCenter, initialZoom, isMobile }) => {
+  const map = useMap();
+
+  const handleZoomIn = () => {
+    map.zoomIn();
+  };
+
+  const handleZoomOut = () => {
+    map.zoomOut();
+  };
+
+  const handleReset = () => {
+    const zoomLevel = isMobile ? 6 : 7;
+    map.setView(initialCenter, zoomLevel, {
+      animate: true,
+      duration: 0.5
+    });
+  };
+
+  return (
+    <div className="absolute top-[10px] left-[10px] z-[1000] flex flex-col shadow-md">
+      {/* Zoom In Button */}
+      <button
+        onClick={handleZoomIn}
+        className="w-[30px] h-[30px] flex items-center justify-center bg-white hover:bg-gray-50 text-gray-700 hover:text-gray-900 border border-gray-300 rounded-t transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-lg font-bold leading-none"
+        title="Zoom in"
+        aria-label="Zoom in"
+      >
+        +
+      </button>
+
+      {/* Zoom Out Button */}
+      <button
+        onClick={handleZoomOut}
+        className="w-[30px] h-[30px] flex items-center justify-center bg-white hover:bg-gray-50 text-gray-700 hover:text-gray-900 border-l border-r border-gray-300 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-lg font-bold leading-none"
+        title="Zoom out"
+        aria-label="Zoom out"
+        style={{ borderTop: 'none' }}
+      >
+        −
+      </button>
+
+      {/* Reset Button */}
+      <button
+        onClick={handleReset}
+        className="w-[30px] h-[30px] flex items-center justify-center bg-white hover:bg-gray-50 text-gray-700 hover:text-gray-900 border border-gray-300 rounded-b transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+        title="Reset map view"
+        aria-label="Reset map to default zoom and position"
+        style={{ borderTop: 'none' }}
+      >
+        <RefreshCw className="w-4 h-4" />
+      </button>
+    </div>
+  );
+};
+
+UnifiedZoomControl.propTypes = {
+  initialCenter: PropTypes.array.isRequired,
+  initialZoom: PropTypes.number.isRequired,
+  isMobile: PropTypes.bool.isRequired,
+};
+
 // Weather info panel component - IMD Style with minimal design
 const WeatherInfoPanel = ({
   selectedRegion,
@@ -1012,7 +1076,7 @@ const WeatherInteractiveMap = ({
         scrollWheelZoom={false}
         attributionControl={false}
         onClick={handleMapClick}
-        zoomControl={!isMobile}
+        zoomControl={false}
         doubleClickZoom={!isMobile}
         touchZoom={false}
         dragging={!isMobile}
@@ -1030,6 +1094,15 @@ const WeatherInteractiveMap = ({
           onRegionSelect={handleRegionClick}
           isMobile={isMobile}
         />
+
+        {/* Unified Zoom Control (Zoom In/Out + Reset) - Only show on non-mobile */}
+        {!isMobile && (
+          <UnifiedZoomControl
+            initialCenter={mapCenter}
+            initialZoom={mapZoom}
+            isMobile={isMobile}
+          />
+        )}
 
         {/* Weather overlays */}
         {/* {showWeatherOverlays &&

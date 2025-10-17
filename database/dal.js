@@ -106,17 +106,24 @@ export const insertCropCalendar = async (calendarData) => {
       }
     }
 
-    // 5. Insert calendar grid if present
-    if (calendarData.calendarGrid || calendarData.grid_data) {
+    // 5. Insert calendar grid and schedule data
+    // ENHANCED: Now stores schedule with period-level color information
+    if (calendarData.calendarGrid || calendarData.grid_data || calendarData.schedule) {
       await client.query(`
         INSERT INTO calendar_grids (calendar_id, grid_data, cell_colors, activity_mappings)
         VALUES ($1, $2, $3, $4)
       `, [
         calendarId,
-        JSON.stringify(calendarData.calendarGrid || calendarData.grid_data),
+        JSON.stringify(calendarData.calendarGrid || calendarData.grid_data || {}),
         JSON.stringify(calendarData.cellColors || {}),
-        JSON.stringify(calendarData.activityMappings || {})
+        // CRITICAL: Store schedule in activity_mappings to preserve period-level colors
+        JSON.stringify(calendarData.schedule || calendarData.activityMappings || {})
       ]);
+
+      console.log('✅ Calendar schedule saved with color data:', {
+        scheduleActivities: calendarData.schedule?.length || 0,
+        totalPeriods: calendarData.schedule?.reduce((sum, act) => sum + (act.periods?.length || 0), 0) || 0
+      });
     }
 
     await client.query('COMMIT');
@@ -141,28 +148,43 @@ export const insertCropCalendar = async (calendarData) => {
  */
 export const getCropCalendarsByType = async (dataType = 'crop-calendar', filters = {}) => {
   try {
+    console.log('📊 getCropCalendarsByType called with:', { dataType, filters });
+
     let whereClause = 'WHERE cc.data_type = $1';
     const params = [dataType];
     let paramIndex = 2;
 
-    // Add filters
-    if (filters.region) {
-      whereClause += ` AND cc.region = $${paramIndex}`;
+    // Add filters with case-insensitive matching - ONLY if values are actually provided
+    // Skip undefined, null, empty string, or string "undefined"
+    if (filters.region && filters.region !== 'undefined' && filters.region.trim() !== '') {
+      whereClause += ` AND LOWER(cc.region) = LOWER($${paramIndex})`;
       params.push(filters.region);
+      console.log(`   🔍 Filter: region = "${filters.region}"`);
       paramIndex++;
+    } else {
+      console.log(`   ⏭️  Skipping region filter (value: ${filters.region})`);
     }
 
-    if (filters.district) {
-      whereClause += ` AND cc.district = $${paramIndex}`;
+    if (filters.district && filters.district !== 'undefined' && filters.district.trim() !== '') {
+      whereClause += ` AND LOWER(cc.district) = LOWER($${paramIndex})`;
       params.push(filters.district);
+      console.log(`   🔍 Filter: district = "${filters.district}"`);
       paramIndex++;
+    } else {
+      console.log(`   ⏭️  Skipping district filter (value: ${filters.district})`);
     }
 
-    if (filters.crop) {
-      whereClause += ` AND cc.crop = $${paramIndex}`;
+    if (filters.crop && filters.crop !== 'undefined' && filters.crop.trim() !== '') {
+      whereClause += ` AND LOWER(cc.crop) = LOWER($${paramIndex})`;
       params.push(filters.crop);
+      console.log(`   🔍 Filter: crop = "${filters.crop}"`);
       paramIndex++;
+    } else {
+      console.log(`   ⏭️  Skipping crop filter (value: ${filters.crop})`);
     }
+
+    console.log('   📋 Final WHERE clause:', whereClause);
+    console.log('   📋 Final params:', params);
 
     const calendarsResult = await query(`
       SELECT
@@ -179,19 +201,50 @@ export const getCropCalendarsByType = async (dataType = 'crop-calendar', filters
       ORDER BY cc.created_at DESC
     `, params);
 
+    console.log(`   ✅ Found ${calendarsResult.rows.length} matching calendars in database`);
+
     const calendars = [];
 
     // For each calendar, get related data
     for (const calendar of calendarsResult.rows) {
+      console.log(`   📖 Loading full data for calendar: ${calendar.unique_id}`);
       const fullCalendar = await getFullCalendarById(calendar.id);
       calendars.push(fullCalendar);
     }
 
     console.log(`📋 Retrieved ${calendars.length} calendars for type: ${dataType}`);
+    if (calendars.length > 0) {
+      console.log(`   📄 Sample calendar structure:`, {
+        id: calendars[0].id,
+        district: calendars[0].district,
+        crop: calendars[0].crop,
+        hasSchedule: !!calendars[0].schedule,
+        hasActivities: !!calendars[0].activities,
+        scheduleLength: calendars[0].schedule?.length || 0,
+        activitiesLength: calendars[0].activities?.length || 0
+      });
+    }
+
     return calendars;
 
   } catch (error) {
     console.error('❌ Error retrieving calendars:', error.message);
+    console.error('   Error type:', error.name);
+    console.error('   Error code:', error.code);
+    console.error('   Stack:', error.stack);
+
+    // Check for specific PostgreSQL errors
+    if (error.code) {
+      console.error(`   PostgreSQL Error Code: ${error.code}`);
+      if (error.code === '42P01') {
+        console.error('   ⚠️  Table does not exist - database schema may not be initialized');
+      } else if (error.code === '42703') {
+        console.error('   ⚠️  Column does not exist - database schema may be out of date');
+      } else if (error.code === 'ECONNREFUSED') {
+        console.error('   ⚠️  Cannot connect to PostgreSQL database');
+      }
+    }
+
     throw error;
   }
 };
@@ -308,12 +361,27 @@ export const getFullCalendarById = async (calendarId) => {
       }
     });
 
-    // Process grid data
+    // Process grid data and schedule
     if (gridResult.rows.length > 0) {
       const grid = gridResult.rows[0];
       fullCalendar.calendarGrid = grid.grid_data;
       fullCalendar.cellColors = grid.cell_colors;
-      fullCalendar.activityMappings = grid.activity_mappings;
+
+      // ENHANCED: Retrieve schedule from activity_mappings
+      // activity_mappings now stores the complete schedule array with period-level colors
+      if (grid.activity_mappings) {
+        // Check if activity_mappings is the schedule array (has periods with colors)
+        if (Array.isArray(grid.activity_mappings) && grid.activity_mappings.length > 0) {
+          fullCalendar.schedule = grid.activity_mappings;
+          console.log('✅ Retrieved schedule with color data:', {
+            scheduleActivities: fullCalendar.schedule.length,
+            totalPeriods: fullCalendar.schedule.reduce((sum, act) => sum + (act.periods?.length || 0), 0)
+          });
+        } else {
+          // Legacy format - store as activityMappings
+          fullCalendar.activityMappings = grid.activity_mappings;
+        }
+      }
     }
 
     return fullCalendar;
@@ -537,6 +605,274 @@ export const searchCalendars = async (searchTerm, dataType = null) => {
   }
 };
 
+// ============================================================================
+// WEEKLY ADVISORY OPERATIONS
+// ============================================================================
+
+/**
+ * Insert a new weekly advisory
+ * @param {Object} advisoryData - Advisory data object
+ * @returns {Promise<Object>} Inserted advisory with ID
+ */
+export const insertWeeklyAdvisory = async (advisoryData) => {
+  try {
+    const result = await query(`
+      INSERT INTO weekly_advisories (
+        advisory_id, zone, region, district, crop_type, activity_stage,
+        week_number, weeks_range, year, start_date, end_date, month_year,
+        rainfall_forecast, temperature_forecast, humidity_forecast,
+        soil_moisture_forecast, soil_temperature_forecast, sunshine_forecast,
+        sunrise_forecast, sunset_forecast, evapotranspiration_forecast,
+        rainfall_implication, temperature_implication, humidity_implication,
+        soil_moisture_implication, soil_temperature_implication, sunshine_implication,
+        sunrise_implication, sunset_implication, evapotranspiration_implication,
+        rainfall_advisory, temperature_advisory, humidity_advisory,
+        soil_moisture_advisory, soil_temperature_advisory, sunshine_advisory,
+        sunrise_advisory, sunset_advisory, evapotranspiration_advisory,
+        sms_text, overall_summary
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
+        $13, $14, $15, $16, $17, $18, $19, $20, $21,
+        $22, $23, $24, $25, $26, $27, $28, $29, $30,
+        $31, $32, $33, $34, $35, $36, $37, $38, $39,
+        $40, $41
+      )
+      ON CONFLICT (advisory_id) DO UPDATE SET
+        zone = EXCLUDED.zone,
+        rainfall_forecast = EXCLUDED.rainfall_forecast,
+        temperature_forecast = EXCLUDED.temperature_forecast,
+        humidity_forecast = EXCLUDED.humidity_forecast,
+        soil_moisture_forecast = EXCLUDED.soil_moisture_forecast,
+        soil_temperature_forecast = EXCLUDED.soil_temperature_forecast,
+        sunshine_forecast = EXCLUDED.sunshine_forecast,
+        sunrise_forecast = EXCLUDED.sunrise_forecast,
+        sunset_forecast = EXCLUDED.sunset_forecast,
+        evapotranspiration_forecast = EXCLUDED.evapotranspiration_forecast,
+        rainfall_implication = EXCLUDED.rainfall_implication,
+        temperature_implication = EXCLUDED.temperature_implication,
+        humidity_implication = EXCLUDED.humidity_implication,
+        soil_moisture_implication = EXCLUDED.soil_moisture_implication,
+        soil_temperature_implication = EXCLUDED.soil_temperature_implication,
+        sunshine_implication = EXCLUDED.sunshine_implication,
+        sunrise_implication = EXCLUDED.sunrise_implication,
+        sunset_implication = EXCLUDED.sunset_implication,
+        evapotranspiration_implication = EXCLUDED.evapotranspiration_implication,
+        rainfall_advisory = EXCLUDED.rainfall_advisory,
+        temperature_advisory = EXCLUDED.temperature_advisory,
+        humidity_advisory = EXCLUDED.humidity_advisory,
+        soil_moisture_advisory = EXCLUDED.soil_moisture_advisory,
+        soil_temperature_advisory = EXCLUDED.soil_temperature_advisory,
+        sunshine_advisory = EXCLUDED.sunshine_advisory,
+        sunrise_advisory = EXCLUDED.sunrise_advisory,
+        sunset_advisory = EXCLUDED.sunset_advisory,
+        evapotranspiration_advisory = EXCLUDED.evapotranspiration_advisory,
+        sms_text = EXCLUDED.sms_text,
+        overall_summary = EXCLUDED.overall_summary,
+        updated_at = NOW()
+      RETURNING id, advisory_id, created_at
+    `, [
+      advisoryData.advisory_id,
+      advisoryData.zone,
+      advisoryData.region,
+      advisoryData.district,
+      advisoryData.crop_type,
+      advisoryData.activity_stage,
+      advisoryData.week_number,
+      advisoryData.weeks_range,
+      advisoryData.year,
+      advisoryData.start_date,
+      advisoryData.end_date,
+      advisoryData.month_year,
+      advisoryData.rainfall_forecast,
+      advisoryData.temperature_forecast,
+      advisoryData.humidity_forecast,
+      advisoryData.soil_moisture_forecast,
+      advisoryData.soil_temperature_forecast,
+      advisoryData.sunshine_forecast,
+      advisoryData.sunrise_forecast,
+      advisoryData.sunset_forecast,
+      advisoryData.evapotranspiration_forecast,
+      advisoryData.rainfall_implication,
+      advisoryData.temperature_implication,
+      advisoryData.humidity_implication,
+      advisoryData.soil_moisture_implication,
+      advisoryData.soil_temperature_implication,
+      advisoryData.sunshine_implication,
+      advisoryData.sunrise_implication,
+      advisoryData.sunset_implication,
+      advisoryData.evapotranspiration_implication,
+      advisoryData.rainfall_advisory,
+      advisoryData.temperature_advisory,
+      advisoryData.humidity_advisory,
+      advisoryData.soil_moisture_advisory,
+      advisoryData.soil_temperature_advisory,
+      advisoryData.sunshine_advisory,
+      advisoryData.sunrise_advisory,
+      advisoryData.sunset_advisory,
+      advisoryData.evapotranspiration_advisory,
+      advisoryData.sms_text,
+      advisoryData.overall_summary
+    ]);
+
+    console.log('✅ Weekly advisory inserted/updated:', result.rows[0].advisory_id);
+    return result.rows[0];
+  } catch (error) {
+    console.error('❌ Error inserting weekly advisory:', error.message);
+    throw error;
+  }
+};
+
+/**
+ * Get weekly advisories by filters
+ * @param {Object} filters - Filters (region, district, crop_type, year, week_number)
+ * @returns {Promise<Array>} Array of advisory objects
+ */
+export const getWeeklyAdvisories = async (filters = {}) => {
+  try {
+    let whereClause = 'WHERE 1=1';
+    const params = [];
+    let paramIndex = 1;
+
+    if (filters.region) {
+      whereClause += ` AND LOWER(region) = LOWER($${paramIndex})`;
+      params.push(filters.region);
+      paramIndex++;
+    }
+
+    if (filters.district) {
+      whereClause += ` AND LOWER(district) = LOWER($${paramIndex})`;
+      params.push(filters.district);
+      paramIndex++;
+    }
+
+    if (filters.crop_type) {
+      whereClause += ` AND LOWER(crop_type) = LOWER($${paramIndex})`;
+      params.push(filters.crop_type);
+      paramIndex++;
+    }
+
+    if (filters.year) {
+      whereClause += ` AND year = $${paramIndex}`;
+      params.push(filters.year);
+      paramIndex++;
+    }
+
+    if (filters.week_number) {
+      whereClause += ` AND week_number = $${paramIndex}`;
+      params.push(filters.week_number);
+      paramIndex++;
+    }
+
+    if (filters.activity_stage) {
+      whereClause += ` AND LOWER(activity_stage) = LOWER($${paramIndex})`;
+      params.push(filters.activity_stage);
+      paramIndex++;
+    }
+
+    const result = await query(`
+      SELECT * FROM weekly_advisories
+      ${whereClause}
+      ORDER BY year DESC, week_number ASC, activity_stage ASC
+    `, params);
+
+    console.log(`📋 Retrieved ${result.rows.length} weekly advisories`);
+    return result.rows;
+  } catch (error) {
+    console.error('❌ Error retrieving weekly advisories:', error.message);
+    throw error;
+  }
+};
+
+/**
+ * Get weekly advisory by advisory_id
+ * @param {string} advisoryId - Advisory ID
+ * @returns {Promise<Object>} Advisory object
+ */
+export const getWeeklyAdvisoryById = async (advisoryId) => {
+  try {
+    const result = await query(`
+      SELECT * FROM weekly_advisories WHERE advisory_id = $1
+    `, [advisoryId]);
+
+    if (result.rows.length === 0) {
+      throw new Error(`Weekly advisory not found: ${advisoryId}`);
+    }
+
+    return result.rows[0];
+  } catch (error) {
+    console.error('❌ Error retrieving weekly advisory:', error.message);
+    throw error;
+  }
+};
+
+/**
+ * Get list of activities for a crop/region/district combination
+ * @param {Object} filters - Filters (region, district, crop_type, year)
+ * @returns {Promise<Array>} Array of activity stage names
+ */
+export const getWeeklyAdvisoryActivities = async (filters = {}) => {
+  try {
+    let whereClause = 'WHERE 1=1';
+    const params = [];
+    let paramIndex = 1;
+
+    if (filters.region) {
+      whereClause += ` AND LOWER(region) = LOWER($${paramIndex})`;
+      params.push(filters.region);
+      paramIndex++;
+    }
+
+    if (filters.district) {
+      whereClause += ` AND LOWER(district) = LOWER($${paramIndex})`;
+      params.push(filters.district);
+      paramIndex++;
+    }
+
+    if (filters.crop_type) {
+      whereClause += ` AND LOWER(crop_type) = LOWER($${paramIndex})`;
+      params.push(filters.crop_type);
+      paramIndex++;
+    }
+
+    if (filters.year) {
+      whereClause += ` AND year = $${paramIndex}`;
+      params.push(filters.year);
+      paramIndex++;
+    }
+
+    const result = await query(`
+      SELECT DISTINCT activity_stage, id, advisory_id
+      FROM weekly_advisories
+      ${whereClause}
+      ORDER BY activity_stage ASC
+    `, params);
+
+    return result.rows;
+  } catch (error) {
+    console.error('❌ Error retrieving advisory activities:', error.message);
+    throw error;
+  }
+};
+
+/**
+ * Delete weekly advisory by advisory_id
+ * @param {string} advisoryId - Advisory ID
+ * @returns {Promise<boolean>} Success status
+ */
+export const deleteWeeklyAdvisory = async (advisoryId) => {
+  try {
+    const result = await query(`
+      DELETE FROM weekly_advisories WHERE advisory_id = $1
+    `, [advisoryId]);
+
+    console.log('✅ Weekly advisory deleted:', advisoryId);
+    return result.rowCount > 0;
+  } catch (error) {
+    console.error('❌ Error deleting weekly advisory:', error.message);
+    throw error;
+  }
+};
+
 export default {
   insertCropCalendar,
   getCropCalendarsByType,
@@ -545,5 +881,10 @@ export default {
   deleteCropCalendar,
   migrateFromJSON,
   getDatabaseStats,
-  searchCalendars
+  searchCalendars,
+  insertWeeklyAdvisory,
+  getWeeklyAdvisories,
+  getWeeklyAdvisoryById,
+  getWeeklyAdvisoryActivities,
+  deleteWeeklyAdvisory
 };

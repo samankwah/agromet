@@ -68,6 +68,9 @@ class EnhancedCalendarParser {
         throw new Error(`Unsupported calendar type: ${calendarInfo.type}`);
       }
 
+      // Calculate and log color extraction statistics
+      const colorStats = this.calculateColorStatistics(parsedCalendar);
+
       return {
         success: true,
         calendarType: calendarInfo.type,
@@ -78,7 +81,8 @@ class EnhancedCalendarParser {
           totalActivities: parsedCalendar.activities?.length || 0,
           processingDate: new Date().toISOString(),
           ...metadata
-        }
+        },
+        colorStatistics: colorStats
       };
 
     } catch (error) {
@@ -903,7 +907,7 @@ class EnhancedCalendarParser {
 
         // Check if cell is active (has content or color)
         const isActive = this.isCellActiveEnhanced(cellValue, cellObj);
-        const backgroundColor = this.extractCellColor(cellObj);
+        const backgroundColor = this.getCellBackgroundColor(cellObj);
 
         // COMPREHENSIVE DEBUG for ALL activities now (not just specific ones)
         console.log(`   🔍 Cell[${timelineIndex}]: col=${excelCol}, ref=${cellRef}, value="${cellValue}", active=${isActive}, color=${backgroundColor}`);
@@ -1003,8 +1007,12 @@ class EnhancedCalendarParser {
           let period;
 
           // Use extracted color, activity-based color, or fallback color
+          // ENHANCED: Check for weeding/pest activities and apply red fallback
+          const activityBasedColor = this.getWeedingColorFallback(activity.name) ||
+                                    (activity.name.includes('Sowing') || activity.name.includes('Transplanting') ? '#00FF00' : null);
+
           const finalColor = backgroundColor ||
-                           (activity.name.includes('Sowing') || activity.name.includes('Transplanting') ? '#00FF00' : null) ||
+                           activityBasedColor ||
                            (forceDetection ? '#CCCCCC' : null);
 
           if (calendarType === 'seasonal') {
@@ -1057,7 +1065,7 @@ class EnhancedCalendarParser {
    */
   isCellActiveEnhanced(cellValue, cellObj) {
     // PRIORITY 1: Check for background color (most important for activity detection)
-    if (cellObj && this.extractCellColor(cellObj)) {
+    if (cellObj && this.getCellBackgroundColor(cellObj)) {
       return true;
     }
 
@@ -1101,126 +1109,327 @@ class EnhancedCalendarParser {
   }
 
   /**
-   * Extract background color from Excel cell object
+   * Get weeding activity color based on activity name pattern (fallback)
+   */
+  getWeedingColorFallback(activityName) {
+    if (!activityName) return null;
+
+    const name = activityName.toLowerCase();
+
+    // Map weeding/pest activities to red colors
+    if (name.includes('weed') || name.includes('weeding')) {
+      if (name.includes('1st') || name.includes('first')) return '#FF0000'; // Pure red
+      if (name.includes('2nd') || name.includes('second')) return '#DC143C'; // Crimson
+      if (name.includes('3rd') || name.includes('third')) return '#B22222'; // Fire brick
+      return '#FF0000'; // Default red for weeding
+    }
+
+    if (name.includes('pest') || name.includes('disease')) {
+      return '#FF4500'; // Orange-red for pest control
+    }
+
+    return null;
+  }
+
+  /**
+   * AGGRESSIVE RED COLOR DETECTION for agricultural calendars
+   * Excel stores red colors in multiple ways - this method checks ALL locations
+   * Priority method to detect red colors before standard extraction
+   */
+  extractRedColorAggressively(cellObj) {
+    if (!cellObj || !cellObj.s) return null;
+
+    // Check all possible red color storage locations
+    const redPatterns = [
+      { value: cellObj.s?.fill?.bgColor?.rgb, location: 's.fill.bgColor.rgb' },
+      { value: cellObj.s?.fill?.fgColor?.rgb, location: 's.fill.fgColor.rgb' },
+      { value: cellObj.s?.fill?.bgColor?.indexed, location: 's.fill.bgColor.indexed' },
+      { value: cellObj.s?.fill?.fgColor?.indexed, location: 's.fill.fgColor.indexed' },
+      { value: cellObj.s?.bgColor?.rgb, location: 's.bgColor.rgb' },
+      { value: cellObj.s?.fgColor?.rgb, location: 's.fgColor.rgb' },
+      { value: cellObj.s?.bgColor?.indexed, location: 's.bgColor.indexed' },
+      { value: cellObj.s?.fgColor?.indexed, location: 's.fgColor.indexed' }
+    ];
+
+    for (const { value, location } of redPatterns) {
+      if (value === undefined || value === null) continue;
+
+      // Check for RGB red (FF0000 or FFFF0000 with alpha)
+      if (typeof value === 'string') {
+        const cleanRgb = value.replace(/^#/, '').toUpperCase();
+
+        // Match exact red: FF0000 or FFFF0000 (with alpha)
+        if (cleanRgb === 'FF0000' || cleanRgb === 'FFFF0000' || cleanRgb.endsWith('FF0000')) {
+          console.log(`🔴 AGGRESSIVE RED: Found RGB red at ${location} = ${value}`);
+          return '#FF0000';
+        }
+
+        // Match red with alpha variations (AAFF0000 where AA is alpha)
+        if (cleanRgb.length === 8 && cleanRgb.substring(2) === 'FF0000') {
+          console.log(`🔴 AGGRESSIVE RED: Found ARGB red at ${location} = ${value}`);
+          return '#FF0000';
+        }
+
+        // Check for red-like colors (dark red, crimson, etc.)
+        const redVariations = ['FF0000', 'DC143C', 'B22222', 'CD5C5C', 'F08080', '800000', 'A52A2A', 'FF4500'];
+        if (redVariations.some(redVar => cleanRgb.includes(redVar) || cleanRgb.substring(2) === redVar)) {
+          console.log(`🔴 AGGRESSIVE RED: Found red variation at ${location} = ${value}`);
+          return `#${cleanRgb.length === 8 ? cleanRgb.substring(2) : cleanRgb}`;
+        }
+      }
+
+      // Check for indexed red (standard Excel red indices: 2, 10, 60, 68)
+      if (typeof value === 'number') {
+        const redIndices = [2, 10, 60, 68]; // Common red color indices in Excel
+        if (redIndices.includes(value)) {
+          console.log(`🔴 AGGRESSIVE RED: Found indexed red at ${location} = ${value}`);
+          return '#FF0000';
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Extract background color from Excel cell object (ENHANCED with comprehensive fallback)
    */
   extractCellColor(cellObj) {
     if (!cellObj) {
       return null;
     }
 
-    // ENHANCED DEBUGGING: Log cell object structure for black color detection
-    console.log(`🎨 COLOR EXTRACTION DEBUG:`, {
-      hasStyle: !!cellObj.s,
-      hasFill: !!(cellObj.s && cellObj.s.fill),
-      fillStructure: cellObj.s && cellObj.s.fill ? {
-        patternType: cellObj.s.fill.patternType,
-        hasBgColor: !!cellObj.s.fill.bgColor,
-        hasFgColor: !!cellObj.s.fill.fgColor,
-        bgColorType: cellObj.s.fill.bgColor ? typeof cellObj.s.fill.bgColor : 'none',
-        fgColorType: cellObj.s.fill.fgColor ? typeof cellObj.s.fill.fgColor : 'none'
-      } : 'NO_FILL'
-    });
+    let backgroundColor = null;
+    let colorSource = null;
 
-    // Try different paths to find color information
-    let color = null;
+    // PRIORITY 0: AGGRESSIVE RED DETECTION FIRST (for agricultural weeding/pest activities)
+    const redColor = this.extractRedColorAggressively(cellObj);
+    if (redColor) {
+      console.log(`🎨 ⭐ PRIORITY RED EXTRACTED: ${redColor}`);
+      return redColor;
+    }
 
-    // METHOD 1: Standard Excel style object
-    if (cellObj.s) {
-      const style = cellObj.s;
+    // METHOD 1: Standard Excel style object with fill patterns
+    if (cellObj.s && cellObj.s.fill) {
+      const fill = cellObj.s.fill;
 
-      // Check for fill pattern with background color
-      if (style.fill) {
-        const fill = style.fill;
-
-        // Check pattern fill with background color (most common)
-        if (fill.patternType && fill.bgColor) {
-          color = this.parseColorObject(fill.bgColor);
-          if (color) {
-            console.log(`🎨 COLOR RESULT: Extracted from pattern bgColor: ${color}`);
-            return color;
-          }
-        }
-
-        // Check foreground color in pattern fill
-        if (fill.patternType && fill.fgColor) {
-          color = this.parseColorObject(fill.fgColor);
-          if (color) {
-            console.log(`🎨 COLOR RESULT: Extracted from pattern fgColor: ${color}`);
-            return color;
-          }
-        }
-
-        // Check solid fill
-        if (fill.bgColor) {
-          color = this.parseColorObject(fill.bgColor);
-          if (color) return color;
-        }
-
-        if (fill.fgColor) {
-          color = this.parseColorObject(fill.fgColor);
-          if (color) return color;
+      // Check pattern fill with background color (most common)
+      if (fill.bgColor) {
+        backgroundColor = this.parseColorObject(fill.bgColor);
+        if (backgroundColor) {
+          colorSource = 'style.fill.bgColor';
+          console.log(`🎨 Extracted color from ${colorSource}: ${backgroundColor}`);
+          return backgroundColor;
         }
       }
 
-      // Direct style color properties
-      if (style.bgColor) {
-        color = this.parseColorObject(style.bgColor);
-        if (color) return color;
-      }
-
-      if (style.fgColor) {
-        color = this.parseColorObject(style.fgColor);
-        if (color) return color;
+      // Check foreground color in pattern fill (alternative)
+      if (fill.fgColor) {
+        backgroundColor = this.parseColorObject(fill.fgColor);
+        if (backgroundColor) {
+          colorSource = 'style.fill.fgColor';
+          console.log(`🎨 Extracted color from ${colorSource}: ${backgroundColor}`);
+          return backgroundColor;
+        }
       }
     }
 
-    // METHOD 2: Direct color properties on cell (alternative Excel format)
+    // METHOD 2: Direct style color properties
+    if (cellObj.s) {
+      if (cellObj.s.bgColor) {
+        backgroundColor = this.parseColorObject(cellObj.s.bgColor);
+        if (backgroundColor) {
+          colorSource = 'style.bgColor';
+          console.log(`🎨 Extracted color from ${colorSource}: ${backgroundColor}`);
+          return backgroundColor;
+        }
+      }
+
+      if (cellObj.s.fgColor) {
+        backgroundColor = this.parseColorObject(cellObj.s.fgColor);
+        if (backgroundColor) {
+          colorSource = 'style.fgColor';
+          console.log(`🎨 Extracted color from ${colorSource}: ${backgroundColor}`);
+          return backgroundColor;
+        }
+      }
+    }
+
+    // METHOD 3: Direct color properties on cell (alternative Excel format)
     if (cellObj.fill) {
-      color = this.parseColorObject(cellObj.fill);
-      if (color) return color;
+      backgroundColor = this.parseColorObject(cellObj.fill);
+      if (backgroundColor) {
+        colorSource = 'cell.fill';
+        console.log(`🎨 Extracted color from ${colorSource}: ${backgroundColor}`);
+        return backgroundColor;
+      }
     }
 
     if (cellObj.bgColor) {
-      color = this.parseColorObject(cellObj.bgColor);
-      if (color) return color;
+      backgroundColor = this.parseColorObject(cellObj.bgColor);
+      if (backgroundColor) {
+        colorSource = 'cell.bgColor';
+        console.log(`🎨 Extracted color from ${colorSource}: ${backgroundColor}`);
+        return backgroundColor;
+      }
     }
 
     if (cellObj.color) {
-      color = this.parseColorObject(cellObj.color);
-      if (color) return color;
+      backgroundColor = this.parseColorObject(cellObj.color);
+      if (backgroundColor) {
+        colorSource = 'cell.color';
+        console.log(`🎨 Extracted color from ${colorSource}: ${backgroundColor}`);
+        return backgroundColor;
+      }
     }
 
-    // METHOD 3: Check if cell has any style information that suggests coloring
-    if (cellObj.s && cellObj.s.fill && cellObj.s.fill.patternType) {
-      // Even if we can't extract the exact color, the presence of fill pattern suggests activity
-      // Return a default color to indicate this cell should be active
-      console.log(`🎨 COLOR RESULT: Using fallback #CCCCCC for cell with pattern fill`);
-      return '#CCCCCC'; // Light gray as indicator that cell has styling
+    // METHOD 4: Check for pattern type suggesting colored cell (fallback)
+    if (cellObj.s && cellObj.s.fill && cellObj.s.fill.patternType && cellObj.s.fill.patternType !== 'none') {
+      // Cell has fill pattern but color couldn't be extracted - use fallback
+      console.log(`🎨 Cell has fill pattern but no color detected, using fallback #CCCCCC`);
+      return '#CCCCCC';
     }
 
-    console.log(`🎨 COLOR RESULT: No color detected, returning null`);
     return null;
   }
 
   /**
-   * Parse color object from Excel style
+   * Get cell background color with comprehensive 5-method fallback chain
+   * This wrapper ensures colors are NEVER missed from Excel cells
+   * PRIORITY: Aggressive red detection for weeding activities
+   */
+  getCellBackgroundColor(cellObj) {
+    if (!cellObj) return null;
+
+    let color = null;
+
+    // METHOD 0: AGGRESSIVE RED DETECTION FIRST (highest priority for weeding)
+    const redColor = this.extractRedColorAggressively(cellObj);
+    if (redColor) {
+      console.log(`🔴 Method 0 (AGGRESSIVE RED): ${redColor}`);
+      return redColor;
+    }
+
+    // METHOD 1: Primary enhanced extraction
+    color = this.extractCellColor(cellObj);
+    if (color) {
+      console.log(`✅ Method 1 (extractCellColor): ${color}`);
+      return color;
+    }
+
+    // METHOD 2: Direct RGB access (raw cell.s.fill.bgColor.rgb)
+    if (cellObj.s && cellObj.s.fill && cellObj.s.fill.bgColor && cellObj.s.fill.bgColor.rgb) {
+      let rgb = cellObj.s.fill.bgColor.rgb;
+      // Handle ARGB format
+      if (rgb.length === 8) {
+        rgb = rgb.substring(2);
+      }
+      color = rgb.startsWith('#') ? rgb.toUpperCase() : `#${rgb.toUpperCase()}`;
+      if (color && color !== '#FFFFFF') {
+        console.log(`✅ Method 2 (direct RGB): ${color}`);
+        return color;
+      }
+    }
+
+    // METHOD 3: Indexed color lookup (comprehensive 0-127 palette)
+    if (cellObj.s && cellObj.s.fill) {
+      if (cellObj.s.fill.bgColor && cellObj.s.fill.bgColor.indexed !== undefined) {
+        color = this.getIndexedColor(cellObj.s.fill.bgColor.indexed);
+        if (color && color !== '#FFFFFF') {
+          console.log(`✅ Method 3 (indexed): ${color} (index: ${cellObj.s.fill.bgColor.indexed})`);
+          return color;
+        }
+      }
+      if (cellObj.s.fill.fgColor && cellObj.s.fill.fgColor.indexed !== undefined) {
+        color = this.getIndexedColor(cellObj.s.fill.fgColor.indexed);
+        if (color && color !== '#FFFFFF') {
+          console.log(`✅ Method 3 (indexed fgColor): ${color} (index: ${cellObj.s.fill.fgColor.indexed})`);
+          return color;
+        }
+      }
+    }
+
+    // METHOD 4: Theme color with tint (Office theme colors with lightening/darkening)
+    if (cellObj.s && cellObj.s.fill) {
+      if (cellObj.s.fill.bgColor && cellObj.s.fill.bgColor.theme !== undefined) {
+        const theme = cellObj.s.fill.bgColor.theme;
+        const tint = cellObj.s.fill.bgColor.tint || 0;
+        const themeColor = this.getThemeColor(theme);
+        if (themeColor && themeColor !== '#FFFFFF') {
+          color = tint !== 0 ? this.applyTint(themeColor, tint) : themeColor;
+          console.log(`✅ Method 4 (theme): ${color} (theme: ${theme}, tint: ${tint})`);
+          return color;
+        }
+      }
+      if (cellObj.s.fill.fgColor && cellObj.s.fill.fgColor.theme !== undefined) {
+        const theme = cellObj.s.fill.fgColor.theme;
+        const tint = cellObj.s.fill.fgColor.tint || 0;
+        const themeColor = this.getThemeColor(theme);
+        if (themeColor && themeColor !== '#FFFFFF') {
+          color = tint !== 0 ? this.applyTint(themeColor, tint) : themeColor;
+          console.log(`✅ Method 4 (theme fgColor): ${color} (theme: ${theme}, tint: ${tint})`);
+          return color;
+        }
+      }
+    }
+
+    // METHOD 5: Foreground color fallback (pattern foreground as last resort)
+    if (cellObj.s && cellObj.s.fill && cellObj.s.fill.fgColor) {
+      if (cellObj.s.fill.fgColor.rgb) {
+        let rgb = cellObj.s.fill.fgColor.rgb;
+        // Handle ARGB format
+        if (rgb.length === 8) {
+          rgb = rgb.substring(2);
+        }
+        color = rgb.startsWith('#') ? rgb.toUpperCase() : `#${rgb.toUpperCase()}`;
+        if (color && color !== '#FFFFFF' && color !== '#000000') {
+          console.log(`✅ Method 5 (fgColor RGB): ${color}`);
+          return color;
+        }
+      }
+    }
+
+    console.log(`❌ All 5 methods failed - no color detected`);
+    return null;
+  }
+
+  /**
+   * Parse color object from Excel style (ENHANCED with ARGB support)
    */
   parseColorObject(colorObj) {
     if (!colorObj) return null;
 
-    // RGB color (most common)
+    // RGB/ARGB color (most common)
     if (colorObj.rgb) {
-      let color = colorObj.rgb;
-      // Ensure it starts with #
-      if (!color.startsWith('#')) {
-        color = `#${color}`;
+      let rgb = colorObj.rgb;
+      let colorSource = 'rgb';
+
+      // ENHANCED: Handle ARGB format (8 characters: AARRGGBB)
+      // Excel often stores colors as ARGB where first 2 chars are alpha channel
+      if (rgb.length === 8) {
+        // Strip alpha channel (first 2 characters)
+        rgb = rgb.substring(2);
+        colorSource = 'argb';
+        console.log(`🎨 ARGB color detected: ${colorObj.rgb} → ${rgb} (stripped alpha)`);
       }
-      // Ensure it's 6 characters after #
-      if (color.length === 7) {
-        // Ignore pure white only - allow black for agricultural activities
-        if (color.toUpperCase() !== '#FFFFFF') {
-          return color.toUpperCase();
+
+      // Ensure it starts with #
+      if (!rgb.startsWith('#')) {
+        rgb = `#${rgb}`;
+      }
+
+      // Validate it's now 7 characters (#RRGGBB)
+      if (rgb.length === 7) {
+        const color = rgb.toUpperCase();
+        // Ignore pure white only - allow black and all other colors for agricultural activities
+        if (color !== '#FFFFFF') {
+          console.log(`🎨 Extracted ${colorSource} color: ${color}`);
+          return color;
+        } else {
+          console.log(`🎨 Ignoring white color: ${color}`);
         }
+      } else {
+        console.log(`⚠️ Invalid RGB length after processing: ${rgb} (length: ${rgb.length})`);
       }
     }
 
@@ -1228,15 +1437,20 @@ class EnhancedCalendarParser {
     if (colorObj.indexed !== undefined) {
       const indexedColor = this.getIndexedColor(colorObj.indexed);
       if (indexedColor && indexedColor !== '#FFFFFF') {
+        console.log(`🎨 Extracted indexed color [${colorObj.indexed}]: ${indexedColor}`);
         return indexedColor;
       }
     }
 
-    // Theme color
+    // Theme color with tint support
     if (colorObj.theme !== undefined) {
+      const tint = colorObj.tint || 0;
       const themeColor = this.getThemeColor(colorObj.theme);
       if (themeColor && themeColor !== '#FFFFFF') {
-        return themeColor;
+        // Apply tint if present
+        const finalColor = tint !== 0 ? this.applyTint(themeColor, tint) : themeColor;
+        console.log(`🎨 Extracted theme color [${colorObj.theme}] with tint ${tint}: ${finalColor}`);
+        return finalColor;
       }
     }
 
@@ -1316,6 +1530,49 @@ class EnhancedCalendarParser {
   }
 
   /**
+   * Apply tint/shade to a color (for Excel theme colors with tint)
+   * Tint value: -1.0 (darker) to +1.0 (lighter)
+   */
+  applyTint(hexColor, tint) {
+    if (!hexColor || tint === 0) return hexColor;
+
+    // Remove # if present
+    const color = hexColor.replace('#', '');
+
+    // Parse RGB components
+    const r = parseInt(color.substring(0, 2), 16);
+    const g = parseInt(color.substring(2, 4), 16);
+    const b = parseInt(color.substring(4, 6), 16);
+
+    // Apply tint
+    let newR, newG, newB;
+    if (tint < 0) {
+      // Darken (tint < 0)
+      const factor = 1 + tint; // -1.0 becomes 0 (black), 0 becomes 1 (original)
+      newR = Math.round(r * factor);
+      newG = Math.round(g * factor);
+      newB = Math.round(b * factor);
+    } else {
+      // Lighten (tint > 0)
+      const factor = tint; // 0 to 1
+      newR = Math.round(r + (255 - r) * factor);
+      newG = Math.round(g + (255 - g) * factor);
+      newB = Math.round(b + (255 - b) * factor);
+    }
+
+    // Clamp values to 0-255
+    newR = Math.max(0, Math.min(255, newR));
+    newG = Math.max(0, Math.min(255, newG));
+    newB = Math.max(0, Math.min(255, newB));
+
+    // Convert back to hex
+    const newColor = `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`.toUpperCase();
+
+    console.log(`🎨 Applied tint ${tint} to ${hexColor} → ${newColor}`);
+    return newColor;
+  }
+
+  /**
    * Get activity color from name (fallback when Excel colors not available)
    */
   getActivityColorFromName(activityName) {
@@ -1333,6 +1590,97 @@ class EnhancedCalendarParser {
     if (name.includes('post') && name.includes('harvest')) return '#800080'; // Purple
 
     return '#32CD32'; // Default lime green
+  }
+
+  /**
+   * Calculate and log color extraction statistics
+   */
+  calculateColorStatistics(parsedData) {
+    console.log('\n📊 ========== COLOR EXTRACTION STATISTICS ==========');
+
+    const activities = parsedData.activities || [];
+    const schedule = parsedData.schedule || [];
+
+    // Count activities with colors
+    let activitiesWithColor = 0;
+    const uniqueColors = new Set();
+
+    schedule.forEach(activitySchedule => {
+      let hasColor = false;
+
+      // Check activity background color
+      if (activitySchedule.backgroundColor) {
+        hasColor = true;
+        uniqueColors.add(activitySchedule.backgroundColor);
+      }
+
+      // Check period colors
+      if (activitySchedule.periods) {
+        activitySchedule.periods.forEach(period => {
+          if (period.backgroundColor) {
+            hasColor = true;
+            uniqueColors.add(period.backgroundColor);
+          }
+        });
+      }
+
+      if (hasColor) {
+        activitiesWithColor++;
+      }
+    });
+
+    // Calculate statistics
+    const totalActivities = activities.length;
+    const totalScheduledActivities = schedule.length;
+    const colorExtractionRate = totalActivities > 0
+      ? Math.round((activitiesWithColor / totalActivities) * 100)
+      : 0;
+
+    // Count total periods with colors
+    let totalPeriods = 0;
+    let periodsWithColor = 0;
+
+    schedule.forEach(activitySchedule => {
+      if (activitySchedule.periods) {
+        totalPeriods += activitySchedule.periods.length;
+        periodsWithColor += activitySchedule.periods.filter(p => p.backgroundColor).length;
+      }
+    });
+
+    const periodColorRate = totalPeriods > 0
+      ? Math.round((periodsWithColor / totalPeriods) * 100)
+      : 0;
+
+    // Log comprehensive statistics
+    console.log(`\n🎯 ACTIVITY STATISTICS:`);
+    console.log(`   Total activities detected: ${totalActivities}`);
+    console.log(`   Activities in schedule: ${totalScheduledActivities}`);
+    console.log(`   Activities with colors: ${activitiesWithColor}/${totalActivities} (${colorExtractionRate}%)`);
+
+    console.log(`\n📅 PERIOD STATISTICS:`);
+    console.log(`   Total activity periods: ${totalPeriods}`);
+    console.log(`   Periods with colors: ${periodsWithColor}/${totalPeriods} (${periodColorRate}%)`);
+
+    console.log(`\n🌈 COLOR PALETTE:`);
+    console.log(`   Unique colors found: ${uniqueColors.size}`);
+    if (uniqueColors.size > 0) {
+      console.log(`   Colors: ${Array.from(uniqueColors).join(', ')}`);
+    }
+
+    console.log(`\n✅ COLOR EXTRACTION SUCCESS RATE: ${colorExtractionRate}%`);
+    console.log('📊 ================================================\n');
+
+    return {
+      totalActivities,
+      totalScheduledActivities,
+      activitiesWithColor,
+      colorExtractionRate,
+      totalPeriods,
+      periodsWithColor,
+      periodColorRate,
+      uniqueColors: Array.from(uniqueColors),
+      uniqueColorCount: uniqueColors.size
+    };
   }
 }
 

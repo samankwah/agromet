@@ -220,7 +220,7 @@ const AgrometAdvisoryUpload = ({ isOpen, onClose, onSave }) => {
         setUploadProgress(prev => Math.min(prev + 10, 90));
       }, 200);
 
-      const result = await userService.uploadAgriculturalData(formDataToSubmit, 'agromet-advisory', (progress) => {
+      const result = await userService.uploadWeeklyAdvisory(formDataToSubmit, (progress) => {
         setUploadProgress(progress);
       });
 

@@ -98,10 +98,26 @@ class UserService {
       console.error('📊 Error response:', error.response?.data);
       console.error('🔍 Error status:', error.response?.status);
 
+      // Enhanced error handling with user-friendly messages
+      let userMessage = 'Registration failed. Please try again.';
+
+      if (error.code === 'ECONNREFUSED' || error.code === 'ERR_CONNECTION_REFUSED' || error.message.includes('Network Error')) {
+        userMessage = 'Unable to connect to the server. Please check your internet connection or try again later.';
+      } else if (error.response?.status === 400) {
+        userMessage = error.response?.data?.message || error.response?.data?.error || 'Invalid registration data. Please check your information.';
+      } else if (error.response?.status === 409) {
+        userMessage = 'An account with this email already exists.';
+      } else if (error.response?.status >= 500) {
+        userMessage = 'Server is temporarily unavailable. Please try again in a few moments.';
+      } else if (error.response?.data?.message) {
+        userMessage = error.response.data.message;
+      }
+
       return {
         success: false,
-        error: error.response?.data?.message || error.message,
-        details: error.response?.data
+        error: userMessage,
+        details: error.response?.data,
+        offline: error.code === 'ECONNREFUSED' || error.code === 'ERR_CONNECTION_REFUSED'
       };
     }
   }
@@ -585,9 +601,19 @@ class UserService {
 
   // Agricultural data upload methods
   async uploadAgriculturalData(formData, dataType, progressCallback) {
+    console.log('📤 ========== FRONTEND UPLOAD START ==========');
+    console.log('📤 uploadAgriculturalData called with:', {
+      dataType,
+      isFormData: formData instanceof FormData,
+      baseURL: this.dataBaseURL,
+      endpoint: '/api/agricultural-data/upload',
+      fullURL: this.dataBaseURL + '/api/agricultural-data/upload'
+    });
+
     try {
       // If formData is not a FormData object, handle it as before for file uploads
       if (!(formData instanceof FormData)) {
+        console.log('📤 Creating new FormData from object');
         const newFormData = new FormData();
         newFormData.append('file', formData.file);
         newFormData.append('dataType', dataType);
@@ -597,9 +623,25 @@ class UserService {
         formData = newFormData;
       } else {
         // For crop calendar and other form submissions, add dataType
+        console.log('📤 FormData already created, adding dataType');
         formData.append('dataType', dataType);
       }
 
+      // Log FormData contents
+      console.log('📤 FormData contents:');
+      for (let pair of formData.entries()) {
+        if (pair[1] instanceof File) {
+          console.log(`   ${pair[0]}: [FILE] ${pair[1].name} (${pair[1].size} bytes)`);
+        } else {
+          console.log(`   ${pair[0]}: ${pair[1]}`);
+        }
+      }
+
+      // Check authentication token
+      const token = this.getAuthToken();
+      console.log('📤 Authentication token:', token ? `Present (${token.substring(0, 20)}...)` : 'MISSING');
+
+      console.log('📤 Sending POST request to server...');
       const response = await this.dataAPI.post('/api/agricultural-data/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -607,10 +649,18 @@ class UserService {
         onUploadProgress: (progressEvent) => {
           if (progressCallback && progressEvent.total) {
             const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            console.log(`📤 Upload progress: ${progress}%`);
             progressCallback(progress);
           }
         },
       });
+
+      console.log('✅ Upload successful!', {
+        status: response.status,
+        statusText: response.statusText,
+        data: response.data
+      });
+      console.log('📤 ========== FRONTEND UPLOAD END ==========');
 
       return {
         success: true,
@@ -618,6 +668,21 @@ class UserService {
         message: 'Agricultural data uploaded and processed successfully'
       };
     } catch (error) {
+      console.error('❌ ========== FRONTEND UPLOAD ERROR ==========');
+      console.error('❌ Upload failed:', {
+        message: error.message,
+        code: error.code,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        responseData: error.response?.data,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          baseURL: error.config?.baseURL
+        }
+      });
+      console.error('❌ ========== FRONTEND UPLOAD ERROR END ==========');
+
       return {
         success: false,
         error: error.response?.data?.message || error.message
@@ -627,6 +692,7 @@ class UserService {
 
   async getAgriculturalData(dataType, filters = {}) {
     try {
+      console.log(`🔧 [USER SERVICE] getAgriculturalData called for: ${dataType}`, filters);
       const params = new URLSearchParams();
       Object.keys(filters).forEach(key => {
         if (filters[key]) {
@@ -634,7 +700,17 @@ class UserService {
         }
       });
 
-      const response = await this.dataAPI.get(`/api/agricultural-data/${dataType}?${params.toString()}`);
+      const url = `/api/agricultural-data/${dataType}?${params.toString()}`;
+      console.log(`🔧 [USER SERVICE] Fetching from URL: ${this.dataBaseURL}${url}`);
+      const response = await this.dataAPI.get(url);
+
+      console.log(`🔧 [USER SERVICE] Raw response for ${dataType}:`, {
+        status: response.status,
+        dataType: typeof response.data,
+        isArray: Array.isArray(response.data),
+        length: Array.isArray(response.data) ? response.data.length : 'N/A',
+        sample: Array.isArray(response.data) ? response.data[0] : response.data
+      });
 
       // Ensure data is always an array, regardless of backend response format
       let cleanData = response.data;
@@ -642,18 +718,32 @@ class UserService {
       // Handle different response formats from backend
       if (Array.isArray(cleanData)) {
         // Normal array response - clean each item
+        console.log(`🔧 [USER SERVICE] Path: Direct array (${cleanData.length} items)`);
         cleanData = cleanData.map(item => this.cleanDataItem(item));
       } else if (cleanData && typeof cleanData === 'object') {
+        // DEBUG: Log detailed condition checks
+        console.log(`🔧 [USER SERVICE] Object response - checking conditions:`, {
+          hasSuccess: 'success' in cleanData,
+          successValue: cleanData.success,
+          successType: typeof cleanData.success,
+          hasData: 'data' in cleanData,
+          dataExists: !!cleanData.data,
+          isDataArray: Array.isArray(cleanData.data),
+          dataLength: Array.isArray(cleanData.data) ? cleanData.data.length : 'N/A'
+        });
+
         // Check if it's a structured API response with data property
         if (cleanData.success && cleanData.data && Array.isArray(cleanData.data)) {
           // Extract the data array from structured response
+          console.log(`🔧 [USER SERVICE] Path: Structured response with success flag (${cleanData.data.length} items)`);
           cleanData = cleanData.data.map(item => this.cleanDataItem(item));
         } else if (cleanData.data && Array.isArray(cleanData.data)) {
           // Extract the data array from object response
+          console.log(`🔧 [USER SERVICE] Path: Object with data array (${cleanData.data.length} items)`);
           cleanData = cleanData.data.map(item => this.cleanDataItem(item));
         } else {
           // Object response without valid data array - return empty array
-          console.warn(`${dataType}: Backend returned object without valid data array`);
+          console.warn(`${dataType}: Backend returned object without valid data array`, cleanData);
           cleanData = [];
         }
       } else {
@@ -780,6 +870,69 @@ class UserService {
     } catch (error) {
       console.error('Get calendar stats error:', error);
       throw new Error(error.response?.data?.message || 'Failed to retrieve calendar statistics');
+    }
+  }
+
+  // Weekly Advisory Upload
+  async uploadWeeklyAdvisory(formData, progressCallback) {
+    console.log('📤 ========== WEEKLY ADVISORY UPLOAD START ==========');
+    console.log('📤 uploadWeeklyAdvisory called');
+    console.log('📤 Base URL:', this.dataBaseURL);
+    console.log('📤 Endpoint: /api/weekly-advisories/upload');
+
+    try {
+      // Log FormData contents
+      console.log('📤 FormData contents:');
+      for (let pair of formData.entries()) {
+        if (pair[1] instanceof File) {
+          console.log(`   ${pair[0]}: [FILE] ${pair[1].name} (${pair[1].size} bytes)`);
+        } else {
+          console.log(`   ${pair[0]}: ${pair[1]}`);
+        }
+      }
+
+      // Check authentication token
+      const token = this.getAuthToken();
+      console.log('📤 Authentication token:', token ? `Present (${token.substring(0, 20)}...)` : 'MISSING');
+
+      console.log('📤 Sending POST request to server...');
+      const response = await this.dataAPI.post('/api/weekly-advisories/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent) => {
+          if (progressCallback && progressEvent.total) {
+            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            console.log(`📤 Upload progress: ${progress}%`);
+            progressCallback(progress);
+          }
+        },
+      });
+
+      console.log('✅ Weekly advisory upload successful!', {
+        status: response.status,
+        data: response.data
+      });
+      console.log('📤 ========== WEEKLY ADVISORY UPLOAD END ==========');
+
+      return {
+        success: true,
+        data: response.data,
+        message: response.data.message || 'Weekly advisory uploaded successfully'
+      };
+    } catch (error) {
+      console.error('❌ ========== WEEKLY ADVISORY UPLOAD ERROR ==========');
+      console.error('❌ Upload failed:', {
+        message: error.message,
+        status: error.response?.status,
+        responseData: error.response?.data
+      });
+      console.error('❌ ========== WEEKLY ADVISORY UPLOAD ERROR END ==========');
+
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message
+      };
     }
   }
 }

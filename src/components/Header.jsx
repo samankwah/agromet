@@ -254,18 +254,6 @@ const Header = () => {
           </div> */}
 
           <Link
-            to="/market-page"
-            className={`block px-3 font-semibold border-b-2 text-sm whitespace-nowrap ${
-              location.pathname === "/market-page"
-                ? "border-black"
-                : "border-transparent"
-            } hover:border-black flex flex-row items-center py-2`}
-          >
-            <FaShoppingCart className="mb-1 text-xl mr-1 text-black" />
-            <span>Market</span>
-          </Link>
-
-          <Link
             to="/agro-advisory"
             className={`block px-3 font-semibold border-b-2 text-sm whitespace-nowrap ${
               location.pathname === "/agro-advisory"
@@ -276,7 +264,17 @@ const Header = () => {
             <FaComments className="mb-1 text-xl mr-1 text-black" />
             <span>Agromet Advisory</span>
           </Link>
-
+          <Link
+            to="/crop-diagnose"
+            className={`block px-3 font-semibold border-b-2 text-sm whitespace-nowrap ${
+              location.pathname === "/crop-diagnose"
+                ? "border-black"
+                : "border-transparent"
+            } hover:border-black flex flex-row items-center py-2`}
+          >
+            <FaCamera className="mb-1 text-xl mr-1 text-black" />
+            <span>Diagnose</span>
+          </Link>
           <Link
             to="/media-page"
             className={`block px-3 font-semibold border-b-2 text-sm whitespace-nowrap ${
@@ -288,17 +286,16 @@ const Header = () => {
             <FaImage className="mb-1 text-xl mr-1 text-black" />
             <span>Media</span>
           </Link>
-
           <Link
-            to="/crop-diagnose"
+            to="/market-page"
             className={`block px-3 font-semibold border-b-2 text-sm whitespace-nowrap ${
-              location.pathname === "/crop-diagnose"
+              location.pathname === "/market-page"
                 ? "border-black"
                 : "border-transparent"
             } hover:border-black flex flex-row items-center py-2`}
           >
-            <FaCamera className="mb-1 text-xl mr-1 text-black" />
-            <span>Diagnose</span>
+            <FaShoppingCart className="mb-1 text-xl mr-1 text-black" />
+            <span>Market</span>
           </Link>
         </div>
 

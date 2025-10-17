@@ -141,17 +141,27 @@ const Dashboard = () => {
 
   const loadAgriculturalStats = async () => {
     try {
+      console.log('📊 [DASHBOARD] loadAgriculturalStats started');
       const dataTypes = ['crop-calendar', 'agromet-advisory', 'poultry-calendar', 'poultry-advisory'];
 
       // Add cache-busting parameter to ensure fresh data
       const timestamp = Date.now();
+      console.log('📊 [DASHBOARD] Calling getAgriculturalData for types:', dataTypes);
       const results = await Promise.allSettled(
         dataTypes.map(type => userService.getAgriculturalData(type, { _t: timestamp }))
       );
-      
-      const [cropCalendarData, agrometAdvisoryData, poultryCalendarData, poultryAdvisoryData] = results.map(result => 
+
+      console.log('📊 [DASHBOARD] Raw results from Promise.allSettled:', results);
+
+      const [cropCalendarData, agrometAdvisoryData, poultryCalendarData, poultryAdvisoryData] = results.map(result =>
         result.status === 'fulfilled' ? result.value : { success: false, data: [] }
       );
+
+      console.log('📊 [DASHBOARD] Crop Calendar Data received:', {
+        success: cropCalendarData.success,
+        dataLength: cropCalendarData.data?.length,
+        sampleData: cropCalendarData.data?.[0]
+      });
 
       const stats = {
         cropCalendars: {

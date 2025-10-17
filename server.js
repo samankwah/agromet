@@ -20,8 +20,14 @@ import {
   updateCropCalendar,
   deleteCropCalendar,
   migrateFromJSON,
-  getDatabaseStats
+  getDatabaseStats,
+  insertWeeklyAdvisory,
+  getWeeklyAdvisories,
+  getWeeklyAdvisoryById,
+  getWeeklyAdvisoryActivities,
+  deleteWeeklyAdvisory
 } from './database/dal.js';
+import weeklyAdvisoryParser from './services/weeklyAdvisoryParser.js';
 
 // Database configuration and detection
 let isDatabaseEnabled = false;
@@ -114,16 +120,31 @@ const saveCalendarData = async (calendarData, dataType) => {
  * Retrieve calendar data using dual-mode storage
  */
 const getCalendarData = async (dataType, filters = {}) => {
+  console.log('🗄️ getCalendarData called:', {
+    dataType,
+    filters,
+    isDatabaseEnabled,
+    databaseInitialized,
+    willQueryPostgreSQL: isDatabaseEnabled && databaseInitialized
+  });
+
   if (isDatabaseEnabled && databaseInitialized) {
     try {
       console.log('📊 Attempting to retrieve from PostgreSQL...');
+      console.log('   Calling getCropCalendarsByType with:', { dataType, filters });
       const data = await getCropCalendarsByType(dataType, filters);
       console.log(`✅ Retrieved ${data.length} records from PostgreSQL`);
+      console.log('   ✅ SUCCESS: Returning PostgreSQL data');
       return { success: true, storage: 'postgresql', data };
     } catch (error) {
-      console.error('❌ PostgreSQL retrieval failed:', error.message);
+      console.error('❌ PostgreSQL retrieval failed!');
+      console.error('   Error message:', error.message);
+      console.error('   Error type:', error.name);
+      console.error('   Error code:', error.code);
       console.log('🔄 Falling back to JSON storage...');
     }
+  } else {
+    console.log('⏭️  Skipping PostgreSQL (not enabled/initialized), using JSON directly');
   }
 
   // Fallback to JSON storage with filtering
@@ -427,18 +448,24 @@ app.post('/api/agricultural-data/upload', authenticateToken, uploadMemory.single
     const { dataType } = req.body;
     const file = req.file;
 
-    console.log('🔐 Auth status:', {
-      hasUser: !!req.user,
-      userId: req.user?.userId,
-      userEmail: req.user?.email
+    console.log('='.repeat(100));
+    console.log('📤 AGRICULTURAL DATA UPLOAD REQUEST RECEIVED');
+    console.log('='.repeat(100));
+    console.log('🔐 Authentication:', {
+      authenticated: !!req.user,
+      userId: req.user?.userId || 'NONE',
+      userEmail: req.user?.email || 'NONE'
     });
-    console.log('📤 Enhanced upload request received:', {
-      dataType,
+    console.log('📋 Request Body Fields:', Object.keys(req.body));
+    console.log('📋 Request Body Values:', req.body);
+    console.log('📁 File Info:', {
       hasFile: !!file,
-      fileName: file?.originalname,
-      fileSize: file?.size,
-      bodyFields: Object.keys(req.body)
+      fileName: file?.originalname || 'NO FILE',
+      fileSize: file?.size || 0,
+      mimeType: file?.mimetype || 'NONE'
     });
+    console.log('🎯 Data Type:', dataType || 'NOT SET');
+    console.log('='.repeat(100));
     
     if (!dataType) {
       return res.status(400).json({ message: 'Data type is required' });
@@ -530,7 +557,7 @@ app.post('/api/agricultural-data/upload', authenticateToken, uploadMemory.single
     
     // Handle crop calendar uploads with enhanced parser
     if (dataType === 'crop-calendar') {
-      console.log('🌾 Processing crop calendar upload');
+      console.log('\n🌾 ========== CROP CALENDAR UPLOAD ==========');
 
       // Validate required fields
       const {
@@ -539,20 +566,22 @@ app.post('/api/agricultural-data/upload', authenticateToken, uploadMemory.single
         crop
       } = req.body;
 
-      console.log('📋 Form data validation:', {
-        region: !!region,
-        district: !!district,
-        crop: !!crop,
-        hasFile: !!file
-      });
+      console.log('📋 Crop Calendar Form Data:');
+      console.log('   - Region:', region || '❌ MISSING');
+      console.log('   - District:', district || '❌ MISSING');
+      console.log('   - Crop:', crop || '❌ MISSING');
+      console.log('   - File:', file?.originalname || '❌ NO FILE');
 
       if (!region || !district || !crop) {
-        console.log('❌ Missing required fields:', { region, district, crop });
+        console.log('❌ VALIDATION FAILED - Missing required fields');
+        console.log('   ❌ Missing:', { region: !region, district: !district, crop: !crop });
         return res.status(400).json({
           success: false,
           message: 'Missing required fields: region, district, and crop are required'
         });
       }
+
+      console.log('✅ Validation passed - All required fields present');
 
       // If file is provided, use enhanced parser for color extraction
       if (file) {
@@ -1620,12 +1649,14 @@ app.get('/api/enhanced-calendars/:id/activities', (req, res) => {
 });
 
 // Specific crop calendar endpoint for frontend filtering (must come before generic route)
-app.get('/api/agricultural-data/crop-calendar', (req, res) => {
+app.get('/api/agricultural-data/crop-calendar', async (req, res) => {
   try {
     console.log('Crop calendar filter request:', req.query);
 
-    // Get all crop calendar data (includes both regular and enhanced calendars)
-    let allCropData = [...(agriculturalData['crop-calendar'] || [])];
+    // Get all crop calendar data from database (with PostgreSQL + JSON fallback)
+    const result = await getCalendarData('crop-calendar', {});
+    let allCropData = result.data || [];
+    console.log(`📊 Retrieved ${allCropData.length} crop calendars from ${result.storage}`);
 
     // Apply filters
     const { region, district, crop, season, regionCode, districtCode, commodityCode } = req.query;
@@ -1723,14 +1754,42 @@ app.get('/api/agricultural-data/crop-calendar', (req, res) => {
 
     console.log(`Crop calendar filter: ${allCropData.length} total -> ${filteredData.length} filtered`);
 
+    // DEDUPLICATION: Show only the latest calendar for each district/crop/season combination
+    const deduplicatedData = [];
+    const seenCombinations = new Map();
+
+    transformedData.forEach(calendar => {
+      // Create unique key for district + crop + season
+      const district = (calendar.district || '').toLowerCase().trim();
+      const crop = (calendar.crop || calendar.commodity || '').toLowerCase().trim();
+      const season = (calendar.season || 'major').toLowerCase().trim();
+      const key = `${district}_${crop}_${season}`;
+
+      const existing = seenCombinations.get(key);
+      const calendarDate = new Date(calendar.uploadDate || calendar.created_at || 0);
+
+      if (!existing || calendarDate > existing.date) {
+        seenCombinations.set(key, { calendar, date: calendarDate });
+      }
+    });
+
+    // Extract deduplicated calendars
+    seenCombinations.forEach(({ calendar }) => {
+      deduplicatedData.push(calendar);
+    });
+
+    console.log(`📊 Deduplicated: ${transformedData.length} -> ${deduplicatedData.length} calendars (showing latest per district/crop/season)`);
+
     res.json({
       success: true,
-      data: transformedData,
-      total: transformedData.length,
+      data: deduplicatedData,
+      total: deduplicatedData.length,
       filters: req.query,
       metadata: {
         totalRecords: allCropData.length,
-        filteredRecords: transformedData.length,
+        filteredRecords: filteredData.length,
+        deduplicatedRecords: deduplicatedData.length,
+        duplicatesRemoved: transformedData.length - deduplicatedData.length,
         queryTime: new Date().toISOString()
       }
     });
@@ -1750,19 +1809,49 @@ app.get('/api/agricultural-data/:dataType', async (req, res) => {
   try {
     const { dataType } = req.params;
 
-    console.log(`🔍 [SERVER DEBUG] GET request for ${dataType} data with filters:`, req.query);
+    console.log('='.repeat(100));
+    console.log(`📊 GET /api/agricultural-data/${dataType}`);
+    console.log('='.repeat(100));
+    console.log('🔍 Query parameters:', req.query);
+    console.log('🔍 All possible filter fields:', {
+      region: req.query.region,
+      district: req.query.district,
+      crop: req.query.crop,
+      regionCode: req.query.regionCode,
+      districtCode: req.query.districtCode,
+      commodityCode: req.query.commodityCode,
+      poultryType: req.query.poultryType
+    });
 
     if (!['crop-calendar', 'agromet-advisory', 'poultry-calendar', 'poultry-advisory'].includes(dataType)) {
-      console.log(`❌ [SERVER DEBUG] Invalid data type requested: ${dataType}`);
+      console.log(`❌ Invalid data type requested: ${dataType}`);
       return res.status(400).json({ message: 'Invalid data type' });
     }
 
+    // Normalize filter parameters (handle both direct and *Code formats)
+    const filters = {
+      region: req.query.region || req.query.regionCode,
+      district: req.query.district || req.query.districtCode,
+      crop: req.query.crop || req.query.commodityCode || req.query.poultryType
+    };
+
+    console.log('🎯 Normalized filters for database query:', filters);
+
     // Retrieve data using dual-mode storage (PostgreSQL + JSON fallback)
-    const result = await getCalendarData(dataType, req.query);
+    const result = await getCalendarData(dataType, filters);
     const data = result.data || [];
 
-    console.log(`📊 [SERVER DEBUG] Retrieved ${data.length} records from ${result.storage} for ${dataType}`);
-    console.log(`📄 [SERVER DEBUG] First few items for ${dataType}:`, data.slice(0, 2));
+    console.log(`📊 Retrieved ${data.length} records from ${result.storage} for ${dataType}`);
+    if (data.length > 0) {
+      console.log(`📄 Sample record:`, {
+        id: data[0].id,
+        region: data[0].region,
+        district: data[0].district,
+        crop: data[0].crop,
+        hasSchedule: !!data[0].schedule,
+        hasActivities: !!data[0].activities
+      });
+    }
 
     // Apply additional filters for JSON storage if needed
     let filteredData = data;
@@ -2388,6 +2477,212 @@ app.get('/api/crop-calendars/stats', (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error retrieving calendar statistics',
+      error: error.message
+    });
+  }
+});
+
+// =============================================================================
+// WEEKLY ADVISORY ENDPOINTS
+// =============================================================================
+
+// Upload and parse weekly advisory Excel file
+app.post('/api/weekly-advisories/upload', authenticateToken, uploadMemory.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No file uploaded'
+      });
+    }
+
+    console.log('📊 Parsing weekly advisory Excel file...');
+
+    // Save temp file
+    const tempFilePath = path.join(__dirname, 'uploads', `temp_advisory_${Date.now()}.xlsx`);
+    fs.writeFileSync(tempFilePath, req.file.buffer);
+
+    // Parse Excel file
+    const parseResult = await weeklyAdvisoryParser.parseExcel(tempFilePath);
+
+    // Clean up temp file
+    fs.unlinkSync(tempFilePath);
+
+    if (!parseResult.success || parseResult.advisories.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Failed to parse Excel file',
+        error: parseResult.error
+      });
+    }
+
+    // Insert advisories into database
+    const insertedAdvisories = [];
+    const errors = [];
+
+    for (const advisory of parseResult.advisories) {
+      try {
+        const result = await insertWeeklyAdvisory(advisory);
+        insertedAdvisories.push(result);
+      } catch (error) {
+        errors.push({
+          activity: advisory.activity_stage,
+          error: error.message
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Successfully uploaded ${insertedAdvisories.length} advisory activities`,
+      data: {
+        inserted: insertedAdvisories.length,
+        errors: errors.length,
+        errorDetails: errors
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Weekly advisory upload error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error uploading weekly advisory',
+      error: error.message
+    });
+  }
+});
+
+// Get weekly advisories with filters
+app.get('/api/weekly-advisories', async (req, res) => {
+  try {
+    const filters = {
+      region: req.query.region,
+      district: req.query.district,
+      crop_type: req.query.crop || req.query.crop_type,
+      year: req.query.year ? parseInt(req.query.year) : undefined,
+      week_number: req.query.week ? parseInt(req.query.week) : undefined,
+      activity_stage: req.query.activity
+    };
+
+    // Remove undefined values
+    Object.keys(filters).forEach(key => {
+      if (filters[key] === undefined) delete filters[key];
+    });
+
+    console.log('📋 Fetching weekly advisories with filters:', filters);
+
+    const advisories = await getWeeklyAdvisories(filters);
+
+    res.json({
+      success: true,
+      data: advisories,
+      count: advisories.length
+    });
+
+  } catch (error) {
+    console.error('❌ Error fetching weekly advisories:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching weekly advisories',
+      error: error.message
+    });
+  }
+});
+
+// Get list of activities for specific filters
+app.get('/api/weekly-advisories/activities', async (req, res) => {
+  try {
+    const filters = {
+      region: req.query.region,
+      district: req.query.district,
+      crop_type: req.query.crop || req.query.crop_type,
+      year: req.query.year ? parseInt(req.query.year) : undefined
+    };
+
+    // Remove undefined values
+    Object.keys(filters).forEach(key => {
+      if (filters[key] === undefined) delete filters[key];
+    });
+
+    console.log('📋 Fetching advisory activities with filters:', filters);
+
+    const activities = await getWeeklyAdvisoryActivities(filters);
+
+    res.json({
+      success: true,
+      data: activities,
+      count: activities.length
+    });
+
+  } catch (error) {
+    console.error('❌ Error fetching advisory activities:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching advisory activities',
+      error: error.message
+    });
+  }
+});
+
+// Get specific advisory by ID
+app.get('/api/weekly-advisories/:advisory_id', async (req, res) => {
+  try {
+    const { advisory_id } = req.params;
+
+    console.log('📋 Fetching weekly advisory:', advisory_id);
+
+    const advisory = await getWeeklyAdvisoryById(advisory_id);
+
+    res.json({
+      success: true,
+      data: advisory
+    });
+
+  } catch (error) {
+    console.error('❌ Error fetching weekly advisory:', error);
+
+    if (error.message.includes('not found')) {
+      return res.status(404).json({
+        success: false,
+        message: 'Weekly advisory not found',
+        error: error.message
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching weekly advisory',
+      error: error.message
+    });
+  }
+});
+
+// Delete weekly advisory
+app.delete('/api/weekly-advisories/:advisory_id', authenticateToken, async (req, res) => {
+  try {
+    const { advisory_id } = req.params;
+
+    console.log('🗑️ Deleting weekly advisory:', advisory_id);
+
+    const deleted = await deleteWeeklyAdvisory(advisory_id);
+
+    if (!deleted) {
+      return res.status(404).json({
+        success: false,
+        message: 'Weekly advisory not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Weekly advisory deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('❌ Error deleting weekly advisory:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting weekly advisory',
       error: error.message
     });
   }
