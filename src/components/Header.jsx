@@ -16,7 +16,7 @@ import {
 } from "react-icons/fa";
 import { Link, useLocation } from "react-router-dom";
 import PropTypes from "prop-types";
-import logo2 from "../assets/images/triagrio.png";
+import logo2 from "../assets/images/agromet-high-resolution-logo-transparent.png";
 import { useChatbotIntegration } from "../hooks/useChatbotIntegration";
 
 // Dropdown Component
