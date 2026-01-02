@@ -1,0 +1,47 @@
+.popup-container {
+  font-family: Arial, sans-serif;
+  color: #333;
+  min-width: 200px;
+}
+
+.city-name {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #007bff; /* Blue color for city name */
+}
+
+.date {
+  font-size: 14px;
+  color: #007bff;
+  margin-bottom: 10px;
+}
+
+.weather-detail {
+  font-size: 14px;
+}
+
+.weather-time {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.weather-icon {
+  margin-left: 10px;
+  font-size: 20px;
+  color: #ffa500; /* Orange for sunny intervals */
+}
+
+.temp-detail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 5px;
+}
+
+.temp-icon {
+  font-size: 18px;
+  color: #ff6347; /* Red for temperature */
+}
