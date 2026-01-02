@@ -199,7 +199,7 @@ const Header = () => {
             <img
               src={logo2}
               alt="agropulse logo"
-              className="h-8 md:h-10 rounded-lg p-1"
+              className="h-10 md:h-12 rounded-lg p-1"
             />
           </Link>
         </div>
