@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import CalendarFullPageView from '../components/common/CalendarFullPageView';
 import calendarPreviewParser from '../utils/calendarPreviewParser';
+import PageTitle from '../components/PageTitle';
 
 const CalendarPreviewPage = () => {
   const [searchParams] = useSearchParams();
@@ -47,12 +48,15 @@ const CalendarPreviewPage = () => {
   };
 
   return (
-    <CalendarFullPageView 
-      calendarData={calendarData}
-      loading={loading}
-      error={error}
-      onBack={handleBack}
-    />
+    <>
+      <PageTitle title="Calendar Preview" />
+      <CalendarFullPageView
+        calendarData={calendarData}
+        loading={loading}
+        error={error}
+        onBack={handleBack}
+      />
+    </>
   );
 };
 

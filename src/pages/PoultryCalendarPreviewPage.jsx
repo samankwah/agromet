@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import CalendarFullPageView from '../components/common/CalendarFullPageView';
 import calendarPreviewParser from '../utils/calendarPreviewParser';
+import PageTitle from '../components/PageTitle';
 
 const PoultryCalendarPreviewPage = () => {
   const [searchParams] = useSearchParams();
@@ -47,12 +48,15 @@ const PoultryCalendarPreviewPage = () => {
   };
 
   return (
-    <CalendarFullPageView 
-      calendarData={calendarData}
-      loading={loading}
-      error={error}
-      onBack={handleBack}
-    />
+    <>
+      <PageTitle title="Poultry Calendar Preview" />
+      <CalendarFullPageView
+        calendarData={calendarData}
+        loading={loading}
+        error={error}
+        onBack={handleBack}
+      />
+    </>
   );
 };
 

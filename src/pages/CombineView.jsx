@@ -1,6 +1,7 @@
 import { useState } from "react";
 import MediaPage from "../pages/MediaPage";
 import CropCalendar from "../pages/CropCalendar";
+import PageTitle from "../components/PageTitle";
 
 const CombinedView = () => {
   const [showCalendar, setShowCalendar] = useState(false);
@@ -17,7 +18,9 @@ const CombinedView = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      <PageTitle title="Media & Calendar" />
+      <div className="min-h-screen bg-gray-50">
       <div className="flex flex-col lg:flex-row">
         {/* MediaPage Section */}
         <div
@@ -41,6 +44,7 @@ const CombinedView = () => {
         )}
       </div>
     </div>
+    </>
   );
 };
 
