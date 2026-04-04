@@ -2,7 +2,30 @@
   "permissions": {
     "allow": [
       "Bash(dir:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(node -e ':*)",
+      "Bash(npx vite:*)",
+      "Bash(python -c \"from app.spreadsheet_parser import _parse_agromet_sheet, _build_agromet_preview; print\\('Parser OK'\\)\")",
+      "Bash(python -c \"from app.domain import build_advisory_payload; print\\('Domain OK'\\)\")",
+      "Bash(curl -s http://localhost:8000/health)",
+      "Bash(curl -s -X POST http://localhost:8000/api/weekly-advisories/preview -F \"file=@Rice excel template - Amenfi Central.xlsx\" -F \"regionCode=REG01\" -F \"districtCode=DS001\" -F \"commodityCode=CT0001\" -F \"title=Agromet Advisory - Amenfi Central\" -F \"description=Weekly advisory for maize in Wassa Amenfi Central\")",
+      "Bash(python -c ':*)",
+      "Bash(curl -s -X POST http://localhost:8000/api/weekly-advisories/preview -F \"file=@Rice excel template - Amenfi Central.xlsx\" -F \"regionCode=REG01\" -F \"districtCode=DS001\" -F \"commodityCode=CT0001\" -F \"title=Test\" -F \"description=Test\")",
+      "Bash(curl -s -X POST http://localhost:8000/api/weekly-advisories/commit -F \"parseToken=iEZNNghV4Udqm1VmJYAWL-EpQnJpO_aC\")",
+      "Bash(curl -s http://localhost:8000/api/weekly-advisories/1)",
+      "Bash(curl -s \"http://localhost:8000/api/weekly-advisories/activities?region=REG01&district=DS001&crop=CT0001\")",
+      "Bash(curl -s \"http://localhost:8000/api/weekly-advisories/1?activity=Site+selection\")",
+      "Bash(curl -s \"http://localhost:8000/api/weekly-advisories/activities?region=WESTERN&district=Wassa+Amenfi+Central&crop=Maize\")",
+      "Bash(curl:*)",
+      "Bash(python -m json.tool)",
+      "Bash(python3 -c ':*)",
+      "Bash(/c/Users/CRAFT/AppData/Local/Programs/Python/Python311/python.exe -c ':*)",
+      "Bash(sqlite3 agromet.db \"SELECT COUNT\\(*\\) as calendar_count FROM calendars WHERE calendar_type='cycle';\")",
+      "Bash(python3)",
+      "Bash(/c/Users/CRAFT/AppData/Local/Programs/Python/Python311/python)",
+      "Bash(/c/Users/CRAFT/AppData/Local/Programs/Python/Python311/python.exe -m json.tool)",
+      "Bash(/c/Users/CRAFT/AppData/Local/Programs/Python/Python311/python.exe -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('token:', d['data']['parseToken']\\); print\\('activities:', len\\(d['data']['extracted']['activities']\\)\\)\")",
+      "Bash(/c/Users/CRAFT/AppData/Local/Programs/Python/Python311/python.exe -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('token:', d['data']['parseToken']\\)\")"
     ]
   }
 }
