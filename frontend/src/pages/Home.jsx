@@ -49,15 +49,68 @@ import {
   Search,
 } from "lucide-react";
 import API_CONFIG from "../config/apiConfig";
+import T from "../components/common/T";
+
+const SECTION_CARD =
+  "bg-white/10 backdrop-blur-md border border-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.12)] rounded-2xl p-4 md:p-5 lg:p-6";
+
+const SECTION_HEADING =
+  "text-white text-2xl md:text-3xl font-semibold tracking-tight";
+
+const SECTION_SUBHEADING = "text-blue-100/80 text-sm md:text-base mt-1";
+
+const heroBackgroundStyle = {
+  backgroundImage: `url(${backgroundImage})`,
+  backgroundSize: "cover",
+  backgroundPosition: "center",
+  backgroundRepeat: "no-repeat",
+  backgroundAttachment: "fixed",
+};
+
+const NewsCard = ({ image, alt, title, excerpt, to }) => (
+  <article className="group bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col transition duration-200 hover:-translate-y-0.5 hover:shadow-xl">
+    <div className="aspect-[16/9] overflow-hidden">
+      <img
+        src={image}
+        alt={alt}
+        className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
+      />
+    </div>
+    <div className="p-5 flex flex-col flex-grow">
+      <h3 className="text-blue-700 font-semibold text-lg leading-snug">
+        <T>{title}</T>
+      </h3>
+      <p className="text-gray-600 text-sm mt-2 leading-relaxed flex-grow">
+        <T>{excerpt}</T>
+      </p>
+      <Link
+        to={to}
+        className="text-blue-600 font-semibold mt-4 inline-flex items-center hover:underline"
+      >
+        <T>Read More</T> <FaArrowRight className="ml-1" />
+      </Link>
+    </div>
+  </article>
+);
+
+NewsCard.propTypes = {
+  image: PropTypes.string.isRequired,
+  alt: PropTypes.string.isRequired,
+  title: PropTypes.string.isRequired,
+  excerpt: PropTypes.string.isRequired,
+  to: PropTypes.string.isRequired,
+};
 
 const sliderSettings = {
   infinite: true,
-  speed: 3000,
+  speed: 800,
   slidesToShow: 4,
   arrows: false,
   autoplay: true,
-  autoplaySpeed: 0,
+  autoplaySpeed: 3000,
   slidesToScroll: 1,
+  pauseOnHover: true,
+  cssEase: "cubic-bezier(0.45, 0, 0.55, 1)",
   responsive: [
     { breakpoint: 1200, settings: { slidesToShow: 4 } },
     { breakpoint: 992, settings: { slidesToShow: 3 } },
@@ -80,7 +133,8 @@ const weatherFocusableSelector =
   'a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
 const updateSliderAccessibility = (sliderRef) => {
-  const sliderRoot = sliderRef.current?.innerSlider?.list?.closest(".slick-slider");
+  const sliderRoot =
+    sliderRef.current?.innerSlider?.list?.closest(".slick-slider");
   if (!sliderRoot) return;
 
   sliderRoot.querySelectorAll(".slick-slide").forEach((slide) => {
@@ -95,7 +149,7 @@ const updateSliderAccessibility = (sliderRef) => {
         if (!element.hasAttribute("data-weather-tabindex")) {
           element.setAttribute(
             "data-weather-tabindex",
-            element.getAttribute("tabindex") ?? ""
+            element.getAttribute("tabindex") ?? "",
           );
         }
         element.setAttribute("tabindex", "-1");
@@ -180,7 +234,7 @@ const DynamicPopup = ({ popupData, setPopupData }) => {
               </div>
             </div>
           </div>
-        `
+        `,
         )
         .openOn(map);
       const closePopup = () => {
@@ -237,7 +291,7 @@ WeatherIcon.propTypes = {
 
 const getFormattedDate = () => {
   const options = { day: "2-digit", month: "long", year: "numeric" };
-  return new Date().toLocaleDateString("en-US", options);
+  return new Date().toLocaleDateString("en-GB", options);
 };
 
 const DefaultIcon = L.icon({
@@ -267,7 +321,7 @@ const WeatherCard = ({ city, condition, minTemp, maxTemp, type }) => (
       />
     </div>
     <p className="text-xs sm:text-sm font-montserrat mb-2 truncate">
-      {condition}
+      <T>{condition}</T>
     </p>
     <div className="flex items-center gap-2">
       <img
@@ -278,7 +332,7 @@ const WeatherCard = ({ city, condition, minTemp, maxTemp, type }) => (
         width="20"
       />
       <p className="text-xs">
-        Min: {minTemp}°C | Max: {maxTemp}°C
+        <T>Min</T>: {minTemp}°C | <T>Max</T>: {maxTemp}°C
       </p>
     </div>
   </div>
@@ -303,37 +357,39 @@ const Home = () => {
 
   const forecastCategories = [
     {
-      title: "Weather Forecasts",
+      title: <T>Weather Forecasts</T>,
       icon: <Cloud className="text-blue-500" />,
       items: [
-        { name: "Weekly Forecast", path: "/7-days-forecast" },
+        { name: <T>Weekly Forecast</T>, path: "/7-days-forecast" },
         {
-          name: "Subseasonal 2 Seasonal Forecast",
+          name: <T>Subseasonal 2 Seasonal Forecast</T>,
           path: "/subseasonal-forecast",
         },
-        { name: "Seasonal Forecast", path: "/seasonal-forecast" },
+        { name: <T>Seasonal Forecast</T>, path: "/seasonal-forecast" },
       ],
     },
     {
-      title: "Environmental Monitoring",
+      title: <T>Environmental Monitoring</T>,
       icon: <BarChart2 className="text-green-600" />,
-      items: [{ name: "Flood and Drought Bulletins", path: "/flood-drought" }],
+      items: [
+        { name: <T>Flood and Drought Bulletins</T>, path: "/flood-drought" },
+      ],
     },
     {
-      title: "Agricultural Resources",
+      title: <T>Agricultural Resources</T>,
       icon: <Wheat className="text-amber-600" />,
       items: [
-        { name: "Agrometeorological Bulletins", path: "/agro-bulletins" },
-        { name: "Crop Calendar", path: "/crop-calendar" },
-        { name: "Crop Advisories", path: "/crop-advisory" },
+        { name: <T>Agrometeorological Bulletins</T>, path: "/agro-bulletins" },
+        { name: <T>Crop Calendar</T>, path: "/crop-calendar" },
+        { name: <T>Crop Advisories</T>, path: "/crop-advisory" },
       ],
     },
     {
-      title: "Livestock Management",
+      title: <T>Livestock Management</T>,
       icon: <Bird className="text-purple-600" />,
       items: [
-        { name: "Poultry Calendar", path: "/poultry-calendar" },
-        { name: "Poultry Advisories", path: "/poultry-advisory" },
+        { name: <T>Poultry Calendar</T>, path: "/poultry-calendar" },
+        { name: <T>Poultry Advisories</T>, path: "/poultry-advisory" },
       ],
     },
   ];
@@ -529,7 +585,7 @@ const Home = () => {
         {
           headers: { "Content-type": "application/json" },
           signal: controller.signal,
-        }
+        },
       );
 
       clearTimeout(timeoutId);
@@ -598,7 +654,7 @@ const Home = () => {
     const baseTemp = cityData.lat > 9 ? 30 : cityData.lat > 7 ? 28 : 26;
     const tempVariation = isNight ? -3 : 2;
     const currentTemp = Math.round(
-      baseTemp + tempVariation + Math.random() * 4
+      baseTemp + tempVariation + Math.random() * 4,
     );
 
     // Time-based weather conditions
@@ -631,16 +687,19 @@ const Home = () => {
   const settings = {
     infinite: true,
     slidesToShow: 6,
-    slidesToScroll: 2,
+    slidesToScroll: 1,
     autoplay: true,
-    autoplaySpeed: 4000,
+    autoplaySpeed: 0,
     accessibility: false,
-    speed: 500,
+    speed: 8000,
     pauseOnHover: true,
+    cssEase: "linear",
     beforeChange: () => {
       if (
         document.activeElement instanceof HTMLElement &&
-        weatherSliderRef.current?.innerSlider?.list?.contains(document.activeElement)
+        weatherSliderRef.current?.innerSlider?.list?.contains(
+          document.activeElement,
+        )
       ) {
         document.activeElement.blur();
       }
@@ -678,7 +737,7 @@ const Home = () => {
     } catch (error) {
       // Fallback to mock data for all cities
       const fallbackData = ghanaCities.map((city) =>
-        getMockWeatherForCity(city)
+        getMockWeatherForCity(city),
       );
       setWeatherData(fallbackData);
     } finally {
@@ -706,8 +765,8 @@ const Home = () => {
       const now = new Date();
       const dateOptions = { day: "2-digit", month: "short", year: "numeric" };
       const timeOptions = { hour: "2-digit", minute: "2-digit", hour12: false };
-      setCurrentDateTime(now.toLocaleDateString("en-US", dateOptions));
-      setFormattedTime(now.toLocaleTimeString("en-US", timeOptions));
+      setCurrentDateTime(now.toLocaleDateString("en-GB", dateOptions));
+      setFormattedTime(now.toLocaleTimeString("en-GB", timeOptions));
     };
     updateDateTime();
     const interval = setInterval(updateDateTime, 60000);
@@ -725,284 +784,281 @@ const Home = () => {
         includeAppName={false}
       />
       <div
-        className="min-h-screen bg-gray-950 mx-auto px-4 py-1 md:px-8 lg:px-12"
-        style={{
-          backgroundImage: `url(${backgroundImage})`,
-          backgroundSize: "1400px 1200px",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-          backgroundAttachment: "fixed",
-          WebkitBackgroundSize: "1200px 800px",
-          MozBackgroundSize: "1200px 800px",
-        }}
+        className="min-h-screen bg-gray-950 relative"
+        style={heroBackgroundStyle}
       >
-        <main className="flex-grow mt-8 md:mt-16 container mx-auto">
-          <div className="pt-8 md:pt-12 lg:pt-2">
-            {/* <h1 className="text-3xl md:text-4xl lg:text-6xl font-bold text-white text-center my-8 md:my-10 lg:my-16">
-              AgroMeteorological Information Services
-            </h1> */}
+        <div className="absolute inset-0 bg-gradient-to-b from-gray-950/70 via-gray-950/40 to-gray-950/80 pointer-events-none" />
+        <main className="relative container mx-auto px-4 sm:px-6 lg:px-8 pt-24 md:pt-28 lg:pt-32 pb-10 md:pb-12 space-y-8 md:space-y-10">
+          <section className="text-center max-w-3xl mx-auto">
+            <span className="inline-block px-3 py-1 rounded-full bg-blue-500/20 border border-blue-300/30 text-blue-100 text-xs md:text-sm font-medium tracking-wide uppercase">
+              <T>Ghana AgroMet Platform</T>
+            </span>
+            <h1 className="mt-4 text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight tracking-tight">
+              <T>Weather Intelligence for Ghana&apos;s Farmers</T>
+            </h1>
+            <p className="mt-4 md:mt-6 text-base md:text-lg text-blue-100/90 leading-relaxed">
+              <T>
+                Hyper-local forecasts, early warnings and agro-advisories built
+                with GMet, MoFA and the World Bank to help farmers plan with
+                confidence.
+              </T>
+            </p>
+            <div className="mt-6 md:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+              <Link
+                to="/seven-days-forecast"
+                className="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-lg transition"
+              >
+                <T>View 7-Day Forecast</T>
+                <FaArrowRight className="ml-2" />
+              </Link>
+              <Link
+                to="/crop-advisory"
+                className="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold transition"
+              >
+                <T>Get Crop Advisory</T>
+              </Link>
+            </div>
+          </section>
 
-            {data.name && (
-              <div className="bg-white/20 backdrop-blur-[5px] rounded-xl p-4 mt-4 max-w-md mx-auto">
-                <h3 className="text-white font-bold">
-                  Weather for {data.name}
-                </h3>
-                <p className="text-white">
-                  Condition: {data.weather && data.weather[0]?.description}
-                </p>
-                <p className="text-white">
-                  Temperature:{" "}
-                  {data.main && Math.round(data.main.temp - 273.15)}
-                  °C
-                </p>
-              </div>
-            )}
-            <div className="bg-[#218af300] rounded-lg shadow-lg p-4 mb-8">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-white text-lg md:text-xl">
-                  Weather for {getFormattedDate()}
+          {data.name && (
+            <div className="bg-white/15 backdrop-blur-md border border-white/20 rounded-xl p-4 max-w-md mx-auto">
+              <h3 className="text-white font-bold">
+                <T>Weather for</T> {data.name}
+              </h3>
+              <p className="text-white">
+                <T>Condition</T>:{" "}
+                {data.weather && <T>{data.weather[0]?.description}</T>}
+              </p>
+              <p className="text-white">
+                <T>Temperature</T>:{" "}
+                {data.main && Math.round(data.main.temp - 273.15)}
+                °C
+              </p>
+            </div>
+          )}
+
+          <section className={SECTION_CARD}>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-2 mb-6">
+              <div>
+                <h2 className={SECTION_HEADING}>
+                  <T>Weather for</T> {getFormattedDate()}
                 </h2>
-                {loadingWeather && (
-                  <div className="flex items-center text-white text-sm">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Loading live weather...
-                  </div>
-                )}
+                <p className={SECTION_SUBHEADING}>
+                  <T>
+                    Live conditions across 20 regional and municipal capitals.
+                  </T>
+                </p>
               </div>
-              <div className="slider-container">
-                {loadingWeather ? (
-                  <div className="flex justify-center items-center py-8">
-                    <div className="text-center text-white">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
-                      <p className="text-sm">
+              {loadingWeather && (
+                <div className="flex items-center text-white/90 text-sm">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <T>Loading live weather...</T>
+                </div>
+              )}
+            </div>
+            <div className="slider-container">
+              {loadingWeather ? (
+                <div className="flex justify-center items-center py-10">
+                  <div className="text-center text-white">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-3"></div>
+                    <p className="text-sm">
+                      <T>
                         Fetching weather data for 20 major cities across
                         Ghana...
-                      </p>
-                      <p className="text-xs text-blue-200 mt-1">
-                        Including all regional & municipal capitals
-                      </p>
-                    </div>
-                  </div>
-                ) : weatherData.length > 0 ? (
-                  <Slider ref={weatherSliderRef} {...settings}>
-                    {weatherData.map((data, index) => (
-                      <WeatherCard key={`${data.city}-${index}`} {...data} />
-                    ))}
-                  </Slider>
-                ) : (
-                  <div className="text-center text-white py-4">
-                    <p className="text-sm">
-                      Weather data for major Ghana cities unavailable.
+                      </T>
                     </p>
                     <p className="text-xs text-blue-200 mt-1">
-                      Please try again later.
+                      <T>Including all regional and municipal capitals</T>
                     </p>
                   </div>
-                )}
+                </div>
+              ) : weatherData.length > 0 ? (
+                <Slider ref={weatherSliderRef} {...settings}>
+                  {weatherData.map((data, index) => (
+                    <WeatherCard key={`${data.city}-${index}`} {...data} />
+                  ))}
+                </Slider>
+              ) : (
+                <div className="text-center text-white py-6">
+                  <p className="text-sm">
+                    <T>Weather data for major Ghana cities unavailable.</T>
+                  </p>
+                  <p className="text-xs text-blue-200 mt-1">
+                    <T>Please try again later.</T>
+                  </p>
+                </div>
+              )}
+            </div>
+          </section>
+
+          <section className="grid grid-cols-1 lg:grid-cols-4 gap-5 md:gap-6">
+            <div className={`${SECTION_CARD} lg:col-span-1`}>
+              <h2 className="text-white text-lg md:text-xl font-semibold mb-4 flex items-center">
+                <img src={cap} alt="" className="h-6 w-6 mr-2" />
+                <T>Latest Weather Warnings</T>
+              </h2>
+              <div className="bg-emerald-500/10 border border-emerald-300/30 rounded-lg p-4 flex items-start">
+                <FaExclamationTriangle className="text-emerald-300 mt-1 mr-3 flex-shrink-0" />
+                <div>
+                  <p className="font-semibold text-emerald-100">
+                    <T>No active alerts</T>
+                  </p>
+                  <p className="text-xs text-emerald-100/80 mt-1">
+                    <T>
+                      All monitored regions are currently clear. We&apos;ll
+                      notify you here when warnings are issued.
+                    </T>
+                  </p>
+                </div>
               </div>
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-              <div className="left-sidebar h-auto my:auto lg:col-span-0 bg-white/20 backdrop-blur-[5px] border-white/20 shadow-[0_4px_30px_rgba(0,0,0,0.1)] rounded-xl mt-1 p-4">
-                <h2 className="text-red-600 text-1xl font-bold mb-4 flex items-center">
-                  <img src={cap} alt="Alert" className="h-6 w-6 mr-2" />
-                  <i className="fas fa-bell mr-2"></i> Latest Weather Warnings
-                </h2>
-                <ul className="space-y-4">
-                  <li className="bg-yellow-100 border border-yellow-300 rounded-lg p-4 flex justify-between items-center">
-                    <div className="flex items-center">
-                      <FaExclamationTriangle className="text-red-500 mr-2" />
-                      <p className="font-bold text-blue-700">
-                        No active alerts currently
-                      </p>
-                    </div>
-                    <FaArrowRight className="text-blue-500" />
-                  </li>
-                </ul>
-              </div>
-              <div className="lg:col-span-2 bg-white/20 backdrop-blur-[5px] border-white/20 shadow-[0_4px_30px_rgba(0,0,0,0.1)] rounded-xl p-4 sticky h-full">
-                <h2 className="text-gray-50 font-bold mb-2 rounded-lg">
-                  <i className="fas fa-calendar-alt mr-2"></i>
-                  {`${currentDateTime} - ${formattedTime}`}
-                </h2>
-                <WeatherInteractiveMap
-                  onRegionSelect={(regionName, regionData) => {
-                    console.log("Selected region:", regionName, regionData);
-                  }}
-                  onDistrictSelect={(district) => {
-                    console.log("Selected district:", district);
-                  }}
-                  showWeatherData={true}
-                  showAgriculturalData={true}
+
+            <div className={`${SECTION_CARD} lg:col-span-2`}>
+              <p className="text-blue-100/80 text-xs md:text-sm mb-1">
+                <i className="fas fa-calendar-alt mr-2"></i>
+                {`${currentDateTime} - ${formattedTime}`}
+              </p>
+              <h2 className={`${SECTION_HEADING} mb-4`}>
+                <T>Regional Weather Map</T>
+              </h2>
+              <WeatherInteractiveMap
+                onRegionSelect={(regionName, regionData) => {
+                  console.log("Selected region:", regionName, regionData);
+                }}
+                onDistrictSelect={(district) => {
+                  console.log("Selected district:", district);
+                }}
+                showWeatherData={true}
+                showAgriculturalData={true}
+              />
+            </div>
+
+            <div className={`${SECTION_CARD} lg:col-span-1`}>
+              <h2 className="text-white text-lg md:text-xl font-semibold mb-4">
+                <T>Weather and Climate Resources</T>
+              </h2>
+              <div className="mb-4 relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  onKeyDown={searchLocation}
+                  placeholder="Enter location (e.g., Accra)"
+                  className="p-2 pl-10 rounded-lg border border-gray-300 text-black w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-
-              <div className="bg-white/20 backdrop-blur-[5px] border-white/20 shadow-[0_4px_30px_rgba(0,0,0,0.1)] rounded-xl p-4 w-full h-full max-w-md">
-                <h2 className="text-gray-100 font-bold text-xl md:text-xl mb-4 flex items-center">
-                  Weather & Climate Resources
-                </h2>
-                <div className="mb-4 relative max-w-md mx-auto">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    onKeyDown={searchLocation}
-                    placeholder="Enter location (e.g., Accra)"
-                    className="p-2 pl-10 rounded border border-gray-300 text-black w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div className="space-y-3">
-                  {forecastCategories.map((category, idx) => (
-                    <div key={idx} className="bg-white rounded-lg shadow">
-                      <button
-                        onClick={() => toggleCategory(idx)}
-                        className="w-full p-3 flex items-center justify-between text-left hover:bg-blue-50 transition-colors rounded-lg"
-                      >
-                        <div className="flex items-center">
-                          <div className="bg-blue-100 p-2 rounded-lg mr-3">
-                            {category.icon}
-                          </div>
-                          <h3 className="font-medium text-gray-800">
-                            {category.title}
-                          </h3>
-                        </div>
-                        <ChevronRight
-                          className={`text-blue-500 transition-transform duration-200 ${
-                            expandedCategory === idx
-                              ? "transform rotate-90"
-                              : ""
-                          }`}
-                        />
-                      </button>
-
-                      {expandedCategory === idx && (
-                        <div className="px-3 pb-3">
-                          <ul className="space-y-2 ml-10">
-                            {category.items.map((item, itemIdx) => (
-                              <li key={itemIdx}>
-                                <a
-                                  href={item.path}
-                                  className="block py-2 px-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors text-sm"
-                                >
-                                  {item.name}
-                                </a>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className="mt-8 bg-white/20 backdrop-blur-[5px] border-white/20 shadow-[0_4px_30px_rgba(0,0,0,0.1)] rounded-xl p-6 mb-14">
-              <h2 className="text-white text-2xl md:text-2xl font-bold mb-6">
-                Latest News & Updates
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div className="bg-gray-100 rounded-lg shadow-lg overflow-hidden">
-                  <img
-                    src={event1}
-                    alt="Weather Event 1"
-                    className="w-full h-48 object-cover"
-                  />
-                  <div className="p-4">
-                    <h3 className="text-blue-600 font-semibold text-lg">
-                      Heavy Rainfall Expected in Northern Regions
-                    </h3>
-                    <p className="text-gray-700 text-sm mt-2">
-                      Authorities issue warnings as heavy rainfall is forecasted
-                      for the northern regions of Ghana this week.
-                    </p>
-                    <Link
-                      to="blog/son-forecast"
-                      className="text-blue-500 font-semibold mt-4 inline-block hover:underline"
+              <div className="space-y-2">
+                {forecastCategories.map((category, idx) => (
+                  <div key={idx} className="bg-white rounded-lg shadow-sm">
+                    <button
+                      onClick={() => toggleCategory(idx)}
+                      className="w-full p-3 flex items-center justify-between text-left hover:bg-blue-50 transition-colors rounded-lg"
                     >
-                      Read More <FaArrowRight className="inline ml-1" />
-                    </Link>
-                  </div>
-                </div>
-
-                {/* News Article 2 */}
-                <div className="bg-gray-100 rounded-lg shadow-lg overflow-hidden">
-                  <img
-                    src={event2}
-                    alt="Weather Event 2"
-                    className="w-full h-48 object-cover"
-                  />
-                  <div className="p-4">
-                    <h3 className="text-blue-600 font-semibold text-lg">
-                      Drought Relief Efforts in Savannah Region
-                    </h3>
-                    <p className="text-gray-700 text-sm mt-2">
-                      Government and NGOs launch initiatives to support farmers
-                      affected by prolonged drought in the Savannah Region.
-                    </p>
-                    <Link
-                      to="/events/crop-calen"
-                      className="text-blue-500 font-semibold mt-4 inline-block hover:underline"
-                    >
-                      Read More <FaArrowRight className="inline ml-1" />
-                    </Link>
-                  </div>
-                </div>
-
-                {/* News Article 3 */}
-                <div className="bg-gray-100 rounded-lg shadow-lg overflow-hidden">
-                  <img
-                    src={event3}
-                    alt="Weather Event 3"
-                    className="w-full h-48 object-cover"
-                  />
-                  <div className="p-4">
-                    <h3 className="text-blue-600 font-semibold text-lg">
-                      New Agro-Meteorological Tools Launched
-                    </h3>
-                    <p className="text-gray-700 text-sm mt-2">
-                      GHAAP introduces advanced tools to provide farmers with
-                      precise weather and climate data.
-                    </p>
-                    <Link
-                      to="events/clim-rep-rel"
-                      className="text-blue-500 font-semibold mt-4 inline-block hover:underline"
-                    >
-                      Read More <FaArrowRight className="inline ml-1" />
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Partners Carousel */}
-            <section className="mt-16 px-4">
-              <div className="container mx-auto mb-10">
-                <h2 className="text-3xl font-bold text-center mb-6 text-gray-100">
-                  Our Partners
-                </h2>
-
-                <div className="rounded-lg p-6 shadow-sm">
-                  <Slider {...sliderSettings}>
-                    {[fsrp, mofa, gmet, worldbank, ecowas].map(
-                      (partner, index) => (
-                        <div key={index} className="p-3">
-                          <div className="bg-gray-50 p-4 rounded border border-gray-200">
-                            <img
-                              src={partner}
-                              alt={`Partner ${index + 1}`}
-                              className="mx-auto h-16 object-contain"
-                            />
-                          </div>
+                      <div className="flex items-center">
+                        <div className="bg-blue-100 p-2 rounded-lg mr-3">
+                          {category.icon}
                         </div>
-                      )
+                        <h3 className="font-medium text-gray-800">
+                          {category.title}
+                        </h3>
+                      </div>
+                      <ChevronRight
+                        className={`text-blue-500 transition-transform duration-200 ${
+                          expandedCategory === idx ? "transform rotate-90" : ""
+                        }`}
+                      />
+                    </button>
+
+                    {expandedCategory === idx && (
+                      <div className="px-3 pb-3">
+                        <ul className="space-y-2 ml-10">
+                          {category.items.map((item, itemIdx) => (
+                            <li key={itemIdx}>
+                              <a
+                                href={item.path}
+                                className="block py-2 px-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors text-sm"
+                              >
+                                {item.name}
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     )}
-                  </Slider>
-                </div>
+                  </div>
+                ))}
               </div>
-            </section>
-          </div>
+            </div>
+          </section>
+
+          <section className={SECTION_CARD}>
+            <div className="mb-6">
+              <h2 className={SECTION_HEADING}>
+                <T>Latest News and Updates</T>
+              </h2>
+              <p className={SECTION_SUBHEADING}>
+                <T>
+                  Alerts, advisories, and program updates from across the
+                  network.
+                </T>
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <NewsCard
+                image={event1}
+                alt="Heavy rainfall in northern Ghana"
+                title="Heavy Rainfall Expected in Northern Regions"
+                excerpt="Authorities issue warnings as heavy rainfall is forecasted for the northern regions of Ghana this week."
+                to="/blog/son-forecast"
+              />
+              <NewsCard
+                image={event2}
+                alt="Drought relief in Savannah Region"
+                title="Drought Relief Efforts in Savannah Region"
+                excerpt="Government and NGOs launch initiatives to support farmers affected by prolonged drought in the Savannah Region."
+                to="/events/crop-calen"
+              />
+              <NewsCard
+                image={event3}
+                alt="New agro-meteorological tools launched"
+                title="New Agro-Meteorological Tools Launched"
+                excerpt="GHAAP introduces advanced tools to provide farmers with precise weather and climate data."
+                to="/events/clim-rep-rel"
+              />
+            </div>
+          </section>
+
+          <section>
+            <div className="text-center mb-8">
+              <h2 className={`${SECTION_HEADING} text-center`}>
+                <T>Our Partners</T>
+              </h2>
+              <p className={`${SECTION_SUBHEADING} max-w-2xl mx-auto`}>
+                <T>
+                  In partnership with Ghana&apos;s leading agricultural and
+                  climate institutions.
+                </T>
+              </p>
+            </div>
+            <div className={SECTION_CARD}>
+              <Slider {...sliderSettings}>
+                {[fsrp, mofa, gmet, worldbank, ecowas].map((partner, index) => (
+                  <div key={index} className="px-3">
+                    <div className="bg-white/95 rounded-xl p-4 flex items-center justify-center h-24">
+                      <img
+                        src={partner}
+                        alt={`Partner ${index + 1}`}
+                        className="max-h-16 object-contain"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </Slider>
+            </div>
+          </section>
         </main>
       </div>
     </>

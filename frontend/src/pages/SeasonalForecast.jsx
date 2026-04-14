@@ -4,6 +4,7 @@ import { GiWaterDrop } from "react-icons/gi";
 import SON from "../assets/images/SON.png";
 import { FaExclamationCircle } from "react-icons/fa";
 import PageTitle from "../components/PageTitle";
+import T from "../components/common/T";
 
 const SeasonalForecast = () => {
   const [selectedZone, setSelectedZone] = useState("East Coast");
@@ -128,9 +129,9 @@ const SeasonalForecast = () => {
       <div className="container mx-auto p-6 bg-teal-900 text-white pt-24">
       {/* Header Section */}
       <div className="text-center mb-8">
-        <h1 className="text-5xl font-bold">{selectedZone} Forecast</h1>
+        <h1 className="text-5xl font-bold">{selectedZone} <T>Forecast</T></h1>
         <strong className="text-2xl text-yellow-400">
-          NORMAL ONSET AND EARLY CESSATION
+          <T>NORMAL ONSET AND EARLY CESSATION</T>
         </strong>
       </div>
 
@@ -155,7 +156,7 @@ const SeasonalForecast = () => {
             onClick={handleDownload}
             className="flex items-center bg-yellow-500 text-black px-4 py-2 rounded-md hover:bg-yellow-400 w-full md:w-auto"
           >
-            <FaDownload className="mr-2" /> Download Forecast
+            <FaDownload className="mr-2" /> <T>Download Forecast</T>
           </button>
         </div>
       </div>
@@ -204,7 +205,7 @@ const SeasonalForecast = () => {
             </thead>
             <tbody>
               <tr className="border-b">
-                <td className="p-2 text-center border">Start</td>
+                <td className="p-2 text-center border"><T>Start</T></td>
                 <td className="p-2 text-center border">
                   {currentData.startLTM}
                 </td>
@@ -213,7 +214,7 @@ const SeasonalForecast = () => {
                 </td>
               </tr>
               <tr className="border-b">
-                <td className="p-2 text-center border">End</td>
+                <td className="p-2 text-center border"><T>End</T></td>
                 <td className="p-2 text-center border">{currentData.endLTM}</td>
                 <td className="p-2 text-center border">
                   {currentData.endForecast}
@@ -221,7 +222,7 @@ const SeasonalForecast = () => {
               </tr>
               <tr className="border-b">
                 <td className="p-2 text-center border">
-                  Length of Season (Days)
+                  <T>Length of Season (Days)</T>
                 </td>
                 <td className="p-2 text-center border">
                   {currentData.lengthLTM}
@@ -241,12 +242,12 @@ const SeasonalForecast = () => {
               className="inline text-blue-500 mr-2"
               style={{ fontSize: "2.5rem" }}
             />
-            Cumulative Rainfall
+            <T>Cumulative Rainfall</T>
           </h3>
           <table className="w-full table-fixed border border-gray-300">
             <thead>
               <tr className="border-b">
-                <th className="p-2 bg-gray-200">Season</th>
+                <th className="p-2 bg-gray-200"><T>Season</T></th>
                 <th className="p-2 bg-gray-200">LTM</th>
                 <th className="p-2 bg-gray-200">2025 Forecast</th>
               </tr>
@@ -275,12 +276,12 @@ const SeasonalForecast = () => {
           <div className="mt-4">
             <h4 className="font-bold text-red-600 flex items-center">
               <FaExclamationCircle className="text-red-600 h-5 w-5 mr-2" />
-              Advisories:
+              <T>Advisories:</T>
             </h4>
             <ul className="list-disc ml-5">
-              <li>Harvest rain water and store for irrigation.</li>
-              <li>Cultivate early short cycle crops.</li>
-              <li>Contact agricultural experts for information</li>
+              <li><T>Harvest rain water and store for irrigation.</T></li>
+              <li><T>Cultivate early short cycle crops.</T></li>
+              <li><T>Contact agricultural experts for information</T></li>
             </ul>
           </div>
         </div>
@@ -293,19 +294,19 @@ const SeasonalForecast = () => {
               style={{ fontSize: "2.5rem" }}
             />{" "}
             {/* Adjusted icon size */}
-            <h3 className="text-xl font-bold text-teal-900">Dry Spells</h3>
+            <h3 className="text-xl font-bold text-teal-900"><T>Dry Spells</T></h3>
           </div>
           <table className="w-full table-fixed border border-gray-300">
             <thead>
               <tr className="border-b">
-                <th className="p-2 bg-gray-200">TYPE</th>
+                <th className="p-2 bg-gray-200"><T>TYPE</T></th>
                 <th className="p-2 bg-gray-200">LTM</th>
                 <th className="p-2 bg-gray-200">2025 Forecast</th>
               </tr>
             </thead>
             <tbody>
               <tr className="border-b">
-                <td className="p-2 text-center border">Early</td>
+                <td className="p-2 text-center border"><T>Early</T></td>
                 <td className="p-2 text-center border">
                   {currentData.drySpellsLTM.early}
                 </td>
@@ -314,7 +315,7 @@ const SeasonalForecast = () => {
                 </td>
               </tr>
               <tr className="border-b">
-                <td className="p-2 text-center border">Late</td>
+                <td className="p-2 text-center border"><T>Late</T></td>
                 <td className="p-2 text-center border">
                   {currentData.drySpellsLTM.late}
                 </td>
@@ -328,12 +329,12 @@ const SeasonalForecast = () => {
           <div className="mt-4">
             <h4 className="font-bold text-red-600 flex items-center">
               <FaExclamationCircle className="text-red-600 h-5 w-5 mr-2" />
-              Advisories:
+              <T>Advisories:</T>
             </h4>
             <ul className="list-disc ml-5">
-              <li>Monitor weather updates regularly.</li>
-              <li>Prepare for potential irrigation needs.</li>
-              <li>Consult with local agronomists for crop management.</li>
+              <li><T>Monitor weather updates regularly.</T></li>
+              <li><T>Prepare for potential irrigation needs.</T></li>
+              <li><T>Consult with local agronomists for crop management.</T></li>
             </ul>
           </div>
         </div>
@@ -342,8 +343,7 @@ const SeasonalForecast = () => {
       {/* Footer Section */}
       <footer className="text-center mt-10 text-gray-300">
         <strong>
-          Long Term Mean (LTM) is the 30-year average condition of a given zone
-          from 1991 - 2020
+          <T>Long Term Mean (LTM) is the 30-year average condition of a given zone from 1991 - 2020</T>
         </strong>
       </footer>
     </div>

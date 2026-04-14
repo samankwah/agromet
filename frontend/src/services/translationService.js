@@ -3,25 +3,48 @@ import offlineTranslationService from "./offlineTranslationService";
 import { ghanaianLanguages } from "../data/ghanaianLanguages";
 import API_CONFIG from "../config/apiConfig";
 
+// Google Translate language code mapping for Ghanaian languages
+const GOOGLE_LANG_MAP = {
+  en: 'en', tw: 'ak', ee: 'ee', gaa: 'gaa', dag: 'dag',
+  ha: 'ha', fat: 'ak', nzi: 'ak', ki: 'ki',
+};
+
+async function googleTranslateFallback(text, sourceLang, targetLang) {
+  const sl = GOOGLE_LANG_MAP[sourceLang] || sourceLang;
+  const tl = GOOGLE_LANG_MAP[targetLang] || targetLang;
+  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
+  const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+  if (!res.ok) throw new Error(`Google Translate HTTP ${res.status}`);
+  const data = await res.json();
+  if (Array.isArray(data) && Array.isArray(data[0])) {
+    return data[0].map(s => s[0]).join('');
+  }
+  throw new Error('Invalid Google Translate response');
+}
+
 // Ghana NLP Translation Service with offline fallback
 class TranslationService {
   constructor() {
     this.baseUrl = API_CONFIG.TRANSLATION_BASE_URL;
     this.ttsUrl = API_CONFIG.TTS_BASE_URL;
 
+    console.log('[TranslationService] INIT — baseUrl:', this.baseUrl, '| BACKEND_BASE_URL:', API_CONFIG.BACKEND_BASE_URL);
+
     // Circuit breaker for API health tracking
     this.apiHealthStatus = {
       translation: { isHealthy: true, lastFailure: null, failureCount: 0 },
       tts: { isHealthy: true, lastFailure: null, failureCount: 0 }
     };
-    this.circuitBreakerThreshold = 3; // Fail after 3 consecutive errors
-    this.circuitBreakerTimeout = 60000; // Reset after 1 minute
+    this.circuitBreakerThreshold = 5; // Fail after 5 consecutive errors
+    this.circuitBreakerTimeout = 15000; // Reset after 15 seconds
 
     // Use comprehensive language data
     this.languages = ghanaianLanguages.languages;
 
-    // Translation cache to reduce API calls
+    // Translation cache to reduce API calls — hydrated from localStorage
     this.cache = new Map();
+    this._hydrateCache();
+    this._persistTimer = null;
 
     // Track online/offline status
     this.isOnline = navigator.onLine;
@@ -53,6 +76,55 @@ class TranslationService {
       return true;
     }
     return false;
+  }
+
+  // Hydrate translation cache from localStorage, purging stale entries
+  _hydrateCache() {
+    try {
+      const raw = localStorage.getItem('agromet_translations_v1');
+      if (raw) {
+        const entries = JSON.parse(raw);
+        let purged = false;
+        for (const [k, v] of entries) {
+          // Cache key format: "sourceText_sourceLang_targetLang"
+          // Skip entries where the "translation" is just the original English text
+          const lastUs = k.lastIndexOf('_');
+          const secondLastUs = k.lastIndexOf('_', lastUs - 1);
+          if (secondLastUs > 0) {
+            const sourceText = k.substring(0, secondLastUs);
+            if (v === sourceText) {
+              purged = true;
+              continue; // Don't load poisoned cache entries
+            }
+          }
+          this.cache.set(k, v);
+        }
+        if (purged) {
+          this._persistCache(); // Re-persist cleaned cache
+        }
+      }
+    } catch {
+      // Corrupted cache — ignore
+    }
+  }
+
+  // Persist translation cache to localStorage (debounced)
+  _persistCache() {
+    if (this._persistTimer) return;
+    this._persistTimer = setTimeout(() => {
+      this._persistTimer = null;
+      try {
+        let entries = [...this.cache.entries()];
+        // Cap at 10,000 entries — keep newest
+        if (entries.length > 10000) {
+          entries = entries.slice(entries.length - 10000);
+          this.cache = new Map(entries);
+        }
+        localStorage.setItem('agromet_translations_v1', JSON.stringify(entries));
+      } catch {
+        // localStorage full or unavailable — ignore
+      }
+    }, 1000);
   }
 
   // Check if API should be used based on circuit breaker
@@ -91,6 +163,36 @@ class TranslationService {
     }
   }
 
+  // Reset the translation circuit breaker (e.g., when user switches language)
+  resetTranslationCircuitBreaker() {
+    this.apiHealthStatus.translation.isHealthy = true;
+    this.apiHealthStatus.translation.failureCount = 0;
+    this.apiHealthStatus.translation.lastFailure = null;
+    console.log('🔄 Translation circuit breaker reset');
+  }
+
+  // Purge stale cache entries for a given target language (where value === source text)
+  purgeStaleEntries(targetLang) {
+    let purged = 0;
+    for (const [key, value] of this.cache.entries()) {
+      if (key.endsWith(`_${targetLang}`)) {
+        const lastUs = key.lastIndexOf('_');
+        const secondLastUs = key.lastIndexOf('_', lastUs - 1);
+        if (secondLastUs > 0) {
+          const sourceText = key.substring(0, secondLastUs);
+          if (value === sourceText) {
+            this.cache.delete(key);
+            purged++;
+          }
+        }
+      }
+    }
+    if (purged > 0) {
+      console.log(`🧹 Purged ${purged} stale cache entries for ${targetLang}`);
+      this._persistCache();
+    }
+  }
+
   // Translate text with offline fallback
   async translate(text, targetLang = "tw", sourceLang = "en") {
     if (!text || targetLang === sourceLang) {
@@ -103,20 +205,30 @@ class TranslationService {
       return this.cache.get(cacheKey);
     }
 
-    // Check circuit breaker before attempting API call
+    // If backend circuit breaker is open, skip backend and go straight to Google
     if (!this.isOnline || !this.shouldUseApi('translation')) {
-      const offlineTranslation = offlineTranslationService.translateOffline(
-        text,
-        sourceLang,
-        targetLang
-      );
-      this.cache.set(cacheKey, offlineTranslation);
-      return offlineTranslation;
+      try {
+        const googleResult = await googleTranslateFallback(text, sourceLang, targetLang);
+        if (googleResult && googleResult.toLowerCase() !== text.toLowerCase()) {
+          this.cache.set(cacheKey, googleResult);
+          this._persistCache();
+          return googleResult;
+        }
+      } catch {
+        // Google also failed — try offline
+      }
+      const offlineTranslation = offlineTranslationService.translateOffline(text, sourceLang, targetLang);
+      if (offlineTranslation !== text) {
+        this.cache.set(cacheKey, offlineTranslation);
+        this._persistCache();
+        return offlineTranslation;
+      }
+      throw new Error('All translation methods unavailable');
     }
 
     try {
-      console.log(`🔄 Translating: "${text}" from ${sourceLang} to ${targetLang}`);
-      
+      console.log(`🔄 Translating: "${text}" from ${sourceLang} to ${targetLang} → URL: ${this.baseUrl}`);
+
       const response = await axios.post(
         this.baseUrl,
         {
@@ -125,7 +237,7 @@ class TranslationService {
         },
         {
           headers: { "Content-Type": "application/json" },
-          timeout: 5000, // 5 second timeout to fail faster
+          timeout: 15000, // 15 second timeout — GhanaNLP can take 6-15s
         }
       );
       
@@ -148,23 +260,35 @@ class TranslationService {
 
       console.log(`✅ Translation result: "${translatedText}"`);
       this.cache.set(cacheKey, translatedText);
+      this._persistCache();
       return translatedText;
     } catch (error) {
-      console.error("❌ Translation API error:", error.message);
-      
-      // Record the failure for circuit breaker
+      console.error("❌ Backend translation error:", error.message);
       this.recordApiFailure('translation', error);
-      
-      // Enhanced fallback to offline translation
-      const offlineTranslation = offlineTranslationService.translateOffline(
-        text,
-        sourceLang,
-        targetLang
-      );
-      console.log(`🔄 Using offline translation: "${offlineTranslation}"`);
+    }
+
+    // Fallback: call Google Translate directly from browser (no backend needed)
+    try {
+      console.log(`🔄 Trying Google Translate fallback for "${text}"`);
+      const googleResult = await googleTranslateFallback(text, sourceLang, targetLang);
+      if (googleResult && googleResult.toLowerCase() !== text.toLowerCase()) {
+        console.log(`✅ Google Translate result: "${googleResult}"`);
+        this.cache.set(cacheKey, googleResult);
+        this._persistCache();
+        return googleResult;
+      }
+    } catch (googleError) {
+      console.error("❌ Google Translate fallback error:", googleError.message);
+    }
+
+    // Last resort: offline translation
+    const offlineTranslation = offlineTranslationService.translateOffline(text, sourceLang, targetLang);
+    if (offlineTranslation !== text) {
       this.cache.set(cacheKey, offlineTranslation);
+      this._persistCache();
       return offlineTranslation;
     }
+    throw new Error(`All translation methods failed for "${text}"`);
   }
 
   // Translate disease detection results with offline fallback

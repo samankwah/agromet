@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import PageTitle from '../components/PageTitle';
+import T from "../components/common/T";
 import { districtOfGhana } from "../district";
 import { FaSpinner } from "react-icons/fa";
 import axios from 'axios';
@@ -155,16 +156,24 @@ const AgroMetAdvisory = () => {
   return (
     <>
       <PageTitle title="Agro-Meteorological Advisory" />
-      <div className="min-h-screen bg-gray-100 pt-20 lg:pt-24">
-        <div className="px-4 md:px-8 py-4 md:py-6">
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-emerald-50/30 pt-20 lg:pt-24 relative overflow-hidden">
+        <div className="absolute top-0 -left-40 w-[500px] h-[500px] bg-emerald-200/30 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-96 -right-40 w-[500px] h-[500px] bg-teal-200/30 rounded-full blur-3xl pointer-events-none" />
+        <div className="px-4 md:px-8 py-4 md:py-6 relative">
 
           {/* Page Title */}
-          <div className="mb-4">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
-              Agro-Meteorological <span className="text-blue-600">Advisory</span>
+          <div className="mb-6">
+            <span className="inline-block px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold uppercase tracking-wider mb-3">
+              <T>Weekly Advisory</T>
+            </span>
+            <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight mb-3">
+              <T>Agro-Meteorological</T>{" "}
+              <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                <T>Advisory</T>
+              </span>
             </h1>
-            <p className="text-sm text-gray-600 mt-1">
-              Get weather-based farming recommendations for your region
+            <p className="text-slate-600 text-base sm:text-lg">
+              <T>Get weather-based farming recommendations for your region</T>
             </p>
           </div>
 
@@ -173,7 +182,7 @@ const AgroMetAdvisory = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
               {/* Year */}
               <div className="flex flex-col">
-                <label className="text-xs font-medium mb-1 text-gray-600">Year</label>
+                <label className="text-xs font-medium mb-1 text-gray-600"><T>Year</T></label>
                 <select
                   value={selected.year || ""}
                   onChange={(e) => handleFilterChange(e, "year")}
@@ -188,13 +197,13 @@ const AgroMetAdvisory = () => {
 
               {/* Season */}
               <div className="flex flex-col">
-                <label className="text-xs font-medium mb-1 text-gray-600">Season</label>
+                <label className="text-xs font-medium mb-1 text-gray-600"><T>Season</T></label>
                 <select
                   value={selected.season || ""}
                   onChange={(e) => handleFilterChange(e, "season")}
                   className="text-sm p-2 border border-gray-300 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="">Select Season</option>
+                  <option value=""><T>Select Season</T></option>
                   {filterData.season.map((value) => (
                     <option key={value} value={value}>{value}</option>
                   ))}
@@ -203,13 +212,13 @@ const AgroMetAdvisory = () => {
 
               {/* Region */}
               <div className="flex flex-col">
-                <label className="text-xs font-medium mb-1 text-gray-600">Region</label>
+                <label className="text-xs font-medium mb-1 text-gray-600"><T>Region</T></label>
                 <select
                   value={selected.region || ""}
                   onChange={(e) => handleFilterChange(e, "region")}
                   className="text-sm p-2 border border-gray-300 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="">Select Region</option>
+                  <option value=""><T>Select Region</T></option>
                   {filterData.region.map((value) => (
                     <option key={value} value={value}>{value}</option>
                   ))}
@@ -218,14 +227,14 @@ const AgroMetAdvisory = () => {
 
               {/* District */}
               <div className="flex flex-col">
-                <label className="text-xs font-medium mb-1 text-gray-600">District</label>
+                <label className="text-xs font-medium mb-1 text-gray-600"><T>District</T></label>
                 <select
                   value={selected.district || ""}
                   onChange={(e) => handleFilterChange(e, "district")}
                   className="text-sm p-2 border border-gray-300 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                   disabled={!selected.region}
                 >
-                  <option value="">{selected.region ? "Select District" : "Select Region First"}</option>
+                  <option value="">{selected.region ? <T>Select District</T> : <T>Select Region First</T>}</option>
                   {selected.region &&
                     districtOfGhana
                       .filter((d) => {
@@ -243,14 +252,14 @@ const AgroMetAdvisory = () => {
 
               {/* Commodity */}
               <div className="flex flex-col">
-                <label className="text-xs font-medium mb-1 text-gray-600">Commodity</label>
+                <label className="text-xs font-medium mb-1 text-gray-600"><T>Commodity</T></label>
                 <select
                   value={selected.crop || ""}
                   onChange={(e) => handleFilterChange(e, "crop")}
                   className="text-sm p-2 border border-gray-300 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                   disabled={!selected.region}
                 >
-                  <option value="">Select Commodity</option>
+                  <option value=""><T>Select Commodity</T></option>
                   {availableCropsForDropdown.map((crop) => (
                     <option key={crop} value={crop}>{crop}</option>
                   ))}
@@ -262,8 +271,8 @@ const AgroMetAdvisory = () => {
           {/* Loading State */}
           {loadingWeekly && (
             <div className="flex items-center justify-center py-12">
-              <FaSpinner className="animate-spin text-green-600 text-2xl mr-3" />
-              <span className="text-gray-600">Loading advisory data...</span>
+              <FaSpinner className="animate-spin text-emerald-600 text-2xl mr-3" />
+              <span className="text-slate-600"><T>Loading advisory data...</T></span>
             </div>
           )}
 
@@ -359,13 +368,13 @@ const AgroMetAdvisory = () => {
             <div className="text-center py-16 bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
               <div className="text-gray-400 text-5xl mb-4">📋</div>
               <div className="text-gray-600 text-lg mb-2 font-semibold">
-                No advisory data available
+                <T>No advisory data available</T>
               </div>
               <p className="text-gray-500 mb-2">
-                No advisory data found for <span className="font-medium text-gray-700">{selected.crop}</span> in <span className="font-medium text-gray-700">{selected.district}</span> district.
+                <T>No advisory data found for</T> <span className="font-medium text-gray-700">{selected.crop}</span> <T>in</T> <span className="font-medium text-gray-700">{selected.district}</span> <T>district.</T>
               </p>
               <p className="text-sm text-gray-400">
-                Advisory data is uploaded by administrators through the dashboard.
+                <T>Advisory data is uploaded by administrators through the dashboard.</T>
               </p>
             </div>
           )}

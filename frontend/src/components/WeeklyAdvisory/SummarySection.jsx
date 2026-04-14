@@ -6,6 +6,8 @@
 
 import React from 'react';
 import { FaFileAlt, FaInfoCircle } from 'react-icons/fa';
+import SpeakButton from '../common/SpeakButton';
+import T from '../common/T';
 
 const SummarySection = ({ summary }) => {
   if (!summary) return null;
@@ -20,12 +22,15 @@ const SummarySection = ({ summary }) => {
           </div>
           <div className="flex-1">
             <h3 className="text-lg font-bold text-emerald-800 uppercase tracking-wide">
-              Forecast and Advisory
+              <T>Forecast and Advisory</T>
             </h3>
             <p className="text-sm text-emerald-600 mt-0.5">
-              Overall Summary Weather Outlook & Advisory
+              <T>Overall Summary Weather Outlook and Advisory</T>
             </p>
           </div>
+          {summary && summary.trim() !== '' && summary.trim() !== '-' && (
+            <SpeakButton text={summary} label="Listen" />
+          )}
         </div>
 
         {/* Summary Content */}
@@ -38,7 +43,7 @@ const SummarySection = ({ summary }) => {
             <div className="flex items-center gap-2 text-emerald-600">
               <FaInfoCircle />
               <p className="text-sm italic">
-                No overall summary available for this advisory
+                <T>No overall summary available for this advisory</T>
               </p>
             </div>
           )}
@@ -48,8 +53,7 @@ const SummarySection = ({ summary }) => {
         <div className="mt-4 flex items-start gap-2 text-emerald-700">
           <FaInfoCircle className="flex-shrink-0 mt-0.5" />
           <p className="text-xs leading-relaxed">
-            This summary combines weather forecasts with actionable farming recommendations
-            for the specified activity stage and period.
+            <T>This summary combines weather forecasts with actionable farming recommendations for the specified activity stage and period.</T>
           </p>
         </div>
       </div>

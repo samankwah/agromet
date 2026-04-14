@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { ChatbotProvider } from './contexts/ChatbotContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 import Layout from './pages/Layout';
 import Home from './pages/Home';
 import NotFound from './components/NotFound';
@@ -53,6 +54,7 @@ const withSuspense = (element) => (
 function App() {
   return (
     <ErrorBoundary>
+      <LanguageProvider>
       <ChatbotProvider>
         <Router
           future={{
@@ -125,6 +127,7 @@ function App() {
           </Routes>
         </Router>
       </ChatbotProvider>
+      </LanguageProvider>
     </ErrorBoundary>
   );
 }

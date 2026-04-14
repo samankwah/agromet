@@ -3,6 +3,7 @@ import { useWeatherData } from "../hooks/useWeatherData";
 import ErrorBoundary from "./ErrorBoundary";
 import AnimatedWeatherIcon from "./AnimatedWeatherIcon";
 import Slider from "react-slick";
+import T from "./common/T";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import "../styles/weatherAnimations.css";
@@ -363,7 +364,7 @@ const WeatherSection = () => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div className="flex items-center gap-4">
             <h2 className="text-white text-xl md:text-2xl font-bold tracking-wide">
-              🌤️ Weather for {getFormattedDate()}
+              🌤️ <T>Weather for</T> {getFormattedDate()}
             </h2>
             <button
               onClick={handleRefresh}

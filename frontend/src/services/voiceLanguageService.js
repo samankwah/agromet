@@ -12,7 +12,7 @@ class VoiceLanguageService {
     this.supportedLanguages = {
       'en': { name: 'English', nativeName: 'English', rtl: false },
       'tw': { name: 'Twi', nativeName: 'Twi', rtl: false },
-      'ga': { name: 'Ga', nativeName: 'Ga', rtl: false },
+      'gaa': { name: 'Ga', nativeName: 'Ga', rtl: false },
       'ee': { name: 'Ewe', nativeName: 'Eʋegbe', rtl: false },
       'ha': { name: 'Hausa', nativeName: 'Hausa', rtl: false },
       'dag': { name: 'Dagbani', nativeName: 'Dagbanli', rtl: false }
@@ -42,7 +42,7 @@ class VoiceLanguageService {
         'seed': 'aba',
         'crop': 'nnɔbae'
       },
-      'ga': { // Ga translations
+      'gaa': { // Ga translations
         'maize': 'ablẽ',
         'rice': 'emo',
         'cassava': 'agbeli',
@@ -120,7 +120,7 @@ class VoiceLanguageService {
         voice.lang.includes('US')
       ),
       'tw': voices.filter(voice => voice.lang.includes('tw')),
-      'ga': voices.filter(voice => voice.lang.includes('ga')),
+      'gaa': voices.filter(voice => voice.lang.includes('gaa')),
       'ee': voices.filter(voice => voice.lang.includes('ee')),
       'ha': voices.filter(voice => voice.lang.includes('ha'))
     };
@@ -407,7 +407,7 @@ class VoiceLanguageService {
     // Check for Ga terms
     const gaTerms = Object.values(this.agriculturalTerms.ga || {});
     if (gaTerms.some(term => lowerText.includes(term))) {
-      return 'ga';
+      return 'gaa';
     }
 
     // Default to English

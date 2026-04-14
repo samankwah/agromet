@@ -9,6 +9,7 @@ import {
 
 import Modal from "./Modal";
 import PageTitle from "../components/PageTitle";
+import T from "../components/common/T";
 import {
   FaTractor,
   FaBug,
@@ -321,79 +322,87 @@ const AdvisoryPage = () => {
   return (
     <>
       <PageTitle title="Crop Advisory Services" />
-      <div className="min-h-screen bg-blue-50 mt-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center py-8">
-          <h1 className="text-3xl md:text-4xl lg:text-6xl font-bold text-blue-700 mb-2">
-            Agro-Characteristics Advisory for Ghana
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-emerald-50/30 pt-16 relative overflow-hidden">
+      <div className="absolute top-0 -left-40 w-[500px] h-[500px] bg-emerald-200/30 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-96 -right-40 w-[500px] h-[500px] bg-teal-200/30 rounded-full blur-3xl pointer-events-none" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        <div className="text-center py-12">
+          <span className="inline-block px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold uppercase tracking-wider mb-4">
+            <T>Crop Advisory</T>
+          </span>
+          <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight mb-4">
+            <T>Agro-Characteristics Advisory for</T>{" "}
+            <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+              <T>Ghana</T>
+            </span>
           </h1>
-          <p className="text-gray-700 text-lg">
-            Stay informed about the best practices for crop production in
+          <p className="text-slate-600 text-lg max-w-3xl mx-auto">
+            <T>Stay informed about the best practices for crop production in
             Ghana’s tropical climate. Get advice on soil preparation,
             irrigation, pest control, and planting based on the local crop
-            calendar.
+            calendar.</T>
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {/* Season: Major Rainy Season */}
-          <div className="bg-white shadow-md rounded-lg p-6">
-            <FaSeedling className="text-blue-600 text-3xl mb-4" />
-            <h2 className="text-xl font-semibold text-blue-800 mb-2">
-              Major Rainy Season, Southern Ghana (March - July)
+          <div className="bg-white/80 backdrop-blur-sm border border-slate-200 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all rounded-2xl p-6">
+            <FaSeedling className="text-emerald-600 text-3xl mb-4" />
+            <h2 className="text-xl font-semibold text-slate-900 mb-2">
+              <T>Major Rainy Season, Southern Ghana (March - July)</T>
             </h2>
             <p className="text-gray-700">
-              Recommended crops: Maize, Rice, Cassava. The start of the major
+              <T>Recommended crops: Maize, Rice, Cassava. The start of the major
               rainy season is the optimal time to plant maize and rice. Ensure
-              proper land preparation and consider organic fertilizers.
+              proper land preparation and consider organic fertilizers.</T>
             </p>
           </div>
-          <div className="bg-white shadow-md rounded-lg p-6">
-            <FaSeedling className="text-blue-600 text-3xl mb-4" />
-            <h2 className="text-xl font-semibold text-blue-800 mb-2">
-              Northern Rainy Season (May - October)
+          <div className="bg-white/80 backdrop-blur-sm border border-slate-200 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all rounded-2xl p-6">
+            <FaSeedling className="text-emerald-600 text-3xl mb-4" />
+            <h2 className="text-xl font-semibold text-slate-900 mb-2">
+              <T>Northern Rainy Season (May - October)</T>
             </h2>
             <p className="text-gray-700">
-              Recommended crops: Maize, Rice, Sorghum, Cowpea, Peanut, Soyabean.
+              <T>Recommended crops: Maize, Rice, Sorghum, Cowpea, Peanut, Soyabean.
               The start of the major rainy season is the optimal time to plant
               maize and rice. Ensure proper land preparation and consider
-              organic fertilizers.
+              organic fertilizers.</T>
             </p>
           </div>
 
           {/* Season: Minor Rainy Season */}
-          <div className="bg-white shadow-md rounded-lg p-6">
-            <FaWater className="text-blue-500 text-3xl mb-4" />
-            <h2 className="text-xl font-semibold text-blue-800 mb-2">
-              Minor Rainy Season (September - November)
+          <div className="bg-white/80 backdrop-blur-sm border border-slate-200 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all rounded-2xl p-6">
+            <FaWater className="text-emerald-600 text-3xl mb-4" />
+            <h2 className="text-xl font-semibold text-slate-900 mb-2">
+              <T>Minor Rainy Season (September - November)</T>
             </h2>
             <p className="text-gray-700">
-              Recommended crops: Vegetables (Tomatoe, Pepper), Groundnut, Yam.
+              <T>Recommended crops: Vegetables (Tomatoe, Pepper), Groundnut, Yam.
               Take advantage of the shorter rainy season to plant vegetables and
-              short-cycle crops like groundnuts and yams.
+              short-cycle crops like groundnuts and yams.</T>
             </p>
           </div>
 
           {/* Season: Dry Season */}
-          <div className="bg-white shadow-md rounded-lg p-6">
-            <FaSun className="text-yellow-500 text-3xl mb-4" />
-            <h2 className="text-xl font-semibold text-blue-800 mb-2">
-              Dry Season (December - March)
+          <div className="bg-white/80 backdrop-blur-sm border border-slate-200 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all rounded-2xl p-6">
+            <FaSun className="text-amber-500 text-3xl mb-4" />
+            <h2 className="text-xl font-semibold text-slate-900 mb-2">
+              <T>Dry Season (December - March)</T>
             </h2>
             <p className="text-gray-700">
-              Recommended tasks: Irrigation for vegetables (onion, carrot), Land
+              <T>Recommended tasks: Irrigation for vegetables (onion, carrot), Land
               preparation for the next rainy season. Use irrigation systems
-              during the dry season to sustain vegetable growth.
+              during the dry season to sustain vegetable growth.</T>
             </p>
           </div>
         </div>
         {/* Advisory Cards */}
         <div className="text-center py-8">
-          <h1 className="text-4xl text-blue-700 font-bold mb-2">
-            Crop Advisory
-          </h1>
-          <p className="text-gray-700">
-            Get specific guidance on maize and rice farming in Ghana.
+          <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight mb-3">
+            <T>Crop Advisory</T>
+          </h2>
+          <p className="text-slate-600">
+            <T>Get specific guidance on maize and rice farming in Ghana.</T>
           </p>
         </div>
 
@@ -401,24 +410,24 @@ const AdvisoryPage = () => {
           {/* Buttons for crop advisory */}
           <div className="flex flex-col md:flex-row space-x-0 md:space-x-4 space-y-4 md:space-y-0">
             <button
-              className={`p-4 rounded-lg shadow-md w-full md:w-auto ${
+              className={`px-6 py-3 rounded-lg font-semibold transition-colors w-full md:w-auto ${
                 selectedCrop === "maize"
-                  ? "bg-blue-600 text-white"
-                  : "bg-white text-blue-600"
+                  ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                  : "bg-white border border-slate-300 text-slate-700 hover:border-emerald-600 hover:text-emerald-700"
               }`}
               onClick={() => handleCropChange("maize")}
             >
-              Maize Advisory
+              <T>Maize Advisory</T>
             </button>
             <button
-              className={`p-4 rounded-lg shadow-md w-full md:w-auto ${
+              className={`px-6 py-3 rounded-lg font-semibold transition-colors w-full md:w-auto ${
                 selectedCrop === "rice"
-                  ? "bg-blue-600 text-white"
-                  : "bg-white text-blue-600"
+                  ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                  : "bg-white border border-slate-300 text-slate-700 hover:border-emerald-600 hover:text-emerald-700"
               }`}
               onClick={() => handleCropChange("rice")}
             >
-              Rice Advisory
+              <T>Rice Advisory</T>
             </button>
           </div>
 
@@ -429,7 +438,7 @@ const AdvisoryPage = () => {
               onChange={handleRegionChange}
               className="border rounded-lg p-2 w-full md:w-auto"
             >
-              <option value="">Select Region</option>
+              <option value=""><T>Select Region</T></option>
               {Object.keys(regionsAndDistricts).map((region) => (
                 <option key={region} value={region}>
                   {region}
@@ -443,7 +452,7 @@ const AdvisoryPage = () => {
               className="border rounded-lg p-2 w-full md:w-auto"
               disabled={!selectedRegion}
             >
-              <option value="">Select District</option>
+              <option value=""><T>Select District</T></option>
               {selectedRegion &&
                 regionsAndDistricts[selectedRegion].map((district) => (
                   <option key={district} value={district}>
@@ -458,18 +467,18 @@ const AdvisoryPage = () => {
           {advisoryData[selectedCrop].stages.map((stage, index) => (
             <div
               key={index}
-              className="p-4 bg-white rounded-lg shadow-lg text-center"
+              className="p-6 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl shadow-sm hover:shadow-md hover:border-emerald-300 transition-all text-center"
             >
-              <div className="text-3xl text-blue-600 mb-2">{stage.icon}</div>
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 text-2xl flex items-center justify-center mx-auto mb-4">{stage.icon}</div>
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">
                 {stage.title}
               </h3>
-              <p className="text-gray-600">{stage.advice}</p>
+              <p className="text-slate-600 text-sm">{stage.advice}</p>
               <button
-                className="mt-2 text-sm text-blue-500 underline"
+                className="mt-3 text-sm font-semibold text-emerald-700 hover:text-emerald-800"
                 onClick={() => handleShowDetails(stage)}
               >
-                Learn more
+                <T>Learn more</T>
               </button>
             </div>
           ))}
@@ -478,7 +487,7 @@ const AdvisoryPage = () => {
         {/* Download CTA */}
         <div className="flex justify-center mt-12">
           <button
-            className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-500"
+            className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
             onClick={() => {
               // This will trigger the download
               const fileUrl = "/path-to-your-file/advisory.pdf";
@@ -490,18 +499,18 @@ const AdvisoryPage = () => {
               document.body.removeChild(link);
             }}
           >
-            Download Full Advisory as PDF
+            <T>Download Full Advisory as PDF</T>
           </button>
         </div>
 
         <div className="mb-4">
           <div className="mt-12 text-center">
-            <h3 className="text-xl font-semibold text-blue-700 mb-4">
-              Need More Advice?
+            <h3 className="text-2xl font-semibold text-slate-900 mb-4">
+              <T>Need More Advice?</T>
             </h3>
-            <p className="text-gray-600 mb-6">
-              Reach out to our agricultural experts for personalized advice
-              tailored to Ghana climate and your specific region.
+            <p className="text-slate-600 mb-6">
+              <T>Reach out to our agricultural experts for personalized advice
+              tailored to Ghana climate and your specific region.</T>
             </p>
           </div>
 
@@ -510,29 +519,29 @@ const AdvisoryPage = () => {
 
             <a
               href="tel:+2330243999631"
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg shadow-md hover:bg-blue-700 transition duration-200 flex items-center gap-2"
+              className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
             >
               <FaPhoneAlt />
-              Call an Expert
+              <T>Call an Expert</T>
             </a>
 
             {/* Email Button */}
             <a
               href="mailto:stephen.amankwah@meteo.gov.gh"
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg shadow-md hover:bg-blue-700 transition duration-200 flex items-center gap-2"
+              className="inline-flex items-center justify-center gap-2 border border-slate-300 hover:border-emerald-600 hover:text-emerald-700 text-slate-700 font-semibold px-6 py-3 rounded-lg transition-colors"
             >
               <FaEnvelope />
-              Email an Expert
+              <T>Email an Expert</T>
             </a>
           </div>
           {/* Modal for Detailed Advice */}
           {modalData && (
             <Modal title={modalData.title} onClose={handleCloseModal}>
               <div className="p-4">
-                <h3 className="text-lg font-bold text-blue-700 mb-6">
+                <h3 className="text-lg font-bold text-slate-900 mb-6">
                   {modalData.title}
                 </h3>
-                <p className="text-gray-600">{modalData.details}</p>
+                <p className="text-slate-600">{modalData.details}</p>
               </div>
             </Modal>
           )}

@@ -11,8 +11,6 @@ import {
   Bell,
   RefreshCw,
   FileImage,
-  Globe,
-  Volume2,
   HelpCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,10 +19,8 @@ import axios from "axios";
 import axiosRetry from "axios-retry";
 import translationService from "../services/translationService";
 import diseaseDetectionService from "../services/diseaseDetectionService";
-import {
-  getTranslation,
-  getSupportedLanguages,
-} from "../data/ghanaianLanguages";
+import useTranslation from "../hooks/useTranslation";
+import SpeakButton from "./common/SpeakButton";
 
 axiosRetry(axios, {
   retries: 3,
@@ -43,11 +39,8 @@ const PlantDiseaseDetector = () => {
   const [dragOver, setDragOver] = useState(false);
   const [cameraStream, setCameraStream] = useState(null);
 
-  // Ghana NLP Integration States
-  const [currentLanguage, setCurrentLanguage] = useState("en");
-  const [showLanguageSelector, setShowLanguageSelector] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [supportedLanguages] = useState(getSupportedLanguages());
+  // Ghana NLP Integration - shared context
+  const { currentLanguage, getDisplayText, isEnglish } = useTranslation();
   const [translatedResult, setTranslatedResult] = useState(null);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [diagnosisHistory, setDiagnosisHistory] = useState([]);
@@ -504,12 +497,6 @@ const PlantDiseaseDetector = () => {
     };
   }, [stopCamera]);
 
-  // Load user's preferred language
-  useEffect(() => {
-    const savedLanguage = translationService.getUserLanguage();
-    setCurrentLanguage(savedLanguage);
-  }, []);
-
   useEffect(() => {
     loadDiagnosisHistory();
   }, [loadDiagnosisHistory]);
@@ -574,16 +561,8 @@ const PlantDiseaseDetector = () => {
         };
 
         // Try to get basic agricultural terms
-        const plantTerm = getTranslation(
-          "plant",
-          currentLanguage,
-          "agriculturalTerms"
-        );
-        const diseaseTerm = getTranslation(
-          "disease",
-          currentLanguage,
-          "agriculturalTerms"
-        );
+        const plantTerm = getDisplayText("plant", "plant", "agriculturalTerms");
+        const diseaseTerm = getDisplayText("disease", "disease", "agriculturalTerms");
         // Enhanced translation attempt with term substitution
         if (plantTerm && plantTerm !== "plant") {
           fallbackTranslated.plant = resultData.plant.replace(
@@ -729,73 +708,6 @@ const PlantDiseaseDetector = () => {
     }
   };
 
-  const handleLanguageChange = async (langCode) => {
-    console.log("🌐 Language changed to:", langCode);
-    setCurrentLanguage(langCode);
-    translationService.setUserLanguage(langCode);
-    setShowLanguageSelector(false);
-
-    // Re-translate existing results if available
-    if (result && langCode !== "en") {
-      console.log(
-        "🔄 Re-translating existing results for new language:",
-        langCode
-      );
-      await translateResults(result);
-    } else if (langCode === "en") {
-      console.log("🇬🇧 Switched to English - clearing translations");
-      setTranslatedResult(null);
-    }
-  };
-
-
-  const speakResults = async () => {
-    if (!result && !translatedResult) return;
-
-    const resultToSpeak = translatedResult || result;
-    const textToSpeak = `
-      ${getTranslation("diseaseDetected", currentLanguage)}: ${
-      resultToSpeak.disease
-    }.
-      ${getTranslation("recommendedAction", currentLanguage)}: ${
-      resultToSpeak.remedy
-    }
-    `;
-
-    await speakText(textToSpeak);
-  };
-
-  const speakText = async (text) => {
-    try {
-      setIsSpeaking(true);
-      // Use Ghana NLP TTS service
-      const ttsResult = await translationService.textToSpeech(
-        text,
-        currentLanguage
-      );
-      
-      if (ttsResult) {
-        if (ttsResult.type === "api" && ttsResult.url) {
-          const audio = new Audio(ttsResult.url);
-          audio.onended = () => setIsSpeaking(false);
-          audio.onerror = () => setIsSpeaking(false);
-          await audio.play();
-        } else if (ttsResult.type === "browser" && ttsResult.speak) {
-          ttsResult.speak();
-          setTimeout(() => setIsSpeaking(false), 3000);
-        }
-      }
-    } catch (error) {
-      console.error("Text-to-speech error:", error);
-      setIsSpeaking(false);
-    }
-  };
-
-  const getDisplayText = (key, fallback = key) => {
-    const translated = getTranslation(key, currentLanguage);
-    return translated && translated !== key ? translated : fallback;
-  };
-
   // Handle keyboard accessibility
   const handleKeyDown = (e, action) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -807,86 +719,18 @@ const PlantDiseaseDetector = () => {
   return (
     <>
       <PageTitle title="Crop Disease Diagnosis Tool" />
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 p-4 sm:p-8 relative">
-      {/* Language and Voice Controls - Fixed Responsive Positioning */}
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-emerald-50/30 pt-20 lg:pt-24 p-4 sm:p-8 relative overflow-hidden">
+      <div className="absolute top-0 -left-40 w-[500px] h-[500px] bg-emerald-200/30 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-96 -right-40 w-[500px] h-[500px] bg-teal-200/30 rounded-full blur-3xl pointer-events-none" />
+      {/* Voice Controls - Fixed Responsive Positioning */}
       <div className="fixed top-4 right-4 z-[60] flex flex-col gap-2 md:flex-row mt-20">
-        {/* Language Selector */}
-        <div className="relative">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowLanguageSelector(!showLanguageSelector)}
-            className="bg-white/95 backdrop-blur-sm border border-green-200 rounded-full w-12 h-12 md:w-auto md:h-auto md:px-4 md:py-2 flex items-center justify-center md:gap-2 shadow-lg hover:border-green-400 transition-all duration-300"
-          >
-            {/* Mobile: Icon only */}
-            <Globe className="w-6 h-6 text-green-600 md:w-4 md:h-4" />
-            {/* Desktop: Icon + Text */}
-            <span className="hidden lg:inline text-green-700 font-medium text-sm">
-              {supportedLanguages[currentLanguage]?.name || "English"}
-            </span>
-          </motion.button>
-
-          <AnimatePresence>
-            {showLanguageSelector && (
-              <motion.div
-                initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                className="absolute top-full right-0 mt-2 bg-white rounded-xl shadow-2xl border border-green-200 overflow-hidden z-[70] w-64"
-              >
-                <div className="max-h-64 overflow-y-auto">
-                  {Object.entries(supportedLanguages).map(([code, lang]) => (
-                    <button
-                      key={code}
-                      onClick={() => handleLanguageChange(code)}
-                      className={`w-full px-4 py-3 text-left hover:bg-green-50 transition-colors duration-200 flex items-center gap-3 ${
-                        currentLanguage === code
-                          ? "bg-green-100 text-green-800"
-                          : "text-gray-700"
-                      }`}
-                    >
-                      <span className="text-lg">{lang.flag}</span>
-                      <div className="min-w-0">
-                        <div className="font-medium text-base truncate">
-                          {lang.name}
-                        </div>
-                        <div className="text-sm text-gray-500 truncate">
-                          {lang.region}
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-
         {/* Text-to-Speech Button */}
         {(result || translatedResult) && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={speakResults}
-            disabled={isSpeaking}
-            className={`bg-white/95 backdrop-blur-sm border border-purple-200 rounded-full w-12 h-12 md:w-auto md:h-auto md:px-4 md:py-2 flex items-center justify-center md:gap-2 shadow-lg hover:border-purple-400 transition-all duration-300 text-purple-600 ${
-              isSpeaking ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-          >
-            <Volume2
-              className={`w-6 h-6 md:w-4 md:h-4 ${
-                isSpeaking ? "animate-pulse" : ""
-              }`}
-            />
-            <span className="hidden lg:inline font-medium text-sm">
-              {isSpeaking
-                ? getDisplayText("speaking", "Speaking...")
-                : getDisplayText("readResults", "Read Results")}
-            </span>
-          </motion.button>
+          <SpeakButton
+            text={`${(translatedResult || result)?.disease || ''}. ${(translatedResult || result)?.remedy || ''}`}
+            label="Read Results"
+            className="bg-white/95 backdrop-blur-sm border-purple-200 rounded-full shadow-lg"
+          />
         )}
 
         {/* Help Button */}
@@ -903,7 +747,7 @@ const PlantDiseaseDetector = () => {
         </motion.button>
       </div>
 
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto relative">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -911,10 +755,15 @@ const PlantDiseaseDetector = () => {
           transition={{ duration: 0.5 }}
           className="text-center mb-12"
         >
-          <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-4 mt-20">
-            {getDisplayText("welcome", "Health Check")}
+          <span className="inline-block px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold uppercase tracking-wider mb-4 mt-20">
+            {getDisplayText("cropDiagnosis", "Crop Diagnosis")}
+          </span>
+          <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight mb-4">
+            <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+              {getDisplayText("welcome", "Health Check")}
+            </span>
           </h1>
-          <p className="text-gray-600 text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed">
+          <p className="text-slate-600 text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed">
             {getDisplayText(
               "uploadImage",
               "AI-powered plant disease detection for healthier crops"
@@ -949,9 +798,9 @@ const PlantDiseaseDetector = () => {
             transition={{ duration: 0.5 }}
             className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-6 sm:p-8 border border-white/20"
           >
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-8 flex items-center">
-              <div className="bg-gradient-to-r from-blue-500 to-cyan-500 p-3 rounded-xl mr-4">
-                <Camera className="w-6 h-6 text-white" />
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-8 flex items-center">
+              <div className="bg-emerald-50 text-emerald-600 p-3 rounded-xl mr-4">
+                <Camera className="w-6 h-6" />
               </div>
               {getDisplayText("uploadPlantImage", "Upload Plant Image")}
             </h2>
@@ -1006,7 +855,7 @@ const PlantDiseaseDetector = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={handleCameraCapture}
-                    className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white py-3 px-4 rounded-xl font-semibold flex items-center justify-center"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-xl font-semibold flex items-center justify-center transition-colors"
                     aria-label="Capture image with camera"
                     onKeyDown={(e) => handleKeyDown(e, handleCameraCapture)}
                   >
@@ -1022,7 +871,7 @@ const PlantDiseaseDetector = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => fileInputRef.current?.click()}
-                    className="bg-gradient-to-r from-green-500 to-emerald-500 text-white py-3 px-4 rounded-xl font-semibold flex items-center justify-center"
+                    className="border border-slate-300 hover:border-emerald-600 hover:text-emerald-700 text-slate-700 py-3 px-4 rounded-xl font-semibold flex items-center justify-center transition-colors"
                     aria-label="Choose file from device"
                     onKeyDown={(e) =>
                       handleKeyDown(e, () => fileInputRef.current?.click())
@@ -1066,7 +915,7 @@ const PlantDiseaseDetector = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={captureCameraImage}
-                    className="bg-gradient-to-r from-green-500 to-emerald-500 text-white py-3 px-4 rounded-xl font-semibold flex items-center justify-center"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-xl font-semibold flex items-center justify-center transition-colors"
                     aria-label="Capture camera image"
                     onKeyDown={(e) => handleKeyDown(e, captureCameraImage)}
                   >
@@ -1130,7 +979,7 @@ const PlantDiseaseDetector = () => {
                     whileTap={{ scale: 0.95 }}
                     onClick={detectDisease}
                     disabled={isLoading}
-                    className="bg-gradient-to-r from-green-500 to-emerald-500 disabled:from-gray-400 disabled:to-gray-500 text-white py-3 px-4 rounded-xl font-semibold flex items-center justify-center"
+                    className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-400 text-white py-3 px-4 rounded-xl font-semibold flex items-center justify-center transition-colors"
                     aria-label="Analyze plant image"
                     onKeyDown={(e) => handleKeyDown(e, detectDisease)}
                   >
@@ -1150,7 +999,7 @@ const PlantDiseaseDetector = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => fileInputRef.current?.click()}
-                    className="bg-gradient-to-r from-gray-500 to-gray-600 text-white py-3 px-4 rounded-xl font-semibold flex items-center justify-center"
+                    className="border border-slate-300 hover:border-emerald-600 hover:text-emerald-700 text-slate-700 py-3 px-4 rounded-xl font-semibold flex items-center justify-center transition-colors"
                     aria-label="Change image"
                     onKeyDown={(e) =>
                       handleKeyDown(e, () => fileInputRef.current?.click())
@@ -1189,9 +1038,9 @@ const PlantDiseaseDetector = () => {
             transition={{ duration: 0.5 }}
             className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-6 sm:p-8 border border-white/20"
           >
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-8 flex items-center">
-              <div className="bg-gradient-to-r from-emerald-500 to-green-500 p-3 rounded-xl mr-4">
-                <CheckCircle className="w-6 h-6 text-white" />
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-8 flex items-center">
+              <div className="bg-emerald-50 text-emerald-600 p-3 rounded-xl mr-4">
+                <CheckCircle className="w-6 h-6" />
               </div>
               {getDisplayText("resultsReady", "Analysis Results")}
             </h2>
@@ -1245,7 +1094,7 @@ const PlantDiseaseDetector = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-4 px-6 rounded-2xl font-bold text-lg flex items-center justify-center"
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 px-6 rounded-2xl font-bold text-lg flex items-center justify-center transition-colors"
                   aria-label="Try another image"
                   onKeyDown={(e) =>
                     handleKeyDown(e, () => fileInputRef.current?.click())
@@ -1377,7 +1226,7 @@ const PlantDiseaseDetector = () => {
           >
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <div>
-                <h2 className="text-2xl font-bold text-gray-800">
+                <h2 className="text-2xl font-semibold text-slate-900">
                   {getDisplayText("diagnosisHistory", "Diagnosis History")}
                 </h2>
                 <p className="text-sm text-gray-500 mt-1">
@@ -1391,7 +1240,7 @@ const PlantDiseaseDetector = () => {
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={loadDiagnosisHistory}
-                className="bg-gradient-to-r from-emerald-500 to-green-500 text-white py-2 px-4 rounded-xl font-semibold flex items-center justify-center"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-4 rounded-xl font-semibold flex items-center justify-center transition-colors"
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
                 {getDisplayText("refreshHistory", "Refresh")}
@@ -1441,7 +1290,7 @@ const PlantDiseaseDetector = () => {
                           </span>
                         )}
                       </div>
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-800">
+                      <h3 className="text-base sm:text-lg font-semibold text-slate-900">
                         {item.disease || getDisplayText("couldNotDetect", "Could not detect disease")}
                       </h3>
                       <p className="text-sm text-gray-500 mt-1">
@@ -1454,7 +1303,7 @@ const PlantDiseaseDetector = () => {
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.97 }}
                         onClick={() => viewHistoryItem(item)}
-                        className="bg-blue-500 text-white py-2 px-4 rounded-xl font-semibold"
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-4 rounded-xl font-semibold transition-colors"
                       >
                         {getDisplayText("viewSavedDiagnosis", "View")}
                       </motion.button>

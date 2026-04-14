@@ -12,6 +12,7 @@ import {
   Loader,
 } from "lucide-react";
 import PageTitle from "../components/PageTitle";
+import T from "../components/common/T";
 
 const SevenDaysForecast = () => {
   const [selectedDay, setSelectedDay] = useState(0);
@@ -29,7 +30,7 @@ const SevenDaysForecast = () => {
   const getFormattedDate = (daysToAdd = 0) => {
     const date = new Date(currentDateTime);
     date.setDate(date.getDate() + daysToAdd);
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    return date.toLocaleDateString("en-GB", { month: "short", day: "numeric" });
   };
 
   // Function to get day name
@@ -38,7 +39,7 @@ const SevenDaysForecast = () => {
     date.setDate(date.getDate() + daysToAdd);
 
     if (daysToAdd === 0) return "Today";
-    return date.toLocaleDateString("en-US", { weekday: "short" });
+    return date.toLocaleDateString("en-GB", { weekday: "short" });
   };
 
   // Get user's location
@@ -338,7 +339,7 @@ const SevenDaysForecast = () => {
       <div className="flex flex-col items-center justify-center h-screen bg-blue-50">
         <Loader className="w-12 h-12 text-blue-500 animate-spin" />
         <p className="mt-4 text-lg text-blue-800">
-          Loading weather forecast...
+          <T>Loading weather forecast...</T>
         </p>
       </div>
     );
@@ -357,13 +358,13 @@ const SevenDaysForecast = () => {
           </h1>
         </div>
         <div className="text-sm text-gray-500">
-          Last updated:{" "}
-          {currentDateTime.toLocaleDateString("en-US", {
+          <T>Last updated:</T>{" "}
+          <T>{currentDateTime.toLocaleDateString("en-US", {
             weekday: "long",
             month: "long",
             day: "numeric",
             year: "numeric",
-          })}{" "}
+          })}</T>{" "}
           {formatTime()}
         </div>
       </div>
@@ -377,10 +378,10 @@ const SevenDaysForecast = () => {
           <div className="flex justify-between items-center mb-4">
             <div>
               <h2 className="text-3xl font-semibold">
-                {forecastData[selectedDay].day}
+                <T>{forecastData[selectedDay].day}</T>
               </h2>
               <p className="text-lg opacity-90">
-                {forecastData[selectedDay].date}
+                <T>{forecastData[selectedDay].date}</T>
               </p>
             </div>
             <div className="flex items-center">
@@ -415,30 +416,30 @@ const SevenDaysForecast = () => {
                   {getTemp(forecastData[selectedDay].high)}
                 </div>
                 <div className="text-lg">
-                  Low: {getTemp(forecastData[selectedDay].low)}
+                  <T>Low</T>: {getTemp(forecastData[selectedDay].low)}
                 </div>
                 <div className="text-lg capitalize">
-                  {forecastData[selectedDay].condition.replace("-", " ")}
+                  <T>{forecastData[selectedDay].condition.replace("-", " ")}</T>
                 </div>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-x-8 gap-y-2">
               <div className="flex items-center">
                 <Droplet size={16} className="mr-2" />
-                <span>Humidity: {forecastData[selectedDay].humidity}%</span>
+                <span><T>Humidity:</T> {forecastData[selectedDay].humidity}%</span>
               </div>
               <div className="flex items-center">
                 <CloudRain size={16} className="mr-2" />
-                <span>Rain: {forecastData[selectedDay].rainChance}%</span>
+                <span><T>Rain:</T> {forecastData[selectedDay].rainChance}%</span>
               </div>
               <div className="flex items-center">
                 <Wind size={16} className="mr-2" />
-                <span>Wind: {forecastData[selectedDay].windSpeed} km/h</span>
+                <span><T>Wind:</T> {forecastData[selectedDay].windSpeed} km/h</span>
               </div>
               <div className="flex items-center">
                 <Thermometer size={16} className="mr-2" />
                 <span>
-                  Feels like: {getTemp(forecastData[selectedDay].high - 1)}
+                  <T>Feels like:</T> {getTemp(forecastData[selectedDay].high - 1)}
                 </span>
               </div>
             </div>
@@ -446,7 +447,7 @@ const SevenDaysForecast = () => {
 
           {/* Hourly forecast for selected day */}
           <div>
-            <h3 className="text-xl font-semibold mb-4">Hourly Forecast</h3>
+            <h3 className="text-xl font-semibold mb-4"><T>Hourly Forecast</T></h3>
             <div className="flex overflow-x-auto pb-2 space-x-4">
               {forecastData[selectedDay].hourly.map((hour, idx) => (
                 <div
@@ -470,7 +471,7 @@ const SevenDaysForecast = () => {
 
         {/* 7-day forecast row */}
         <div className="bg-gray-800/40 backdrop-blur-sm p-4">
-          <h3 className="text-lg font-semibold mb-3">7-Day Forecast</h3>
+          <h3 className="text-lg font-semibold mb-3"><T>7-Day Forecast</T></h3>
           <div className="grid grid-cols-7 gap-2">
             {forecastData.map((day, idx) => (
               <div
@@ -480,7 +481,7 @@ const SevenDaysForecast = () => {
                 }`}
                 onClick={() => setSelectedDay(idx)}
               >
-                <span className="text-sm font-medium">{day.day}</span>
+                <span className="text-sm font-medium"><T>{day.day}</T></span>
                 <div className="my-2">{getWeatherIcon(day.condition)}</div>
                 <div className="flex flex-col items-center text-xs sm:text-sm">
                   <span className="font-medium">
@@ -500,7 +501,7 @@ const SevenDaysForecast = () => {
       <div className="mt-6 bg-white rounded-xl shadow-md overflow-hidden">
         <div className="p-4 bg-gray-50 border-b">
           <h3 className="text-lg font-semibold text-gray-800">
-            Weather Matrix
+            <T>Weather Matrix</T>
           </h3>
         </div>
 
@@ -509,22 +510,22 @@ const SevenDaysForecast = () => {
             <thead>
               <tr className="bg-gray-50">
                 <th className="py-3 px-4 text-left text-sm font-medium text-gray-500">
-                  DAY
+                  <T>DAY</T>
                 </th>
                 <th className="py-3 px-4 text-left text-sm font-medium text-gray-500">
-                  CONDITION
+                  <T>CONDITION</T>
                 </th>
                 <th className="py-3 px-4 text-left text-sm font-medium text-gray-500">
-                  HIGH / LOW
+                  <T>HIGH / LOW</T>
                 </th>
                 <th className="py-3 px-4 text-left text-sm font-medium text-gray-500">
-                  RAIN %
+                  <T>RAIN %</T>
                 </th>
                 <th className="py-3 px-4 text-left text-sm font-medium text-gray-500">
-                  HUMIDITY
+                  <T>HUMIDITY</T>
                 </th>
                 <th className="py-3 px-4 text-left text-sm font-medium text-gray-500">
-                  WIND
+                  <T>WIND</T>
                 </th>
               </tr>
             </thead>
@@ -538,14 +539,14 @@ const SevenDaysForecast = () => {
                   onClick={() => setSelectedDay(idx)}
                 >
                   <td className="py-3 px-4">
-                    <div className="font-medium">{day.day}</div>
-                    <div className="text-xs text-gray-500">{day.date}</div>
+                    <div className="font-medium"><T>{day.day}</T></div>
+                    <div className="text-xs text-gray-500"><T>{day.date}</T></div>
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center">
                       {getWeatherIcon(day.condition)}
                       <span className="ml-2 capitalize">
-                        {day.condition.replace("-", " ")}
+                        <T>{day.condition.replace("-", " ")}</T>
                       </span>
                     </div>
                   </td>
@@ -590,7 +591,7 @@ const SevenDaysForecast = () => {
       {/* Footer */}
       <div className="mt-4 text-center text-sm text-gray-500 mb-8">
         <p>
-          Weather data provided by Ghana Meteorological Agency • Last updated:{" "}
+          <T>Weather data provided by Ghana Meteorological Agency</T> • <T>Last updated:</T>{" "}
           {formatTime()}
         </p>
       </div>

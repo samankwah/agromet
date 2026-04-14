@@ -13,6 +13,8 @@ import {
   FaTimes,
   FaCamera,
 } from "react-icons/fa";
+import LanguageSelector from "./common/LanguageSelector";
+import T from "./common/T";
 import { Link, useLocation } from "react-router-dom";
 import PropTypes from "prop-types";
 import logo2 from "../assets/images/agromet-high-resolution-logo-transparent.png";
@@ -87,7 +89,7 @@ Dropdown.propTypes = {
     PropTypes.shape({
       to: PropTypes.string,
       href: PropTypes.string,
-      label: PropTypes.string.isRequired,
+      label: PropTypes.node.isRequired,
     })
   ).isRequired,
   title: PropTypes.string.isRequired,
@@ -104,20 +106,18 @@ const Header = () => {
   useChatbotIntegration();
 
   const forecastLinks = [
-    { to: "/7-days-forecast", label: "Weekly Forecast" },
-    { to: "/agro-bulletins", label: "Agrometeorological Bulletins" },
-    { to: "/subseasonal-forecast", label: "Subseasonal 2 Seasonal Forecast" },
-
-    { to: "/flood-drought", label: "Flood & Drought Bulletins" },
-
-    { to: "/seasonal-forecast", label: "Seasonal Forecast" },
+    { to: "/7-days-forecast", label: <T>Weekly Forecast</T> },
+    { to: "/agro-bulletins", label: <T>Agrometeorological Bulletins</T> },
+    { to: "/subseasonal-forecast", label: <T>Subseasonal 2 Seasonal Forecast</T> },
+    { to: "/flood-drought", label: <T>Flood & Drought Bulletins</T> },
+    { to: "/seasonal-forecast", label: <T>Seasonal Forecast</T> },
   ];
 
   const agricultureLinks = [
-    { to: "/crop-calendar", label: "Crop Calendar" },
-    { to: "/poultry-calendar", label: "Poultry Calendar" },
-    { to: "/crop-advisory", label: "Crop Advisories" },
-    { to: "/poultry-advisory", label: "Poultry Advisories" },
+    { to: "/crop-calendar", label: <T>Crop Calendar</T> },
+    { to: "/poultry-calendar", label: <T>Poultry Calendar</T> },
+    { to: "/crop-advisory", label: <T>Crop Advisories</T> },
+    { to: "/poultry-advisory", label: <T>Poultry Advisories</T> },
   ];
 
   // Toggle section expansion
@@ -223,7 +223,7 @@ const Header = () => {
             } hover:border-black flex flex-row items-center py-2`}
           >
             <FaHome className="mb-1 text-xl mr-1 text-black" />
-            <span>Home</span>
+            <span><T>Home</T></span>
           </Link>
 
           {/* <div className="flex flex-row items-center">
@@ -261,7 +261,7 @@ const Header = () => {
             } hover:border-black flex flex-row items-center py-2`}
           >
             <FaComments className="mb-1 text-xl mr-1 text-black" />
-            <span>Agromet Advisory</span>
+            <span><T>Agromet Advisory</T></span>
           </Link>
           <Link
             to="/crop-diagnose"
@@ -272,7 +272,7 @@ const Header = () => {
             } hover:border-black flex flex-row items-center py-2`}
           >
             <FaCamera className="mb-1 text-xl mr-1 text-black" />
-            <span>Diagnose</span>
+            <span><T>Diagnose</T></span>
           </Link>
           <Link
             to="/market-page"
@@ -283,8 +283,12 @@ const Header = () => {
             } hover:border-black flex flex-row items-center py-2`}
           >
             <FaShoppingCart className="mb-1 text-xl mr-1 text-black" />
-            <span>Market</span>
+            <span><T>Market</T></span>
           </Link>
+        </div>
+
+        <div className="hidden lg:flex items-center">
+          <LanguageSelector variant="header" />
         </div>
 
         <div className="hidden lg:flex flex-col border-2 border-gray-100 h-8 mx-2" />
@@ -336,6 +340,11 @@ const Header = () => {
               {/* Mobile Menu Content */}
               <div className="h-[calc(100%-68px)] overflow-y-auto">
                 <nav className="flex flex-col">
+                  {/* Language Selector */}
+                  <div className="px-4 py-3 border-b border-gray-100">
+                    <LanguageSelector variant="inline" />
+                  </div>
+
                   {/* Main Navigation Items */}
                   <Link
                     to="/"
@@ -344,7 +353,7 @@ const Header = () => {
                     } hover:bg-gray-100`}
                   >
                     <FaHome className="mr-4 text-lg" />
-                    <span className="font-medium">Home</span>
+                    <span className="font-medium"><T>Home</T></span>
                   </Link>
 
                   <Link
@@ -356,7 +365,7 @@ const Header = () => {
                     } hover:bg-gray-100`}
                   >
                     <FaShoppingCart className="mr-4 text-lg" />
-                    <span className="font-medium">Market</span>
+                    <span className="font-medium"><T>Market</T></span>
                   </Link>
 
                 <Link
@@ -368,7 +377,7 @@ const Header = () => {
                   } hover:bg-gray-100`}
                 >
                   <FaComments className="mr-4 text-lg" />
-                  <span className="font-medium">Agromet Advisory</span>
+                  <span className="font-medium"><T>Agromet Advisory</T></span>
                 </Link>
 
                 <Link
@@ -380,7 +389,7 @@ const Header = () => {
                   } hover:bg-gray-100`}
                 >
                   <FaCamera className="mr-4 text-lg" />
-                  <span className="font-medium">Crop Diagnose</span>
+                  <span className="font-medium"><T>Crop Diagnose</T></span>
                 </Link>
 
                 {/* Expandable Weather Section */}
@@ -394,7 +403,7 @@ const Header = () => {
                   >
                     <div className="flex items-center">
                       <FaCloudSun className="mr-4 text-lg" />
-                      <span className="font-medium">Weather</span>
+                      <span className="font-medium"><T>Weather</T></span>
                     </div>
                     {expandedSection === "weather" ? (
                       <FaChevronUp className="text-gray-500" />
@@ -434,7 +443,7 @@ const Header = () => {
                   >
                     <div className="flex items-center">
                       <FaSeedling className="mr-4 text-lg" />
-                      <span className="font-medium">Agriculture</span>
+                      <span className="font-medium"><T>Agriculture</T></span>
                     </div>
                     {expandedSection === "agriculture" ? (
                       <FaChevronUp className="text-gray-500" />
@@ -473,7 +482,7 @@ const Header = () => {
                   } hover:bg-gray-100 mt-2`}
                 >
                   <FaUser className="mr-4 text-lg" />
-                  <span className="font-medium">Admin</span>
+                  <span className="font-medium"><T>Admin</T></span>
                 </Link>
                 </nav>
               </div>

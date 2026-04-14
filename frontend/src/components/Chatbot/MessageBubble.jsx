@@ -1,19 +1,19 @@
 import { useState } from 'react';
 import { FaUser, FaRobot, FaCopy, FaCheck, FaVolumeUp, FaStop } from 'react-icons/fa';
 import PropTypes from 'prop-types';
-import translationService from '../../services/translationService';
+import useTranslation from '../../hooks/useTranslation';
 
-const MessageBubble = ({ 
-  message, 
-  isUser, 
-  timestamp, 
-  isTyping = false, 
-  imageData = null, 
-  currentLanguage = "en",
-  translatedText = null 
+const MessageBubble = ({
+  message,
+  isUser,
+  timestamp,
+  isTyping = false,
+  imageData = null,
+  currentLanguage: _currentLanguage,
+  translatedText = null
 }) => {
   const [copied, setCopied] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
+  const { speak, isSpeaking, stopSpeaking } = useTranslation();
 
   const handleCopy = async () => {
     try {
@@ -27,32 +27,10 @@ const MessageBubble = ({
 
   const handleSpeak = async () => {
     if (isSpeaking) {
-      // Stop current speech
-      window.speechSynthesis?.cancel();
-      setIsSpeaking(false);
+      stopSpeaking();
       return;
     }
-
-    try {
-      setIsSpeaking(true);
-      const textToSpeak = translatedText || message;
-      const ttsResult = await translationService.textToSpeech(textToSpeak, currentLanguage);
-      
-      if (ttsResult) {
-        if (ttsResult.type === "api" && ttsResult.url) {
-          const audio = new Audio(ttsResult.url);
-          audio.onended = () => setIsSpeaking(false);
-          audio.onerror = () => setIsSpeaking(false);
-          await audio.play();
-        } else if (ttsResult.type === "browser" && ttsResult.speak) {
-          ttsResult.speak();
-          setTimeout(() => setIsSpeaking(false), 3000);
-        }
-      }
-    } catch (error) {
-      console.error('Speech synthesis error:', error);
-      setIsSpeaking(false);
-    }
+    speak(translatedText || message);
   };
 
   const formatMessage = (text) => {

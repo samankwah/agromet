@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import PageTitle from '../components/PageTitle';
+import T from '../components/common/T';
 import {
   TrendingUp,
   TrendingDown,
@@ -278,13 +279,10 @@ const SubseasonalForecast = () => {
       <div className="mb-8 text-center">
         <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 flex items-center justify-center">
           {/* <BarChart3 className="mr-2 text-blue-600" /> */}
-          Subseasonal Agricultural Forecast
+          <T>Subseasonal Agricultural Forecast</T>
         </h1>
         <p className="mt-2 text-gray-600 max-w-4xl mx-auto">
-          Extended-range weather forecasts (2-8 weeks ahead) to support
-          strategic agricultural planning. These forecasts help farmers make
-          informed decisions about crop selection, planting schedules, and
-          resource allocation based on longer-term climate patterns.
+          <T>Extended-range weather forecasts (2-8 weeks ahead) to support strategic agricultural planning. These forecasts help farmers make informed decisions about crop selection, planting schedules, and resource allocation based on longer-term climate patterns.</T>
         </p>
 
         <div className="mt-4 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-md max-w-4xl mx-auto">
@@ -309,7 +307,7 @@ const SubseasonalForecast = () => {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             <Clock className="inline mr-1 h-4 w-4" />
-            Forecast Period
+            <T>Forecast Period</T>
           </label>
           <select
             value={selectedWeek}
@@ -328,7 +326,7 @@ const SubseasonalForecast = () => {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             <Map className="inline mr-1 h-4 w-4" />
-            Region
+            <T>Region</T>
           </label>
           <select
             value={selectedRegion}
@@ -347,17 +345,17 @@ const SubseasonalForecast = () => {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             <Filter className="inline mr-1 h-4 w-4" />
-            View Type
+            <T>View Type</T>
           </label>
           <select
             value={forecastType}
             onChange={(e) => setForecastType(e.target.value)}
             className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
           >
-            <option value="overview">Overview</option>
-            <option value="detailed">Detailed Analysis</option>
-            <option value="agricultural">Agricultural Focus</option>
-            <option value="climate">Climate Patterns</option>
+            <option value="overview"><T>Overview</T></option>
+            <option value="detailed"><T>Detailed Analysis</T></option>
+            <option value="agricultural"><T>Agricultural Focus</T></option>
+            <option value="climate"><T>Climate Patterns</T></option>
           </select>
         </div>
       </div>
@@ -368,22 +366,22 @@ const SubseasonalForecast = () => {
           <div className="flex justify-between items-start">
             <div>
               <h2 className="text-xl font-semibold">
-                {forecastData.period.label} Forecast
+                {forecastData.period.label} <T>Forecast</T>
               </h2>
-              <p className="text-blue-100 mt-1">{forecastData.region} Region</p>
+              <p className="text-blue-100 mt-1">{forecastData.region} <T>Region</T></p>
               <p className="text-blue-200 text-sm mt-1">
-                {forecastData.startDate.toLocaleDateString("en-US", {
+                <T>{forecastData.startDate.toLocaleDateString("en-US", {
                   month: "long",
                   day: "numeric",
-                })}{" "}
+                })}</T>{" "}
                 -{" "}
-                {new Date(
+                <T>{new Date(
                   forecastData.startDate.getTime() + 13 * 24 * 60 * 60 * 1000
                 ).toLocaleDateString("en-US", {
                   month: "long",
                   day: "numeric",
                   year: "numeric",
-                })}
+                })}</T>
               </p>
             </div>
             <div className="text-right">
@@ -393,7 +391,7 @@ const SubseasonalForecast = () => {
                   {forecastData.confidence}%
                 </span>
               </div>
-              <p className="text-blue-200 text-sm">Confidence</p>
+              <p className="text-blue-200 text-sm"><T>Confidence</T></p>
             </div>
           </div>
         </div>
@@ -406,7 +404,7 @@ const SubseasonalForecast = () => {
                 <div className="flex items-center">
                   <Thermometer className="h-5 w-5 text-red-500 mr-2" />
                   <h3 className="text-lg font-medium text-gray-900">
-                    Temperature
+                    <T>Temperature</T>
                   </h3>
                 </div>
                 {getTrendIcon(forecastData.temperature.trend)}
@@ -414,7 +412,7 @@ const SubseasonalForecast = () => {
 
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Trend:</span>
+                  <span className="text-sm text-gray-600"><T>Trend:</T></span>
                   <span
                     className={`text-sm font-medium ${getTrendColor(
                       forecastData.temperature.trend
@@ -428,7 +426,7 @@ const SubseasonalForecast = () => {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Anomaly:</span>
+                  <span className="text-sm text-gray-600"><T>Anomaly:</T></span>
                   <span
                     className={`text-sm font-medium ${getTrendColor(
                       forecastData.temperature.trend
@@ -439,7 +437,7 @@ const SubseasonalForecast = () => {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Confidence:</span>
+                  <span className="text-sm text-gray-600"><T>Confidence:</T></span>
                   <span
                     className={`text-sm font-medium ${getConfidenceColor(
                       forecastData.temperature.confidence
@@ -457,7 +455,7 @@ const SubseasonalForecast = () => {
                 <div className="flex items-center">
                   <CloudRain className="h-5 w-5 text-blue-500 mr-2" />
                   <h3 className="text-lg font-medium text-gray-900">
-                    Rainfall
+                    <T>Rainfall</T>
                   </h3>
                 </div>
                 {getTrendIcon(forecastData.rainfall.trend)}
@@ -465,7 +463,7 @@ const SubseasonalForecast = () => {
 
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Trend:</span>
+                  <span className="text-sm text-gray-600"><T>Trend:</T></span>
                   <span
                     className={`text-sm font-medium ${getTrendColor(
                       forecastData.rainfall.trend
@@ -479,7 +477,7 @@ const SubseasonalForecast = () => {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Anomaly:</span>
+                  <span className="text-sm text-gray-600"><T>Anomaly:</T></span>
                   <span
                     className={`text-sm font-medium ${getTrendColor(
                       forecastData.rainfall.trend
@@ -490,7 +488,7 @@ const SubseasonalForecast = () => {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Confidence:</span>
+                  <span className="text-sm text-gray-600"><T>Confidence:</T></span>
                   <span
                     className={`text-sm font-medium ${getConfidenceColor(
                       forecastData.rainfall.confidence
@@ -510,10 +508,10 @@ const SubseasonalForecast = () => {
         <div className="px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 flex items-center">
             <Wind className="mr-2 text-blue-600" />
-            Influencing Climate Patterns
+            <T>Influencing Climate Patterns</T>
           </h3>
           <p className="text-sm text-gray-600 mt-1">
-            Large-scale climate phenomena affecting the forecast
+            <T>Large-scale climate phenomena affecting the forecast</T>
           </p>
         </div>
 
@@ -544,7 +542,7 @@ const SubseasonalForecast = () => {
                   {phenomenon.description}
                 </p>
                 <div className="flex items-center">
-                  <span className="text-xs text-gray-500">Status:</span>
+                  <span className="text-xs text-gray-500"><T>Status:</T></span>
                   <span
                     className={`ml-2 text-xs font-medium px-2 py-1 rounded ${
                       phenomenon.status === "strengthening" ||
@@ -572,7 +570,7 @@ const SubseasonalForecast = () => {
         <div className="px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 flex items-center">
             <Leaf className="mr-2 text-green-600" />
-            Agricultural Impacts & Recommendations
+            <T>Agricultural Impacts & Recommendations</T>
           </h3>
           <p className="text-sm text-gray-600 mt-1">
             Crop-specific implications of the{" "}
@@ -780,22 +778,21 @@ const SubseasonalForecast = () => {
       {/* Footer */}
       <div className="text-center text-sm text-gray-500">
         <p className="mb-1">
-          Subseasonal forecasts are generated using ensemble climate models and
-          historical climate patterns
+          <T>Subseasonal forecasts are generated using ensemble climate models and historical climate patterns</T>
         </p>
         <p className="mb-1">
-          Data sources: ECMWF, NCEP, and regional climate models
+          <T>Data sources: ECMWF, NCEP, and regional climate models</T>
         </p>
         <p>
-          Last updated:{" "}
-          {new Date().toLocaleDateString("en-US", {
+          <T>Last updated:</T>{" "}
+          <T>{new Date().toLocaleDateString("en-US", {
             weekday: "long",
             month: "long",
             day: "numeric",
             year: "numeric",
             hour: "numeric",
             minute: "2-digit",
-          })}
+          })}</T>
         </p>
       </div>
       </div>

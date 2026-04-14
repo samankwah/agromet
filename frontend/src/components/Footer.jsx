@@ -1,139 +1,149 @@
 import { Link } from "react-router-dom";
+import {
+  FaFacebookF,
+  FaTwitter,
+  FaLinkedinIn,
+  FaWhatsapp,
+  FaEnvelope,
+} from "react-icons/fa";
+import T from "./common/T";
 import logo from "../assets/images/agromet-high-resolution-logo-transparent.png";
-import facebookIcon from "../assets/icons/facebook.png";
-import twitterIcon from "../assets/icons/x.png";
-import linkedinIcon from "../assets/icons/linkedin.png";
-import whatsappIcon from "../assets/icons/whatsapp.png";
+
+const quickLinks = [
+  { to: "/about", label: "About Us" },
+  { to: "/our-services", label: "Our Services" },
+  { to: "/contact", label: "Contact" },
+  { to: "/careers", label: "Careers" },
+];
+
+const socialLinks = [
+  {
+    href: "https://www.facebook.com",
+    label: "Facebook",
+    Icon: FaFacebookF,
+  },
+  {
+    href: "https://www.twitter.com",
+    label: "Twitter",
+    Icon: FaTwitter,
+  },
+  {
+    href: "https://www.linkedin.com",
+    label: "LinkedIn",
+    Icon: FaLinkedinIn,
+  },
+  {
+    href: "https://chat.whatsapp.com/IKNqrHOpAYmI1s5prZtQs6",
+    label: "WhatsApp",
+    Icon: FaWhatsapp,
+  },
+];
+
+const SectionHeading = ({ children }) => (
+  <div className="mb-6">
+    <h5 className="text-sm font-semibold uppercase tracking-wider text-white">
+      {children}
+    </h5>
+    <div className="w-8 h-0.5 bg-emerald-400 mt-2" />
+  </div>
+);
 
 const Footer = () => {
   return (
-    <footer className="bg-blue-900 text-white w-full py-4 md:py-6 md:px-12">
-      <div className="max-w-screen-xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 px-4">
-        {/* Logo and Description */}
-        <div className="flex flex-col items-start md:items-start">
-          {/* Link the logo to the website */}
-          <Link to="/">
-            <img src={logo} alt="agropulse logo" className="h-12 mb-4" />
-          </Link>
+    <footer className="relative bg-gradient-to-b from-slate-900 to-slate-950 text-slate-300 w-full">
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 pt-16 pb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-12">
+          {/* Brand */}
+          <div className="lg:col-span-5">
+            <Link to="/" className="inline-block mb-5">
+              <img src={logo} alt="AgroMet" className="h-12 w-auto" />
+            </Link>
+            <p className="text-sm leading-relaxed text-slate-400 max-w-sm">
+              <T>
+                AgroMet delivers real-time, reliable agrometeorological
+                advisories that help farmers and agribusinesses across Ghana
+                plan, monitor, and adapt with confidence.
+              </T>
+            </p>
 
-          <p className="text-sm text-gray-300 text-start md:text-left">
-            AgroMet app delivers real-time, reliable agrometeorological
-            advisories for planning and monitoring.
-          </p>
-        </div>
-
-        {/* Navigation Links */}
-        <div className="flex flex-col items-start md:items-center">
-          <h5 className="font-semibold mb-2 text-lg text-gray-100">
-            Quick Links
-          </h5>
-          <ul className="space-y-1 text-sm text-gray-300">
-            <li>
-              <Link to="/about" className="hover:text-gray-400">
-                About Us
-              </Link>
-            </li>
-            <li>
-              <Link to="/our-services" className="hover:text-gray-400">
-                Our Services
-              </Link>
-            </li>
-            <li>
-              <Link to="/contact" className="hover:text-gray-400">
-                Contact
-              </Link>
-            </li>
-            <li>
-              <Link to="/careers" className="hover:text-gray-400">
-                Careers
-              </Link>
-            </li>
-          </ul>
-        </div>
-
-        {/* Social Media and Legal */}
-        <div className="flex flex-col items-start md:items-start">
-          <h5 className="font-semibold mb-2 text-lg text-gray-100">
-            Connect With Us
-          </h5>
-
-          {/* Social Media Icons */}
-          <div className="flex space-x-4 mb-2">
             <a
-              href="https://www.facebook.com" // Add your actual Facebook link
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Facebook"
+              href="mailto:agromet@gmail.com"
+              className="mt-6 inline-flex items-center gap-2 text-sm text-slate-300 hover:text-emerald-400 transition-colors"
             >
-              <img src={facebookIcon} alt="Facebook" className="h-6 w-6" />
-            </a>
-            <a
-              href="https://www.twitter.com" // Add your actual Twitter link
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Twitter"
-            >
-              <img src={twitterIcon} alt="Twitter" className="h-6 w-6" />
-            </a>
-            <a
-              href="https://www.linkedin.com" // Add your actual LinkedIn link
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="LinkedIn"
-            >
-              <img src={linkedinIcon} alt="LinkedIn" className="h-6 w-6" />
-            </a>
-            <a
-              href="https://chat.whatsapp.com/IKNqrHOpAYmI1s5prZtQs6"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="whatsapp"
-            >
-              <img src={whatsappIcon} alt="WhatsApp" className="h-6 w-6" />
-            </a>
-          </div>
-
-          {/* Email Contact - Added Below Social Media Icons */}
-          <div className="flex items-center mb-2">
-            <a
-              href="mailto:deepdiveteam@fsrp.org.gh"
-              className="text-sm text-gray-300 hover:text-gray-400 flex items-center"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 mr-1"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                />
-              </svg>
+              <FaEnvelope className="w-4 h-4" />
               agromet@gmail.com
             </a>
           </div>
 
-          <ul className="text-sm space-y-1 text-gray-300">
-            <li>
-              <Link to="/privacy-policy" className="hover:text-gray-400">
-                Privacy Policy
-              </Link>
-            </li>
-            <li>
-              <Link to="/terms-of-service" className="hover:text-gray-400">
-                Terms of Service
-              </Link>
-            </li>
-          </ul>
-        </div>
-      </div>
+          {/* Quick Links */}
+          <div className="lg:col-span-3">
+            <SectionHeading>
+              <T>Quick Links</T>
+            </SectionHeading>
+            <ul className="space-y-3">
+              {quickLinks.map((link) => (
+                <li key={link.to}>
+                  <Link
+                    to={link.to}
+                    className="text-sm text-slate-300 hover:text-emerald-400 transition-colors"
+                  >
+                    <T>{link.label}</T>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
 
-      <div className="mt-4 border-t border-gray-600 pt-2 text-xs text-gray-400 flex justify-center">
-        <p>&copy; {new Date().getFullYear()} AgroMet. All rights reserved.</p>
+          {/* Connect */}
+          <div className="lg:col-span-4">
+            <SectionHeading>
+              <T>Connect With Us</T>
+            </SectionHeading>
+            <p className="text-sm text-slate-400 mb-5 max-w-xs">
+              <T>
+                Follow AgroMet for the latest advisories, crop insights, and
+                climate updates.
+              </T>
+            </p>
+            <div className="flex items-center gap-3">
+              {socialLinks.map(({ href, label, Icon }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  className="w-10 h-10 rounded-full bg-slate-800 hover:bg-gradient-to-br hover:from-emerald-500 hover:to-teal-600 text-slate-200 hover:text-white flex items-center justify-center transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-500/30"
+                >
+                  <Icon className="w-4 h-4" />
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Legal Strip */}
+        <div className="border-t border-slate-800 mt-12 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-slate-500">
+            &copy; {new Date().getFullYear()} AgroMet.{" "}
+            <T>All rights reserved.</T>
+          </p>
+          <div className="flex items-center gap-6">
+            <Link
+              to="/privacy-policy"
+              className="text-xs text-slate-400 hover:text-emerald-400 transition-colors"
+            >
+              <T>Privacy Policy</T>
+            </Link>
+            <Link
+              to="/terms-of-service"
+              className="text-xs text-slate-400 hover:text-emerald-400 transition-colors"
+            >
+              <T>Terms of Service</T>
+            </Link>
+          </div>
+        </div>
       </div>
     </footer>
   );

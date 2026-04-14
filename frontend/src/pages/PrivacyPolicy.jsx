@@ -1,115 +1,135 @@
-import PageTitle from '../components/PageTitle';
-import { FaShieldAlt, FaRegFileAlt, FaLock, FaUsers } from "react-icons/fa";
+import PageTitle from "../components/PageTitle";
+import {
+  FaShieldAlt,
+  FaRegFileAlt,
+  FaLock,
+  FaUsers,
+  FaEnvelope,
+  FaPhoneAlt,
+} from "react-icons/fa";
+import T from "../components/common/T";
+
+const sections = [
+  {
+    icon: FaRegFileAlt,
+    title: "Information We Collect",
+    body: "We may collect the following types of information:",
+    list: [
+      "Personal identification information (name, email, phone)",
+      "Usage data describing how you interact with our services",
+      "Cookies and similar tracking technologies",
+      "Location data when you opt in to localized advisories",
+    ],
+  },
+  {
+    icon: FaShieldAlt,
+    title: "How We Use Your Information",
+    body: "We use the information we collect to:",
+    list: [
+      "Provide, operate, and maintain the AgroMet platform",
+      "Personalize advisories and recommendations to your location",
+      "Communicate with you about updates, alerts, and support",
+      "Analyze usage patterns to improve the product",
+    ],
+  },
+  {
+    icon: FaLock,
+    title: "Data Security",
+    body: "We take the security of your personal information seriously and implement administrative, technical, and physical safeguards designed to protect it against unauthorized access, alteration, disclosure, or destruction.",
+  },
+  {
+    icon: FaUsers,
+    title: "Third-Party Services",
+    body: "We may engage vetted third-party service providers to help us operate and improve AgroMet. These providers have access to your information only to perform tasks on our behalf and are contractually obligated to protect it.",
+  },
+  {
+    icon: FaRegFileAlt,
+    title: "Changes to This Privacy Policy",
+    body: "We may update this Privacy Policy from time to time. Material changes will be posted on this page with a new effective date. We encourage you to review this policy periodically.",
+  },
+];
 
 const PrivacyPolicy = () => {
   return (
     <>
       <PageTitle title="Privacy Policy" />
-      <div className="bg-gradient-to-br from-blue-50 to-blue-100 min-h-screen p-8">
-      <div className="max-w-7xl mx-auto bg-white rounded-lg shadow-lg p-8 pt-20">
-        <h1 className="text-4xl font-bold text-blue-900 mb-6 text-center">
-          Privacy Policy
-        </h1>
-        <p className="text-gray-700 text-lg mb-8 text-center">
-          Your privacy is important to us. This Privacy Policy outlines how we
-          collect, use, and protect your information.
-        </p>
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-emerald-50/30 relative overflow-hidden">
+        <div className="absolute top-20 -left-32 w-96 h-96 bg-emerald-200/30 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-40 -right-32 w-96 h-96 bg-teal-200/30 rounded-full blur-3xl pointer-events-none" />
 
-        {/* Section: Information We Collect */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-2 flex items-center">
-            <FaRegFileAlt className="text-blue-900 mr-2" />
-            Information We Collect
-          </h2>
-          <p className="text-gray-700 mb-2">
-            We may collect the following types of information:
-          </p>
-          <ul className="list-disc list-inside mb-4 text-gray-600">
-            <li>Personal Identification Information (Name, Email, etc.)</li>
-            <li>Usage Data (How you interact with our services)</li>
-            <li>Cookies and Tracking Technologies</li>
-          </ul>
-        </div>
+        <div className="max-w-4xl mx-auto px-6 lg:px-8 pt-28 pb-20 relative">
+          <header className="mb-12 text-center">
+            <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight mb-4">
+              <T>Privacy Policy</T>
+            </h1>
+            <p className="text-sm text-slate-500 mb-6">
+              <T>Last updated: April 2026</T>
+            </p>
+            <p className="text-base text-slate-600 leading-relaxed max-w-2xl mx-auto">
+              <T>
+                Your privacy matters to us. This Privacy Policy explains how
+                AgroMet collects, uses, and safeguards the information you share
+                with us.
+              </T>
+            </p>
+          </header>
 
-        {/* Section: How We Use Your Information */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-2 flex items-center">
-            <FaShieldAlt className="text-blue-900 mr-2" />
-            How We Use Your Information
-          </h2>
-          <p className="text-gray-700 mb-2">
-            We use the information we collect in various ways, including to:
-          </p>
-          <ul className="list-disc list-inside mb-4 text-gray-600">
-            <li>Provide, operate, and maintain our website</li>
-            <li>Improve, personalize, and expand our services</li>
-            <li>
-              Communicate with you, either directly or through one of our
-              partners
-            </li>
-            <li>Process your transactions and manage your orders</li>
-            <li>Send you emails and newsletters</li>
-          </ul>
-        </div>
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200 shadow-sm p-8 lg:p-12 space-y-10">
+            {sections.map(({ icon: Icon, title, body, list }) => (
+              <section key={title}>
+                <h2 className="text-2xl font-semibold text-slate-900 mb-3 flex items-center gap-3">
+                  <span className="inline-flex w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 items-center justify-center">
+                    <Icon className="w-5 h-5" />
+                  </span>
+                  <T>{title}</T>
+                </h2>
+                <p className="text-base text-slate-600 leading-relaxed">
+                  <T>{body}</T>
+                </p>
+                {list && (
+                  <ul className="mt-3 space-y-2 text-slate-600">
+                    {list.map((item) => (
+                      <li key={item} className="flex items-start gap-2">
+                        <span className="mt-2 w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+                        <span>
+                          <T>{item}</T>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            ))}
 
-        {/* Section: Data Security */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-2 flex items-center">
-            <FaLock className="text-blue-900 mr-2" />
-            Data Security
-          </h2>
-          <p className="text-gray-700 mb-2">
-            We take the security of your personal information seriously. We
-            implement various security measures to maintain the safety of your
-            personal information when you place an order or enter, submit, or
-            access your personal information.
-          </p>
+            <section className="pt-8 border-t border-slate-200">
+              <h2 className="text-2xl font-semibold text-slate-900 mb-4">
+                <T>Contact Us</T>
+              </h2>
+              <p className="text-base text-slate-600 leading-relaxed mb-4">
+                <T>
+                  If you have any questions about this Privacy Policy, please
+                  reach out to us:
+                </T>
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 text-slate-700">
+                <a
+                  href="mailto:agromet@gmail.com"
+                  className="inline-flex items-center gap-2 hover:text-emerald-700 transition-colors"
+                >
+                  <FaEnvelope className="w-4 h-4 text-emerald-600" />
+                  agromet@gmail.com
+                </a>
+                <a
+                  href="tel:+233243999631"
+                  className="inline-flex items-center gap-2 hover:text-emerald-700 transition-colors"
+                >
+                  <FaPhoneAlt className="w-4 h-4 text-emerald-600" />
+                  +233 24 399 9631
+                </a>
+              </div>
+            </section>
+          </div>
         </div>
-
-        {/* Section: Third-Party Services */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-2 flex items-center">
-            <FaUsers className="text-blue-900 mr-2" />
-            Third-Party Services
-          </h2>
-          <p className="text-gray-700 mb-2">
-            We may employ third-party companies and services to facilitate our
-            services, to provide the services on our behalf, to perform
-            service-related services, or to assist us in analyzing how our
-            services are used. These third parties may have access to your
-            personal information only to perform these tasks on our behalf and
-            are obligated not to disclose or use it for any other purpose.
-          </p>
-        </div>
-
-        {/* Section: Changes to This Privacy Policy */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-2 flex items-center">
-            <FaRegFileAlt className="text-blue-900 mr-2" />
-            Changes to This Privacy Policy
-          </h2>
-          <p className="text-gray-700 mb-2">
-            We may update our Privacy Policy from time to time. We will notify
-            you of any changes by posting the new Privacy Policy on this page.
-            You are advised to review this Privacy Policy periodically for any
-            changes.
-          </p>
-        </div>
-
-        {/* Section: Contact Us */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-2 flex items-center">
-            <FaLock className="text-blue-900 mr-2" />
-            Contact Us
-          </h2>
-          <p className="text-gray-700 mb-2">
-            If you have any questions about this Privacy Policy, please contact
-            us:
-          </p>
-          <p className="text-gray-600">Email: support@example.com</p>
-          <p className="text-gray-600">Phone: +233 123 456 789</p>
-        </div>
-      </div>
       </div>
     </>
   );

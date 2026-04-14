@@ -9,6 +9,7 @@ import { getSafeDistrictsByRegion } from '../utils/regionDistrictHelpers';
 import { SafeDistrictOptions } from '../components/common/SafeSelectOptions';
 import { getAllRegionNames } from '../data/ghanaCodes';
 import toast from 'react-hot-toast';
+import T from '../components/common/T';
 
 // DownloadButton Component
 const DownloadButton = ({ onDownload }) => {
@@ -1508,11 +1509,11 @@ const CropCalendar = () => {
             <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
               <div className="flex-1">
                 <h1 className="text-3xl md:text-5xl font-bold mb-3">
-                  <span className="text-green-600">Crop Production </span>
-                  <span className="text-blue-600">Calendar</span>
+                  <span className="text-green-600"><T>Crop Production</T> </span>
+                  <span className="text-blue-600"><T>Calendar</T></span>
                 </h1>
                 <p className="text-gray-500 text-base md:text-lg">
-                  Seasonal crop activity planning and advisory for Ghana&apos;s agricultural regions
+                  <T>Seasonal crop activity planning and advisory for Ghana&apos;s agricultural regions</T>
                 </p>
               </div>
 
@@ -1532,26 +1533,26 @@ const CropCalendar = () => {
             <div className="flex flex-col lg:flex-row lg:items-end gap-4">
               <div className="flex-1 grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Season</label>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1"><T>Season</T></label>
                   <select
                     value={selectedSeason}
                     onChange={handleSeasonChange}
                     className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all"
                   >
-                    <option value="">Select Season</option>
+                    <option value=""><T>Select Season</T></option>
                     {seasonOptions.map((opt) => (
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Crop Type <span className="text-red-400">*</span></label>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1"><T>Crop Type</T> <span className="text-red-400">*</span></label>
                   <select
                     value={selectedCrop}
                     onChange={handleCropChange}
                     className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all"
                   >
-                    <option value="">Select Crop</option>
+                    <option value=""><T>Select Crop</T></option>
                     {isUsingDynamicData && availableCrops.length > 0 ? (
                       availableCrops.map((crop) => (
                         <option key={crop} value={crop.toLowerCase()}>{crop}</option>
@@ -1568,27 +1569,27 @@ const CropCalendar = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Region <span className="text-red-400">*</span></label>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1"><T>Region</T> <span className="text-red-400">*</span></label>
                   <select
                     value={selectedRegion}
                     onChange={handleRegionChange}
                     className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all"
                   >
-                    <option value="All Regions">Select Region</option>
+                    <option value="All Regions"><T>Select Region</T></option>
                     {regionsOfGhana.map((region) => (
                       <option key={region} value={region}>{region}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">District <span className="text-red-400">*</span></label>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1"><T>District</T> <span className="text-red-400">*</span></label>
                   <select
                     value={selectedDistrict}
                     onChange={handleDistrictChange}
                     className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
                     disabled={selectedRegion === "All Regions"}
                   >
-                    <option value="All Districts">Select District</option>
+                    <option value="All Districts"><T>Select District</T></option>
                     <SafeDistrictOptions
                       districts={districtData.districts}
                       placeholder=""
@@ -1600,7 +1601,7 @@ const CropCalendar = () => {
             </div>
             {(!selectedSeason || !selectedCrop || selectedRegion === "All Regions" || selectedDistrict === "All Districts") && (
               <p className="mt-3 text-xs text-amber-600 font-medium">
-                Select season, crop, region, and district to view calendar data
+                <T>Select season, crop, region, and district to view calendar data</T>
               </p>
             )}
           </div>
@@ -1615,7 +1616,7 @@ const CropCalendar = () => {
                   <div className="w-8 h-8 rounded-full border-2 border-gray-200"></div>
                   <div className="absolute top-0 left-0 w-8 h-8 rounded-full border-2 border-transparent border-t-blue-600 animate-spin"></div>
                 </div>
-                <p className="text-gray-600">Loading agricultural data...</p>
+                <p className="text-gray-600"><T>Loading agricultural data...</T></p>
               </div>
             </div>
           )}
@@ -1629,7 +1630,7 @@ const CropCalendar = () => {
                   <div className="text-2xl">🌱</div>
                 </div>
 
-                <h3 className="text-xl md:text-2xl font-semibold text-gray-900 mb-3">No Calendar Data</h3>
+                <h3 className="text-xl md:text-2xl font-semibold text-gray-900 mb-3"><T>No Calendar Data</T></h3>
 
                 {/* Enhanced messaging based on user selection and server status */}
                 {error && error.type === 'calendar_manager' ? (

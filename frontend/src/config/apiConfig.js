@@ -5,38 +5,23 @@
 
 const DEV_WARNING_CACHE = new Set();
 
-// Get base URLs from environment variables with fallback to localhost
+const BACKEND_URL =
+  import.meta.env.VITE_BACKEND_BASE_URL ||
+  import.meta.env.VITE_AUTH_BASE_URL ||
+  import.meta.env.VITE_DATA_BASE_URL ||
+  import.meta.env.VITE_AI_BASE_URL ||
+  'http://localhost:8000';
+
 export const API_CONFIG = {
-  // Single in-repo backend server for auth, data, and AI proxy routes.
-  BACKEND_BASE_URL:
-    import.meta.env.VITE_BACKEND_BASE_URL ||
-    import.meta.env.VITE_AUTH_BASE_URL ||
-    import.meta.env.VITE_DATA_BASE_URL ||
-    import.meta.env.VITE_AI_BASE_URL ||
-    'http://localhost:8000',
+  BACKEND_BASE_URL: BACKEND_URL,
 
   // API timeout configuration
   DEFAULT_TIMEOUT: 15000,
   HEALTH_CHECK_TIMEOUT: 5000,
 
-  TRANSLATION_BASE_URL:
-    `${import.meta.env.VITE_BACKEND_BASE_URL ||
-      import.meta.env.VITE_AUTH_BASE_URL ||
-      import.meta.env.VITE_DATA_BASE_URL ||
-      import.meta.env.VITE_AI_BASE_URL ||
-      'http://localhost:8000'}/api/v1/translate`,
-  TTS_BASE_URL:
-    `${import.meta.env.VITE_BACKEND_BASE_URL ||
-      import.meta.env.VITE_AUTH_BASE_URL ||
-      import.meta.env.VITE_DATA_BASE_URL ||
-      import.meta.env.VITE_AI_BASE_URL ||
-      'http://localhost:8000'}/api/tts`,
-  AMBEE_BASE_URL:
-    `${import.meta.env.VITE_BACKEND_BASE_URL ||
-      import.meta.env.VITE_AUTH_BASE_URL ||
-      import.meta.env.VITE_DATA_BASE_URL ||
-      import.meta.env.VITE_AI_BASE_URL ||
-      'http://localhost:8000'}/api/ambee`,
+  TRANSLATION_BASE_URL: `${BACKEND_URL}/api/v1/translate`,
+  TTS_BASE_URL: `${BACKEND_URL}/api/tts`,
+  AMBEE_BASE_URL: `${BACKEND_URL}/api/ambee`,
 };
 
 API_CONFIG.AUTH_BASE_URL = API_CONFIG.BACKEND_BASE_URL;
@@ -128,6 +113,16 @@ export const API_ENDPOINTS = {
   // Weather
   WEATHER: {
     GET: '/user/weather',
+  },
+
+  // Market
+  MARKET: {
+    COMMODITIES: '/api/market/commodities',
+    COMMODITY: (slug) => `/api/market/commodities/${slug}`,
+    TRENDS: '/api/market/trends',
+    TREND: (slug) => `/api/market/trends/${slug}`,
+    REGIONS: '/api/market/regions',
+    REGION: (region) => `/api/market/regions/${region}`,
   },
 };
 

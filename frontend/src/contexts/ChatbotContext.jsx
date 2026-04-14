@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
+import { useLanguage } from './LanguageContext';
 
 const ChatbotContext = createContext();
 
@@ -12,6 +13,8 @@ export const useChatbot = () => {
 };
 
 export const ChatbotProvider = ({ children }) => {
+  const { currentLanguage, setLanguage } = useLanguage();
+
   const [userContext, setUserContext] = useState({
     region: null,
     weather: null,
@@ -21,7 +24,6 @@ export const ChatbotProvider = ({ children }) => {
   });
 
   const [chatPreferences, setChatPreferences] = useState({
-    language: 'en',
     enableVoice: true,
     enableNotifications: true,
   });
@@ -101,8 +103,14 @@ export const ChatbotProvider = ({ children }) => {
   }, []);
 
   const updatePreferences = (newPreferences) => {
-    setChatPreferences(prev => ({ ...prev, ...newPreferences }));
-    localStorage.setItem('chatPreferences', JSON.stringify({ ...chatPreferences, ...newPreferences }));
+    if (newPreferences.language) {
+      setLanguage(newPreferences.language);
+    }
+    const { language: _lang, ...rest } = newPreferences;
+    if (Object.keys(rest).length > 0) {
+      setChatPreferences(prev => ({ ...prev, ...rest }));
+      localStorage.setItem('chatPreferences', JSON.stringify({ ...chatPreferences, ...rest }));
+    }
   };
 
   // Load saved preferences
@@ -182,9 +190,12 @@ export const ChatbotProvider = ({ children }) => {
     };
   };
 
+  // Derive chatPreferences with language from LanguageContext for backwards compatibility
+  const mergedPreferences = { ...chatPreferences, language: currentLanguage };
+
   const value = {
     userContext,
-    chatPreferences,
+    chatPreferences: mergedPreferences,
     updateRegion,
     updateWeather,
     updateCrops,

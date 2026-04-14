@@ -6,6 +6,8 @@
 
 import React from 'react';
 import { FaSms, FaMobileAlt, FaCopy } from 'react-icons/fa';
+import SpeakButton from '../common/SpeakButton';
+import T from '../common/T';
 
 const SMSSection = ({ smsText }) => {
   const [copied, setCopied] = React.useState(false);
@@ -35,27 +37,30 @@ const SMSSection = ({ smsText }) => {
               </h3>
               <p className="text-xs text-sky-600 mt-0.5 flex items-center gap-1">
                 <FaMobileAlt className="text-xs" />
-                <span>Mobile Advisory Preview</span>
+                <span><T>Mobile Advisory Preview</T></span>
               </p>
             </div>
           </div>
 
-          {/* Copy Button */}
+          {/* Copy & Speak Buttons */}
           {smsText && smsText.trim() !== '' && smsText.trim() !== '-' && (
-            <button
-              onClick={handleCopy}
-              className="flex items-center gap-2 px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white text-xs font-medium rounded-md transition-all duration-200 shadow-sm"
-              title="Copy SMS text to clipboard"
-            >
-              <FaCopy />
-              {copied ? 'Copied!' : 'Copy'}
-            </button>
+            <div className="flex items-center gap-2">
+              <SpeakButton text={smsText} />
+              <button
+                onClick={handleCopy}
+                className="flex items-center gap-2 px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white text-xs font-medium rounded-md transition-all duration-200 shadow-sm"
+                title="Copy SMS text to clipboard"
+              >
+                <FaCopy />
+                {copied ? <T>Copied!</T> : <T>Copy</T>}
+              </button>
+            </div>
           )}
         </div>
 
         {/* SMS Preview Badge */}
         <div className="inline-flex items-center px-3 py-1 bg-sky-600 text-white text-xs font-semibold rounded-full mb-3">
-          SMS Preview
+          <T>SMS Preview</T>
         </div>
 
         {/* SMS Text */}
@@ -66,7 +71,7 @@ const SMSSection = ({ smsText }) => {
             </p>
           ) : (
             <p className="text-sm text-slate-400 italic">
-              No SMS text available for this advisory
+              <T>No SMS text available for this advisory</T>
             </p>
           )}
         </div>

@@ -25,7 +25,32 @@
       "Bash(/c/Users/CRAFT/AppData/Local/Programs/Python/Python311/python)",
       "Bash(/c/Users/CRAFT/AppData/Local/Programs/Python/Python311/python.exe -m json.tool)",
       "Bash(/c/Users/CRAFT/AppData/Local/Programs/Python/Python311/python.exe -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('token:', d['data']['parseToken']\\); print\\('activities:', len\\(d['data']['extracted']['activities']\\)\\)\")",
-      "Bash(/c/Users/CRAFT/AppData/Local/Programs/Python/Python311/python.exe -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('token:', d['data']['parseToken']\\)\")"
+      "Bash(/c/Users/CRAFT/AppData/Local/Programs/Python/Python311/python.exe -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('token:', d['data']['parseToken']\\)\")",
+      "Bash(gh auth:*)",
+      "Bash(gh repo:*)",
+      "Bash(git config:*)",
+      "Bash(grep -L \"translationService\\\\|voiceLanguageService\\\\|currentLanguage\" \"C:/Users/CRAFT/Desktop/future MEST projects/agromet/frontend/src/pages\"/*.jsx)",
+      "Bash(npm run:*)",
+      "Bash(grep \"^\\\\s*[a-zA-Z_]*:\\\\s*{$\" \"C:\\\\Users\\\\CRAFT\\\\Desktop\\\\future MEST projects\\\\agromet\\\\frontend\\\\src\\\\data\\\\ghanaianLanguages.js\")",
+      "Bash(sed 's/^\\\\s*//')",
+      "Bash(grep -E \"^  [a-zA-Z_]+:\\\\s*\\\\{$\" \"C:\\\\Users\\\\CRAFT\\\\Desktop\\\\future MEST projects\\\\agromet\\\\frontend\\\\src\\\\data\\\\ghanaianLanguages.js\")",
+      "Bash(bash /tmp/check_langs.sh)",
+      "Bash(grep -n \"Your cart is empty\\\\|National Price\\\\|Market Timing\\\\|Seasonal Pattern\\\\|Nearby Markets\\\\|Forecast and Advisory\\\\|No specific advisory\\\\|Mobile Advisory\\\\|Copy\\\\|Copied\\\\|Remove\" components/MarketPage.jsx components/WeeklyAdvisory/*.jsx)",
+      "Bash(grep -E \"\\\\.\\(js|jsx\\)$\")",
+      "Bash(echo \" EXIT:$?\")",
+      "Bash(node -e \"process.stdin.on\\('data',d=>{const j=JSON.parse\\(d\\);console.log\\(j.responseData.translatedText, '| status:', j.responseStatus\\)}\\)\")",
+      "Bash(node -e \"process.stdin.on\\('data',d=>{try{const j=JSON.parse\\(d\\);console.log\\('Home →',j[0][0][0]\\)}catch\\(e\\){console.log\\(d.toString\\(\\)\\)}}\\)\")",
+      "Bash(node -e \"process.stdin.on\\('data',d=>{try{const j=JSON.parse\\(d\\);console.log\\('Weather Forecast →',j[0][0][0]\\)}catch\\(e\\){console.log\\(d.toString\\(\\)\\)}}\\)\")",
+      "Bash(node -e \"process.stdin.on\\('data',d=>{try{const j=JSON.parse\\(d\\);console.log\\('Diagnose →',j[0][0][0]\\)}catch\\(e\\){console.log\\(d.toString\\(\\)\\)}}\\)\")",
+      "Bash(node -e \"process.stdin.on\\('data',d=>{try{const j=JSON.parse\\(d\\);console.log\\('Market →',j[0][0][0]\\)}catch\\(e\\){console.log\\(d.toString\\(\\)\\)}}\\)\")",
+      "Bash(node -e \"process.stdin.on\\('data',d=>{try{const j=JSON.parse\\(d\\);console.log\\('Agriculture →',j[0][0][0]\\)}catch\\(e\\){console.log\\(d.toString\\(\\)\\)}}\\)\")",
+      "Bash(node node_modules/vite/bin/vite.js build)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=4096\" npm run build)",
+      "Bash(npx eslint:*)",
+      "Bash(node -e \"const {parse}=require\\('@babel/parser'\\);const fs=require\\('fs'\\);const src=fs.readFileSync\\('src/pages/Home.jsx','utf8'\\);try{parse\\(src,{sourceType:'module',plugins:['jsx']}\\);console.log\\('OK'\\);}catch\\(e\\){console.log\\('PARSE ERROR:',e.message\\);}\")",
+      "Bash(node -e \"const {parse}=require\\('@babel/parser'\\);const fs=require\\('fs'\\);try{parse\\(fs.readFileSync\\('src/pages/Home.jsx','utf8'\\),{sourceType:'module',plugins:['jsx']}\\);console.log\\('OK'\\);}catch\\(e\\){console.log\\('ERR:',e.message\\);}\")",
+      "Bash(head -n 1140 AgroBulletins.jsx)",
+      "Bash(mv AgroBulletins.jsx.tmp AgroBulletins.jsx)"
     ]
   }
 }

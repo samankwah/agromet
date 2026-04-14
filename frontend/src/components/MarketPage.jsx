@@ -1,4 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import T from "./common/T";
+import useT from "../hooks/useT";
 import { Search, TrendingUp, TrendingDown, Minus, BarChart3, ShoppingCart, X, ChevronRight, ArrowUpRight, ArrowDownRight, Info, Plus, Phone, MessageCircle, Package } from "lucide-react";
 import PropTypes from "prop-types";
 import PageTitle from "./PageTitle";
@@ -224,24 +226,24 @@ const ProductCard = ({ product, marketData, trendData, onViewInsight, onAddToCar
             </div>
           </div>
         ) : (
-          <p className="text-sm text-gray-400 italic">Price unavailable</p>
+          <p className="text-sm text-gray-400 italic"><T>Price unavailable</T></p>
         )}
 
         {/* Action buttons */}
         <div className="mt-3 grid grid-cols-2 gap-2">
           <button
             onClick={() => onViewInsight(product)}
-            className="flex items-center justify-center gap-1.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg py-2 transition-colors"
+            className="flex items-center justify-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg py-2 transition-colors"
           >
             <Info className="w-3.5 h-3.5" />
-            Insight
+            <T>Insight</T>
           </button>
           <button
             onClick={() => onAddToCart(product)}
-            className="flex items-center justify-center gap-1.5 text-xs font-semibold text-white bg-green-600 hover:bg-green-700 rounded-lg py-2 transition-colors"
+            className="flex items-center justify-center gap-1.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg py-2 transition-colors"
           >
             <ShoppingCart className="w-3.5 h-3.5" />
-            Add
+            <T>Add</T>
           </button>
         </div>
       </div>
@@ -276,7 +278,7 @@ const InsightPanel = ({ product, marketData, trendData, region, onClose, onAddTo
       <div className="relative w-full sm:max-w-md h-full bg-white shadow-2xl overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-100 px-4 sm:px-6 py-4 flex items-center justify-between z-10">
-          <h2 className="text-lg font-bold text-gray-900">Price Insight</h2>
+          <h2 className="text-lg font-bold text-gray-900"><T>Price Insight</T></h2>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
             <X className="w-5 h-5 text-gray-500" />
           </button>
@@ -301,7 +303,7 @@ const InsightPanel = ({ product, marketData, trendData, region, onClose, onAddTo
         <div className="px-4 sm:px-6 py-5 border-b border-gray-50">
           <div className="grid grid-cols-2 gap-3 sm:gap-4">
             <div className="bg-gray-50 rounded-xl p-3 sm:p-4">
-              <p className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">National Price</p>
+              <p className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wide mb-1"><T>National Price</T></p>
               <p className="text-xl sm:text-2xl font-bold text-gray-900">GH&#8373;{marketData?.price?.toFixed(2) || "—"}</p>
               <p className="text-[10px] sm:text-xs text-gray-400">{marketData?.unit || "per bag"}</p>
             </div>
@@ -320,36 +322,36 @@ const InsightPanel = ({ product, marketData, trendData, region, onClose, onAddTo
         {/* 6-month trend chart */}
         {trendData?.["6months"] && (
           <div className="px-4 sm:px-6 py-5 border-b border-gray-50">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">6-Month Price Trend</p>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4"><T>6-Month Price Trend</T></p>
             <FullPriceChart data={trendData["6months"]} currentMonth={currentMonth} />
           </div>
         )}
 
         {/* Timing signal */}
         <div className="px-4 sm:px-6 py-5 border-b border-gray-50">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Market Timing</p>
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3"><T>Market Timing</T></p>
           {isPeakMonth ? (
             <div className="flex items-start gap-3 bg-green-50 border border-green-200 rounded-xl p-3 sm:p-4">
               <TrendingUp className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-sm font-semibold text-green-800">Good time to sell</p>
-                <p className="text-xs text-green-600 mt-0.5">Peak price period. Sell now or within 2-4 weeks for best returns.</p>
+                <p className="text-sm font-semibold text-green-800"><T>Good time to sell</T></p>
+                <p className="text-xs text-green-600 mt-0.5"><T>Peak price period. Sell now or within 2-4 weeks for best returns.</T></p>
               </div>
             </div>
           ) : isLowMonth ? (
             <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-3 sm:p-4">
               <TrendingDown className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-sm font-semibold text-red-800">Hold if possible</p>
-                <p className="text-xs text-red-600 mt-0.5">Prices typically lower. Store properly and wait for peak season.</p>
+                <p className="text-sm font-semibold text-red-800"><T>Hold if possible</T></p>
+                <p className="text-xs text-red-600 mt-0.5"><T>Prices typically lower. Store properly and wait for peak season.</T></p>
               </div>
             </div>
           ) : (
             <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-3 sm:p-4">
               <BarChart3 className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-sm font-semibold text-amber-800">Moderate timing</p>
-                <p className="text-xs text-amber-600 mt-0.5">Average price period. Monitor daily prices for opportunities.</p>
+                <p className="text-sm font-semibold text-amber-800"><T>Moderate timing</T></p>
+                <p className="text-xs text-amber-600 mt-0.5"><T>Average price period. Monitor daily prices for opportunities.</T></p>
               </div>
             </div>
           )}
@@ -358,15 +360,15 @@ const InsightPanel = ({ product, marketData, trendData, region, onClose, onAddTo
         {/* Seasonal pattern */}
         {trendData && (
           <div className="px-4 sm:px-6 py-5 border-b border-gray-50">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Seasonal Pattern</p>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3"><T>Seasonal Pattern</T></p>
             <p className="text-sm text-gray-700 mb-3">{trendData.seasonal_pattern}</p>
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-green-50 rounded-lg p-2.5 sm:p-3">
-                <p className="text-[10px] font-semibold text-green-600 uppercase mb-1">Peak Months</p>
+                <p className="text-[10px] font-semibold text-green-600 uppercase mb-1"><T>Peak Months</T></p>
                 <p className="text-xs sm:text-sm font-medium text-green-800">{trendData.peak_months?.map(m => monthNames[m - 1]).join(", ")}</p>
               </div>
               <div className="bg-orange-50 rounded-lg p-2.5 sm:p-3">
-                <p className="text-[10px] font-semibold text-orange-600 uppercase mb-1">Low Months</p>
+                <p className="text-[10px] font-semibold text-orange-600 uppercase mb-1"><T>Low Months</T></p>
                 <p className="text-xs sm:text-sm font-medium text-orange-800">{trendData.low_months?.map(m => monthNames[m - 1]).join(", ")}</p>
               </div>
             </div>
@@ -376,7 +378,7 @@ const InsightPanel = ({ product, marketData, trendData, region, onClose, onAddTo
         {/* Market centers */}
         {regionInfo && (
           <div className="px-4 sm:px-6 py-5 border-b border-gray-50">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Nearby Markets</p>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3"><T>Nearby Markets</T></p>
             <div className="space-y-2">
               {regionInfo.major_markets.map((market) => (
                 <div key={market} className="flex items-center gap-3 bg-gray-50 rounded-lg px-3 sm:px-4 py-2.5 sm:py-3">
@@ -385,7 +387,7 @@ const InsightPanel = ({ product, marketData, trendData, region, onClose, onAddTo
                   <ChevronRight className="w-4 h-4 text-gray-300 ml-auto" />
                 </div>
               ))}
-              <p className="text-xs text-gray-400 mt-1">Transport access: <span className="font-medium capitalize">{regionInfo.transport_access}</span></p>
+              <p className="text-xs text-gray-400 mt-1"><T>Transport access:</T> <span className="font-medium capitalize">{regionInfo.transport_access}</span></p>
             </div>
           </div>
         )}
@@ -394,7 +396,7 @@ const InsightPanel = ({ product, marketData, trendData, region, onClose, onAddTo
         <div className="sticky bottom-0 bg-white border-t border-gray-100 px-4 sm:px-6 py-4">
           <button
             onClick={() => { onAddToCart(product); onClose(); }}
-            className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl transition-colors"
+            className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition-colors"
           >
             <ShoppingCart className="w-4 h-4" />
             Add to Cart — GH&#8373;{(regionalPrice || marketData?.price || 0).toFixed(2)}
@@ -428,8 +430,8 @@ const CartDrawer = ({ cart, selectedRegion, onUpdateQty, onRemove, onClose, onCh
         <div className="border-b border-gray-100 px-4 sm:px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ShoppingCart className="w-5 h-5 text-gray-700" />
-            <h2 className="text-lg font-bold text-gray-900">Cart</h2>
-            <span className="bg-green-100 text-green-700 text-xs font-semibold px-2 py-0.5 rounded-full">{cart.length}</span>
+            <h2 className="text-lg font-bold text-gray-900"><T>Cart</T></h2>
+            <span className="bg-emerald-100 text-emerald-700 text-xs font-semibold px-2 py-0.5 rounded-full">{cart.length}</span>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100"><X className="w-5 h-5 text-gray-500" /></button>
         </div>
@@ -439,7 +441,7 @@ const CartDrawer = ({ cart, selectedRegion, onUpdateQty, onRemove, onClose, onCh
           {cart.length === 0 ? (
             <div className="text-center py-12">
               <Package className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-              <p className="text-gray-400 text-sm">Your cart is empty</p>
+              <p className="text-gray-400 text-sm"><T>Your cart is empty</T></p>
             </div>
           ) : (
             cart.map((item) => (
@@ -454,7 +456,7 @@ const CartDrawer = ({ cart, selectedRegion, onUpdateQty, onRemove, onClose, onCh
                     <span className="text-sm font-semibold text-gray-800 w-6 text-center">{item.qty}</span>
                     <button onClick={() => onUpdateQty(item.id, item.qty + 1)}
                       className="w-6 h-6 rounded-md bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-100 text-xs font-bold">+</button>
-                    <button onClick={() => onRemove(item.id)} className="ml-auto text-xs text-red-400 hover:text-red-600">Remove</button>
+                    <button onClick={() => onRemove(item.id)} className="ml-auto text-xs text-red-400 hover:text-red-600"><T>Remove</T></button>
                   </div>
                 </div>
                 <p className="text-sm font-bold text-gray-900 whitespace-nowrap">GH&#8373;{(item.price * item.qty).toFixed(2)}</p>
@@ -474,14 +476,14 @@ const CartDrawer = ({ cart, selectedRegion, onUpdateQty, onRemove, onClose, onCh
               <p className="text-xs text-gray-400">Prices reflect {selectedRegion} market rates</p>
             )}
             <button onClick={onCheckout}
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
               <MessageCircle className="w-4 h-4" />
-              Place Order via WhatsApp
+              <T>Place Order via WhatsApp</T>
             </button>
             <button onClick={onCheckout}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
+              className="w-full border border-slate-300 hover:border-emerald-600 hover:text-emerald-700 text-slate-700 font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
               <Phone className="w-4 h-4" />
-              Call to Order
+              <T>Call to Order</T>
             </button>
           </div>
         )}
@@ -509,8 +511,14 @@ const Marketplace = () => {
   const [insightProduct, setInsightProduct] = useState(null);
   const [cart, setCart] = useState([]);
   const [showCart, setShowCart] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const { t } = useT();
 
   const regions = ["Greater Accra", "Ashanti", "Northern", "Western"];
+
+  useEffect(() => {
+    marketIntelligenceService.init().finally(() => setLoading(false));
+  }, []);
 
   const getProductPrice = (product) => {
     const mktData = marketIntelligenceService.getCurrentPrice(product.slug);
@@ -576,32 +584,53 @@ const Marketplace = () => {
   const highDemandCount = Object.values(marketIntelligenceService.currentPrices).filter(p => p.demand === "high" || p.demand === "very-high").length;
   const cartItemCount = cart.reduce((s, i) => s + i.qty, 0);
 
+  if (loading) {
+    return (
+      <>
+        <PageTitle title="Agricultural Market" />
+        <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-emerald-50/30 pt-20 lg:pt-24 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-slate-500 text-sm"><T>Loading market data...</T></p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <PageTitle title="Agricultural Market" />
-      <div className="min-h-screen bg-gray-50 pt-20 lg:pt-24">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-emerald-50/30 pt-20 lg:pt-24 relative overflow-hidden">
+        <div className="absolute top-0 -left-40 w-[500px] h-[500px] bg-emerald-200/30 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-96 -right-40 w-[500px] h-[500px] bg-teal-200/30 rounded-full blur-3xl pointer-events-none" />
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 relative">
 
           {/* Header */}
           <div className="flex items-start justify-between gap-4 mb-6 sm:mb-8">
             <div className="min-w-0">
-              <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold mb-2 sm:mb-3">
-                <span className="text-green-600">Agricultural </span>
-                <span className="text-blue-600">Market</span>
+              <span className="inline-block px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold uppercase tracking-wider mb-3">
+                <T>Market Intelligence</T>
+              </span>
+              <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight mb-3">
+                <T>Agricultural</T>{" "}
+                <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                  <T>Market</T>
+                </span>
               </h1>
-              <p className="text-gray-500 text-sm sm:text-base md:text-lg">
-                Real-time commodity prices, market trends, and selling insights across Ghana
+              <p className="text-slate-600 text-base sm:text-lg">
+                <T>Real-time commodity prices, market trends, and selling insights across Ghana</T>
               </p>
             </div>
             {/* Cart button */}
             <button
               onClick={() => setShowCart(true)}
-              className="relative flex-shrink-0 flex items-center gap-2 bg-white border border-gray-200 hover:border-gray-300 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 shadow-sm transition-colors mt-1"
+              className="relative flex-shrink-0 flex items-center gap-2 bg-white border border-slate-200 hover:border-emerald-500 hover:text-emerald-700 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 shadow-sm transition-colors mt-1"
             >
-              <ShoppingCart className="w-5 h-5 text-gray-700" />
-              <span className="text-sm font-semibold text-gray-700 hidden sm:inline">Cart</span>
+              <ShoppingCart className="w-5 h-5 text-slate-700" />
+              <span className="text-sm font-semibold text-slate-700 hidden sm:inline">Cart</span>
               {cartItemCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-green-600 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                <span className="absolute -top-2 -right-2 bg-emerald-600 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
                   {cartItemCount}
                 </span>
               )}
@@ -611,20 +640,20 @@ const Marketplace = () => {
           {/* Market Summary */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 mb-6">
             <div className="bg-white rounded-xl border border-gray-100 p-3 sm:p-4">
-              <p className="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wide">Commodities</p>
+              <p className="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wide"><T>Commodities</T></p>
               <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">{Object.keys(marketIntelligenceService.currentPrices).length}</p>
             </div>
             <div className="bg-white rounded-xl border border-gray-100 p-3 sm:p-4">
-              <p className="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wide">Prices Rising</p>
+              <p className="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wide"><T>Prices Rising</T></p>
               <p className="text-xl sm:text-2xl font-bold text-green-600 mt-1">{risingCount}</p>
             </div>
             <div className="bg-white rounded-xl border border-gray-100 p-3 sm:p-4">
-              <p className="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wide">High Demand</p>
+              <p className="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wide"><T>High Demand</T></p>
               <p className="text-xl sm:text-2xl font-bold text-orange-600 mt-1">{highDemandCount}</p>
             </div>
             <div className="bg-white rounded-xl border border-gray-100 p-3 sm:p-4">
-              <p className="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wide">Market Centers</p>
-              <p className="text-xl sm:text-2xl font-bold text-blue-600 mt-1">{Object.keys(marketIntelligenceService.marketCenters).length}</p>
+              <p className="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wide"><T>Market Centers</T></p>
+              <p className="text-xl sm:text-2xl font-bold text-teal-600 mt-1">{Object.keys(marketIntelligenceService.marketCenters).length}</p>
             </div>
           </div>
 
@@ -633,26 +662,26 @@ const Marketplace = () => {
             <div className="flex flex-col lg:flex-row lg:items-end gap-3 sm:gap-4">
               <div className="flex-1 grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 <div className="col-span-2 lg:col-span-1">
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Search</label>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1"><T>Search</T></label>
                   <div className="relative">
-                    <input type="text" placeholder="Search commodities..."
+                    <input type="text" placeholder={t("Search commodities...")}
                       value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                       className="w-full px-3 py-2.5 pl-10 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all" />
                     <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Category</label>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1"><T>Category</T></label>
                   <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}
                     className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all">
                     {categories.map((cat) => (<option key={cat} value={cat}>{cat}</option>))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Region</label>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1"><T>Region</T></label>
                   <select value={selectedRegion} onChange={(e) => setSelectedRegion(e.target.value)}
                     className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all">
-                    <option value="">National Average</option>
+                    <option value="">{t("National Average")}</option>
                     {regions.map((r) => (<option key={r} value={r}>{r}</option>))}
                   </select>
                 </div>
@@ -687,7 +716,7 @@ const Marketplace = () => {
 
           {filteredProducts.length === 0 && (
             <div className="text-center py-16">
-              <p className="text-gray-400 text-lg">No commodities found matching your search.</p>
+              <p className="text-gray-400 text-lg"><T>No commodities found matching your search.</T></p>
             </div>
           )}
         </div>

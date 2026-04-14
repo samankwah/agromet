@@ -1,11 +1,17 @@
 /**
  * Market Intelligence Service for Agricultural Decision Making
  * Provides market-aware crop recommendations and pricing insights for Ghana
+ * Fetches live data from backend API with hardcoded fallback
  */
+
+import API_CONFIG, { API_ENDPOINTS } from '../config/apiConfig';
 
 class MarketIntelligenceService {
   constructor() {
-    // Current market data (would connect to real APIs in production)
+    this.initialized = false;
+    this.initPromise = null;
+
+    // Fallback market data (used when backend is unavailable)
     this.currentPrices = {
       'yellow-maize': { price: 299.99, unit: 'per bag', trend: 'stable', demand: 'high' },
       'white-maize': { price: 289.99, unit: 'per bag', trend: 'rising', demand: 'high' },
@@ -91,6 +97,53 @@ class MarketIntelligenceService {
         'ramadan_effect': 'variable' // Affects demand patterns
       }
     };
+  }
+
+  /**
+   * Initialize service by fetching live data from the backend.
+   * Safe to call multiple times — subsequent calls return the same promise.
+   * Falls back silently to hardcoded data on failure.
+   */
+  async init() {
+    if (this.initPromise) return this.initPromise;
+
+    this.initPromise = (async () => {
+      try {
+        const base = API_CONFIG.BACKEND_BASE_URL;
+        const [commoditiesRes, trendsRes, regionsRes] = await Promise.all([
+          fetch(`${base}${API_ENDPOINTS.MARKET.COMMODITIES}`),
+          fetch(`${base}${API_ENDPOINTS.MARKET.TRENDS}`),
+          fetch(`${base}${API_ENDPOINTS.MARKET.REGIONS}`),
+        ]);
+
+        if (commoditiesRes.ok) {
+          const { data } = await commoditiesRes.json();
+          if (data && Object.keys(data).length > 0) {
+            this.currentPrices = data;
+          }
+        }
+
+        if (trendsRes.ok) {
+          const { data } = await trendsRes.json();
+          if (data && Object.keys(data).length > 0) {
+            this.historicalTrends = data;
+          }
+        }
+
+        if (regionsRes.ok) {
+          const { data } = await regionsRes.json();
+          if (data && Object.keys(data).length > 0) {
+            this.marketCenters = data;
+          }
+        }
+
+        this.initialized = true;
+      } catch (err) {
+        console.warn('Market service: backend unavailable, using fallback data', err.message);
+      }
+    })();
+
+    return this.initPromise;
   }
 
   /**

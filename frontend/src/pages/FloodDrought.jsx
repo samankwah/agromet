@@ -1,5 +1,6 @@
 import { useState } from "react";
 import PageTitle from '../components/PageTitle';
+import T from '../components/common/T';
 import {
   BarChart,
   Bar,
@@ -177,7 +178,7 @@ const FloodDrought = () => {
         {/* Key Metrics Cards */}
         <div className="bg-gradient-to-br from-blue-500 to-blue-700 p-4 rounded-xl shadow-lg text-white">
           <div className="flex items-center justify-between">
-            <h3 className="font-bold">Flood Events</h3>
+            <h3 className="font-bold"><T>Flood Events</T></h3>
             <Droplet size={24} />
           </div>
           <p className="text-3xl font-bold mt-2">7</p>
@@ -186,7 +187,7 @@ const FloodDrought = () => {
 
         <div className="bg-gradient-to-br from-amber-500 to-amber-700 p-4 rounded-xl shadow-lg text-white">
           <div className="flex items-center justify-between">
-            <h3 className="font-bold">Drought Zones</h3>
+            <h3 className="font-bold"><T>Drought Zones</T></h3>
             <Thermometer size={24} />
           </div>
           <p className="text-3xl font-bold mt-2">49</p>
@@ -195,7 +196,7 @@ const FloodDrought = () => {
 
         <div className="bg-gradient-to-br from-red-500 to-red-700 p-4 rounded-xl shadow-lg text-white">
           <div className="flex items-center justify-between">
-            <h3 className="font-bold">People Affected</h3>
+            <h3 className="font-bold"><T>People Affected</T></h3>
             <AlertTriangle size={24} />
           </div>
           <p className="text-3xl font-bold mt-2">43M</p>
@@ -204,7 +205,7 @@ const FloodDrought = () => {
 
         <div className="bg-gradient-to-br from-green-500 to-green-700 p-4 rounded-xl shadow-lg text-white">
           <div className="flex items-center justify-between">
-            <h3 className="font-bold">Resilience Score</h3>
+            <h3 className="font-bold"><T>Resilience Score</T></h3>
             <Award size={24} />
           </div>
           <p className="text-3xl font-bold mt-2">{resilienceScore.score}</p>
@@ -216,7 +217,7 @@ const FloodDrought = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white p-4 rounded-xl shadow-md">
           <h3 className="text-lg font-semibold mb-4 text-gray-800">
-            Economic Impact Trends (Million GHS)
+            <T>Economic Impact Trends (Million GHS)</T>
           </h3>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -252,7 +253,7 @@ const FloodDrought = () => {
 
         <div className="bg-white p-2 rounded-xl shadow-md">
           <h3 className="text-lg font-semibold mb-4 text-gray-800">
-            Climate Risk Matrix
+            <T>Climate Risk Matrix</T>
           </h3>
           <div className="flex mb-4 space-x-2">
             <select
@@ -260,7 +261,7 @@ const FloodDrought = () => {
               value={selectedRegion}
               onChange={(e) => setSelectedRegion(e.target.value)}
             >
-              <option value="global">All Agroecological Zones</option>
+              <option value="global"><T>All Agroecological Zones</T></option>
               {climateMatrixData.map((region, index) => (
                 <option key={index} value={region.region}>
                   {region.region}
@@ -303,7 +304,7 @@ const FloodDrought = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="bg-white p-1 rounded-xl shadow-md lg:col-span-1">
           <h3 className="text-lg font-semibold mb-4 text-gray-800">
-            Impact Distribution
+            <T>Impact Distribution</T>
           </h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -335,17 +336,17 @@ const FloodDrought = () => {
 
         <div className="bg-white p-4 rounded-xl shadow-md lg:col-span-2">
           <h3 className="text-lg font-semibold mb-4 text-gray-800">
-            Risk Hotspots
+            <T>Risk Hotspots</T>
           </h3>
           <div className="overflow-x-auto">
             <table className="min-w-full bg-white">
               <thead className="bg-gray-100">
                 <tr>
-                  <th className="py-3 px-4 text-left">Type</th>
-                  <th className="py-3 px-4 text-left">Region</th>
-                  <th className="py-3 px-4 text-left">Risk Level</th>
-                  <th className="py-3 px-4 text-left">Trend</th>
-                  <th className="py-3 px-4 text-left">Impact</th>
+                  <th className="py-3 px-4 text-left"><T>Type</T></th>
+                  <th className="py-3 px-4 text-left"><T>Region</T></th>
+                  <th className="py-3 px-4 text-left"><T>Risk Level</T></th>
+                  <th className="py-3 px-4 text-left"><T>Trend</T></th>
+                  <th className="py-3 px-4 text-left"><T>Impact</T></th>
                 </tr>
               </thead>
               <tbody>
@@ -425,7 +426,7 @@ const FloodDrought = () => {
         <div className="flex items-center gap-3 mb-4">
           <Droplet size={28} className="text-blue-700" />
           <h3 className="text-2xl font-semibold text-blue-800">
-            Flood Trends & Impact
+            <T>Flood Trends & Impact</T>
           </h3>
         </div>
         <p className="mb-6 text-gray-700 leading-relaxed">
@@ -438,7 +439,7 @@ const FloodDrought = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white p-4 rounded-xl shadow-md">
             <h4 className="font-semibold text-blue-700 mb-3">
-              Yearly Flood Incidents
+              <T>Yearly Flood Incidents</T>
             </h4>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
@@ -462,7 +463,7 @@ const FloodDrought = () => {
           <div className="space-y-4">
             <div className="bg-blue-50 p-4 rounded-xl shadow-md">
               <h4 className="font-semibold text-blue-700 mb-3">
-                Key Mitigation Strategies
+                <T>Key Mitigation Strategies</T>
               </h4>
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-white p-3 rounded-lg shadow-sm flex items-start">
@@ -470,9 +471,9 @@ const FloodDrought = () => {
                     <Umbrella size={16} className="text-blue-700" />
                   </div>
                   <div>
-                    <h5 className="text-sm font-medium">Advanced Warning</h5>
+                    <h5 className="text-sm font-medium"><T>Advanced Warning</T></h5>
                     <p className="text-xs text-gray-600">
-                      Real-time monitoring systems
+                      <T>Real-time monitoring systems</T>
                     </p>
                   </div>
                 </div>
@@ -481,9 +482,9 @@ const FloodDrought = () => {
                     <MapPin size={16} className="text-blue-700" />
                   </div>
                   <div>
-                    <h5 className="text-sm font-medium">Urban Planning</h5>
+                    <h5 className="text-sm font-medium"><T>Urban Planning</T></h5>
                     <p className="text-xs text-gray-600">
-                      Permeable surfaces & green spaces
+                      <T>Permeable surfaces & green spaces</T>
                     </p>
                   </div>
                 </div>
@@ -492,7 +493,7 @@ const FloodDrought = () => {
 
             <div className="bg-blue-50 p-4 rounded-xl shadow-md">
               <h4 className="font-semibold text-blue-700 mb-3">
-                Most Vulnerable Regions
+                <T>Most Vulnerable Regions</T>
               </h4>
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
@@ -536,7 +537,7 @@ const FloodDrought = () => {
         <div className="flex items-center gap-3 mb-4">
           <Thermometer size={28} className="text-amber-700" />
           <h3 className="text-2xl font-semibold text-amber-800">
-            Drought Analysis & Patterns
+            <T>Drought Analysis & Patterns</T>
           </h3>
         </div>
         <p className="mb-6 text-gray-700 leading-relaxed">
@@ -549,7 +550,7 @@ const FloodDrought = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white p-4 rounded-xl shadow-md">
             <h4 className="font-semibold text-amber-700 mb-3">
-              Drought Impact Trend
+              <T>Drought Impact Trend</T>
             </h4>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
@@ -581,13 +582,13 @@ const FloodDrought = () => {
           <div className="space-y-4">
             <div className="bg-amber-50 p-4 rounded-xl shadow-md">
               <h4 className="font-semibold text-amber-700 mb-3">
-                Key Adaptation Strategies
+                <T>Key Adaptation Strategies</T>
               </h4>
               <div className="grid grid-cols-1 gap-3">
                 <div className="bg-white p-3 rounded-lg shadow-sm">
-                  <h5 className="text-sm font-medium">Precision Agriculture</h5>
+                  <h5 className="text-sm font-medium"><T>Precision Agriculture</T></h5>
                   <div className="flex justify-between items-center mt-2">
-                    <span className="text-xs text-gray-600">Effectiveness</span>
+                    <span className="text-xs text-gray-600"><T>Effectiveness</T></span>
                     <div className="w-32 bg-gray-200 rounded-full h-2">
                       <div
                         className="bg-green-500 h-2 rounded-full"
@@ -598,10 +599,10 @@ const FloodDrought = () => {
                 </div>
                 <div className="bg-white p-3 rounded-lg shadow-sm">
                   <h5 className="text-sm font-medium">
-                    Water Conservation Systems
+                    <T>Water Conservation Systems</T>
                   </h5>
                   <div className="flex justify-between items-center mt-2">
-                    <span className="text-xs text-gray-600">Effectiveness</span>
+                    <span className="text-xs text-gray-600"><T>Effectiveness</T></span>
                     <div className="w-32 bg-gray-200 rounded-full h-2">
                       <div
                         className="bg-green-500 h-2 rounded-full"
@@ -612,10 +613,10 @@ const FloodDrought = () => {
                 </div>
                 <div className="bg-white p-3 rounded-lg shadow-sm">
                   <h5 className="text-sm font-medium">
-                    Drought-Resistant Crops
+                    <T>Drought-Resistant Crops</T>
                   </h5>
                   <div className="flex justify-between items-center mt-2">
-                    <span className="text-xs text-gray-600">Effectiveness</span>
+                    <span className="text-xs text-gray-600"><T>Effectiveness</T></span>
                     <div className="w-32 bg-gray-200 rounded-full h-2">
                       <div
                         className="bg-green-500 h-2 rounded-full"
@@ -638,7 +639,7 @@ const FloodDrought = () => {
         <div className="flex items-center gap-3 mb-4">
           <AlertTriangle size={28} className="text-purple-700" />
           <h3 className="text-2xl font-semibold text-purple-800">
-            Climate Vulnerability Matrix
+            <T>Climate Vulnerability Matrix</T>
           </h3>
         </div>
         <p className="mb-6 text-gray-700 leading-relaxed">
@@ -650,7 +651,7 @@ const FloodDrought = () => {
 
         <div className="bg-white p-4 rounded-xl shadow-md mb-6">
           <h4 className="font-semibold text-purple-700 mb-3">
-            Regional Risk Comparison
+            <T>Regional Risk Comparison</T>
           </h4>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
@@ -686,14 +687,14 @@ const FloodDrought = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white p-4 rounded-xl shadow-md">
             <h4 className="font-semibold text-purple-700 mb-3">
-              Risk Factor Analysis
+              <T>Risk Factor Analysis</T>
             </h4>
             <table className="min-w-full">
               <thead className="bg-purple-50">
                 <tr>
-                  <th className="py-2 px-3 text-left text-sm">Region</th>
-                  <th className="py-2 px-3 text-left text-sm">Primary Risk</th>
-                  <th className="py-2 px-1 text-left text-sm">Vulnerability</th>
+                  <th className="py-2 px-3 text-left text-sm"><T>Region</T></th>
+                  <th className="py-2 px-3 text-left text-sm"><T>Primary Risk</T></th>
+                  <th className="py-2 px-1 text-left text-sm"><T>Vulnerability</T></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -786,7 +787,7 @@ const FloodDrought = () => {
       <PageTitle title="Flood & Drought Alerts" />
       <div className="container mx-auto p-6 bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg mt-20">
       <h2 className="text-3xl font-bold text-center mb-8 text-gray-800">
-        Flood and Drought Risk Analysis
+        <T>Flood and Drought Risk Analysis</T>
       </h2>
 
       {/* Tab Navigation */}
@@ -799,7 +800,7 @@ const FloodDrought = () => {
           }`}
           onClick={() => setActiveTab("dashboard")}
         >
-          Dashboard
+          <T>Dashboard</T>
         </button>
         <button
           className={`px-4 py-2 m-1 rounded-lg font-medium ${
@@ -809,7 +810,7 @@ const FloodDrought = () => {
           }`}
           onClick={() => setActiveTab("flood")}
         >
-          Flood Analysis
+          <T>Flood Analysis</T>
         </button>
         <button
           className={`px-4 py-2 m-1 rounded-lg font-medium ${
@@ -819,7 +820,7 @@ const FloodDrought = () => {
           }`}
           onClick={() => setActiveTab("drought")}
         >
-          Drought Analysis
+          <T>Drought Analysis</T>
         </button>
         <button
           className={`px-4 py-1 m-1 rounded-lg font-medium ${
@@ -829,7 +830,7 @@ const FloodDrought = () => {
           }`}
           onClick={() => setActiveTab("matrix")}
         >
-          Climate Matrix
+          <T>Climate Matrix</T>
         </button>
       </div>
 
