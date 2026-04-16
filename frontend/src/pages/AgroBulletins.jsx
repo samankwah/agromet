@@ -1138,3 +1138,369 @@ const AgroBulletins = () => {
   };
 
   // Generate past dekad analysis data
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-600"></div>
+      </div>
+    );
+  }
+
+  const dekadBulletins = agroBulletins.regional.bulletins;
+  const avgMax = Math.round(dekadBulletins.reduce((s, b) => s + b.maxTemp, 0) / dekadBulletins.length);
+  const avgMin = Math.round(dekadBulletins.reduce((s, b) => s + b.minTemp, 0) / dekadBulletins.length);
+  const avgHumidity = Math.round(dekadBulletins.reduce((s, b) => s + b.humidity, 0) / dekadBulletins.length);
+  const avgRain = Math.round(dekadBulletins.reduce((s, b) => s + b.rainProbability, 0) / dekadBulletins.length);
+  const rainyDays = dekadBulletins.filter((b) => b.rainProbability >= 50).length;
+
+  const riskLevel = (() => {
+    if (avgRain >= 60 || avgMax >= 33 || avgHumidity >= 85) return { label: 'Elevated', tone: 'amber' };
+    if (avgRain <= 20 && avgMax >= 31) return { label: 'Dry Stress', tone: 'amber' };
+    return { label: 'Favorable', tone: 'emerald' };
+  })();
+
+  const dekadLabel = dekadPeriod === 'past' ? 'Past dekad' : dekadPeriod === 'current' ? 'Current dekad' : 'Next dekad';
+  const dateRange = `${getDates()[0].date} – ${getDates()[9].date}`;
+
+  const firstSentence = (text) => {
+    const match = String(text || '').match(/^[^.!?]+[.!?]/);
+    return match ? match[0].trim() : String(text || '').slice(0, 140);
+  };
+
+  const getCropStatus = (content) => {
+    const s = String(content || '').toLowerCase();
+    if (/(stress|risk|waterlog|disease|pest|damage|lodging)/.test(s)) return { label: 'Watch', tone: 'amber' };
+    if (/(favor|ideal|optimal|vigorous|excellent|benefit)/.test(s)) return { label: 'Favorable', tone: 'emerald' };
+    return { label: 'Monitor', tone: 'sky' };
+  };
+
+  const severityFromTitle = (title) => {
+    const t = String(title || '').toLowerCase();
+    if (/armyworm|aphid|whitefly/.test(t)) return { label: 'High', tone: 'red' };
+    if (/fungal|disease/.test(t)) return { label: 'Moderate', tone: 'amber' };
+    if (/soil/.test(t)) return { label: 'Watch', tone: 'sky' };
+    if (/storage|granary/.test(t)) return { label: 'Low', tone: 'violet' };
+    return { label: 'Monitor', tone: 'slate' };
+  };
+
+  const kpis = [
+    {
+      label: 'Temperature',
+      value: `${avgMax}° / ${avgMin}°C`,
+      sub: 'Avg max / min',
+      icon: <Thermometer className="w-5 h-5" />,
+      tone: 'amber',
+    },
+    {
+      label: 'Rainfall Probability',
+      value: `${avgRain}%`,
+      sub: `${rainyDays} rainy day${rainyDays === 1 ? '' : 's'}`,
+      icon: <CloudRain className="w-5 h-5" />,
+      tone: 'sky',
+    },
+    {
+      label: 'Humidity',
+      value: `${avgHumidity}%`,
+      sub: 'Avg relative',
+      icon: <Droplet className="w-5 h-5" />,
+      tone: 'emerald',
+    },
+    {
+      label: 'Overall Risk',
+      value: riskLevel.label,
+      sub: 'Composite index',
+      icon: <Shield className="w-5 h-5" />,
+      tone: riskLevel.tone,
+    },
+  ];
+
+  return (
+    <>
+      <PageTitle title="Agro-Meteorological Bulletins" />
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-emerald-50/30 pt-24 pb-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        <div className="absolute top-0 -left-40 w-[500px] h-[500px] bg-emerald-200/30 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-96 -right-40 w-[500px] h-[500px] bg-teal-200/30 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto relative">
+          {/* Hero */}
+          <div className="text-center mb-10">
+            <span className="inline-block px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold uppercase tracking-wider mb-4">
+              <T>10-Day Dekadal Bulletin</T>
+            </span>
+            <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight mb-4">
+              <T>10-Day Agromet</T>{' '}
+              <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                <T>Outlook</T>
+              </span>
+            </h1>
+            <p className="text-slate-600 text-lg max-w-3xl mx-auto">
+              <T>Weather, crop impact and pest alerts at a glance — tailored to your region and dekad.</T>
+            </p>
+          </div>
+
+          {/* Control bar */}
+          <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm mb-6 flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider"><T>Dekad</T></span>
+              <div className="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-1">
+                {[
+                  { id: 'past', label: 'Past' },
+                  { id: 'current', label: 'Current' },
+                  { id: 'next', label: 'Next' },
+                ].map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => setDekadPeriod(p.id)}
+                    className={`px-4 py-1.5 text-sm font-semibold rounded-md transition-colors ${
+                      dekadPeriod === p.id
+                        ? 'bg-emerald-600 text-white shadow-sm'
+                        : 'text-slate-600 hover:text-emerald-700'
+                    }`}
+                  >
+                    <T>{p.label}</T>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                <Map className="w-3.5 h-3.5" /> <T>Region</T>
+              </span>
+              <select
+                value={selectedRegion}
+                onChange={(e) => setSelectedRegion(e.target.value)}
+                className="px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              >
+                {Object.entries(regionsByZone).map(([zone, list]) => (
+                  <optgroup key={zone} label={zone}>
+                    {list.map((r) => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            </div>
+            <div className="text-sm text-slate-500">
+              <span className="font-semibold text-slate-700">{dekadLabel}</span> · {dateRange}
+            </div>
+          </div>
+
+          {/* KPI tiles */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {kpis.map((k) => (
+              <div
+                key={k.label}
+                className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all"
+              >
+                <div className={`inline-flex w-10 h-10 rounded-lg items-center justify-center border ${toneClasses[k.tone]}`}>
+                  {k.icon}
+                </div>
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-4"><T>{k.label}</T></p>
+                <p className="text-2xl lg:text-3xl font-bold text-slate-900 mt-1">{k.value}</p>
+                <p className="text-xs text-slate-500 mt-1"><T>{k.sub}</T></p>
+              </div>
+            ))}
+          </div>
+
+          {/* 10-day timeline */}
+          <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 items-center justify-center">
+                  <Cloud className="w-5 h-5" />
+                </span>
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-900"><T>10-Day Forecast</T></h2>
+                  <p className="text-xs text-slate-500"><T>Tap a day to see farming guidance</T></p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-10 gap-3">
+              {dekadBulletins.map((b) => {
+                const isOpen = expandedDay === b.id;
+                return (
+                  <button
+                    key={b.id}
+                    onClick={() => setExpandedDay(isOpen ? null : b.id)}
+                    className={`flex flex-col items-center text-center rounded-xl border p-3 transition-all ${
+                      isOpen
+                        ? 'border-emerald-500 bg-emerald-50 shadow-sm'
+                        : 'border-slate-200 bg-white hover:border-emerald-300 hover:shadow-sm'
+                    }`}
+                  >
+                    <span className="text-[11px] font-semibold text-slate-500 uppercase">{b.title.split(',')[0]}</span>
+                    <span className="text-xs text-slate-500">{b.title.split(',')[1]?.trim()}</span>
+                    <div className="my-2 text-2xl">{b.icon}</div>
+                    <span className="text-sm font-bold text-slate-900">{b.maxTemp}°</span>
+                    <span className="text-xs text-slate-500">{b.minTemp}°</span>
+                    <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-sky-700">
+                      <Droplet className="w-3 h-3" /> {b.rainProbability}%
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {expandedDay && (() => {
+              const b = dekadBulletins.find((x) => x.id === expandedDay);
+              if (!b) return null;
+              return (
+                <div className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50/60 p-5">
+                  <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-900">{b.fullDate}</h3>
+                      <p className="text-sm text-slate-600">{b.condition}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2 text-xs font-semibold">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-700">
+                        <Thermometer className="w-3 h-3" /> {b.maxTemp}° / {b.minTemp}°
+                      </span>
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-slate-200 text-sky-700">
+                        <Droplet className="w-3 h-3" /> {b.rainProbability}%
+                      </span>
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-700">
+                        <Wind className="w-3 h-3" /> {b.windSpeed} km/h
+                      </span>
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-slate-200 text-emerald-700">
+                        {b.humidity}% RH
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-sm text-slate-700 leading-relaxed">{b.content}</p>
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Crop impact matrix */}
+          <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm mb-8">
+            <div className="flex items-center gap-3 mb-5">
+              <span className="inline-flex w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 items-center justify-center">
+                <Leaf className="w-5 h-5" />
+              </span>
+              <div>
+                <h2 className="text-xl font-semibold text-slate-900"><T>Crop Impact Matrix</T></h2>
+                <p className="text-xs text-slate-500"><T>Status by commodity group</T></p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {agroBulletins.cropping.bulletins.map((c) => {
+                const status = getCropStatus(c.content);
+                return (
+                  <details
+                    key={c.id}
+                    className="group rounded-xl border border-slate-200 bg-white p-4 open:shadow-sm open:border-emerald-300 transition-all"
+                  >
+                    <summary className="flex items-start justify-between gap-3 cursor-pointer list-none">
+                      <div className="flex items-start gap-3 min-w-0">
+                        <span className="flex-shrink-0 w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                          {c.icon}
+                        </span>
+                        <div className="min-w-0">
+                          <h3 className="text-sm font-semibold text-slate-900 truncate">{c.title}</h3>
+                          <p className="text-xs text-slate-500 line-clamp-2">{firstSentence(c.content)}</p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                        <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase border ${toneClasses[status.tone]}`}>
+                          {status.label}
+                        </span>
+                        <ChevronDown className="w-4 h-4 text-slate-400 group-open:rotate-180 transition-transform" />
+                      </div>
+                    </summary>
+                    <p className="mt-3 pt-3 border-t border-slate-100 text-sm text-slate-600 leading-relaxed">{c.content}</p>
+                  </details>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Pest & disease alerts */}
+          <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm mb-8">
+            <div className="flex items-center gap-3 mb-5">
+              <span className="inline-flex w-10 h-10 rounded-lg bg-red-50 text-red-600 items-center justify-center">
+                <AlertTriangle className="w-5 h-5" />
+              </span>
+              <div>
+                <h2 className="text-xl font-semibold text-slate-900"><T>Pest & Disease Alerts</T></h2>
+                <p className="text-xs text-slate-500"><T>Prioritized by severity for this dekad</T></p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {agroBulletins.pest.bulletins.map((p) => {
+                const sev = severityFromTitle(p.title);
+                return (
+                  <details
+                    key={p.id}
+                    className="group rounded-xl border border-slate-200 bg-white p-4 open:shadow-sm open:border-emerald-300 transition-all"
+                  >
+                    <summary className="flex items-start justify-between gap-3 cursor-pointer list-none">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase border ${toneClasses[sev.tone]}`}>
+                            {sev.label}
+                          </span>
+                        </div>
+                        <h3 className="text-sm font-semibold text-slate-900">{p.title}</h3>
+                        <p className="text-xs text-slate-500 line-clamp-2 mt-1">{firstSentence(p.content)}</p>
+                      </div>
+                      <ChevronDown className="flex-shrink-0 w-4 h-4 text-slate-400 group-open:rotate-180 transition-transform" />
+                    </summary>
+                    <p className="mt-3 pt-3 border-t border-slate-100 text-sm text-slate-600 leading-relaxed">{p.content}</p>
+                  </details>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Period summary */}
+          <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="inline-flex w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 items-center justify-center">
+                <Info className="w-5 h-5" />
+              </span>
+              <div>
+                <h2 className="text-xl font-semibold text-slate-900"><T>Period Outlook</T></h2>
+                <p className="text-xs text-slate-500">{dekadLabel} · {selectedRegion}</p>
+              </div>
+            </div>
+            <p className="text-sm text-slate-700 leading-relaxed mb-5">{agroBulletins.general.summary}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {agroBulletins.general.bulletins.slice(0, 6).map((g) => (
+                <div key={g.id} className="rounded-xl border border-slate-200 bg-white p-4">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-lg">{g.icon}</span>
+                    <h3 className="text-sm font-semibold text-slate-900">{g.title}</h3>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed line-clamp-3">{firstSentence(g.content)}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Footer note */}
+          <div className="text-center text-xs text-slate-500">
+            <p>
+              <T>Data sources: Ghana Meteorological Agency, regional agromet stations. Updated dekadally.</T>
+            </p>
+            <p className="mt-1">
+              <T>Last updated</T>:{' '}
+              {currentDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+            </p>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default AgroBulletins;

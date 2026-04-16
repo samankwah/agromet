@@ -32,29 +32,29 @@ const FloodDrought = () => {
 
   // Ghana-specific flood data
   const floodData = [
-    { year: 2020, incidents: 24, affected: 8, damages: 16 },
-    { year: 2021, incidents: 31, affected: 12, damages: 25 },
-    { year: 2022, incidents: 38, affected: 17, damages: 34 },
-    { year: 2023, incidents: 42, affected: 21, damages: 46 },
-    { year: 2024, incidents: 49, affected: 28, damages: 58 },
+    { year: 2022, incidents: 31, affected: 12, damages: 25 },
+    { year: 2023, incidents: 38, affected: 17, damages: 34 },
+    { year: 2024, incidents: 42, affected: 21, damages: 46 },
+    { year: 2025, incidents: 49, affected: 28, damages: 58 },
+    { year: 2026, incidents: 55, affected: 33, damages: 68 },
   ];
 
   // Ghana-specific drought data
   const droughtData = [
-    { year: 2020, regions: 3, affected: 5, damages: 12 },
-    { year: 2021, regions: 4, affected: 7, damages: 18 },
-    { year: 2022, regions: 5, affected: 9, damages: 24 },
-    { year: 2023, regions: 6, affected: 12, damages: 31 },
-    { year: 2024, regions: 7, affected: 15, damages: 38 },
+    { year: 2022, regions: 4, affected: 7, damages: 18 },
+    { year: 2023, regions: 5, affected: 9, damages: 24 },
+    { year: 2024, regions: 6, affected: 12, damages: 31 },
+    { year: 2025, regions: 7, affected: 15, damages: 38 },
+    { year: 2026, regions: 8, affected: 18, damages: 45 },
   ];
 
   // Combined economic impact data for Ghana
   const combinedTrendData = [
-    { year: 2020, flood: 16, drought: 12 },
-    { year: 2021, flood: 25, drought: 18 },
-    { year: 2022, flood: 34, drought: 24 },
-    { year: 2023, flood: 46, drought: 31 },
-    { year: 2024, flood: 58, drought: 38 },
+    { year: 2022, flood: 25, drought: 18 },
+    { year: 2023, flood: 34, drought: 24 },
+    { year: 2024, flood: 46, drought: 31 },
+    { year: 2025, flood: 58, drought: 38 },
+    { year: 2026, flood: 68, drought: 45 },
   ];
 
   // Ghana's agroecological zones climate risk data
@@ -174,49 +174,49 @@ const FloodDrought = () => {
   // Tabs content
   const renderDashboard = () => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Key Metrics Cards */}
-        <div className="bg-gradient-to-br from-blue-500 to-blue-700 p-4 rounded-xl shadow-lg text-white">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold"><T>Flood Events</T></h3>
-            <Droplet size={24} />
-          </div>
-          <p className="text-3xl font-bold mt-2">7</p>
-          <p className="text-sm opacity-80">2024 • +17% from 2023</p>
+        <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all">
+          <span className="inline-flex w-10 h-10 rounded-lg bg-sky-50 text-sky-600 border border-sky-200 items-center justify-center">
+            <Droplet size={20} />
+          </span>
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-4"><T>Flood Events</T></p>
+          <p className="text-2xl lg:text-3xl font-bold text-slate-900 mt-1">7</p>
+          <p className="text-xs text-slate-500 mt-1">2026 • +17% from 2025</p>
         </div>
 
-        <div className="bg-gradient-to-br from-amber-500 to-amber-700 p-4 rounded-xl shadow-lg text-white">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold"><T>Drought Zones</T></h3>
-            <Thermometer size={24} />
-          </div>
-          <p className="text-3xl font-bold mt-2">49</p>
-          <p className="text-sm opacity-80">2024 • +17% from 2023</p>
+        <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all">
+          <span className="inline-flex w-10 h-10 rounded-lg bg-amber-50 text-amber-600 border border-amber-200 items-center justify-center">
+            <Thermometer size={20} />
+          </span>
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-4"><T>Drought Zones</T></p>
+          <p className="text-2xl lg:text-3xl font-bold text-slate-900 mt-1">49</p>
+          <p className="text-xs text-slate-500 mt-1">2026 • +17% from 2025</p>
         </div>
 
-        <div className="bg-gradient-to-br from-red-500 to-red-700 p-4 rounded-xl shadow-lg text-white">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold"><T>People Affected</T></h3>
-            <AlertTriangle size={24} />
-          </div>
-          <p className="text-3xl font-bold mt-2">43M</p>
-          <p className="text-sm opacity-80">2024 • +33% from 2023</p>
+        <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all">
+          <span className="inline-flex w-10 h-10 rounded-lg bg-red-50 text-red-600 border border-red-200 items-center justify-center">
+            <AlertTriangle size={20} />
+          </span>
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-4"><T>People Affected</T></p>
+          <p className="text-2xl lg:text-3xl font-bold text-slate-900 mt-1">43M</p>
+          <p className="text-xs text-slate-500 mt-1">2026 • +33% from 2025</p>
         </div>
 
-        <div className="bg-gradient-to-br from-green-500 to-green-700 p-4 rounded-xl shadow-lg text-white">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold"><T>Resilience Score</T></h3>
-            <Award size={24} />
-          </div>
-          <p className="text-3xl font-bold mt-2">{resilienceScore.score}</p>
-          <p className="text-sm opacity-80">Ghana • Moderate</p>
+        <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all">
+          <span className="inline-flex w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200 items-center justify-center">
+            <Award size={20} />
+          </span>
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-4"><T>Resilience Score</T></p>
+          <p className="text-2xl lg:text-3xl font-bold text-slate-900 mt-1">{resilienceScore.score}</p>
+          <p className="text-xs text-slate-500 mt-1">Ghana • Moderate</p>
         </div>
       </div>
 
       {/* Main Dashboard Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-4 rounded-xl shadow-md">
-          <h3 className="text-lg font-semibold mb-4 text-gray-800">
+        <div className="bg-white/80 backdrop-blur-sm border border-slate-200 p-5 rounded-2xl shadow-sm">
+          <h3 className="text-lg font-semibold mb-4 text-slate-900">
             <T>Economic Impact Trends (Million GHS)</T>
           </h3>
           <div className="h-72">
@@ -251,13 +251,13 @@ const FloodDrought = () => {
           </div>
         </div>
 
-        <div className="bg-white p-2 rounded-xl shadow-md">
-          <h3 className="text-lg font-semibold mb-4 text-gray-800">
+        <div className="bg-white/80 backdrop-blur-sm border border-slate-200 p-5 rounded-2xl shadow-sm">
+          <h3 className="text-lg font-semibold mb-4 text-slate-900">
             <T>Climate Risk Matrix</T>
           </h3>
           <div className="flex mb-4 space-x-2">
             <select
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500"
+              className="bg-white border border-slate-200 text-slate-700 text-sm rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500"
               value={selectedRegion}
               onChange={(e) => setSelectedRegion(e.target.value)}
             >
@@ -302,8 +302,8 @@ const FloodDrought = () => {
 
       {/* Impact Distribution */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="bg-white p-1 rounded-xl shadow-md lg:col-span-1">
-          <h3 className="text-lg font-semibold mb-4 text-gray-800">
+        <div className="bg-white/80 backdrop-blur-sm border border-slate-200 p-5 rounded-2xl shadow-sm lg:col-span-1">
+          <h3 className="text-lg font-semibold mb-4 text-slate-900">
             <T>Impact Distribution</T>
           </h3>
           <div className="h-64">
@@ -334,30 +334,30 @@ const FloodDrought = () => {
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl shadow-md lg:col-span-2">
-          <h3 className="text-lg font-semibold mb-4 text-gray-800">
+        <div className="bg-white/80 backdrop-blur-sm border border-slate-200 p-5 rounded-2xl shadow-sm lg:col-span-2">
+          <h3 className="text-lg font-semibold mb-4 text-slate-900">
             <T>Risk Hotspots</T>
           </h3>
           <div className="overflow-x-auto">
-            <table className="min-w-full bg-white">
-              <thead className="bg-gray-100">
+            <table className="min-w-full">
+              <thead className="bg-slate-50">
                 <tr>
-                  <th className="py-3 px-4 text-left"><T>Type</T></th>
-                  <th className="py-3 px-4 text-left"><T>Region</T></th>
-                  <th className="py-3 px-4 text-left"><T>Risk Level</T></th>
-                  <th className="py-3 px-4 text-left"><T>Trend</T></th>
-                  <th className="py-3 px-4 text-left"><T>Impact</T></th>
+                  <th className="py-3 px-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider"><T>Type</T></th>
+                  <th className="py-3 px-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider"><T>Region</T></th>
+                  <th className="py-3 px-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider"><T>Risk Level</T></th>
+                  <th className="py-3 px-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider"><T>Trend</T></th>
+                  <th className="py-3 px-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider"><T>Impact</T></th>
                 </tr>
               </thead>
               <tbody>
                 {globalHotspots.map((spot, index) => (
-                  <tr key={index} className="hover:bg-gray-50 border-b">
+                  <tr key={index} className="hover:bg-slate-50 border-b border-slate-200">
                     <td className="py-2 px-4">
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
                           spot.type === "Flood"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-amber-100 text-amber-800"
+                            ? "bg-sky-50 text-sky-700 border-sky-200"
+                            : "bg-amber-50 text-amber-700 border-amber-200"
                         }`}
                       >
                         {spot.type === "Flood" ? (
@@ -371,10 +371,10 @@ const FloodDrought = () => {
                     <td className="py-2 px-4">{spot.region}</td>
                     <td className="py-2 px-4">
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
                           spot.risk === "Extreme"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-orange-100 text-orange-800"
+                            ? "bg-red-50 text-red-700 border-red-200"
+                            : "bg-amber-50 text-amber-700 border-amber-200"
                         }`}
                       >
                         {spot.risk}
@@ -422,23 +422,22 @@ const FloodDrought = () => {
 
   const renderFloodAnalysis = () => (
     <div className="space-y-6">
-      <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-xl shadow-md">
+      <div className="bg-white/80 backdrop-blur-sm border border-slate-200 p-6 rounded-2xl shadow-sm">
         <div className="flex items-center gap-3 mb-4">
-          <Droplet size={28} className="text-blue-700" />
-          <h3 className="text-2xl font-semibold text-blue-800">
+          <span className="inline-flex w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 items-center justify-center">
+            <Droplet size={20} />
+          </span>
+          <h3 className="text-2xl font-semibold text-slate-900">
             <T>Flood Trends & Impact</T>
           </h3>
         </div>
-        <p className="mb-6 text-gray-700 leading-relaxed">
-          Global flood events have shown a concerning upward trend over the past
-          five years, with both frequency and severity increasing. Climate
-          change, urbanization, and deforestation are primary contributing
-          factors to this alarming pattern.
+        <p className="mb-6 text-slate-600 leading-relaxed">
+          <T>Global flood events have shown a concerning upward trend over the past five years, with both frequency and severity increasing. Climate change, urbanization, and deforestation are primary contributing factors to this alarming pattern.</T>
         </p>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white p-4 rounded-xl shadow-md">
-            <h4 className="font-semibold text-blue-700 mb-3">
+          <div className="bg-white/80 backdrop-blur-sm border border-slate-200 p-5 rounded-2xl shadow-sm">
+            <h4 className="font-semibold text-slate-900 mb-3">
               <T>Yearly Flood Incidents</T>
             </h4>
             <div className="h-64">
@@ -461,8 +460,8 @@ const FloodDrought = () => {
           </div>
 
           <div className="space-y-4">
-            <div className="bg-blue-50 p-4 rounded-xl shadow-md">
-              <h4 className="font-semibold text-blue-700 mb-3">
+            <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl">
+              <h4 className="font-semibold text-slate-900 mb-3">
                 <T>Key Mitigation Strategies</T>
               </h4>
               <div className="grid grid-cols-2 gap-3">
@@ -491,8 +490,8 @@ const FloodDrought = () => {
               </div>
             </div>
 
-            <div className="bg-blue-50 p-4 rounded-xl shadow-md">
-              <h4 className="font-semibold text-blue-700 mb-3">
+            <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl">
+              <h4 className="font-semibold text-slate-900 mb-3">
                 <T>Most Vulnerable Regions</T>
               </h4>
               <div className="space-y-2">
@@ -533,23 +532,22 @@ const FloodDrought = () => {
 
   const renderDroughtAnalysis = () => (
     <div className="space-y-6">
-      <div className="bg-gradient-to-r from-amber-50 to-amber-100 p-6 rounded-xl shadow-md">
+      <div className="bg-white/80 backdrop-blur-sm border border-slate-200 p-6 rounded-2xl shadow-sm">
         <div className="flex items-center gap-3 mb-4">
-          <Thermometer size={28} className="text-amber-700" />
-          <h3 className="text-2xl font-semibold text-amber-800">
+          <span className="inline-flex w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 items-center justify-center">
+            <Thermometer size={20} />
+          </span>
+          <h3 className="text-2xl font-semibold text-slate-900">
             <T>Drought Analysis & Patterns</T>
           </h3>
         </div>
-        <p className="mb-6 text-gray-700 leading-relaxed">
-          Drought conditions have intensified globally, with longer duration and
-          greater severity becoming increasingly common. Rising temperatures,
-          changing precipitation patterns, and increased water demand are major
-          contributing factors.
+        <p className="mb-6 text-slate-600 leading-relaxed">
+          <T>Drought conditions have intensified globally, with longer duration and greater severity becoming increasingly common. Rising temperatures, changing precipitation patterns, and increased water demand are major contributing factors.</T>
         </p>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white p-4 rounded-xl shadow-md">
-            <h4 className="font-semibold text-amber-700 mb-3">
+          <div className="bg-white/80 backdrop-blur-sm border border-slate-200 p-5 rounded-2xl shadow-sm">
+            <h4 className="font-semibold text-slate-900 mb-3">
               <T>Drought Impact Trend</T>
             </h4>
             <div className="h-64">
@@ -580,8 +578,8 @@ const FloodDrought = () => {
           </div>
 
           <div className="space-y-4">
-            <div className="bg-amber-50 p-4 rounded-xl shadow-md">
-              <h4 className="font-semibold text-amber-700 mb-3">
+            <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl">
+              <h4 className="font-semibold text-slate-900 mb-3">
                 <T>Key Adaptation Strategies</T>
               </h4>
               <div className="grid grid-cols-1 gap-3">
@@ -635,22 +633,21 @@ const FloodDrought = () => {
 
   const renderMatrix = () => (
     <div className="space-y-6">
-      <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-6 rounded-xl shadow-md">
+      <div className="bg-white/80 backdrop-blur-sm border border-slate-200 p-6 rounded-2xl shadow-sm">
         <div className="flex items-center gap-3 mb-4">
-          <AlertTriangle size={28} className="text-purple-700" />
-          <h3 className="text-2xl font-semibold text-purple-800">
+          <span className="inline-flex w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 items-center justify-center">
+            <AlertTriangle size={20} />
+          </span>
+          <h3 className="text-2xl font-semibold text-slate-900">
             <T>Climate Vulnerability Matrix</T>
           </h3>
         </div>
-        <p className="mb-6 text-gray-700 leading-relaxed">
-          The Climate Matrix provides a comprehensive overview of flood and
-          drought risks across different regions, along with their current
-          adaptation capabilities. This visualization helps identify priority
-          areas for intervention.
+        <p className="mb-6 text-slate-600 leading-relaxed">
+          <T>The Climate Matrix provides a comprehensive overview of flood and drought risks across different regions, along with their current adaptation capabilities. This visualization helps identify priority areas for intervention.</T>
         </p>
 
         <div className="bg-white p-4 rounded-xl shadow-md mb-6">
-          <h4 className="font-semibold text-purple-700 mb-3">
+          <h4 className="font-semibold text-slate-900 mb-3">
             <T>Regional Risk Comparison</T>
           </h4>
           <div className="h-80">
@@ -685,12 +682,12 @@ const FloodDrought = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white p-4 rounded-xl shadow-md">
-            <h4 className="font-semibold text-purple-700 mb-3">
+          <div className="bg-white/80 backdrop-blur-sm border border-slate-200 p-5 rounded-2xl shadow-sm">
+            <h4 className="font-semibold text-slate-900 mb-3">
               <T>Risk Factor Analysis</T>
             </h4>
             <table className="min-w-full">
-              <thead className="bg-purple-50">
+              <thead className="bg-slate-50">
                 <tr>
                   <th className="py-2 px-3 text-left text-sm"><T>Region</T></th>
                   <th className="py-2 px-3 text-left text-sm"><T>Primary Risk</T></th>
@@ -746,8 +743,8 @@ const FloodDrought = () => {
             </table>
           </div>
 
-          <div className="bg-white p-4 rounded-xl shadow-md">
-            <h4 className="font-semibold text-purple-700 mb-3">
+          <div className="bg-white/80 backdrop-blur-sm border border-slate-200 p-5 rounded-2xl shadow-sm">
+            <h4 className="font-semibold text-slate-900 mb-3">
               Impact Distribution
             </h4>
             <div className="h-64">
@@ -782,54 +779,39 @@ const FloodDrought = () => {
     </div>
   );
 
+  const tabBtn = (id, label) =>
+    `px-4 py-2 m-1 rounded-lg text-sm font-semibold transition-colors ${
+      activeTab === id
+        ? "bg-emerald-600 text-white shadow-sm"
+        : "text-slate-600 hover:text-emerald-700 hover:bg-emerald-50"
+    }`;
+
   return (
     <>
       <PageTitle title="Flood & Drought Alerts" />
-      <div className="container mx-auto p-6 bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg mt-20">
-      <h2 className="text-3xl font-bold text-center mb-8 text-gray-800">
-        <T>Flood and Drought Risk Analysis</T>
-      </h2>
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-emerald-50/30 pt-24 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      <div className="absolute top-0 -left-40 w-[500px] h-[500px] bg-emerald-200/30 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-96 -right-40 w-[500px] h-[500px] bg-teal-200/30 rounded-full blur-3xl pointer-events-none" />
+      <div className="max-w-7xl mx-auto relative">
+      <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight mb-6">
+        <T>Flood and Drought</T>{" "}
+        <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+          <T>Risk Analysis</T>
+        </span>
+      </h1>
 
       {/* Tab Navigation */}
-      <div className="flex flex-wrap justify-center bg-white rounded-xl shadow-md mb-8 p-1">
-        <button
-          className={`px-4 py-2 m-1 rounded-lg font-medium ${
-            activeTab === "dashboard"
-              ? "bg-blue-600 text-white"
-              : "text-gray-600 hover:bg-gray-100"
-          }`}
-          onClick={() => setActiveTab("dashboard")}
-        >
+      <div className="flex flex-wrap bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl shadow-sm mb-8 p-1">
+        <button className={tabBtn("dashboard")} onClick={() => setActiveTab("dashboard")}>
           <T>Dashboard</T>
         </button>
-        <button
-          className={`px-4 py-2 m-1 rounded-lg font-medium ${
-            activeTab === "flood"
-              ? "bg-blue-600 text-white"
-              : "text-gray-600 hover:bg-gray-100"
-          }`}
-          onClick={() => setActiveTab("flood")}
-        >
+        <button className={tabBtn("flood")} onClick={() => setActiveTab("flood")}>
           <T>Flood Analysis</T>
         </button>
-        <button
-          className={`px-4 py-2 m-1 rounded-lg font-medium ${
-            activeTab === "drought"
-              ? "bg-amber-600 text-white"
-              : "text-gray-600 hover:bg-gray-100"
-          }`}
-          onClick={() => setActiveTab("drought")}
-        >
+        <button className={tabBtn("drought")} onClick={() => setActiveTab("drought")}>
           <T>Drought Analysis</T>
         </button>
-        <button
-          className={`px-4 py-1 m-1 rounded-lg font-medium ${
-            activeTab === "matrix"
-              ? "bg-purple-600 text-white"
-              : "text-gray-600 hover:bg-gray-100"
-          }`}
-          onClick={() => setActiveTab("matrix")}
-        >
+        <button className={tabBtn("matrix")} onClick={() => setActiveTab("matrix")}>
           <T>Climate Matrix</T>
         </button>
       </div>
@@ -840,12 +822,12 @@ const FloodDrought = () => {
       {activeTab === "drought" && renderDroughtAnalysis()}
       {activeTab === "matrix" && renderMatrix()}
 
-      <div className="mt-8 border-t pt-6 text-sm text-gray-500 flex justify-between">
+      <div className="mt-8 border-t border-slate-200 pt-6 text-xs text-slate-500 flex flex-col sm:flex-row justify-between gap-2">
         <p>
-          Data sources: Ghana Meteorological Agency, Hydromet Research Office
-          for Disaster Risk Reduction
+          <T>Data sources: Ghana Meteorological Agency, Hydromet Research Office for Disaster Risk Reduction</T>
         </p>
-        <p>Last updated: May 2025</p>
+        <p><T>Last updated: April 2026</T></p>
+      </div>
       </div>
       </div>
     </>

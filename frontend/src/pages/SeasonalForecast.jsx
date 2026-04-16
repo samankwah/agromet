@@ -1,10 +1,27 @@
 import { useState } from "react";
-import { FaCloudSun, FaCloudRain, FaDownload, FaSun } from "react-icons/fa";
-import { GiWaterDrop } from "react-icons/gi";
+import { FaCloudSun, FaCloudRain, FaDownload, FaSun, FaExclamationCircle } from "react-icons/fa";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  CartesianGrid,
+  ResponsiveContainer,
+} from "recharts";
 import SON from "../assets/images/SON.png";
-import { FaExclamationCircle } from "react-icons/fa";
 import PageTitle from "../components/PageTitle";
 import T from "../components/common/T";
+
+const parseRange = (value) => {
+  if (typeof value === "number") return { min: value, max: value, mid: value };
+  const match = String(value).match(/(\d+)(?:\s*-\s*(\d+))?/);
+  if (!match) return { min: 0, max: 0, mid: 0 };
+  const min = Number(match[1]);
+  const max = match[2] ? Number(match[2]) : min;
+  return { min, max, mid: (min + max) / 2 };
+};
 
 const SeasonalForecast = () => {
   const [selectedZone, setSelectedZone] = useState("East Coast");
@@ -99,6 +116,40 @@ const SeasonalForecast = () => {
 
   const currentData = forecastData[selectedZone];
 
+  // Derived chart data
+  const lengthLTM = parseRange(currentData.lengthLTM);
+  const lengthForecast = parseRange(currentData.lengthForecast);
+  const lengthDomainMin = 60;
+  const lengthDomainMax = 160;
+  const toPct = (v) =>
+    ((v - lengthDomainMin) / (lengthDomainMax - lengthDomainMin)) * 100;
+
+  const rainfallChartData = [
+    {
+      season: "MAM",
+      LTM: parseRange(currentData.rainfallLTM.mam).mid,
+      Forecast: parseRange(currentData.rainfallForecast.mam).mid,
+    },
+    {
+      season: "AMJ",
+      LTM: parseRange(currentData.rainfallLTM.amj).mid,
+      Forecast: parseRange(currentData.rainfallForecast.amj).mid,
+    },
+  ];
+
+  const drySpellsChartData = [
+    {
+      period: "Early",
+      LTM: parseRange(currentData.drySpellsLTM.early).mid,
+      Forecast: parseRange(currentData.drySpellsForecast.early).mid,
+    },
+    {
+      period: "Late",
+      LTM: parseRange(currentData.drySpellsLTM.late).mid,
+      Forecast: parseRange(currentData.drySpellsForecast.late).mid,
+    },
+  ];
+
   const handleDownload = () => {
     const forecastText = `
     Seasonal Forecast for ${selectedZone}:
@@ -126,37 +177,50 @@ const SeasonalForecast = () => {
   return (
     <>
       <PageTitle title="Seasonal Weather Forecast" />
-      <div className="container mx-auto p-6 bg-teal-900 text-white pt-24">
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-emerald-50/30 pt-24 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      <div className="absolute top-0 -left-40 w-[500px] h-[500px] bg-emerald-200/30 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-96 -right-40 w-[500px] h-[500px] bg-teal-200/30 rounded-full blur-3xl pointer-events-none" />
+      <div className="max-w-7xl mx-auto relative">
       {/* Header Section */}
-      <div className="text-center mb-8">
-        <h1 className="text-5xl font-bold">{selectedZone} <T>Forecast</T></h1>
-        <strong className="text-2xl text-yellow-400">
-          <T>NORMAL ONSET AND EARLY CESSATION</T>
-        </strong>
+      <div className="mb-6">
+        <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight">
+          {selectedZone}{" "}
+          <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+            <T>Seasonal Forecast</T>
+          </span>
+        </h1>
+        <p className="mt-2 text-sm font-semibold text-emerald-700 uppercase tracking-wider">
+          <T>Normal Onset and Early Cessation</T>
+        </p>
       </div>
 
-      <div className="flex justify-between items-center mt-8">
-        {/* Zone Selection */}
-        <div className="w-1/6 pb-12">
-          <select
-            value={selectedZone}
-            onChange={(e) => setSelectedZone(e.target.value)}
-            className="w-full text-black p-2 rounded-md border border-gray-300"
-          >
-            {Object.keys(forecastData).map((zone) => (
-              <option key={zone} value={zone}>
+      <div className="flex flex-col gap-4 mb-6">
+        {/* Zone Selector Pills */}
+        <div className="flex flex-wrap gap-2">
+          {Object.keys(forecastData).map((zone) => {
+            const active = zone === selectedZone;
+            return (
+              <button
+                key={zone}
+                onClick={() => setSelectedZone(zone)}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                  active
+                    ? "bg-emerald-600 text-white shadow-sm"
+                    : "bg-white border border-slate-200 text-slate-600 hover:border-emerald-300 hover:text-emerald-700"
+                }`}
+              >
                 {zone}
-              </option>
-            ))}
-          </select>
+              </button>
+            );
+          })}
         </div>
         {/* Download Button */}
-        <div className=" pb-12">
+        <div className="flex justify-end">
           <button
             onClick={handleDownload}
-            className="flex items-center bg-yellow-500 text-black px-4 py-2 rounded-md hover:bg-yellow-400 w-full md:w-auto"
+            className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
           >
-            <FaDownload className="mr-2" /> <T>Download Forecast</T>
+            <FaDownload /> <T>Download Forecast</T>
           </button>
         </div>
       </div>
@@ -164,7 +228,7 @@ const SeasonalForecast = () => {
       {/* Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Map Section */}
-        <div className="bg-white text-black rounded-lg p-4">
+        <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-4 shadow-sm">
           <img
             src={SON}
             alt="Agro-Ecological Zones Map"
@@ -173,112 +237,156 @@ const SeasonalForecast = () => {
         </div>
 
         {/* LTM and Forecast Table */}
-        <div className="bg-white text-black rounded-lg p-6">
-          <GiWaterDrop
-            className="inline text-blue-500 mr-2 pt-12"
-            style={{ fontSize: "1.5rem" }}
-          />
-          <FaCloudRain
-            className="inline text-blue-500 mr-2"
-            style={{ fontSize: "2.5rem" }}
-          />
-          <GiWaterDrop
-            className="inline text-blue-500 mr-2"
-            style={{ fontSize: "1.5rem" }}
-          />
+        <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="inline-flex w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 items-center justify-center">
+              <FaCloudSun style={{ fontSize: "1.25rem" }} />
+            </span>
+            <h3 className="text-xl font-semibold text-slate-900"><T>Season Length</T></h3>
+          </div>
 
-          <FaCloudSun
-            className="inline text-blue-500 mr-2"
-            style={{ fontSize: "2.5rem" }}
-          />
+          {/* Season length range bars */}
+          <div className="mb-5 space-y-4">
+            {[
+              { label: "LTM", range: lengthLTM, color: "bg-slate-300", dot: "bg-slate-500" },
+              { label: "2026 Forecast", range: lengthForecast, color: "bg-emerald-200", dot: "bg-emerald-600" },
+            ].map((row) => (
+              <div key={row.label}>
+                <div className="flex justify-between text-xs font-semibold text-slate-500 mb-1">
+                  <span>{row.label}</span>
+                  <span>{row.range.min}–{row.range.max} days</span>
+                </div>
+                <div className="relative h-3 rounded-full bg-slate-100">
+                  <div
+                    className={`absolute top-0 h-3 rounded-full ${row.color}`}
+                    style={{
+                      left: `${toPct(row.range.min)}%`,
+                      width: `${Math.max(2, toPct(row.range.max) - toPct(row.range.min))}%`,
+                    }}
+                  />
+                  <div
+                    className={`absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full ${row.dot}`}
+                    style={{ left: `calc(${toPct(row.range.mid)}% - 6px)` }}
+                  />
+                </div>
+              </div>
+            ))}
+            <div className="flex justify-between text-[10px] text-slate-400">
+              <span>{lengthDomainMin}d</span>
+              <span>{(lengthDomainMin + lengthDomainMax) / 2}d</span>
+              <span>{lengthDomainMax}d</span>
+            </div>
+          </div>
 
-          <table className="w-full table-fixed border border-gray-300">
+          <div className="overflow-x-auto">
+          <table className="w-full table-fixed border border-slate-200 text-sm">
             <thead>
-              <tr className="border-b">
-                <th className="p-2 bg-gray-200 border text-center"></th>
-                <th className="p-2 bg-gray-200 border text-center">LTM</th>
-
-                <th className="p-2 bg-gray-200 border text-center">
-                  2025 Forecast
+              <tr>
+                <th className="p-2 bg-slate-50 border border-slate-200 text-slate-600 text-center"></th>
+                <th className="p-2 bg-slate-50 border border-slate-200 text-slate-600 text-center">LTM</th>
+                <th className="p-2 bg-slate-50 border border-slate-200 text-slate-600 text-center">
+                  2026 Forecast
                 </th>
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b">
-                <td className="p-2 text-center border"><T>Start</T></td>
-                <td className="p-2 text-center border">
+              <tr>
+                <td className="p-2 text-center border border-slate-200 text-slate-700"><T>Start</T></td>
+                <td className="p-2 text-center border border-slate-200 text-slate-700">
                   {currentData.startLTM}
                 </td>
-                <td className="p-2 text-center border">
+                <td className="p-2 text-center border border-slate-200 text-slate-700">
                   {currentData.startForecast}
                 </td>
               </tr>
-              <tr className="border-b">
-                <td className="p-2 text-center border"><T>End</T></td>
-                <td className="p-2 text-center border">{currentData.endLTM}</td>
-                <td className="p-2 text-center border">
+              <tr>
+                <td className="p-2 text-center border border-slate-200 text-slate-700"><T>End</T></td>
+                <td className="p-2 text-center border border-slate-200 text-slate-700">{currentData.endLTM}</td>
+                <td className="p-2 text-center border border-slate-200 text-slate-700">
                   {currentData.endForecast}
                 </td>
               </tr>
-              <tr className="border-b">
-                <td className="p-2 text-center border">
+              <tr>
+                <td className="p-2 text-center border border-slate-200 text-slate-700">
                   <T>Length of Season (Days)</T>
                 </td>
-                <td className="p-2 text-center border">
+                <td className="p-2 text-center border border-slate-200 text-slate-700">
                   {currentData.lengthLTM}
                 </td>
-                <td className="p-2 text-center border">
+                <td className="p-2 text-center border border-slate-200 text-slate-700">
                   {currentData.lengthForecast}
                 </td>
               </tr>
             </tbody>
           </table>
+          </div>
         </div>
 
         {/* Rainfall Table */}
-        <div className="bg-white text-black rounded-lg p-6">
-          <h3 className="text-xl font-bold text-teal-900 mb-4">
-            <FaCloudRain
-              className="inline text-blue-500 mr-2"
-              style={{ fontSize: "2.5rem" }}
-            />
-            <T>Cumulative Rainfall</T>
-          </h3>
-          <table className="w-full table-fixed border border-gray-300">
+        <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="inline-flex w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 items-center justify-center">
+              <FaCloudRain style={{ fontSize: "1.25rem" }} />
+            </span>
+            <h3 className="text-xl font-semibold text-slate-900"><T>Cumulative Rainfall</T></h3>
+          </div>
+          <div className="mb-5" style={{ width: "100%", height: 220 }}>
+            <ResponsiveContainer>
+              <BarChart data={rainfallChartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="season" stroke="#64748b" fontSize={12} />
+                <YAxis stroke="#64748b" fontSize={12} unit=" mm" />
+                <Tooltip
+                  contentStyle={{
+                    background: "#fff",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: 8,
+                    fontSize: 12,
+                  }}
+                />
+                <Legend wrapperStyle={{ fontSize: 12 }} />
+                <Bar dataKey="LTM" fill="#94a3b8" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="Forecast" fill="#10b981" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="overflow-x-auto">
+          <table className="w-full table-fixed border border-slate-200 text-sm">
             <thead>
-              <tr className="border-b">
-                <th className="p-2 bg-gray-200"><T>Season</T></th>
-                <th className="p-2 bg-gray-200">LTM</th>
-                <th className="p-2 bg-gray-200">2025 Forecast</th>
+              <tr>
+                <th className="p-2 bg-slate-50 border border-slate-200 text-slate-600"><T>Season</T></th>
+                <th className="p-2 bg-slate-50 border border-slate-200 text-slate-600">LTM</th>
+                <th className="p-2 bg-slate-50 border border-slate-200 text-slate-600">2026 Forecast</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b">
-                <td className="p-2 text-center border">MAM</td>
-                <td className="p-2 text-center border">
+              <tr>
+                <td className="p-2 text-center border border-slate-200 text-slate-700">MAM</td>
+                <td className="p-2 text-center border border-slate-200 text-slate-700">
                   {currentData.rainfallLTM.mam}
                 </td>
-                <td className="p-2 text-center border">
+                <td className="p-2 text-center border border-slate-200 text-slate-700">
                   {currentData.rainfallForecast.mam}
                 </td>
               </tr>
-              <tr className="border-b">
-                <td className="p-2 text-center border">AMJ</td>
-                <td className="p-2 text-center border">
+              <tr>
+                <td className="p-2 text-center border border-slate-200 text-slate-700">AMJ</td>
+                <td className="p-2 text-center border border-slate-200 text-slate-700">
                   {currentData.rainfallLTM.amj}
                 </td>
-                <td className="p-2 text-center border">
+                <td className="p-2 text-center border border-slate-200 text-slate-700">
                   {currentData.rainfallForecast.amj}
                 </td>
               </tr>
             </tbody>
           </table>
+          </div>
           <div className="mt-4">
-            <h4 className="font-bold text-red-600 flex items-center">
+            <h4 className="font-semibold text-red-600 flex items-center">
               <FaExclamationCircle className="text-red-600 h-5 w-5 mr-2" />
               <T>Advisories:</T>
             </h4>
-            <ul className="list-disc ml-5">
+            <ul className="list-disc ml-5 text-sm text-slate-600 mt-1 space-y-1">
               <li><T>Harvest rain water and store for irrigation.</T></li>
               <li><T>Cultivate early short cycle crops.</T></li>
               <li><T>Contact agricultural experts for information</T></li>
@@ -287,51 +395,71 @@ const SeasonalForecast = () => {
         </div>
 
         {/* Dry Spells Table */}
-        <div className="bg-white text-black rounded-lg p-6">
-          <div className="flex items-center mb-4">
-            <FaSun
-              className="text-orange-500 mr-2"
-              style={{ fontSize: "2.5rem" }}
-            />{" "}
-            {/* Adjusted icon size */}
-            <h3 className="text-xl font-bold text-teal-900"><T>Dry Spells</T></h3>
+        <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="inline-flex w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 items-center justify-center">
+              <FaSun style={{ fontSize: "1.25rem" }} />
+            </span>
+            <h3 className="text-xl font-semibold text-slate-900"><T>Dry Spells</T></h3>
           </div>
-          <table className="w-full table-fixed border border-gray-300">
+          <div className="mb-5" style={{ width: "100%", height: 220 }}>
+            <ResponsiveContainer>
+              <BarChart data={drySpellsChartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="period" stroke="#64748b" fontSize={12} />
+                <YAxis stroke="#64748b" fontSize={12} unit=" d" />
+                <Tooltip
+                  contentStyle={{
+                    background: "#fff",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: 8,
+                    fontSize: 12,
+                  }}
+                />
+                <Legend wrapperStyle={{ fontSize: 12 }} />
+                <Bar dataKey="LTM" fill="#94a3b8" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="Forecast" fill="#f59e0b" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="overflow-x-auto">
+          <table className="w-full table-fixed border border-slate-200 text-sm">
             <thead>
-              <tr className="border-b">
-                <th className="p-2 bg-gray-200"><T>TYPE</T></th>
-                <th className="p-2 bg-gray-200">LTM</th>
-                <th className="p-2 bg-gray-200">2025 Forecast</th>
+              <tr>
+                <th className="p-2 bg-slate-50 border border-slate-200 text-slate-600"><T>TYPE</T></th>
+                <th className="p-2 bg-slate-50 border border-slate-200 text-slate-600">LTM</th>
+                <th className="p-2 bg-slate-50 border border-slate-200 text-slate-600">2026 Forecast</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b">
-                <td className="p-2 text-center border"><T>Early</T></td>
-                <td className="p-2 text-center border">
+              <tr>
+                <td className="p-2 text-center border border-slate-200 text-slate-700"><T>Early</T></td>
+                <td className="p-2 text-center border border-slate-200 text-slate-700">
                   {currentData.drySpellsLTM.early}
                 </td>
-                <td className="p-2 text-center border">
+                <td className="p-2 text-center border border-slate-200 text-slate-700">
                   {currentData.drySpellsForecast.early}
                 </td>
               </tr>
-              <tr className="border-b">
-                <td className="p-2 text-center border"><T>Late</T></td>
-                <td className="p-2 text-center border">
+              <tr>
+                <td className="p-2 text-center border border-slate-200 text-slate-700"><T>Late</T></td>
+                <td className="p-2 text-center border border-slate-200 text-slate-700">
                   {currentData.drySpellsLTM.late}
                 </td>
-                <td className="p-2 text-center border">
+                <td className="p-2 text-center border border-slate-200 text-slate-700">
                   {currentData.drySpellsForecast.late}
                 </td>
               </tr>
             </tbody>
           </table>
+          </div>
 
           <div className="mt-4">
-            <h4 className="font-bold text-red-600 flex items-center">
+            <h4 className="font-semibold text-red-600 flex items-center">
               <FaExclamationCircle className="text-red-600 h-5 w-5 mr-2" />
               <T>Advisories:</T>
             </h4>
-            <ul className="list-disc ml-5">
+            <ul className="list-disc ml-5 text-sm text-slate-600 mt-1 space-y-1">
               <li><T>Monitor weather updates regularly.</T></li>
               <li><T>Prepare for potential irrigation needs.</T></li>
               <li><T>Consult with local agronomists for crop management.</T></li>
@@ -341,11 +469,10 @@ const SeasonalForecast = () => {
       </div>
 
       {/* Footer Section */}
-      <footer className="text-center mt-10 text-gray-300">
-        <strong>
-          <T>Long Term Mean (LTM) is the 30-year average condition of a given zone from 1991 - 2020</T>
-        </strong>
+      <footer className="text-center mt-10 text-xs text-slate-500">
+        <T>Long Term Mean (LTM) is the 30-year average condition of a given zone from 1991 - 2020</T>
       </footer>
+      </div>
     </div>
     </>
   );

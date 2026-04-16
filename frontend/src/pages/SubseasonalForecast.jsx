@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import PageTitle from '../components/PageTitle';
 import T from '../components/common/T';
 import {
@@ -25,6 +26,67 @@ import {
   Target,
   Activity,
 } from "lucide-react";
+
+const ConfidenceDonut = ({ value, label, color = "#10b981" }) => {
+  const data = [
+    { name: "filled", value: value },
+    { name: "empty", value: Math.max(0, 100 - value) },
+  ];
+  return (
+    <div className="relative flex flex-col items-center">
+      <div className="relative w-full" style={{ height: 120 }}>
+        <ResponsiveContainer>
+          <PieChart>
+            <Pie
+              data={data}
+              innerRadius={38}
+              outerRadius={52}
+              startAngle={90}
+              endAngle={-270}
+              dataKey="value"
+              stroke="none"
+            >
+              <Cell fill={color} />
+              <Cell fill="#e2e8f0" />
+            </Pie>
+          </PieChart>
+        </ResponsiveContainer>
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <span className="text-xl font-bold text-slate-900">{Math.round(value)}%</span>
+        </div>
+      </div>
+      <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-1">
+        {label}
+      </span>
+    </div>
+  );
+};
+
+const AnomalyBar = ({ value, max, unit, positiveColor, negativeColor }) => {
+  const clamped = Math.max(-max, Math.min(max, value));
+  const widthPct = (Math.abs(clamped) / max) * 50;
+  const isPositive = clamped >= 0;
+  return (
+    <div className="w-full">
+      <div className="relative h-3 rounded-full bg-slate-100">
+        <div className="absolute top-0 bottom-0 left-1/2 w-px bg-slate-300" />
+        <div
+          className="absolute top-0 h-3 rounded-full"
+          style={{
+            background: isPositive ? positiveColor : negativeColor,
+            left: isPositive ? "50%" : `${50 - widthPct}%`,
+            width: `${widthPct}%`,
+          }}
+        />
+      </div>
+      <div className="mt-1 flex justify-between text-[10px] text-slate-400">
+        <span>-{max}{unit}</span>
+        <span>0</span>
+        <span>+{max}{unit}</span>
+      </div>
+    </div>
+  );
+};
 
 const SubseasonalForecast = () => {
   const [loading, setLoading] = useState(true);
@@ -240,8 +302,8 @@ const SubseasonalForecast = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-600"></div>
       </div>
     );
   }
@@ -275,28 +337,78 @@ const SubseasonalForecast = () => {
   return (
     <>
       <PageTitle title="Subseasonal Forecast" />
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-16">
-      <div className="mb-8 text-center">
-        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 flex items-center justify-center">
-          {/* <BarChart3 className="mr-2 text-blue-600" /> */}
-          <T>Subseasonal Agricultural Forecast</T>
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-emerald-50/30 pt-24 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      <div className="absolute top-0 -left-40 w-[500px] h-[500px] bg-emerald-200/30 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-96 -right-40 w-[500px] h-[500px] bg-teal-200/30 rounded-full blur-3xl pointer-events-none" />
+      <div className="max-w-7xl mx-auto relative">
+      <div className="mb-8">
+        <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight">
+          <T>Subseasonal Agricultural</T>{" "}
+          <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+            <T>Forecast</T>
+          </span>
         </h1>
-        <p className="mt-2 text-gray-600 max-w-4xl mx-auto">
+        <p className="mt-3 text-slate-600 max-w-4xl">
           <T>Extended-range weather forecasts (2-8 weeks ahead) to support strategic agricultural planning. These forecasts help farmers make informed decisions about crop selection, planting schedules, and resource allocation based on longer-term climate patterns.</T>
         </p>
 
-        <div className="mt-4 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-md max-w-4xl mx-auto">
-          <div className="flex justify-center">
-            <div className="flex-shrink-0">
-              <Info className="h-5 w-5 text-blue-600" />
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-blue-800">
-                Subseasonal forecasts provide probabilistic outlooks based on
-                climate patterns and are most reliable for identifying general
-                trends rather than specific daily conditions.
-              </p>
-            </div>
+        <div className="mt-4 bg-emerald-50 border-l-4 border-emerald-500 p-4 rounded-lg max-w-4xl">
+          <div className="flex items-start gap-3">
+            <Info className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-emerald-800">
+              <T>Subseasonal forecasts provide probabilistic outlooks based on climate patterns and are most reliable for identifying general trends rather than specific daily conditions.</T>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Forecast Period Timeline */}
+      <div className="mb-8 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <T>Forecast Horizon</T>
+          </span>
+          <span className="text-xs text-slate-400">
+            <T>Click to change period</T>
+          </span>
+        </div>
+        <div className="relative">
+          <div className="absolute top-4 left-4 right-4 h-0.5 bg-slate-200" />
+          <div className="relative grid grid-cols-4 gap-2">
+            {Object.entries(forecastPeriods).map(([key, period]) => {
+              const active = key === selectedWeek;
+              return (
+                <button
+                  key={key}
+                  onClick={() => setSelectedWeek(key)}
+                  className="flex flex-col items-center text-center group"
+                >
+                  <span
+                    className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${
+                      active
+                        ? "bg-emerald-600 border-emerald-600 shadow-md scale-110"
+                        : "bg-white border-slate-300 group-hover:border-emerald-400"
+                    }`}
+                  >
+                    <span
+                      className={`w-2 h-2 rounded-full ${
+                        active ? "bg-white" : "bg-slate-300 group-hover:bg-emerald-400"
+                      }`}
+                    />
+                  </span>
+                  <span
+                    className={`mt-2 text-xs font-semibold ${
+                      active ? "text-emerald-700" : "text-slate-600"
+                    }`}
+                  >
+                    {period.label}
+                  </span>
+                  <span className="text-[10px] text-slate-400 hidden sm:block">
+                    {period.days}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -305,14 +417,14 @@ const SubseasonalForecast = () => {
       <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Forecast Period Selector */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
             <Clock className="inline mr-1 h-4 w-4" />
             <T>Forecast Period</T>
           </label>
           <select
             value={selectedWeek}
             onChange={(e) => setSelectedWeek(e.target.value)}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
             {Object.entries(forecastPeriods).map(([key, period]) => (
               <option key={key} value={key}>
@@ -324,14 +436,14 @@ const SubseasonalForecast = () => {
 
         {/* Region Selector */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
             <Map className="inline mr-1 h-4 w-4" />
             <T>Region</T>
           </label>
           <select
             value={selectedRegion}
             onChange={(e) => setSelectedRegion(e.target.value)}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
             {regions.map((region) => (
               <option key={region} value={region}>
@@ -343,14 +455,14 @@ const SubseasonalForecast = () => {
 
         {/* Forecast Type */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
             <Filter className="inline mr-1 h-4 w-4" />
             <T>View Type</T>
           </label>
           <select
             value={forecastType}
             onChange={(e) => setForecastType(e.target.value)}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
             <option value="overview"><T>Overview</T></option>
             <option value="detailed"><T>Detailed Analysis</T></option>
@@ -361,15 +473,18 @@ const SubseasonalForecast = () => {
       </div>
 
       {/* Forecast Summary Card */}
-      <div className="mb-8 bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200">
-        <div className="bg-gradient-to-r from-blue-600 to-blue-800 px-6 py-4 text-white">
-          <div className="flex justify-between items-start">
+      <div className="mb-8 bg-white/80 backdrop-blur-sm shadow-sm rounded-2xl overflow-hidden border border-slate-200">
+        <div className="px-6 py-4 border-b border-slate-200 flex flex-wrap justify-between items-start gap-3">
+          <div className="flex items-start gap-3">
+            <span className="inline-flex w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 items-center justify-center">
+              <BarChart3 className="h-5 w-5" />
+            </span>
             <div>
-              <h2 className="text-xl font-semibold">
+              <h2 className="text-xl font-semibold text-slate-900">
                 {forecastData.period.label} <T>Forecast</T>
               </h2>
-              <p className="text-blue-100 mt-1">{forecastData.region} <T>Region</T></p>
-              <p className="text-blue-200 text-sm mt-1">
+              <p className="text-slate-600 text-sm mt-0.5">{forecastData.region} <T>Region</T></p>
+              <p className="text-slate-500 text-xs mt-0.5">
                 <T>{forecastData.startDate.toLocaleDateString("en-US", {
                   month: "long",
                   day: "numeric",
@@ -384,30 +499,35 @@ const SubseasonalForecast = () => {
                 })}</T>
               </p>
             </div>
-            <div className="text-right">
-              <div className="flex items-center">
-                {getConfidenceIcon(forecastData.confidence)}
-                <span className="ml-1 text-lg font-semibold">
-                  {forecastData.confidence}%
-                </span>
-              </div>
-              <p className="text-blue-200 text-sm"><T>Confidence</T></p>
-            </div>
+          </div>
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-sm font-semibold">
+            {getConfidenceIcon(forecastData.confidence)}
+            <span>{forecastData.confidence}% <T>Confidence</T></span>
           </div>
         </div>
 
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Temperature Forecast */}
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center">
                   <Thermometer className="h-5 w-5 text-red-500 mr-2" />
-                  <h3 className="text-lg font-medium text-gray-900">
+                  <h3 className="text-lg font-medium text-slate-900">
                     <T>Temperature</T>
                   </h3>
                 </div>
                 {getTrendIcon(forecastData.temperature.trend)}
+              </div>
+
+              <div className="mb-3">
+                <AnomalyBar
+                  value={forecastData.temperature.anomaly}
+                  max={2}
+                  unit="°C"
+                  positiveColor="#ef4444"
+                  negativeColor="#0ea5e9"
+                />
               </div>
 
               <div className="space-y-2">
@@ -450,15 +570,25 @@ const SubseasonalForecast = () => {
             </div>
 
             {/* Rainfall Forecast */}
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center">
                   <CloudRain className="h-5 w-5 text-blue-500 mr-2" />
-                  <h3 className="text-lg font-medium text-gray-900">
+                  <h3 className="text-lg font-medium text-slate-900">
                     <T>Rainfall</T>
                   </h3>
                 </div>
                 {getTrendIcon(forecastData.rainfall.trend)}
+              </div>
+
+              <div className="mb-3">
+                <AnomalyBar
+                  value={forecastData.rainfall.anomaly}
+                  max={30}
+                  unit="%"
+                  positiveColor="#0ea5e9"
+                  negativeColor="#f59e0b"
+                />
               </div>
 
               <div className="space-y-2">
@@ -504,15 +634,19 @@ const SubseasonalForecast = () => {
       </div>
 
       {/* Climate Phenomena */}
-      <div className="mb-8 bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-            <Wind className="mr-2 text-blue-600" />
-            <T>Influencing Climate Patterns</T>
-          </h3>
-          <p className="text-sm text-gray-600 mt-1">
-            <T>Large-scale climate phenomena affecting the forecast</T>
-          </p>
+      <div className="mb-8 bg-white/80 backdrop-blur-sm shadow-sm rounded-2xl overflow-hidden border border-slate-200">
+        <div className="px-6 py-4 border-b border-slate-200 flex items-center gap-3">
+          <span className="inline-flex w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 items-center justify-center">
+            <Wind className="h-5 w-5" />
+          </span>
+          <div>
+            <h3 className="text-xl font-semibold text-slate-900">
+              <T>Influencing Climate Patterns</T>
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              <T>Large-scale climate phenomena affecting the forecast</T>
+            </p>
+          </div>
         </div>
 
         <div className="p-6">
@@ -520,40 +654,40 @@ const SubseasonalForecast = () => {
             {forecastData.climatePhenomena.map((phenomenon, index) => (
               <div
                 key={index}
-                className="border border-gray-200 rounded-lg p-4"
+                className="border border-slate-200 rounded-xl p-4 bg-white hover:border-emerald-300 hover:shadow-sm transition-all"
               >
                 <div className="flex justify-between items-start mb-2">
-                  <h4 className="font-medium text-gray-900">
+                  <h4 className="font-semibold text-slate-900">
                     {phenomenon.name}
                   </h4>
                   <span
-                    className={`text-xs px-2 py-1 rounded-full font-medium ${
+                    className={`text-xs px-2 py-1 rounded-full font-semibold ${
                       phenomenon.impact === "High"
-                        ? "bg-red-100 text-red-800"
+                        ? "bg-red-50 text-red-700 border border-red-200"
                         : phenomenon.impact === "Moderate"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : "bg-green-100 text-green-800"
+                        ? "bg-amber-50 text-amber-700 border border-amber-200"
+                        : "bg-emerald-50 text-emerald-700 border border-emerald-200"
                     }`}
                   >
                     {phenomenon.impact}
                   </span>
                 </div>
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="text-sm text-slate-600 mb-2">
                   {phenomenon.description}
                 </p>
                 <div className="flex items-center">
-                  <span className="text-xs text-gray-500"><T>Status:</T></span>
+                  <span className="text-xs text-slate-500"><T>Status:</T></span>
                   <span
-                    className={`ml-2 text-xs font-medium px-2 py-1 rounded ${
+                    className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full border ${
                       phenomenon.status === "strengthening" ||
                       phenomenon.status === "warming" ||
                       phenomenon.status === "active"
-                        ? "bg-orange-100 text-orange-800"
+                        ? "bg-amber-50 text-amber-700 border-amber-200"
                         : phenomenon.status === "weakening" ||
                           phenomenon.status === "cooling" ||
                           phenomenon.status === "weak"
-                        ? "bg-blue-100 text-blue-800"
-                        : "bg-gray-100 text-gray-800"
+                        ? "bg-sky-50 text-sky-700 border-sky-200"
+                        : "bg-slate-50 text-slate-700 border-slate-200"
                     }`}
                   >
                     {phenomenon.status}
@@ -566,107 +700,143 @@ const SubseasonalForecast = () => {
       </div>
 
       {/* Agricultural Impacts */}
-      <div className="mb-8 bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-            <Leaf className="mr-2 text-green-600" />
-            <T>Agricultural Impacts & Recommendations</T>
-          </h3>
-          <p className="text-sm text-gray-600 mt-1">
-            Crop-specific implications of the{" "}
-            {forecastData.period.label.toLowerCase()} forecast
-          </p>
+      <div className="mb-8 bg-white/80 backdrop-blur-sm shadow-sm rounded-2xl overflow-hidden border border-slate-200">
+        <div className="px-6 py-4 border-b border-slate-200 flex items-center gap-3">
+          <span className="inline-flex w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 items-center justify-center">
+            <Leaf className="h-5 w-5" />
+          </span>
+          <div>
+            <h3 className="text-xl font-semibold text-slate-900">
+              <T>Agricultural Impacts & Recommendations</T>
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              <T>Crop-specific implications of the</T>{" "}
+              {forecastData.period.label.toLowerCase()} <T>forecast</T>
+            </p>
+          </div>
         </div>
 
         <div className="p-6">
-          <div className="space-y-4">
+          <div className="space-y-3">
             {forecastData.agriculturalImpacts.map((impact, index) => (
-              <div
+              <details
                 key={index}
-                className="border border-gray-200 rounded-lg overflow-hidden"
+                className="group border border-slate-200 rounded-xl bg-white open:shadow-sm open:border-emerald-300 transition-all"
               >
-                <div
-                  className="p-4 cursor-pointer hover:bg-gray-50"
-                  onClick={() =>
-                    setExpandedParameter(
-                      expandedParameter === index ? null : index
-                    )
-                  }
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-medium text-gray-900">
+                <summary className="p-4 cursor-pointer list-none">
+                  <div className="flex justify-between items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <h4 className="font-semibold text-slate-900">
                           {impact.crop}
                         </h4>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center gap-2">
                           <span
-                            className={`text-xs px-2 py-1 rounded-full font-medium ${
+                            className={`text-xs px-2 py-0.5 rounded-full font-semibold border ${
                               impact.impact === "High"
-                                ? "bg-red-100 text-red-800"
+                                ? "bg-red-50 text-red-700 border-red-200"
                                 : impact.impact === "Moderate to High"
-                                ? "bg-orange-100 text-orange-800"
+                                ? "bg-amber-50 text-amber-700 border-amber-200"
                                 : impact.impact === "Moderate"
-                                ? "bg-yellow-100 text-yellow-800"
+                                ? "bg-amber-50 text-amber-700 border-amber-200"
                                 : impact.impact === "Low to Moderate"
-                                ? "bg-blue-100 text-blue-800"
-                                : "bg-green-100 text-green-800"
+                                ? "bg-sky-50 text-sky-700 border-sky-200"
+                                : "bg-emerald-50 text-emerald-700 border-emerald-200"
                             }`}
                           >
                             {impact.impact} Impact
                           </span>
-                          {expandedParameter === index ? (
-                            <ChevronUp className="h-4 w-4 text-gray-400" />
-                          ) : (
-                            <ChevronDown className="h-4 w-4 text-gray-400" />
-                          )}
+                          <ChevronDown className="h-4 w-4 text-slate-400 group-open:rotate-180 transition-transform" />
                         </div>
                       </div>
-                      <p className="text-sm text-gray-600 mt-1">
+                      <div className="mt-2">
+                        {(() => {
+                          const sev = impact.impact;
+                          const pct =
+                            sev === "High"
+                              ? 100
+                              : sev === "Moderate to High"
+                              ? 80
+                              : sev === "Moderate"
+                              ? 60
+                              : sev === "Low to Moderate"
+                              ? 40
+                              : 25;
+                          const color =
+                            pct >= 80 ? "bg-red-500" : pct >= 50 ? "bg-amber-500" : "bg-emerald-500";
+                          return (
+                            <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                              <div
+                                className={`h-full ${color} rounded-full`}
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
+                          );
+                        })()}
+                      </div>
+                      <p className="text-sm text-slate-600 mt-2">
                         {impact.description}
                       </p>
                     </div>
                   </div>
-                </div>
-
-                {expandedParameter === index && (
-                  <div className="px-4 pb-4 pt-2 bg-gray-50 border-t border-gray-200">
-                    <div className="flex items-start">
-                      <AlertTriangle className="h-4 w-4 text-yellow-600 mr-2 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <h5 className="text-sm font-medium text-gray-900 mb-1">
-                          Recommended Actions:
-                        </h5>
-                        <p className="text-sm text-gray-700">
-                          {impact.recommendation}
-                        </p>
-                      </div>
+                </summary>
+                <div className="px-4 pb-4 pt-2 border-t border-slate-100">
+                  <div className="flex items-start">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 mr-2 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h5 className="text-sm font-semibold text-slate-900 mb-1">
+                        <T>Recommended Actions:</T>
+                      </h5>
+                      <p className="text-sm text-slate-600">
+                        {impact.recommendation}
+                      </p>
                     </div>
                   </div>
-                )}
-              </div>
+                </div>
+              </details>
             ))}
           </div>
         </div>
       </div>
 
       {/* Confidence & Uncertainty Information */}
-      <div className="mb-8 bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200">
-        <div className="px-6 py-4 border-b border-gray-200">
+      <div className="mb-8 bg-white/80 backdrop-blur-sm shadow-sm rounded-2xl overflow-hidden border border-slate-200">
+        <div className="px-6 py-4 border-b border-slate-200">
           <button
             onClick={() => setShowConfidenceLevel(!showConfidenceLevel)}
             className="flex items-center justify-between w-full text-left"
           >
-            <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-              <Target className="mr-2 text-purple-600" />
-              Forecast Confidence & Limitations
-            </h3>
+            <div className="flex items-center gap-3">
+              <span className="inline-flex w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 items-center justify-center">
+                <Target className="h-5 w-5" />
+              </span>
+              <h3 className="text-xl font-semibold text-slate-900">
+                <T>Forecast Confidence & Limitations</T>
+              </h3>
+            </div>
             {showConfidenceLevel ? (
-              <ChevronUp className="h-5 w-5 text-gray-400" />
+              <ChevronUp className="h-5 w-5 text-slate-400" />
             ) : (
-              <ChevronDown className="h-5 w-5 text-gray-400" />
+              <ChevronDown className="h-5 w-5 text-slate-400" />
             )}
           </button>
+        </div>
+
+        {/* Confidence Donut Trio (always visible) */}
+        <div className="px-6 py-6 border-b border-slate-200">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <ConfidenceDonut value={forecastData.confidence} label="Overall" color="#10b981" />
+            <ConfidenceDonut
+              value={forecastData.temperature.confidence}
+              label="Temperature"
+              color="#0ea5e9"
+            />
+            <ConfidenceDonut
+              value={forecastData.rainfall.confidence}
+              label="Rainfall"
+              color="#14b8a6"
+            />
+          </div>
         </div>
 
         {showConfidenceLevel && (
@@ -760,23 +930,23 @@ const SubseasonalForecast = () => {
       </div>
 
       {/* Action Buttons */}
-      <div className="mb-8 flex flex-wrap gap-4 justify-center">
-        <button className="inline-flex items-center px-6 py-3 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-          <Download className="mr-2 h-4 w-4" />
-          Download Forecast
+      <div className="mb-8 flex flex-col sm:flex-row flex-wrap gap-4 justify-center">
+        <button className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-slate-300 text-sm font-semibold rounded-lg text-slate-700 bg-white hover:border-emerald-600 hover:text-emerald-700 transition-colors">
+          <Download className="h-4 w-4" />
+          <T>Download Forecast</T>
         </button>
-        <button className="inline-flex items-center px-6 py-3 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-          <Share2 className="mr-2 h-4 w-4" />
-          Share Forecast
+        <button className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-slate-300 text-sm font-semibold rounded-lg text-slate-700 bg-white hover:border-emerald-600 hover:text-emerald-700 transition-colors">
+          <Share2 className="h-4 w-4" />
+          <T>Share Forecast</T>
         </button>
-        <button className="inline-flex items-center px-6 py-3 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-          <Calendar className="mr-2 h-4 w-4" />
-          Subscribe to Updates
+        <button className="inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 transition-colors">
+          <Calendar className="h-4 w-4" />
+          <T>Subscribe to Updates</T>
         </button>
       </div>
 
       {/* Footer */}
-      <div className="text-center text-sm text-gray-500">
+      <div className="text-center text-xs text-slate-500">
         <p className="mb-1">
           <T>Subseasonal forecasts are generated using ensemble climate models and historical climate patterns</T>
         </p>
@@ -794,6 +964,7 @@ const SubseasonalForecast = () => {
             minute: "2-digit",
           })}</T>
         </p>
+      </div>
       </div>
       </div>
     </>
