@@ -5,6 +5,7 @@ import 'leaflet/dist/leaflet.css';
 import PropTypes from 'prop-types';
 import ghanaRegionsData from '../assets/ghana-regions.json';
 import { Cloud, CloudRain, Sun, Thermometer, Droplets, Wind, Eye, Gauge } from 'lucide-react';
+import { SkeletonBlock } from './common/SkeletonLoading';
 
 // Fix for default markers
 delete L.Icon.Default.prototype._getIconUrl;
@@ -332,9 +333,14 @@ const InteractiveMap = ({
   if (loading) {
     return (
       <div className="w-full h-96 flex items-center justify-center bg-gray-100 rounded-lg">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading interactive map...</p>
+        <div className="w-full max-w-sm space-y-4 px-6">
+          <SkeletonBlock className="mx-auto h-28 w-24" rounded="rounded-full" tone="blue" />
+          <SkeletonBlock className="mx-auto h-4 w-44" />
+          <div className="grid grid-cols-3 gap-3">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <SkeletonBlock key={`interactive-map-${index}`} className="h-10" tone="blue" />
+            ))}
+          </div>
         </div>
       </div>
     );

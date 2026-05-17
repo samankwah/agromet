@@ -1,6 +1,5 @@
 import { useState, useCallback } from "react";
-import axios from "axios";
-import API_CONFIG from "../config/apiConfig";
+import { getWeatherBundleByCoordinates, OPEN_METEO_SOURCE } from "../services/openMeteoService";
 
 // Custom hook for weather data management
 export const useWeatherData = () => {
@@ -8,26 +7,15 @@ export const useWeatherData = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Get API configuration from environment
-  const getApiConfig = useCallback(() => {
-    return {
-      baseUrl: `${API_CONFIG.AMBEE_BASE_URL}/weather/forecast/by-lat-lng`
-    };
-  }, []);
-
-  // Generate mock weather data
-  const generateMockWeather = useCallback((city) => {
-    const conditions = [
-      "Sunny Intervals", "Cloudy", "Light Rain", "Partly Cloudy",
-      "Clear Sky", "Overcast", "Mist"
-    ];
-
+  const getUnavailableWeather = useCallback((city) => {
     return {
       city,
-      condition: conditions[Math.floor(Math.random() * conditions.length)],
-      minTemp: Math.round(20 + Math.random() * 10),
-      maxTemp: Math.round(28 + Math.random() * 12),
-      source: "fallback",
+      condition: "Weather unavailable",
+      minTemp: null,
+      maxTemp: null,
+      humidity: null,
+      windSpeed: null,
+      source: `${OPEN_METEO_SOURCE} unavailable`,
     };
   }, []);
 
@@ -37,49 +25,36 @@ export const useWeatherData = () => {
 
   // Fetch weather data for a city
   const fetchWeatherForCity = useCallback(async (city, lat, lng) => {
-    const { baseUrl } = getApiConfig();
-
     try {
-      const url = `${baseUrl}?lat=${lat}&lng=${lng}`;
-      const response = await axios.get(url, {
-        headers: { "Content-type": "application/json" },
-        timeout: 10000, // 10 second timeout
+      const weather = await getWeatherBundleByCoordinates(lat, lng, {
+        forecastDays: 7,
       });
-
-      const forecast = response.data.data?.[0];
-      if (!forecast) {
-        throw new Error("No forecast data available");
-      }
-
-      // Handle temperature conversion (Fahrenheit to Celsius if needed)
-      const tempCelsius = forecast.temperature > 50
-        ? Math.round(((forecast.temperature - 32) * 5) / 9)
-        : Math.round(forecast.temperature);
+      const today = weather.daily[0];
 
       return {
         city,
-        condition: forecast.summary || "Sunny Intervals",
-        minTemp: Math.max(0, Math.round(tempCelsius - 3)),
-        maxTemp: Math.round(tempCelsius + 3),
+        condition: weather.current.condition || today?.condition || "Variable Weather",
+        minTemp: today?.lowTemp ?? weather.current.temperatureValue,
+        maxTemp: today?.highTemp ?? weather.current.temperatureValue,
+        humidity: weather.current.humidityValue,
+        windSpeed: weather.current.windSpeedValue,
+        summary: weather.current.summary,
         source: "live",
+        updatedAt: weather.current.updatedAt,
         lat,
         lng,
       };
     } catch (err) {
-      // Return mock data as fallback
       return {
-        ...generateMockWeather(city),
+        ...getUnavailableWeather(city),
         lat,
         lng,
         errorMessage:
-          err?.response?.data?.detail?.message ||
-          err?.response?.data?.detail?.error ||
-          err?.response?.data?.detail ||
           err?.message ||
           "Live weather unavailable.",
       };
     }
-  }, [generateMockWeather, getApiConfig]);
+  }, [getUnavailableWeather]);
 
   // Fetch weather for multiple cities
   const fetchWeatherForCities = useCallback(async (cities) => {

@@ -12,7 +12,21 @@ import {
 } from "recharts";
 import SON from "../assets/images/SON.png";
 import PageTitle from "../components/PageTitle";
+import Breadcrumb from "../components/common/Breadcrumb";
 import T from "../components/common/T";
+
+const formatUpdatedTime = (timestamp) => {
+  const date = timestamp ? new Date(timestamp) : new Date();
+
+  return date.toLocaleString("en-GB", {
+    timeZone: "Africa/Accra",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
 
 const parseRange = (value) => {
   if (typeof value === "number") return { min: value, max: value, mid: value };
@@ -25,6 +39,7 @@ const parseRange = (value) => {
 
 const SeasonalForecast = () => {
   const [selectedZone, setSelectedZone] = useState("East Coast");
+  const [updatedAt] = useState(() => new Date().toISOString());
 
   // Data for different agro-ecological zones
   const forecastData = {
@@ -177,10 +192,9 @@ const SeasonalForecast = () => {
   return (
     <>
       <PageTitle title="Seasonal Weather Forecast" />
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-emerald-50/30 pt-24 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      <div className="absolute top-0 -left-40 w-[500px] h-[500px] bg-emerald-200/30 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-96 -right-40 w-[500px] h-[500px] bg-teal-200/30 rounded-full blur-3xl pointer-events-none" />
+      <div className="neo-page min-h-screen pt-32 md:pt-36 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       <div className="max-w-7xl mx-auto relative">
+      <Breadcrumb />
       {/* Header Section */}
       <div className="mb-6">
         <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight">
@@ -191,6 +205,9 @@ const SeasonalForecast = () => {
         </h1>
         <p className="mt-2 text-sm font-semibold text-emerald-700 uppercase tracking-wider">
           <T>Normal Onset and Early Cessation</T>
+        </p>
+        <p className="mt-2 text-sm font-medium text-slate-500">
+          <T>Updated</T> {formatUpdatedTime(updatedAt)}
         </p>
       </div>
 

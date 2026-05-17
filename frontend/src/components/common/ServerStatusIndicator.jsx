@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AlertCircle, CheckCircle, Clock, RefreshCw } from 'lucide-react';
 import serverHealthCheck from '../../utils/serverHealthCheck';
+import { InlineBusySkeleton } from './SkeletonLoading';
 
 /**
  * Server Status Indicator Component
@@ -125,8 +126,14 @@ const ServerStatusIndicator = ({
           disabled={isLoading}
           className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
         >
-          <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-          {isLoading ? 'Checking...' : 'Refresh'}
+          {isLoading ? (
+            <InlineBusySkeleton label="Checking..." tone="slate" />
+          ) : (
+            <>
+              <RefreshCw className="w-4 h-4" />
+              Refresh
+            </>
+          )}
         </button>
       </div>
 

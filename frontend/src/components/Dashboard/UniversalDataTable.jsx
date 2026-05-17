@@ -21,6 +21,7 @@ import {
   FaChevronRight
 } from "react-icons/fa";
 import { safeRender, safeRenderForCard } from "../../utils/renderUtils";
+import { TableSkeleton } from "../common/SkeletonLoading";
 
 const UniversalDataTable = ({
   data = [],
@@ -206,11 +207,8 @@ const UniversalDataTable = ({
   // Render loading state
   if (loading) {
     return (
-      <div className={`bg-white rounded-lg shadow ${className}`}>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
-          <span className="ml-2 text-gray-600">Loading {title.toLowerCase()}...</span>
-        </div>
+      <div className={`neo-table-shell ${className}`}>
+        <TableSkeleton rows={6} columns={Math.max(columns.length || 4, showActions ? 5 : 4)} className="border-0" />
       </div>
     );
   }
@@ -218,7 +216,7 @@ const UniversalDataTable = ({
   // Render error state
   if (error) {
     return (
-      <div className={`bg-white rounded-lg shadow ${className}`}>
+      <div className={`neo-table-shell ${className}`}>
         <div className="p-6">
           <div className="bg-red-50 border border-red-200 rounded-md p-4">
             <div className="flex">
@@ -228,7 +226,7 @@ const UniversalDataTable = ({
                 {onRefresh && (
                   <button
                     onClick={onRefresh}
-                    className="mt-2 text-sm bg-red-100 hover:bg-red-200 text-red-800 px-3 py-1 rounded flex items-center"
+                  className="neo-button mt-2 min-h-0 px-3 py-1 text-sm text-red-800"
                   >
                     <FaRefresh className="mr-1" />
                     Try Again
@@ -243,13 +241,13 @@ const UniversalDataTable = ({
   }
 
   return (
-    <div className={`bg-white rounded-lg shadow ${className}`}>
+    <div className={`neo-table-shell ${className}`}>
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200">
+      <div className="px-6 py-4 border-b neo-divider">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h3 className="text-lg font-medium text-gray-900">{title}</h3>
-            <p className="text-sm text-gray-500">
+            <h3 className="text-lg font-medium text-neo-text">{title}</h3>
+            <p className="text-sm text-neo-muted">
               {processedData.length} record{processedData.length !== 1 ? 's' : ''} found
               {selectedRows.size > 0 && ` (${selectedRows.size} selected)`}
             </p>
@@ -259,7 +257,7 @@ const UniversalDataTable = ({
             {onAdd && (
               <button
                 onClick={onAdd}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
+                className="neo-button-primary"
               >
                 <FaPlus className="mr-2" />
                 Add New
@@ -269,7 +267,7 @@ const UniversalDataTable = ({
             {onRefresh && (
               <button
                 onClick={onRefresh}
-                className="p-2 text-gray-400 hover:text-gray-600 border border-gray-300 rounded-md"
+                className="neo-icon-button h-10 w-10"
               >
                 <FaRefresh />
               </button>
@@ -279,18 +277,18 @@ const UniversalDataTable = ({
       </div>
 
       {/* Filters and Controls */}
-      <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+      <div className="px-6 py-4 bg-white/25 border-b neo-divider">
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Search */}
           {showSearch && (
             <div className="flex items-center space-x-2 flex-1">
-              <FaSearch className="text-gray-400 flex-shrink-0" />
+              <FaSearch className="text-neo-muted flex-shrink-0" />
               <input
                 type="text"
                 placeholder="Search..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="neo-input flex-1"
               />
             </div>
           )}
@@ -298,7 +296,7 @@ const UniversalDataTable = ({
           {/* Column Filters */}
           {showFilter && Object.keys(filterOptions).length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
-              <FaFilter className="text-gray-400 flex-shrink-0" />
+              <FaFilter className="text-neo-muted flex-shrink-0" />
               {Object.entries(filterOptions).slice(0, 3).map(([columnKey, options]) => {
                 const column = tableColumns.find(col => col.key === columnKey);
                 return (
@@ -306,7 +304,7 @@ const UniversalDataTable = ({
                     key={columnKey}
                     value={selectedFilters[columnKey] || ''}
                     onChange={(e) => handleFilterChange(columnKey, e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="neo-control px-3 py-2 text-sm"
                   >
                     <option value="">All {column?.label || columnKey}</option>
                     {options.map(option => (
@@ -319,7 +317,7 @@ const UniversalDataTable = ({
               {(searchTerm || Object.keys(selectedFilters).some(key => selectedFilters[key])) && (
                 <button
                   onClick={clearAllFilters}
-                  className="px-3 py-1 text-sm text-red-600 hover:text-red-800"
+                  className="neo-button min-h-0 px-3 py-1 text-sm text-red-700"
                 >
                   Clear Filters
                 </button>
@@ -330,13 +328,13 @@ const UniversalDataTable = ({
           {/* View Toggle and Export */}
           <div className="flex items-center space-x-2">
             {showViewToggle && (
-              <div className="flex items-center space-x-1 border border-gray-300 rounded-md p-1">
+              <div className="neo-inset flex items-center space-x-1 p-1">
                 <button
                   onClick={() => setViewMode("table")}
                   className={`p-2 rounded ${
                     viewMode === "table" 
-                      ? "bg-green-100 text-green-600" 
-                      : "text-gray-400 hover:text-gray-600"
+                      ? "bg-white/70 text-neo-accent-strong shadow-neo-pressed" 
+                      : "text-neo-muted hover:text-neo-accent-strong"
                   }`}
                 >
                   <FaTable />
@@ -345,8 +343,8 @@ const UniversalDataTable = ({
                   onClick={() => setViewMode("card")}
                   className={`p-2 rounded ${
                     viewMode === "card" 
-                      ? "bg-green-100 text-green-600" 
-                      : "text-gray-400 hover:text-gray-600"
+                      ? "bg-white/70 text-neo-accent-strong shadow-neo-pressed" 
+                      : "text-neo-muted hover:text-neo-accent-strong"
                   }`}
                 >
                   <FaTh />
@@ -358,7 +356,7 @@ const UniversalDataTable = ({
               <div className="flex items-center space-x-1">
                 <button
                   onClick={handleExportCSV}
-                  className="p-2 text-gray-600 hover:text-green-600 border border-gray-300 rounded-md"
+                  className="neo-icon-button h-10 w-10"
                   title="Export CSV"
                 >
                   <FaFileCsv />
@@ -366,7 +364,7 @@ const UniversalDataTable = ({
                 {onExport && (
                   <button
                     onClick={handleExportExcel}
-                    className="p-2 text-gray-600 hover:text-green-600 border border-gray-300 rounded-md"
+                    className="neo-icon-button h-10 w-10"
                     title="Export Excel"
                   >
                     <FaFileExcel />
@@ -381,11 +379,11 @@ const UniversalDataTable = ({
       {/* Data Display */}
       {processedData.length === 0 ? (
         <div className="px-6 py-16 text-center">
-          <div className="text-gray-400 mb-4">
+          <div className="text-neo-muted mb-4">
             <FaTable className="mx-auto h-12 w-12" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Data Available</h3>
-          <p className="text-gray-500 mb-4">
+          <h3 className="text-lg font-medium text-neo-text mb-2">No Data Available</h3>
+          <p className="text-neo-muted mb-4">
             {data.length === 0 
               ? `No ${title.toLowerCase()} data has been uploaded yet.`
               : "No data matches your current filters."
@@ -394,7 +392,7 @@ const UniversalDataTable = ({
           {onAdd && data.length === 0 && (
             <button
               onClick={onAdd}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center mx-auto"
+              className="neo-button-primary mx-auto"
             >
               <FaPlus className="mr-2" />
               Add First Record
@@ -406,8 +404,8 @@ const UniversalDataTable = ({
           {/* Table View */}
           {viewMode === "table" ? (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-neo-border">
+                <thead className="bg-white/35">
                   <tr>
                     {selectedRows.size > 0 && (
                       <th className="px-6 py-3 text-left">
@@ -415,21 +413,21 @@ const UniversalDataTable = ({
                           type="checkbox"
                           checked={selectedRows.size === paginatedData.length}
                           onChange={selectAllRows}
-                          className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                          className="rounded border-neo-border text-neo-accent focus:ring-neo-focus"
                         />
                       </th>
                     )}
                     {tableColumns.map((column) => (
                       <th
                         key={column.key}
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        className="px-6 py-3 text-left text-xs font-medium text-neo-muted uppercase tracking-wider"
                       >
                         <div className="flex items-center space-x-1">
                           <span>{column.label}</span>
                           {column.sortable && (
                             <button
                               onClick={() => handleSort(column.key)}
-                              className="text-gray-400 hover:text-gray-600"
+                              className="text-neo-muted hover:text-neo-accent-strong"
                             >
                               {sortConfig.key === column.key ? (
                                 sortConfig.direction === 'asc' ? <FaSortUp /> : <FaSortDown />
@@ -442,20 +440,20 @@ const UniversalDataTable = ({
                       </th>
                     ))}
                     {showActions && (
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-neo-muted uppercase tracking-wider">
                         Actions
                       </th>
                     )}
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white/20 divide-y divide-neo-border">
                   {paginatedData.map((row, index) => {
                     const rowId = row.id || row.uniqueId || index;
                     return (
                       <tr 
                         key={rowId} 
-                        className={`hover:bg-gray-50 ${
-                          selectedRows.has(rowId) ? 'bg-green-50' : ''
+                        className={`hover:bg-white/45 ${
+                          selectedRows.has(rowId) ? 'bg-emerald-50/70' : ''
                         }`}
                       >
                         {selectedRows.size > 0 && (
@@ -464,14 +462,14 @@ const UniversalDataTable = ({
                               type="checkbox"
                               checked={selectedRows.has(rowId)}
                               onChange={() => toggleRowSelection(rowId)}
-                              className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                              className="rounded border-neo-border text-neo-accent focus:ring-neo-focus"
                             />
                           </td>
                         )}
                         {tableColumns.map((column) => (
                           <td
                             key={column.key}
-                            className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                            className="px-6 py-4 whitespace-nowrap text-sm text-neo-text"
                           >
                             {column.render 
                               ? column.render(row[column.key], row) 
@@ -526,8 +524,8 @@ const UniversalDataTable = ({
                 return (
                   <div
                     key={rowId}
-                    className={`border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow ${
-                      selectedRows.has(rowId) ? 'border-green-300 bg-green-50' : ''
+                    className={`neo-surface-soft p-4 transition-shadow ${
+                      selectedRows.has(rowId) ? 'border-emerald-300 bg-emerald-50/70' : ''
                     }`}
                   >
                     <div className="flex justify-between items-start mb-3">
@@ -538,15 +536,15 @@ const UniversalDataTable = ({
                               type="checkbox"
                               checked={selectedRows.has(rowId)}
                               onChange={() => toggleRowSelection(rowId)}
-                              className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                              className="rounded border-neo-border text-neo-accent focus:ring-neo-focus"
                             />
                           )}
-                          <h4 className="font-semibold text-gray-900 flex-1">
+                          <h4 className="font-semibold text-neo-text flex-1">
                             {row[tableColumns[0]?.key] || 'Item'}
                           </h4>
                         </div>
                         {tableColumns[1] && (
-                          <p className="text-sm text-gray-600 mt-1">
+                          <p className="text-sm text-neo-muted mt-1">
                             {safeRenderForCard(row[tableColumns[1].key])}
                           </p>
                         )}
@@ -585,7 +583,7 @@ const UniversalDataTable = ({
                       )}
                     </div>
 
-                    <div className="text-sm text-gray-600 space-y-1">
+                    <div className="text-sm text-neo-muted space-y-1">
                       {tableColumns.slice(2, 5).map((column) => (
                         <div key={column.key} className="flex justify-between">
                           <span className="font-medium">{column.label}:</span>
@@ -606,9 +604,9 @@ const UniversalDataTable = ({
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+            <div className="px-6 py-4 bg-white/25 border-t neo-divider">
               <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-700">
+                <div className="text-sm text-neo-muted">
                   Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
                   {Math.min(currentPage * itemsPerPage, processedData.length)} of{" "}
                   {processedData.length} results
@@ -618,7 +616,7 @@ const UniversalDataTable = ({
                   <button
                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                     disabled={currentPage === 1}
-                    className="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 flex items-center"
+                    className="neo-button min-h-0 px-3 py-1 text-sm"
                   >
                     <FaChevronLeft className="mr-1" />
                     Previous
@@ -636,8 +634,8 @@ const UniversalDataTable = ({
                         onClick={() => setCurrentPage(page)}
                         className={`px-3 py-1 border rounded-md ${
                           currentPage === page
-                            ? "bg-green-500 text-white border-green-500"
-                            : "border-gray-300 hover:bg-gray-50"
+                            ? "bg-neo-accent text-white border-neo-accent"
+                            : "border-neo-border hover:bg-white/55"
                         }`}
                       >
                         {page}
@@ -648,7 +646,7 @@ const UniversalDataTable = ({
                   <button
                     onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                     disabled={currentPage === totalPages}
-                    className="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 flex items-center"
+                    className="neo-button min-h-0 px-3 py-1 text-sm"
                   >
                     Next
                     <FaChevronRight className="ml-1" />

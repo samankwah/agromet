@@ -1,8 +1,6 @@
 // src/pages/DashboardPage.jsx
 import React from "react";
 import Dashboard from "../components/Dashboard/Dashboard";
-import Navbar from "../components/Header"; // Your existing navbar
-// import Footer from "../components/Footer"; // Your existing footer
 import PageTitle from "../components/PageTitle";
 
 const DashboardPage = () => {
@@ -13,10 +11,8 @@ const DashboardPage = () => {
     <>
       <PageTitle title="Admin Dashboard" />
       <div>
-      {/* <Navbar /> Your existing navigation */}
-      <Dashboard username={username} />
-      {/* <Footer /> Your existing footer */}
-    </div>
+        <Dashboard username={username} />
+      </div>
     </>
   );
 };

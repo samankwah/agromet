@@ -9,6 +9,7 @@ import {
 
 import Modal from "./Modal";
 import PageTitle from "../components/PageTitle";
+import Breadcrumb from "../components/common/Breadcrumb";
 import T from "../components/common/T";
 import {
   FaTractor,
@@ -322,10 +323,9 @@ const AdvisoryPage = () => {
   return (
     <>
       <PageTitle title="Crop Advisory Services" />
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-emerald-50/30 pt-16 relative overflow-hidden">
-      <div className="absolute top-0 -left-40 w-[500px] h-[500px] bg-emerald-200/30 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-96 -right-40 w-[500px] h-[500px] bg-teal-200/30 rounded-full blur-3xl pointer-events-none" />
+      <div className="neo-page min-h-screen pt-32 md:pt-36 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        <Breadcrumb />
         <div className="text-center py-12">
           <span className="inline-block px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold uppercase tracking-wider mb-4">
             <T>Crop Advisory</T>

@@ -15,6 +15,7 @@ import {
 import { GHANA_REGIONS, POULTRY_TYPES, generateUniqueId, getRegionByCode, getDistrictByCode, getPoultryTypeByCode, getBreedByCode } from '../../data/ghanaCodes';
 import userService from '../../services/userService';
 import TemplateGenerationService from '../../services/templateGenerationService';
+import { InlineBusySkeleton } from '../common/SkeletonLoading';
 
 const PoultryAdvisoryUpload = ({ isOpen, onClose, onSave }) => {
   const [formData, setFormData] = useState({
@@ -262,7 +263,7 @@ const PoultryAdvisoryUpload = ({ isOpen, onClose, onSave }) => {
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-start sm:items-center justify-center p-2 sm:p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-7xl max-h-screen sm:max-h-[95vh] overflow-y-auto mt-2 sm:mt-0">
+      <div className="neo-table-shell-xl w-full max-w-7xl max-h-screen sm:max-h-[95vh] overflow-y-auto mt-2 sm:mt-0">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 sm:p-6 border-b border-gray-200 sticky top-0 bg-white z-10 space-y-3 sm:space-y-0">
           <div>
@@ -456,8 +457,7 @@ const PoultryAdvisoryUpload = ({ isOpen, onClose, onSave }) => {
 
               {loading && (
                 <div className="text-center">
-                  <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-blue-500 mx-auto"></div>
-                  <p className="text-xs sm:text-sm text-gray-600 mt-2">Processing file...</p>
+                  <InlineBusySkeleton label="Processing file..." tone="blue" className="text-xs text-gray-600 sm:text-sm" />
                 </div>
               )}
 
@@ -616,7 +616,7 @@ const PoultryAdvisoryUpload = ({ isOpen, onClose, onSave }) => {
 
               {/* Upload Summary for Poultry */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <div className="bg-white neo-surface-soft p-4">
                   <h3 className="font-semibold text-gray-900 mb-3">Upload Details</h3>
                   <div className="space-y-2 text-sm">
                     <div>
@@ -654,7 +654,7 @@ const PoultryAdvisoryUpload = ({ isOpen, onClose, onSave }) => {
                   </div>
                 </div>
 
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <div className="bg-white neo-surface-soft p-4">
                   <h3 className="font-semibold text-gray-900 mb-3">Data Summary</h3>
                   <div className="space-y-2 text-sm">
                     <div>
@@ -738,10 +738,7 @@ const PoultryAdvisoryUpload = ({ isOpen, onClose, onSave }) => {
                     disabled={loading}
                   >
                     {loading ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Uploading...
-                      </>
+                      <InlineBusySkeleton label="Uploading..." />
                     ) : (
                       <>
                         <FaCheck className="mr-2" />

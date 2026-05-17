@@ -8,7 +8,6 @@ import {
   FaFileCsv,
   FaFileAlt,
   FaFileExcel,
-  FaSpinner,
   FaCheckCircle,
   FaExclamationTriangle,
   FaDownload,
@@ -21,6 +20,7 @@ import userService from "../../services/userService";
 import { validateFile, FileValidationError, formatFileSize } from "../../utils/fileValidation";
 import { logger } from "../../utils/logger";
 import toast from "react-hot-toast";
+import { InlineBusySkeleton, SkeletonBlock } from "../common/SkeletonLoading";
 
 const EnhancedFileUploader = ({ 
   dataType, 
@@ -296,7 +296,7 @@ const EnhancedFileUploader = ({
   };
 
   return (
-    <div className={`bg-white rounded-lg shadow-lg ${className}`}>
+    <div className={`neo-table-shell-lg ${className}`}>
       {/* Header */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex justify-between items-center">
@@ -402,7 +402,7 @@ const EnhancedFileUploader = ({
                     <div className="flex-shrink-0 ml-4">
                       {fileItem.status === 'uploading' && (
                         <div className="flex items-center">
-                          <FaSpinner className="animate-spin text-blue-500 mr-2" />
+                          <SkeletonBlock className="mr-2 h-4 w-4" rounded="rounded-full" tone="blue" />
                           <span className="text-xs text-blue-600">
                             {uploadProgress[fileItem.id] || 0}%
                           </span>
@@ -457,10 +457,7 @@ const EnhancedFileUploader = ({
                 className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
               >
                 {uploading ? (
-                  <>
-                    <FaSpinner className="animate-spin mr-2" />
-                    Uploading...
-                  </>
+                  <InlineBusySkeleton label="Uploading..." />
                 ) : (
                   <>
                     <FaUpload className="mr-2" />

@@ -16,84 +16,21 @@ import {
 import LanguageSelector from "./common/LanguageSelector";
 import T from "./common/T";
 import { Link, useLocation } from "react-router-dom";
-import PropTypes from "prop-types";
 import logo2 from "../assets/images/agromet-high-resolution-logo-transparent.png";
 import { useChatbotIntegration } from "../hooks/useChatbotIntegration";
 
-// Dropdown Component
-const Dropdown = ({ links, title }) => {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null);
+const navPillBase =
+  "inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-sm font-semibold text-neo-text transition-all duration-200 hover:text-neo-accent-strong focus:outline-none focus-visible:ring-4 focus-visible:ring-neo-focus/25";
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [dropdownRef]);
+const navPillState = (active) =>
+  active
+    ? "bg-neo-bg shadow-neo-pressed text-neo-accent-strong"
+    : "hover:bg-white/45 hover:shadow-neo-soft";
 
-  return (
-    <div
-      className="relative"
-      onMouseEnter={() => setIsDropdownOpen(true)}
-      onMouseLeave={() => setIsDropdownOpen(false)}
-      ref={dropdownRef}
-    >
-      <button className="block px-3 text-black font-semibold border-b-2 border-transparent hover:border-black text-sm whitespace-nowrap flex items-center">
-        {title} <FaChevronDown className="inline ml-1 text-black" />
-      </button>
-
-      {isDropdownOpen && (
-        <div
-          className="absolute left-0 z-50 w-52 bg-white border border-gray-200 rounded-md shadow-lg"
-          style={{ top: "100%" }}
-        >
-          <ul className="py-1">
-            {links.map((link) => (
-              <li key={link.to || link.href}>
-                {link.href ? (
-                  <a
-                    href={link.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block p-2 text-black hover:bg-gray-200 transition duration-200 text-sm"
-                    onClick={() => setIsDropdownOpen(false)}
-                  >
-                    {link.label}
-                  </a>
-                ) : (
-                  <Link
-                    to={link.to}
-                    className="block p-2 text-black hover:bg-gray-200 transition duration-200 text-sm"
-                    onClick={() => setIsDropdownOpen(false)}
-                  >
-                    {link.label}
-                  </Link>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
-  );
-};
-
-Dropdown.propTypes = {
-  links: PropTypes.arrayOf(
-    PropTypes.shape({
-      to: PropTypes.string,
-      href: PropTypes.string,
-      label: PropTypes.node.isRequired,
-    })
-  ).isRequired,
-  title: PropTypes.string.isRequired,
-};
+const mobileNavState = (active) =>
+  active
+    ? "bg-neo-bg shadow-neo-pressed text-neo-accent-strong"
+    : "text-neo-text hover:bg-white/50 hover:shadow-neo-soft";
 
 const Header = () => {
   const location = useLocation();
@@ -187,18 +124,25 @@ const Header = () => {
     }
   }, [isMobileMenuOpen]);
 
+  const isForecastActive = forecastLinks.some((link) => location.pathname === link.to);
+  const isAgricultureActive = agricultureLinks.some((link) => location.pathname === link.to);
+
   return (
-    <div className="fixed inset-x-0 top-2 z-[1000] px-2 md:px-3">
+    <div className="fixed inset-x-0 top-3 z-[1000] px-2 md:px-4">
       <header
-        className="mx-auto w-full max-w-[1600px] rounded-full border border-white/30 bg-white/20 p-1 shadow-md backdrop-blur-[600px] md:p-2"
+        className="neo-surface mx-auto w-full max-w-[1600px] rounded-full px-2 py-1.5 md:px-3 md:py-2"
       >
-        <div className="container mx-auto flex items-center justify-between px-2 md:px-4">
+        <div className="mx-auto flex items-center justify-between gap-2 px-1 md:px-2">
         <div className="flex items-center space-x-2 mb-0 md:mb-0">
-          <Link to="/">
+          <Link
+            to="/"
+            className="inline-flex items-center rounded-full bg-neo-surface px-3 py-1.5 shadow-neo-soft transition hover:shadow-neo"
+            aria-label="AgroMet home"
+          >
             <img
               src={logo2}
               alt="agropulse logo"
-              className="h-10 md:h-12 rounded-lg p-1"
+              className="h-11 w-auto object-contain md:h-14"
             />
           </Link>
         </div>
@@ -207,82 +151,42 @@ const Header = () => {
           <button
             ref={menuButtonRef}
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="p-2 menu-toggle"
+            className="neo-icon-button menu-toggle"
             aria-label="Toggle mobile menu"
             aria-expanded={isMobileMenuOpen}
           >
-            <FaBars className="h-6 w-6 text-black" />
+            <FaBars className="h-5 w-5" />
           </button>
         </div>
         {/* Desktop Navbar Links */}
-        <div className="hidden text-black lg:flex align-middle items-center justify-center flex-1 space-x-4 xl:space-x-6">
+        <div className="hidden lg:flex align-middle items-center justify-center flex-1 gap-2 xl:gap-3">
           <Link
             to="/"
-            className={`block px-3 font-semibold text-sm border-b-2 ${
-              location.pathname === "/" ? "border-black" : "border-transparent"
-            } hover:border-black flex flex-row items-center py-2`}
+            className={`${navPillBase} ${navPillState(location.pathname === "/")}`}
           >
-            <FaHome className="mb-1 text-xl mr-1 text-black" />
+            <FaHome className="text-base" />
             <span><T>Home</T></span>
           </Link>
 
-          {/* <div className="flex flex-row items-center">
-            <FaCloudSun className="mb-1 text-xl mr-1 text-black" />
-            <Dropdown
-              links={forecastLinks}
-              title="Weather"
-              className={`block px-3 font-semibold border-b-2 text-sm ${
-                forecastLinks.some((link) => location.pathname === link.to)
-                  ? "border-black"
-                  : "border-transparent"
-              } hover:border-black flex flex-row items-center py-2`}
-            />
-          </div>
-
-          <div className="flex flex-row items-center">
-            <FaSeedling className="mb-1 text-xl mr-1 text-black" />
-            <Dropdown
-              links={agricultureLinks}
-              title="Agriculture"
-              className={`block px-3 font-semibold border-b-2 text-sm ${
-                agricultureLinks.some((link) => location.pathname === link.to)
-                  ? "border-black"
-                  : "border-transparent"
-              } hover:border-black flex flex-row items-center py-2`}
-            />
-          </div> */}
-
           <Link
             to="/agro-advisory"
-            className={`block px-3 font-semibold border-b-2 text-sm whitespace-nowrap ${
-              location.pathname === "/agro-advisory"
-                ? "border-black"
-                : "border-transparent"
-            } hover:border-black flex flex-row items-center py-2`}
+            className={`${navPillBase} ${navPillState(location.pathname === "/agro-advisory" || location.pathname === "/agromet-advisory")} whitespace-nowrap`}
           >
-            <FaComments className="mb-1 text-xl mr-1 text-black" />
+            <FaComments className="text-base" />
             <span><T>Agromet Advisory</T></span>
           </Link>
           <Link
             to="/crop-diagnose"
-            className={`block px-3 font-semibold border-b-2 text-sm whitespace-nowrap ${
-              location.pathname === "/crop-diagnose"
-                ? "border-black"
-                : "border-transparent"
-            } hover:border-black flex flex-row items-center py-2`}
+            className={`${navPillBase} ${navPillState(location.pathname === "/crop-diagnose")} whitespace-nowrap`}
           >
-            <FaCamera className="mb-1 text-xl mr-1 text-black" />
+            <FaCamera className="text-base" />
             <span><T>Diagnose</T></span>
           </Link>
           <Link
             to="/market-page"
-            className={`block px-3 font-semibold border-b-2 text-sm whitespace-nowrap ${
-              location.pathname === "/market-page"
-                ? "border-black"
-                : "border-transparent"
-            } hover:border-black flex flex-row items-center py-2`}
+            className={`${navPillBase} ${navPillState(location.pathname === "/market-page")} whitespace-nowrap`}
           >
-            <FaShoppingCart className="mb-1 text-xl mr-1 text-black" />
+            <FaShoppingCart className="text-base" />
             <span><T>Market</T></span>
           </Link>
         </div>
@@ -291,31 +195,28 @@ const Header = () => {
           <LanguageSelector variant="header" />
         </div>
 
-        <div className="hidden lg:flex flex-col border-2 border-gray-100 h-8 mx-2" />
+        <div className="hidden lg:flex h-8 w-px bg-neo-border mx-2" />
 
         <Link
           to="/admin-login"
-          className={`hidden lg:flex px-3 font-semibold text-sm border-b-2 ${
-            location.pathname === "/admin-login"
-              ? "border-black"
-              : "border-transparent"
-          } hover:border-black flex-row items-center py-2 text-black`}
+          className={`neo-icon-button hidden lg:flex ${location.pathname === "/admin-login" ? "is-active" : ""}`}
+          aria-label="Admin login"
         >
-          <FaUser className="mb-1 text-xl text-black" />
+          <FaUser className="text-base" />
         </Link>
         </div>
 
         {/* Mobile Menu Overlay */}
         {isMobileMenuOpen && (
           <div
-            className="fixed inset-0 bg-black/0 z-50 lg:hidden transition-opacity duration-300"
+            className="fixed inset-0 z-50 bg-neo-text/15 lg:hidden transition-opacity duration-300"
             aria-modal="true"
             role="dialog"
           >
             <div
               ref={mobileMenuRef}
               tabIndex={-1}
-              className={`fixed top-0 left-0 h-screen w-4/5 max-w-[320px] overflow-y-auto bg-white shadow-lg z-50 transform transition-transform duration-300 ease-in-out ${
+              className={`neo-surface fixed top-3 left-3 h-[calc(100vh-1.5rem)] w-[min(84vw,340px)] overflow-y-auto rounded-neo-lg z-50 transform transition-transform duration-300 ease-in-out ${
                 isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
               }`}
             >
@@ -325,12 +226,12 @@ const Header = () => {
                   <img
                     src={logo2}
                     alt="ddt logo"
-                    className="h-8 rounded-lg p-1"
+                    className="h-10 w-auto rounded-lg p-1"
                   />
                 </div>
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-2 text-gray-500 hover:text-gray-700"
+                  className="neo-icon-button h-10 w-10"
                   aria-label="Close menu"
                 >
                   <FaTimes className="h-5 w-5" />
@@ -341,16 +242,14 @@ const Header = () => {
               <div className="h-[calc(100%-68px)] overflow-y-auto">
                 <nav className="flex flex-col">
                   {/* Language Selector */}
-                  <div className="px-4 py-3 border-b border-gray-100">
+                  <div className="px-4 py-3 border-b neo-divider">
                     <LanguageSelector variant="inline" />
                   </div>
 
                   {/* Main Navigation Items */}
                   <Link
                     to="/"
-                    className={`flex items-center px-6 py-3 text-gray-950 ${
-                      location.pathname === "/" ? "bg-blue-50 text-blue-700" : ""
-                    } hover:bg-gray-100`}
+                    className={`mx-3 my-1 flex items-center rounded-full px-4 py-3 ${mobileNavState(location.pathname === "/")}`}
                   >
                     <FaHome className="mr-4 text-lg" />
                     <span className="font-medium"><T>Home</T></span>
@@ -358,11 +257,7 @@ const Header = () => {
 
                   <Link
                     to="/market-page"
-                    className={`flex items-center px-6 py-3 text-gray-950 ${
-                      location.pathname === "/market-page"
-                        ? "bg-blue-50 text-blue-700"
-                        : ""
-                    } hover:bg-gray-100`}
+                    className={`mx-3 my-1 flex items-center rounded-full px-4 py-3 ${mobileNavState(location.pathname === "/market-page")}`}
                   >
                     <FaShoppingCart className="mr-4 text-lg" />
                     <span className="font-medium"><T>Market</T></span>
@@ -370,11 +265,7 @@ const Header = () => {
 
                 <Link
                   to="/agro-advisory"
-                  className={`flex items-center px-6 py-3 text-gray-950 ${
-                    location.pathname === "/agro-advisory"
-                      ? "bg-blue-50 text-blue-700"
-                      : ""
-                  } hover:bg-gray-100`}
+                  className={`mx-3 my-1 flex items-center rounded-full px-4 py-3 ${mobileNavState(location.pathname === "/agro-advisory" || location.pathname === "/agromet-advisory")}`}
                 >
                   <FaComments className="mr-4 text-lg" />
                   <span className="font-medium"><T>Agromet Advisory</T></span>
@@ -382,11 +273,7 @@ const Header = () => {
 
                 <Link
                   to="/crop-diagnose"
-                  className={`flex items-center px-6 py-3 text-gray-950 ${
-                    location.pathname === "/crop-diagnose"
-                      ? "bg-blue-50 text-blue-700"
-                      : ""
-                  } hover:bg-gray-100`}
+                  className={`mx-3 my-1 flex items-center rounded-full px-4 py-3 ${mobileNavState(location.pathname === "/crop-diagnose")}`}
                 >
                   <FaCamera className="mr-4 text-lg" />
                   <span className="font-medium"><T>Crop Diagnose</T></span>
@@ -395,9 +282,7 @@ const Header = () => {
                 {/* Expandable Weather Section */}
                 <div>
                   <button
-                    className={`flex items-center justify-between w-full px-6 py-3 text-gray-950 hover:bg-gray-100 ${
-                      expandedSection === "weather" ? "bg-blue-50" : ""
-                    }`}
+                    className={`mx-3 my-1 flex w-[calc(100%-1.5rem)] items-center justify-between rounded-full px-4 py-3 ${mobileNavState(expandedSection === "weather" || isForecastActive)}`}
                     onClick={() => toggleSection("weather")}
                     aria-expanded={expandedSection === "weather"}
                   >
@@ -406,25 +291,25 @@ const Header = () => {
                       <span className="font-medium"><T>Weather</T></span>
                     </div>
                     {expandedSection === "weather" ? (
-                      <FaChevronUp className="text-gray-500" />
+                      <FaChevronUp className="text-neo-muted" />
                     ) : (
-                      <FaChevronDown className="text-gray-500" />
+                      <FaChevronDown className="text-neo-muted" />
                     )}
                   </button>
 
                   {expandedSection === "weather" && (
-                    <div className="bg-gray-50">
+                    <div className="mx-4 mb-2 rounded-neo bg-white/40 p-2">
                       {forecastLinks.map((link, index) => (
                         <Link
                           key={index}
                           to={link.to}
-                          className={`flex items-center pl-14 pr-6 py-3 text-gray-700 hover:bg-gray-100 ${
+                          className={`flex items-center rounded-full px-4 py-2 text-sm ${
                             location.pathname === link.to
-                              ? "text-blue-600 bg-blue-50"
-                              : ""
+                              ? "bg-neo-bg text-neo-accent-strong shadow-neo-pressed"
+                              : "text-neo-muted hover:bg-white/60"
                           }`}
                         >
-                          <FaChevronRight className="mr-2 text-xs text-gray-400" />
+                          <FaChevronRight className="mr-2 text-xs text-neo-muted" />
                           <span>{link.label}</span>
                         </Link>
                       ))}
@@ -435,9 +320,7 @@ const Header = () => {
                 {/* Expandable Agriculture Section */}
                 <div>
                   <button
-                    className={`flex items-center justify-between w-full px-6 py-3 text-gray-950 hover:bg-gray-100 ${
-                      expandedSection === "agriculture" ? "bg-blue-50" : ""
-                    }`}
+                    className={`mx-3 my-1 flex w-[calc(100%-1.5rem)] items-center justify-between rounded-full px-4 py-3 ${mobileNavState(expandedSection === "agriculture" || isAgricultureActive)}`}
                     onClick={() => toggleSection("agriculture")}
                     aria-expanded={expandedSection === "agriculture"}
                   >
@@ -446,25 +329,25 @@ const Header = () => {
                       <span className="font-medium"><T>Agriculture</T></span>
                     </div>
                     {expandedSection === "agriculture" ? (
-                      <FaChevronUp className="text-gray-500" />
+                      <FaChevronUp className="text-neo-muted" />
                     ) : (
-                      <FaChevronDown className="text-gray-500" />
+                      <FaChevronDown className="text-neo-muted" />
                     )}
                   </button>
 
                   {expandedSection === "agriculture" && (
-                    <div className="bg-gray-50">
+                    <div className="mx-4 mb-2 rounded-neo bg-white/40 p-2">
                       {agricultureLinks.map((link, index) => (
                         <Link
                           key={index}
                           to={link.to}
-                          className={`flex items-center pl-14 pr-6 py-3 text-gray-700 hover:bg-gray-100 ${
+                          className={`flex items-center rounded-full px-4 py-2 text-sm ${
                             location.pathname === link.to
-                              ? "text-blue-600 bg-blue-50"
-                              : ""
+                              ? "bg-neo-bg text-neo-accent-strong shadow-neo-pressed"
+                              : "text-neo-muted hover:bg-white/60"
                           }`}
                         >
-                          <FaChevronRight className="mr-2 text-xs text-gray-400" />
+                          <FaChevronRight className="mr-2 text-xs text-neo-muted" />
                           <span>{link.label}</span>
                         </Link>
                       ))}
@@ -475,11 +358,7 @@ const Header = () => {
                 {/* Admin Login */}
                 <Link
                   to="/admin-login"
-                  className={`flex items-center px-6 py-3 text-gray-950 ${
-                    location.pathname === "/admin-login"
-                      ? "bg-blue-50 text-blue-700"
-                      : ""
-                  } hover:bg-gray-100 mt-2`}
+                  className={`mx-3 my-1 mt-3 flex items-center rounded-full px-4 py-3 ${mobileNavState(location.pathname === "/admin-login")}`}
                 >
                   <FaUser className="mr-4 text-lg" />
                   <span className="font-medium"><T>Admin</T></span>

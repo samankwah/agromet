@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
-import { useLanguage } from './LanguageContext';
 
 const ChatbotContext = createContext();
 
@@ -12,9 +11,11 @@ export const useChatbot = () => {
   return context;
 };
 
-export const ChatbotProvider = ({ children }) => {
-  const { currentLanguage, setLanguage } = useLanguage();
-
+export const ChatbotProvider = ({
+  children,
+  currentLanguage = 'en',
+  setLanguage = () => {},
+}) => {
   const [userContext, setUserContext] = useState({
     region: null,
     weather: null,
@@ -106,7 +107,8 @@ export const ChatbotProvider = ({ children }) => {
     if (newPreferences.language) {
       setLanguage(newPreferences.language);
     }
-    const { language: _lang, ...rest } = newPreferences;
+    const rest = { ...newPreferences };
+    delete rest.language;
     if (Object.keys(rest).length > 0) {
       setChatPreferences(prev => ({ ...prev, ...rest }));
       localStorage.setItem('chatPreferences', JSON.stringify({ ...chatPreferences, ...rest }));
@@ -213,4 +215,6 @@ export const ChatbotProvider = ({ children }) => {
 
 ChatbotProvider.propTypes = {
   children: PropTypes.node.isRequired,
+  currentLanguage: PropTypes.string,
+  setLanguage: PropTypes.func,
 };

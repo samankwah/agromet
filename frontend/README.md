@@ -43,7 +43,7 @@ A modern web application for agricultural meteorological advisory services in Gh
 ### AI & Language
 - Crop disease diagnostic tool (image-based)
 - AI chatbot with farm profile context
-- Multi-language support (GhanaNLP translation + TTS)
+- Multi-language support with browser translation fallback and browser TTS
 - Voice input capabilities
 
 ### Admin Dashboard
@@ -83,7 +83,6 @@ cp .env.example .env
 | `VITE_FIREBASE_PROJECT_ID` | Firebase project ID |
 | `VITE_GOOGLE_MAPS_API_KEY` | Google Maps JavaScript API key |
 | `VITE_AMBEE_API_KEY` | Ambee weather data API key |
-| `VITE_GHANANLP_API_KEY` | GhanaNLP translation API key |
 
 ### Development
 

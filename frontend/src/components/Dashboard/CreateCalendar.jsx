@@ -6,6 +6,7 @@ import { logger } from "../../utils/logger";
 import { validateFile, FileValidationError } from "../../utils/fileValidation";
 import userService from "../../services/userService";
 import { toast } from "react-hot-toast";
+import { InlineBusySkeleton } from "../common/SkeletonLoading";
 
 const CreateCropCalendar = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
@@ -519,10 +520,7 @@ const CreateCropCalendar = ({ isOpen, onClose }) => {
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Creating...
-                    </>
+                    <InlineBusySkeleton label="Creating..." />
                   ) : (
                     <>
                       <FaFileExcel className="mr-2" />

@@ -1,8 +1,9 @@
 import { useState, useMemo, useEffect } from "react";
 import PageTitle from '../components/PageTitle';
+import Breadcrumb from '../components/common/Breadcrumb';
 import T from "../components/common/T";
 import { districtOfGhana } from "../district";
-import { FaSpinner } from "react-icons/fa";
+import { TableSkeleton } from "../components/common/SkeletonLoading";
 import axios from 'axios';
 
 // Weekly Advisory Components
@@ -156,11 +157,9 @@ const AgroMetAdvisory = () => {
   return (
     <>
       <PageTitle title="Agro-Meteorological Advisory" />
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-emerald-50/30 pt-20 lg:pt-24 relative overflow-hidden">
-        <div className="absolute top-0 -left-40 w-[500px] h-[500px] bg-emerald-200/30 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute top-96 -right-40 w-[500px] h-[500px] bg-teal-200/30 rounded-full blur-3xl pointer-events-none" />
+      <div className="neo-page min-h-screen pt-32 md:pt-36 relative overflow-hidden">
         <div className="px-4 md:px-8 py-4 md:py-6 relative">
-
+          <Breadcrumb />
           {/* Page Title */}
           <div className="mb-6">
             <span className="inline-block px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold uppercase tracking-wider mb-3">
@@ -270,9 +269,8 @@ const AgroMetAdvisory = () => {
 
           {/* Loading State */}
           {loadingWeekly && (
-            <div className="flex items-center justify-center py-12">
-              <FaSpinner className="animate-spin text-emerald-600 text-2xl mr-3" />
-              <span className="text-slate-600"><T>Loading advisory data...</T></span>
+            <div className="py-6">
+              <TableSkeleton rows={4} columns={4} />
             </div>
           )}
 

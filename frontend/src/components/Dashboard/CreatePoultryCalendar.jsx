@@ -6,6 +6,7 @@ import { POULTRY_TYPES } from "../../data/ghanaCodes";
 import { logger } from "../../utils/logger";
 import { validateFile, FileValidationError } from "../../utils/fileValidation";
 import API_CONFIG from "../../config/apiConfig";
+import { InlineBusySkeleton } from "../common/SkeletonLoading";
 
 const CreatePoultryCalendar = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
@@ -436,10 +437,7 @@ const CreatePoultryCalendar = ({ isOpen, onClose }) => {
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Creating...
-                    </>
+                    <InlineBusySkeleton label="Creating..." />
                   ) : (
                     <>
                       <FaFileExcel className="mr-2" />

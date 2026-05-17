@@ -14,6 +14,7 @@ import {
 import PropTypes from "prop-types";
 import userService from "../../services/userService";
 import { safeRenderForTable, safeRenderForCard } from "../../utils/renderUtils";
+import { TableSkeleton } from "../common/SkeletonLoading";
 
 const ContentManager = ({ dataType, title }) => {
   const [data, setData] = useState([]);
@@ -312,14 +313,14 @@ const ContentManager = ({ dataType, title }) => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+      <div className="py-6">
+        <TableSkeleton rows={6} columns={5} />
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow">
+    <div className="neo-table-shell">
       {/* Header */}
       <div className="px-6 py-4 border-b border-gray-200">
         <div className="flex items-center justify-between">

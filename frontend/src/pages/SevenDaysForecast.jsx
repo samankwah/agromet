@@ -1,261 +1,338 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
-  Sun,
-  Cloud,
-  CloudRain,
-  CloudLightning,
-  CloudDrizzle,
   Wind,
   Droplet,
   Thermometer,
   MapPin,
-  Loader,
+  CloudRain,
+  Search,
 } from "lucide-react";
 import PageTitle from "../components/PageTitle";
+import Breadcrumb from "../components/common/Breadcrumb";
 import T from "../components/common/T";
+import AnimatedWeatherIcon from "../components/AnimatedWeatherIcon";
+import { ForecastSkeleton } from "../components/common/SkeletonLoading";
+import {
+  geocodeLocation,
+  getWeatherBundleByCoordinates,
+} from "../services/openMeteoService";
+
+const FORECAST_LOCATION_STORAGE_KEY = "agrometForecastLocation";
+const AUTO_LOCATION_TIMEZONE = "auto";
+const REVERSE_GEOCODING_ENDPOINT =
+  "https://api.bigdatacloud.net/data/reverse-geocode-client";
+
+const formatUpdatedTime = (timestamp) => {
+  const date = timestamp ? new Date(timestamp) : new Date();
+
+  return date.toLocaleString("en-GB", {
+    timeZone: "Africa/Accra",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const toForecastLocation = (location) => {
+  const lat = Number(location.latitude ?? location.lat);
+  const lng = Number(location.longitude ?? location.lng);
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  const region = location.admin1 || location.region || "";
+  const looksLikeCoordinates = /^-?\d+(\.\d+)?,\s*-?\d+(\.\d+)?$/.test(region);
+
+  return {
+    city: location.name || location.city || "Current location",
+    region: looksLikeCoordinates ? "" : region,
+    country: location.country || "",
+    lat,
+    lng,
+    timezone: location.timezone || AUTO_LOCATION_TIMEZONE,
+  };
+};
+
+const getStoredForecastLocation = () => {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const storedLocation = JSON.parse(
+      window.localStorage.getItem(FORECAST_LOCATION_STORAGE_KEY)
+    );
+    return toForecastLocation(storedLocation || {});
+  } catch {
+    return null;
+  }
+};
+
+const saveForecastLocation = (location) => {
+  if (typeof window === "undefined" || !location) return;
+  window.localStorage.setItem(
+    FORECAST_LOCATION_STORAGE_KEY,
+    JSON.stringify(location)
+  );
+};
+
+const getBrowserPosition = () =>
+  new Promise((resolve, reject) => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      reject(new Error("Browser location is not available."));
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(resolve, reject, {
+      enableHighAccuracy: true,
+      maximumAge: 15 * 60 * 1000,
+      timeout: 10000,
+    });
+  });
+
+const reverseGeocodeLocation = async (lat, lng) => {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), 7000);
+  const url = new URL(REVERSE_GEOCODING_ENDPOINT);
+
+  url.searchParams.set("latitude", String(lat));
+  url.searchParams.set("longitude", String(lng));
+  url.searchParams.set("localityLanguage", "en");
+
+  try {
+    const response = await fetch(url.toString(), {
+      headers: { Accept: "application/json" },
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      throw new Error("Reverse geocoding failed.");
+    }
+
+    const place = await response.json();
+    const townName =
+      place.locality ||
+      place.city ||
+      place.principalSubdivision ||
+      place.countryName ||
+      "Current location";
+
+    return toForecastLocation({
+      city: townName,
+      region:
+        townName === place.principalSubdivision
+          ? ""
+          : place.principalSubdivision,
+      country: place.countryName,
+      lat,
+      lng,
+      timezone: AUTO_LOCATION_TIMEZONE,
+    });
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+};
+
+const getNamedLocationFromCoordinates = async (lat, lng) => {
+  try {
+    const namedLocation = await reverseGeocodeLocation(lat, lng);
+    if (namedLocation) return namedLocation;
+  } catch (error) {
+    console.warn("Could not resolve town name for current location:", error);
+  }
+
+  return toForecastLocation({
+    city: "Current location",
+    lat,
+    lng,
+    timezone: AUTO_LOCATION_TIMEZONE,
+  });
+};
+
+const toForecastDisplay = (weatherBundle) =>
+  weatherBundle.daily.slice(0, 7).map((day, index) => ({
+    day: day.day,
+    date: day.displayDate,
+    high: day.highTemp ?? 0,
+    low: day.lowTemp ?? 0,
+    feelsLike:
+      index === 0
+        ? weatherBundle.current.apparentTemperatureValue
+        : day.apparentHighTemp ?? day.highTemp ?? 0,
+    condition: day.conditionSlug,
+    conditionText: day.condition,
+    summary:
+      index === 0
+        ? weatherBundle.current.conversationalSummary
+        : day.summary,
+    humidity: day.humidity || weatherBundle.current.humidityValue || 0,
+    rainChance: day.rainChance || 0,
+    windSpeed: day.windSpeed || 0,
+    hourly: weatherBundle.hourly[day.date] || [],
+  }));
 
 const SevenDaysForecast = () => {
   const [selectedDay, setSelectedDay] = useState(0);
   const [tempUnit, setTempUnit] = useState("celsius"); // celsius or fahrenheit
-  const [location, setLocation] = useState({
-    city: "Accra",
-    region: "Greater Accra",
-    country: "Ghana",
-  });
-  const [loading, setLoading] = useState(true);
-  const [currentDateTime, setCurrentDateTime] = useState(new Date());
+  const [location, setLocation] = useState(null);
+  const [townSearch, setTownSearch] = useState("");
+  const [searchingTown, setSearchingTown] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [detectingLocation, setDetectingLocation] = useState(false);
+  const [locationAttempted, setLocationAttempted] = useState(false);
   const [forecastData, setForecastData] = useState([]);
+  const [forecastError, setForecastError] = useState("");
+  const [updatedAt, setUpdatedAt] = useState("");
+  const manualLocationOverrideRef = useRef(false);
 
-  // Function to get formatted date string (e.g., "May 21")
-  const getFormattedDate = (daysToAdd = 0) => {
-    const date = new Date(currentDateTime);
-    date.setDate(date.getDate() + daysToAdd);
-    return date.toLocaleDateString("en-GB", { month: "short", day: "numeric" });
-  };
-
-  // Function to get day name
-  const getDayName = (daysToAdd = 0) => {
-    const date = new Date(currentDateTime);
-    date.setDate(date.getDate() + daysToAdd);
-
-    if (daysToAdd === 0) return "Today";
-    return date.toLocaleDateString("en-GB", { weekday: "short" });
-  };
-
-  // Get user's location
   useEffect(() => {
-    const getUserLocation = async () => {
-      setLoading(true);
+    let isMounted = true;
+
+    const detectInitialLocation = async () => {
+      if (location) {
+        setLocationAttempted(true);
+        return;
+      }
+
+      setDetectingLocation(true);
+      setForecastError("");
+
       try {
-        // In a real app, you would use a geolocation API to get the actual location
-        // For demonstration, we'll use a mock location service with fallback to Accra
+        const position = await getBrowserPosition();
 
-        // This simulates getting location from browser's geolocation API
-        // navigator.geolocation.getCurrentPosition() would be used in a real app
+        if (!isMounted) return;
 
-        // Simulate location detection (defaulting to Accra for demonstration)
-        setTimeout(() => {
-          setLocation({
-            city: "Accra",
-            region: "Greater Accra",
-            country: "Ghana",
-          });
-          setLoading(false);
-          generateForecastData();
-        }, 1000);
+        const nextLocation = await getNamedLocationFromCoordinates(
+          position.coords.latitude,
+          position.coords.longitude
+        );
+
+        if (!isMounted || manualLocationOverrideRef.current) return;
+
+        saveForecastLocation(nextLocation);
+        setLocation(nextLocation);
       } catch (error) {
-        console.error("Error getting location:", error);
-        setLocation({
-          city: "Accra",
-          region: "Greater Accra",
-          country: "Ghana",
-        });
-        setLoading(false);
+        if (!isMounted) return;
+
+        const storedLocation = getStoredForecastLocation();
+
+        if (storedLocation) {
+          const namedStoredLocation =
+            storedLocation.city === "Current location"
+              ? await getNamedLocationFromCoordinates(
+                  storedLocation.lat,
+                  storedLocation.lng
+                )
+              : storedLocation;
+
+          if (!isMounted || manualLocationOverrideRef.current) return;
+
+          saveForecastLocation(namedStoredLocation);
+          setLocation(namedStoredLocation);
+          return;
+        }
+
+        setForecastError(
+          error.message ||
+            "Location access is unavailable. Allow location access to load the forecast."
+        );
+      } finally {
+        if (isMounted) {
+          setDetectingLocation(false);
+          setLocationAttempted(true);
+        }
       }
     };
 
-    getUserLocation();
+    detectInitialLocation();
 
-    // Update the current time every minute
-    const timeInterval = setInterval(() => {
-      setCurrentDateTime(new Date());
-    }, 60000);
+    return () => {
+      isMounted = false;
+    };
+  }, [location]);
 
-    return () => clearInterval(timeInterval);
-  }, []);
+  useEffect(() => {
+    if (!location) {
+      setForecastData([]);
+      setUpdatedAt("");
+      setLoading(false);
+      return undefined;
+    }
 
-  // Generate forecast data based on current date
-  const generateForecastData = () => {
-    // Mock data for 7-day forecast with dynamic dates
-    const newForecastData = [
-      {
-        day: getDayName(0),
-        date: getFormattedDate(0),
-        high: 31,
-        low: 24,
-        condition: "partly-cloudy",
-        humidity: 70,
-        rainChance: 10,
-        windSpeed: 12,
-        hourly: [
-          { time: "6AM", temp: 24, condition: "clear", rainChance: 0 },
-          { time: "9AM", temp: 26, condition: "partly-cloudy", rainChance: 0 },
-          {
-            time: "12PM",
-            temp: 30,
-            condition: "partly-cloudy",
-            rainChance: 10,
-          },
-          { time: "3PM", temp: 31, condition: "partly-cloudy", rainChance: 10 },
-          { time: "6PM", temp: 28, condition: "partly-cloudy", rainChance: 5 },
-          { time: "9PM", temp: 26, condition: "clear", rainChance: 0 },
-          { time: "12AM", temp: 25, condition: "clear", rainChance: 0 },
-          { time: "3AM", temp: 24, condition: "clear", rainChance: 0 },
-        ],
-      },
-      {
-        day: getDayName(1),
-        date: getFormattedDate(1),
-        high: 32,
-        low: 24,
-        condition: "clear",
-        humidity: 65,
-        rainChance: 0,
-        windSpeed: 10,
-        hourly: [
-          { time: "6AM", temp: 24, condition: "clear", rainChance: 0 },
-          { time: "9AM", temp: 27, condition: "clear", rainChance: 0 },
-          { time: "12PM", temp: 30, condition: "clear", rainChance: 0 },
-          { time: "3PM", temp: 32, condition: "clear", rainChance: 0 },
-          { time: "6PM", temp: 29, condition: "clear", rainChance: 0 },
-          { time: "9PM", temp: 26, condition: "clear", rainChance: 0 },
-          { time: "12AM", temp: 25, condition: "clear", rainChance: 0 },
-          { time: "3AM", temp: 24, condition: "clear", rainChance: 0 },
-        ],
-      },
-      {
-        day: getDayName(2),
-        date: getFormattedDate(2),
-        high: 30,
-        low: 25,
-        condition: "partly-cloudy",
-        humidity: 75,
-        rainChance: 30,
-        windSpeed: 14,
-        hourly: [
-          { time: "6AM", temp: 25, condition: "partly-cloudy", rainChance: 10 },
-          { time: "9AM", temp: 27, condition: "partly-cloudy", rainChance: 20 },
-          {
-            time: "12PM",
-            temp: 29,
-            condition: "partly-cloudy",
-            rainChance: 30,
-          },
-          { time: "3PM", temp: 30, condition: "cloudy", rainChance: 30 },
-          { time: "6PM", temp: 28, condition: "cloudy", rainChance: 25 },
-          { time: "9PM", temp: 27, condition: "partly-cloudy", rainChance: 20 },
-          {
-            time: "12AM",
-            temp: 26,
-            condition: "partly-cloudy",
-            rainChance: 10,
-          },
-          { time: "3AM", temp: 25, condition: "partly-cloudy", rainChance: 10 },
-        ],
-      },
-      {
-        day: getDayName(3),
-        date: getFormattedDate(3),
-        high: 29,
-        low: 24,
-        condition: "rain",
-        humidity: 85,
-        rainChance: 80,
-        windSpeed: 18,
-        hourly: [
-          { time: "6AM", temp: 24, condition: "cloudy", rainChance: 40 },
-          { time: "9AM", temp: 25, condition: "cloudy", rainChance: 60 },
-          { time: "12PM", temp: 27, condition: "rain", rainChance: 80 },
-          { time: "3PM", temp: 29, condition: "rain", rainChance: 80 },
-          { time: "6PM", temp: 27, condition: "rain", rainChance: 70 },
-          { time: "9PM", temp: 26, condition: "rain", rainChance: 60 },
-          { time: "12AM", temp: 25, condition: "cloudy", rainChance: 40 },
-          { time: "3AM", temp: 24, condition: "cloudy", rainChance: 30 },
-        ],
-      },
-      {
-        day: getDayName(4),
-        date: getFormattedDate(4),
-        high: 30,
-        low: 23,
-        condition: "rain",
-        humidity: 80,
-        rainChance: 60,
-        windSpeed: 15,
-        hourly: [
-          { time: "6AM", temp: 23, condition: "cloudy", rainChance: 30 },
-          { time: "9AM", temp: 25, condition: "cloudy", rainChance: 40 },
-          { time: "12PM", temp: 28, condition: "rain", rainChance: 60 },
-          { time: "3PM", temp: 30, condition: "rain", rainChance: 60 },
-          { time: "6PM", temp: 27, condition: "rain", rainChance: 50 },
-          { time: "9PM", temp: 25, condition: "cloudy", rainChance: 30 },
-          {
-            time: "12AM",
-            temp: 24,
-            condition: "partly-cloudy",
-            rainChance: 20,
-          },
-          { time: "3AM", temp: 23, condition: "partly-cloudy", rainChance: 10 },
-        ],
-      },
-      {
-        day: getDayName(5),
-        date: getFormattedDate(5),
-        high: 31,
-        low: 23,
-        condition: "partly-cloudy",
-        humidity: 70,
-        rainChance: 20,
-        windSpeed: 12,
-        hourly: [
-          { time: "6AM", temp: 23, condition: "partly-cloudy", rainChance: 10 },
-          { time: "9AM", temp: 26, condition: "partly-cloudy", rainChance: 10 },
-          {
-            time: "12PM",
-            temp: 29,
-            condition: "partly-cloudy",
-            rainChance: 20,
-          },
-          { time: "3PM", temp: 31, condition: "partly-cloudy", rainChance: 20 },
-          { time: "6PM", temp: 28, condition: "partly-cloudy", rainChance: 10 },
-          { time: "9PM", temp: 26, condition: "clear", rainChance: 0 },
-          { time: "12AM", temp: 24, condition: "clear", rainChance: 0 },
-          { time: "3AM", temp: 23, condition: "clear", rainChance: 0 },
-        ],
-      },
-      {
-        day: getDayName(6),
-        date: getFormattedDate(6),
-        high: 32,
-        low: 24,
-        condition: "clear",
-        humidity: 65,
-        rainChance: 0,
-        windSpeed: 10,
-        hourly: [
-          { time: "6AM", temp: 24, condition: "clear", rainChance: 0 },
-          { time: "9AM", temp: 27, condition: "clear", rainChance: 0 },
-          { time: "12PM", temp: 30, condition: "clear", rainChance: 0 },
-          { time: "3PM", temp: 32, condition: "clear", rainChance: 0 },
-          { time: "6PM", temp: 29, condition: "clear", rainChance: 0 },
-          { time: "9PM", temp: 26, condition: "clear", rainChance: 0 },
-          { time: "12AM", temp: 25, condition: "clear", rainChance: 0 },
-          { time: "3AM", temp: 24, condition: "clear", rainChance: 0 },
-        ],
-      },
-    ];
+    let isMounted = true;
 
-    setForecastData(newForecastData);
+    const loadForecast = async () => {
+      setLoading(true);
+      setForecastError("");
+
+      try {
+        const weatherBundle = await getWeatherBundleByCoordinates(
+          location.lat,
+          location.lng,
+          {
+            forecastDays: 7,
+            timezone: location.timezone || AUTO_LOCATION_TIMEZONE,
+          }
+        );
+
+        if (!isMounted) return;
+
+        setSelectedDay(0);
+        setForecastData(toForecastDisplay(weatherBundle));
+        setUpdatedAt(
+          weatherBundle.updatedAt ||
+            weatherBundle.current?.updatedAt ||
+            new Date().toISOString()
+        );
+      } catch (error) {
+        if (!isMounted) return;
+        console.error("Error loading Open-Meteo forecast:", error);
+        setForecastError("Open-Meteo forecast unavailable. Try again later.");
+        setForecastData([]);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadForecast();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [location]);
+
+  const handleTownSearch = async (event) => {
+    event.preventDefault();
+
+    const townName = townSearch.trim();
+    if (!townName) {
+      setForecastError("Enter a town name to load its forecast.");
+      return;
+    }
+
+    setSearchingTown(true);
+    manualLocationOverrideRef.current = true;
+    setDetectingLocation(false);
+    setLocationAttempted(true);
+    setForecastError("");
+
+    try {
+      const result = await geocodeLocation(townName, { count: 8 });
+      const nextLocation = toForecastLocation(result);
+
+      if (!nextLocation) {
+        throw new Error("Open-Meteo did not return coordinates for that town.");
+      }
+
+      saveForecastLocation(nextLocation);
+      setLocation(nextLocation);
+      setTownSearch("");
+      setLocationAttempted(true);
+    } catch (error) {
+      setForecastError(error.message || "Could not find that town.");
+    } finally {
+      setSearchingTown(false);
+    }
   };
 
   // Helper function to convert celsius to fahrenheit
@@ -265,29 +342,24 @@ const SevenDaysForecast = () => {
 
   // Helper function to get temperature with unit
   const getTemp = (temp) => {
+    if (!Number.isFinite(Number(temp))) return "--";
+
     return tempUnit === "celsius"
-      ? `${temp}°C`
-      : `${celsiusToFahrenheit(temp)}°F`;
+      ? `${Math.round(Number(temp))}\u00B0C`
+      : `${celsiusToFahrenheit(temp)}\u00B0F`;
   };
 
-  // Helper function to get weather icon based on condition
-  const getWeatherIcon = (condition, size = 24) => {
-    switch (condition) {
-      case "clear":
-        return <Sun size={size} className="text-yellow-500" />;
-      case "partly-cloudy":
-        return <Cloud size={size} className="text-gray-400" />;
-      case "cloudy":
-        return <Cloud size={size} className="text-gray-600" />;
-      case "rain":
-        return <CloudRain size={size} className="text-blue-500" />;
-      case "thunderstorm":
-        return <CloudLightning size={size} className="text-purple-600" />;
-      case "drizzle":
-        return <CloudDrizzle size={size} className="text-blue-400" />;
-      default:
-        return <Sun size={size} className="text-yellow-500" />;
-    }
+  const getIconCondition = (condition) => {
+    const conditionMap = {
+      clear: "sunny",
+      "partly-cloudy": "partly cloudy",
+      cloudy: "cloudy",
+      rain: "light rain",
+      drizzle: "light rain",
+      thunderstorm: "thunderstorm",
+    };
+
+    return conditionMap[condition] || "sunny intervals";
   };
 
   // Get background color based on time of day and condition
@@ -325,47 +397,98 @@ const SevenDaysForecast = () => {
       : "from-blue-400 to-blue-600";
   };
 
-  // Format time for display with AM/PM
-  const formatTime = () => {
-    return currentDateTime.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
+  const locationTitle = location
+    ? [location.city, location.region, location.country].filter(Boolean).join(", ")
+    : "";
 
-  if (loading || forecastData.length === 0) {
+  const townSearchForm = (
+    <form
+      onSubmit={handleTownSearch}
+      className="flex w-full gap-2 sm:w-[360px]"
+    >
+      <label className="sr-only" htmlFor="weekly-town-search">
+        <T>Search town</T>
+      </label>
+      <input
+        id="weekly-town-search"
+        type="search"
+        value={townSearch}
+        onChange={(event) => setTownSearch(event.target.value)}
+        className="min-h-10 min-w-0 flex-1 rounded-lg border border-slate-300 px-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+        placeholder="Search town"
+      />
+      <button
+        type="submit"
+        disabled={searchingTown}
+        className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        <Search className="h-4 w-4" />
+        <T>Search</T>
+      </button>
+    </form>
+  );
+
+  if (loading || detectingLocation || searchingTown || (!locationAttempted && forecastData.length === 0)) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-blue-50">
-        <Loader className="w-12 h-12 text-blue-500 animate-spin" />
-        <p className="mt-4 text-lg text-blue-800">
-          <T>Loading weather forecast...</T>
-        </p>
-      </div>
+      <>
+        <PageTitle title="7-Day Weather Forecast" />
+        <div className="container mx-auto px-4 pb-8 pt-32 sm:px-6 md:pt-36 lg:px-8">
+          <Breadcrumb />
+          <ForecastSkeleton className="mt-4" />
+        </div>
+      </>
+    );
+  }
+
+  if (forecastData.length === 0) {
+    return (
+      <>
+        <PageTitle title="7-Day Weather Forecast" />
+        <div className="container mx-auto px-4 pb-8 pt-32 sm:px-6 md:pt-36 lg:px-8">
+          <Breadcrumb />
+          <div className="mb-4 flex justify-end">{townSearchForm}</div>
+          {!loading && !detectingLocation && locationAttempted && !location && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm font-medium text-amber-900">
+              <T>
+                {forecastError || "Allow location access to load a live Open-Meteo forecast."}
+              </T>
+            </div>
+          )}
+          {!loading && !detectingLocation && location && forecastError && (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-4 text-sm font-medium text-red-800">
+              <T>{forecastError}</T>
+            </div>
+          )}
+        </div>
+      </>
     );
   }
 
   return (
     <>
       <PageTitle title="7-Day Weather Forecast" />
-      <div className="container mx-auto mt-10 px-4 sm:px-6 lg:px-8 mt-24">
+      <div className="container mx-auto px-4 pb-8 pt-32 sm:px-6 md:pt-36 lg:px-8">
+      <Breadcrumb />
       {/* Location and last updated info */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
-        <div className="flex items-center mb-2 sm:mb-0">
-          <MapPin className="h-5 w-5 text-blue-600 mr-1" />
-          <h1 className="text-xl font-semibold text-gray-800">
-            {location.city}, {location.region}, {location.country}
-          </h1>
+        <div className="flex items-start mb-2 sm:mb-0">
+          <MapPin className="mt-1 h-5 w-5 flex-shrink-0 text-blue-600 mr-1" />
+          <div>
+            <h1 className="text-xl font-semibold text-gray-800" data-no-auto-translate>
+              {locationTitle}
+            </h1>
+            <p className="mt-1 text-sm font-medium text-slate-500">
+              <T>Updated</T> {formatUpdatedTime(updatedAt)}
+            </p>
+          </div>
         </div>
-        <div className="text-sm text-gray-500">
-          <T>Last updated:</T>{" "}
-          <T>{currentDateTime.toLocaleDateString("en-US", {
-            weekday: "long",
-            month: "long",
-            day: "numeric",
-            year: "numeric",
-          })}</T>{" "}
-          {formatTime()}
+        <div className="w-full sm:ml-auto sm:w-auto">
+          {townSearchForm}
+          {forecastError && (
+            <p className="mt-2 text-right text-sm font-medium text-red-600">
+              <T>{forecastError}</T>
+            </p>
+          )}
         </div>
       </div>
 
@@ -393,7 +516,7 @@ const SevenDaysForecast = () => {
                     : "bg-blue-700 text-white"
                 }`}
               >
-                °C
+                &deg;C
               </button>
               <button
                 onClick={() => setTempUnit("fahrenheit")}
@@ -403,14 +526,19 @@ const SevenDaysForecast = () => {
                     : "bg-blue-700 text-white"
                 }`}
               >
-                °F
+                &deg;F
               </button>
             </div>
           </div>
 
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-6">
             <div className="flex items-center">
-              {getWeatherIcon(forecastData[selectedDay].condition, 64)}
+              <AnimatedWeatherIcon
+                condition={getIconCondition(forecastData[selectedDay].condition)}
+                size="4xl"
+                showParticles
+                interactive
+              />
               <div className="ml-4">
                 <div className="text-6xl font-light">
                   {getTemp(forecastData[selectedDay].high)}
@@ -419,7 +547,10 @@ const SevenDaysForecast = () => {
                   <T>Low</T>: {getTemp(forecastData[selectedDay].low)}
                 </div>
                 <div className="text-lg capitalize">
-                  <T>{forecastData[selectedDay].condition.replace("-", " ")}</T>
+                  <T>{forecastData[selectedDay].conditionText}</T>
+                </div>
+                <div className="text-sm opacity-85">
+                  <T>{forecastData[selectedDay].summary}</T>
                 </div>
               </div>
             </div>
@@ -439,7 +570,7 @@ const SevenDaysForecast = () => {
               <div className="flex items-center">
                 <Thermometer size={16} className="mr-2" />
                 <span>
-                  <T>Feels like:</T> {getTemp(forecastData[selectedDay].high - 1)}
+                  <T>Feels like:</T> {getTemp(forecastData[selectedDay].feelsLike)}
                 </span>
               </div>
             </div>
@@ -455,7 +586,12 @@ const SevenDaysForecast = () => {
                   className="flex flex-col items-center bg-white/10 backdrop-blur-sm rounded-lg p-3 min-w-[70px]"
                 >
                   <span className="text-sm font-medium mb-1">{hour.time}</span>
-                  {getWeatherIcon(hour.condition, 28)}
+                  <AnimatedWeatherIcon
+                    condition={getIconCondition(hour.condition)}
+                    size="sm"
+                    showParticles={false}
+                    interactive={false}
+                  />
                   <span className="mt-1 font-medium">{getTemp(hour.temp)}</span>
                   {hour.rainChance > 0 && (
                     <div className="flex items-center mt-1 text-xs">
@@ -482,13 +618,19 @@ const SevenDaysForecast = () => {
                 onClick={() => setSelectedDay(idx)}
               >
                 <span className="text-sm font-medium"><T>{day.day}</T></span>
-                <div className="my-2">{getWeatherIcon(day.condition)}</div>
+                <AnimatedWeatherIcon
+                  condition={getIconCondition(day.condition)}
+                  size="sm"
+                  showParticles={false}
+                  interactive={false}
+                  className="my-2"
+                />
                 <div className="flex flex-col items-center text-xs sm:text-sm">
                   <span className="font-medium">
-                    {getTemp(day.high).split("°")[0]}°
+                    {Math.round(day.high)}&deg;
                   </span>
                   <span className="opacity-80">
-                    {getTemp(day.low).split("°")[0]}°
+                    {Math.round(day.low)}&deg;
                   </span>
                 </div>
               </div>
@@ -544,9 +686,14 @@ const SevenDaysForecast = () => {
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center">
-                      {getWeatherIcon(day.condition)}
+                      <AnimatedWeatherIcon
+                        condition={getIconCondition(day.condition)}
+                        size="sm"
+                        showParticles={false}
+                        interactive={false}
+                      />
                       <span className="ml-2 capitalize">
-                        <T>{day.condition.replace("-", " ")}</T>
+                        <T>{day.conditionText}</T>
                       </span>
                     </div>
                   </td>
@@ -586,14 +733,6 @@ const SevenDaysForecast = () => {
             </tbody>
           </table>
         </div>
-      </div>
-
-      {/* Footer */}
-      <div className="mt-4 text-center text-sm text-gray-500 mb-8">
-        <p>
-          <T>Weather data provided by Ghana Meteorological Agency</T> • <T>Last updated:</T>{" "}
-          {formatTime()}
-        </p>
       </div>
     </div>
     </>

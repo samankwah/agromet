@@ -19,6 +19,7 @@ import EnhancedCalendarViewer from "../EnhancedCalendarViewer";
 import ProductionCycleManager from "../ProductionCycleManager";
 import ProfileDropdown from "../common/ProfileDropdown";
 import userService from "../../services/userService";
+import { TableSkeleton } from "../common/SkeletonLoading";
 
 const Dashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -310,14 +311,14 @@ const Dashboard = () => {
 
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="neo-page flex min-h-screen">
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div 
           className="fixed inset-0 z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         >
-          <div className="absolute inset-0 bg-gray-600 opacity-75"></div>
+          <div className="absolute inset-0 bg-neo-text/35"></div>
         </div>
       )}
 
@@ -329,20 +330,22 @@ const Dashboard = () => {
       {/* Main Content */}
       <div className="flex-1 lg:ml-0">
         {/* Mobile Header */}
-        <div className="lg:hidden bg-white shadow-sm border-b border-gray-200">
+        <div className="lg:hidden neo-surface-soft m-3">
           <div className="flex items-center justify-between px-4 py-3">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="text-gray-600 hover:text-gray-900"
+              className="neo-icon-button h-10 w-10"
+              aria-label="Open dashboard navigation"
             >
               <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <h1 className="text-lg font-semibold text-green-800">AgroMet AI</h1>
+            <h1 className="text-lg font-semibold text-neo-accent-strong">AgroMet AI</h1>
             <button
               onClick={handleLogout}
-              className="text-gray-600 hover:text-gray-900"
+              className="neo-icon-button h-10 w-10"
+              aria-label="Sign out"
             >
               <FaSignOutAlt className="h-5 w-5" />
             </button>
@@ -350,11 +353,11 @@ const Dashboard = () => {
         </div>
 
         {/* Desktop Header */}
-        <div className="hidden lg:block bg-white shadow-sm sticky top-0 z-10 relative">
+        <div className="hidden lg:block neo-surface-soft sticky top-4 z-10 relative mx-4 mt-4">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16 w-full">
               <div className="flex items-center">
-                <h1 className="text-xl font-bold text-green-800">AgroMet AI Admin</h1>
+                <h1 className="text-xl font-bold text-neo-accent-strong">AgroMet AI Admin</h1>
               </div>
               <div className="flex items-center">
                 {/* Spacer to maintain layout */}
@@ -373,16 +376,15 @@ const Dashboard = () => {
         {/* Page Content */}
         <div className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
           {isLoading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
-              <span className="ml-2 text-gray-600">Loading...</span>
+            <div className="py-6">
+              <TableSkeleton rows={5} columns={4} />
             </div>
           ) : (
             <>
               {/* Page Title */}
               <div className="mb-6">
-                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">{getPageTitle()}</h2>
-                <p className="mt-1 text-sm text-gray-500">
+                <h2 className="text-xl sm:text-2xl font-semibold text-neo-text">{getPageTitle()}</h2>
+                <p className="mt-1 text-sm text-neo-muted">
                   Manage your agricultural data and calendars efficiently
                 </p>
               </div>
@@ -392,50 +394,50 @@ const Dashboard = () => {
                 <>
                   {/* Key Metrics Cards - Mobile Responsive */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-                    <div className="bg-gradient-to-r from-green-400 to-green-600 rounded-lg shadow-lg p-4 sm:p-6 text-white">
+                    <div className="neo-stat">
                       <div className="flex items-center">
-                        <div className="p-2 bg-white bg-opacity-30 rounded-lg">
+                        <div className="neo-icon-button h-12 w-12">
                           <FaCalendarAlt className="h-5 w-5 sm:h-6 sm:w-6" />
                         </div>
                         <div className="ml-3 sm:ml-4">
-                          <p className="text-green-100 text-xs sm:text-sm">Crop Calendars</p>
-                          <p className="text-xl sm:text-2xl font-bold">{agriculturalStats.cropCalendars.total}</p>
+                          <p className="text-neo-muted text-xs sm:text-sm">Crop Calendars</p>
+                          <p className="text-xl sm:text-2xl font-bold text-neo-text">{agriculturalStats.cropCalendars.total}</p>
                         </div>
                       </div>
                     </div>
                     
-                    <div className="bg-gradient-to-r from-blue-400 to-blue-600 rounded-lg shadow-lg p-4 sm:p-6 text-white">
+                    <div className="neo-stat">
                       <div className="flex items-center">
-                        <div className="p-2 bg-white bg-opacity-30 rounded-lg">
+                        <div className="neo-icon-button h-12 w-12">
                           <FaCloudSun className="h-5 w-5 sm:h-6 sm:w-6" />
                         </div>
                         <div className="ml-3 sm:ml-4">
-                          <p className="text-blue-100 text-xs sm:text-sm">Agromet Advisories</p>
-                          <p className="text-xl sm:text-2xl font-bold">{agriculturalStats.agrometAdvisories.total}</p>
+                          <p className="text-neo-muted text-xs sm:text-sm">Agromet Advisories</p>
+                          <p className="text-xl sm:text-2xl font-bold text-neo-text">{agriculturalStats.agrometAdvisories.total}</p>
                         </div>
                       </div>
                     </div>
                     
-                    <div className="bg-gradient-to-r from-purple-400 to-purple-600 rounded-lg shadow-lg p-4 sm:p-6 text-white">
+                    <div className="neo-stat">
                       <div className="flex items-center">
-                        <div className="p-2 bg-white bg-opacity-30 rounded-lg">
+                        <div className="neo-icon-button h-12 w-12">
                           <FaSeedling className="h-5 w-5 sm:h-6 sm:w-6" />
                         </div>
                         <div className="ml-3 sm:ml-4">
-                          <p className="text-purple-100 text-xs sm:text-sm">Poultry Calendars</p>
-                          <p className="text-xl sm:text-2xl font-bold">{agriculturalStats.poultryCalendars.total}</p>
+                          <p className="text-neo-muted text-xs sm:text-sm">Poultry Calendars</p>
+                          <p className="text-xl sm:text-2xl font-bold text-neo-text">{agriculturalStats.poultryCalendars.total}</p>
                         </div>
                       </div>
                     </div>
                     
-                    <div className="bg-gradient-to-r from-orange-400 to-orange-600 rounded-lg shadow-lg p-4 sm:p-6 text-white">
+                    <div className="neo-stat">
                       <div className="flex items-center">
-                        <div className="p-2 bg-white bg-opacity-30 rounded-lg">
+                        <div className="neo-icon-button h-12 w-12">
                           <FaUsers className="h-5 w-5 sm:h-6 sm:w-6" />
                         </div>
                         <div className="ml-3 sm:ml-4">
-                          <p className="text-orange-100 text-xs sm:text-sm">Poultry Advisories</p>
-                          <p className="text-xl sm:text-2xl font-bold">{agriculturalStats.poultryAdvisories.total}</p>
+                          <p className="text-neo-muted text-xs sm:text-sm">Poultry Advisories</p>
+                          <p className="text-xl sm:text-2xl font-bold text-neo-text">{agriculturalStats.poultryAdvisories.total}</p>
                         </div>
                       </div>
                     </div>
@@ -444,71 +446,71 @@ const Dashboard = () => {
                   {/* Recent Activity */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
                     {/* Recent Uploads */}
-                    <div className="bg-white rounded-lg shadow p-4 sm:p-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Uploads</h3>
+                    <div className="neo-panel">
+                      <h3 className="text-lg font-semibold text-neo-text mb-4">Recent Uploads</h3>
                       <div className="space-y-3">
                         {recentUploads.length > 0 ? recentUploads.map((upload) => (
-                          <div key={upload.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-50 rounded-md space-y-2 sm:space-y-0">
+                          <div key={upload.id} className="neo-inset flex flex-col sm:flex-row sm:items-center justify-between p-3 space-y-2 sm:space-y-0">
                             <div className="flex items-center min-w-0 flex-1">
-                              <FaFileAlt className="text-green-500 mr-3 flex-shrink-0" />
+                              <FaFileAlt className="text-neo-accent mr-3 flex-shrink-0" />
                               <div className="min-w-0 flex-1">
-                                <p className="text-sm font-medium text-gray-900 truncate">{upload.filename}</p>
-                                <p className="text-xs text-gray-500">{upload.type} • {upload.recordCount} records</p>
+                                <p className="text-sm font-medium text-neo-text truncate">{upload.filename}</p>
+                                <p className="text-xs text-neo-muted">{upload.type} - {upload.recordCount} records</p>
                               </div>
                             </div>
                             <div className="flex flex-row sm:flex-col items-start sm:items-end justify-between sm:justify-start space-x-2 sm:space-x-0 sm:space-y-1 flex-shrink-0">
-                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">
                                 {upload.status}
                               </span>
-                              <p className="text-xs text-gray-500">
+                              <p className="text-xs text-neo-muted">
                                 {new Date(upload.uploadDate).toLocaleDateString()}
                               </p>
                             </div>
                           </div>
                         )) : (
                           <div className="text-center py-8">
-                            <FaFileAlt className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                            <p className="text-sm text-gray-500">No recent uploads found</p>
-                            <p className="text-xs text-gray-400 mt-1">Upload agricultural data to see recent activity</p>
+                            <FaFileAlt className="mx-auto h-12 w-12 text-neo-muted mb-4" />
+                            <p className="text-sm text-neo-muted">No recent uploads found</p>
+                            <p className="text-xs text-neo-muted/80 mt-1">Upload agricultural data to see recent activity</p>
                           </div>
                         )}
                       </div>
                     </div>
 
                     {/* Quick Actions */}
-                    <div className="bg-white rounded-lg shadow p-4 sm:p-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+                    <div className="neo-panel">
+                      <h3 className="text-lg font-semibold text-neo-text mb-4">Quick Actions</h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <button
                           onClick={() => handleNavigate("agricultural-crop-calendar")}
-                          className="flex items-center p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
+                          className="neo-button justify-start text-left"
                         >
-                          <FaCalendarAlt className="text-green-600 mr-3" />
-                          <span className="text-sm font-medium text-green-800">Upload Crop Calendar</span>
+                          <FaCalendarAlt className="text-neo-accent" />
+                          <span className="text-sm font-medium">Upload Crop Calendar</span>
                         </button>
                         
                         <button
                           onClick={() => handleNavigate("agricultural-agromet-advisory")}
-                          className="flex items-center p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                          className="neo-button justify-start text-left"
                         >
-                          <FaCloudSun className="text-blue-600 mr-3" />
-                          <span className="text-sm font-medium text-blue-800">Upload Advisories</span>
+                          <FaCloudSun className="text-neo-teal" />
+                          <span className="text-sm font-medium">Upload Advisories</span>
                         </button>
                         
                         <button
                           onClick={() => handleNavigate("agricultural-poultry-calendar")}
-                          className="flex items-center p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
+                          className="neo-button justify-start text-left"
                         >
-                          <FaSeedling className="text-purple-600 mr-3" />
-                          <span className="text-sm font-medium text-purple-800">Upload Poultry Calendar</span>
+                          <FaSeedling className="text-neo-accent" />
+                          <span className="text-sm font-medium">Upload Poultry Calendar</span>
                         </button>
                         
                         <button
                           onClick={() => handleNavigate("agricultural-poultry-advisory")}
-                          className="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                          className="neo-button justify-start text-left"
                         >
-                          <FaUsers className="text-gray-600 mr-3" />
-                          <span className="text-sm font-medium text-gray-800">Upload Poultry Advisory</span>
+                          <FaUsers className="text-neo-muted" />
+                          <span className="text-sm font-medium">Upload Poultry Advisory</span>
                         </button>
                       </div>
                     </div>
@@ -519,7 +521,7 @@ const Dashboard = () => {
 
               {/* Content Management Pages */}
               {activePage.startsWith("content-management-") && (
-                <div className="bg-white rounded-lg shadow">
+                <div className="neo-table-shell">
                   {activePage === "content-management-crop-calendar" && (
                     <CalendarDataPreview
                       dataType="crop-calendar"
@@ -545,7 +547,7 @@ const Dashboard = () => {
 
               {/* Agricultural Data Pages */}
               {activePage.startsWith("agricultural-") && !activePage.startsWith("content-management-") && (
-                <div className="bg-white rounded-lg shadow">
+                <div className="neo-table-shell">
                   {activePage === "agricultural-crop-calendar" && (
                     <CalendarDataPreview
                       dataType="crop-calendar"
@@ -571,7 +573,7 @@ const Dashboard = () => {
 
               {/* Enhanced Calendar Pages */}
               {activePage.startsWith("enhanced-calendar") && (
-                <div className="bg-white rounded-lg shadow">
+                <div className="neo-table-shell">
                   {activePage === "enhanced-calendar-upload" && (
                     <EnhancedCalendarUpload />
                   )}

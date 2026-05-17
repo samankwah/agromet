@@ -9,6 +9,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { FaArrowLeft, FaInfoCircle } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import { TableSkeleton } from './SkeletonLoading';
 
 const CalendarFullPageView = ({ 
   calendarData, 
@@ -29,11 +30,10 @@ const CalendarFullPageView = ({
   // Handle loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-8">
+      <div className="neo-page min-h-screen p-8">
         <div className="max-w-full mx-auto">
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mr-4"></div>
-            <span className="text-xl text-gray-600">Parsing calendar...</span>
+          <div className="py-10">
+            <TableSkeleton rows={8} columns={6} />
           </div>
         </div>
       </div>
@@ -43,7 +43,7 @@ const CalendarFullPageView = ({
   // Handle error state
   if (error || !calendarData?.success) {
     return (
-      <div className="min-h-screen bg-gray-50 p-8">
+      <div className="neo-page min-h-screen p-8">
         <div className="max-w-4xl mx-auto">
           <button
             onClick={handleBack}
@@ -68,9 +68,9 @@ const CalendarFullPageView = ({
   }
 
   // Handle no data
-  if (!calendarData?.data?.calendarGrid) {
+  if (!calendarData?.data?.calendarGrid && !calendarData?.data?.sourceSheets?.length) {
     return (
-      <div className="min-h-screen bg-gray-50 p-8">
+      <div className="neo-page min-h-screen p-8">
         <div className="max-w-4xl mx-auto">
           <button
             onClick={handleBack}
@@ -90,6 +90,7 @@ const CalendarFullPageView = ({
 
   const { data } = calendarData;
   const { calendarGrid, timeline, activities } = data;
+  const sourceSheets = data.sourceSheets || [];
 
   // Get activity-specific colors based on activity name (matching target image exactly)
   const getActivityColor = (activityName) => {
@@ -346,6 +347,94 @@ const CalendarFullPageView = ({
 
   const monthHeaders = getMonthHeaders();
   const calendarTitle = data.title || `${data.commodity?.toUpperCase() || 'CROP'} PRODUCTION-${data.type === 'seasonal' ? 'MAJOR SEASON' : 'PRODUCTION CYCLE'}`;
+
+  const renderExactSheetCell = (cell, cellIndex) => {
+    if (cell?.covered) {
+      return null;
+    }
+
+    const value = cell?.value ?? '';
+    const background = cell?.background || 'transparent';
+    const hasBackground = background !== 'transparent';
+
+    return (
+      <td
+        key={cellIndex}
+        colSpan={cell?.colSpan || 1}
+        rowSpan={cell?.rowSpan || 1}
+        className="border border-gray-400 px-2 py-1 text-xs min-w-[56px] h-7 align-middle"
+        style={{
+          backgroundColor: background,
+          color: '#111827',
+          fontWeight: hasBackground || value ? 600 : 400,
+          whiteSpace: 'pre-wrap',
+        }}
+      >
+        {value}
+      </td>
+    );
+  };
+
+  if (sourceSheets.length > 0) {
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
+          <div className="max-w-full mx-auto">
+            <button
+              onClick={handleBack}
+              className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+            >
+              <FaArrowLeft className="mr-2" />
+              Back to Form
+            </button>
+          </div>
+        </div>
+
+        <div className="px-6 py-8">
+          <div className="max-w-full mx-auto">
+            <div className="text-center mb-8">
+              <h1 className="text-2xl font-bold text-gray-900 uppercase">
+                {calendarTitle}
+              </h1>
+            </div>
+
+            <div className="space-y-10">
+              {sourceSheets.map((sheet, sheetIndex) => (
+                <section key={`${sheet.name}-${sheetIndex}`}>
+                  {sourceSheets.length > 1 && (
+                    <div className="mb-3">
+                      <h2 className="text-lg font-semibold text-gray-900">{sheet.name}</h2>
+                      {sheet.sourceFileName && (
+                        <p className="text-sm text-gray-500">{sheet.sourceFileName}</p>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="overflow-x-auto shadow-lg">
+                    <table className="border-collapse border border-gray-400 bg-white" style={{ minWidth: 'max-content' }}>
+                      <tbody>
+                        {(sheet.rows || []).map((row, rowIndex) => (
+                          <tr key={rowIndex}>
+                            {(row || []).map((cell, cellIndex) => renderExactSheetCell(cell, cellIndex))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              ))}
+            </div>
+
+            <div className="mt-8 text-center text-sm text-gray-500">
+              <p className="mt-1">
+                Generated from Excel calendar • {sourceSheets.length} sheet{sourceSheets.length === 1 ? '' : 's'} • {activities?.length || 0} activities
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white">

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useMemo, useRef } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import PropTypes from 'prop-types';
 import translationService from '../services/translationService';
 import { getTranslation } from '../data/ghanaianLanguages';
@@ -17,9 +17,11 @@ export const LanguageProvider = ({ children }) => {
   const [currentLanguage, setCurrentLanguage] = useState(
     () => translationService.getUserLanguage() || 'en'
   );
-  const [isTranslating, setIsTranslating] = useState(false);
+  const [translationVersion, setTranslationVersion] = useState(0);
+  const [pendingTranslations, setPendingTranslations] = useState(0);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const audioRef = useRef(null);
+  const isTranslating = pendingTranslations > 0;
 
   const supportedLanguages = useMemo(
     () => translationService.getSupportedLanguages(),
@@ -28,27 +30,38 @@ export const LanguageProvider = ({ children }) => {
 
   const setLanguage = useCallback((code) => {
     if (translationService.setUserLanguage(code)) {
-      // Reset circuit breaker so API calls are retried with the new language
       translationService.resetTranslationCircuitBreaker();
-      // Purge any stale cache entries where "translation" is just the original English text
-      translationService.purgeStaleEntries(code);
       setCurrentLanguage(code);
+      setTranslationVersion((version) => version + 1);
     }
   }, []);
+
+  useEffect(() => {
+    const htmlLangByCode = {
+      en: 'en',
+      tw: 'ak-GH',
+      gaa: 'gaa-GH',
+      ee: 'ee-GH',
+      dag: 'dag-GH',
+    };
+
+    document.documentElement.lang = htmlLangByCode[currentLanguage] || currentLanguage;
+    document.documentElement.dir = 'ltr';
+  }, [currentLanguage]);
 
   const translate = useCallback(
     async (text, targetLang, sourceLang = 'en') => {
       const lang = targetLang || currentLanguage;
       if (lang === 'en' || !text) return text;
 
-      setIsTranslating(true);
+      setPendingTranslations((count) => count + 1);
       try {
         const result = await translationService.translate(text, lang, sourceLang);
         return result || text;
       } catch {
         return text;
       } finally {
-        setIsTranslating(false);
+        setPendingTranslations((count) => Math.max(0, count - 1));
       }
     },
     [currentLanguage]
@@ -95,8 +108,32 @@ export const LanguageProvider = ({ children }) => {
           };
 
           await audio.play();
+        } else if (result?.url) {
+          const audio = new Audio(result.url);
+          audioRef.current = audio;
+
+          audio.onended = () => {
+            if (result.type === 'api') {
+              URL.revokeObjectURL(result.url);
+            }
+            setIsSpeaking(false);
+            audioRef.current = null;
+          };
+          audio.onerror = () => {
+            if (result.type === 'api') {
+              URL.revokeObjectURL(result.url);
+            }
+            setIsSpeaking(false);
+            audioRef.current = null;
+          };
+
+          await audio.play();
+        } else if (typeof result?.speak === 'function') {
+          result.speak({
+            onEnd: () => setIsSpeaking(false),
+            onError: () => setIsSpeaking(false),
+          });
         } else {
-          // Browser speech synthesis fallback (translationService handles this)
           setIsSpeaking(false);
         }
       } catch {
@@ -134,9 +171,10 @@ export const LanguageProvider = ({ children }) => {
       isTranslating,
       supportedLanguages,
       getDisplayText,
+      translationVersion,
       isEnglish: currentLanguage === 'en',
     }),
-    [currentLanguage, setLanguage, translate, speak, stopSpeaking, isSpeaking, isTranslating, supportedLanguages, getDisplayText]
+    [currentLanguage, setLanguage, translate, speak, stopSpeaking, isSpeaking, isTranslating, supportedLanguages, getDisplayText, translationVersion]
   );
 
   return (

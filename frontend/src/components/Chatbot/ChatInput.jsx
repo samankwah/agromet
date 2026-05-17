@@ -3,6 +3,7 @@ import { FaPaperPlane, FaMicrophone, FaStop, FaCamera, FaTimes } from 'react-ico
 import PropTypes from 'prop-types';
 import visualIntegrationService from '../../services/visualIntegrationService';
 import voiceLanguageService from '../../services/voiceLanguageService';
+import { SkeletonBlock } from '../common/SkeletonLoading';
 
 const ChatInput = ({ onSendMessage, disabled = false, placeholder = "Ask me anything about farming...", currentLanguage = "en" }) => {
   const [message, setMessage] = useState('');
@@ -157,15 +158,15 @@ const ChatInput = ({ onSendMessage, disabled = false, placeholder = "Ask me anyt
 
 
   return (
-    <div className="border-t border-gray-200 bg-white">
+    <div className="border-t neo-divider bg-white/25">
       {/* Image Preview */}
       {imagePreview && (
-        <div className="p-3 border-b border-gray-100">
+        <div className="p-3 border-b neo-divider">
           <div className="relative inline-block">
             <img 
               src={imagePreview} 
               alt="Selected crop image" 
-              className="max-w-24 max-h-24 rounded-lg border border-gray-300"
+              className="max-w-24 max-h-24 rounded-neo border border-neo-border"
             />
             <button
               type="button"
@@ -176,7 +177,7 @@ const ChatInput = ({ onSendMessage, disabled = false, placeholder = "Ask me anyt
               <FaTimes />
             </button>
           </div>
-          <p className="text-xs text-gray-500 mt-2">
+          <p className="text-xs text-neo-muted mt-2">
             📸 Image ready for analysis. Add a message or click send to analyze.
           </p>
         </div>
@@ -193,11 +194,11 @@ const ChatInput = ({ onSendMessage, disabled = false, placeholder = "Ask me anyt
               onKeyPress={handleKeyPress}
               placeholder={selectedImage ? "Describe what you see or ask about this image..." : placeholder}
               disabled={disabled || isProcessingImage}
-              className="w-full resize-none border border-gray-300 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="neo-input w-full resize-none rounded-neo pr-12 text-sm sm:text-base disabled:cursor-not-allowed disabled:opacity-70"
               rows={1}
               maxLength={1000}
             />
-            <div className="absolute bottom-2 right-2 text-xs text-gray-400">
+            <div className="absolute bottom-2 right-3 text-xs text-neo-muted">
               {message.length}/1000
             </div>
           </div>
@@ -214,7 +215,7 @@ const ChatInput = ({ onSendMessage, disabled = false, placeholder = "Ask me anyt
             type="button"
             onClick={handleCameraClick}
             disabled={disabled || isProcessingImage}
-            className="p-2 sm:p-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-blue-500 hover:bg-blue-600 text-white"
+            className="neo-icon-button h-11 w-11 disabled:opacity-50 disabled:cursor-not-allowed"
             title="Upload crop image for analysis"
           >
             <FaCamera className="text-sm" />
@@ -225,10 +226,10 @@ const ChatInput = ({ onSendMessage, disabled = false, placeholder = "Ask me anyt
             type="button"
             onClick={handleVoiceClick}
             disabled={disabled || isProcessingImage}
-            className={`p-2 sm:p-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`neo-icon-button h-11 w-11 disabled:opacity-50 disabled:cursor-not-allowed ${
               isRecording
                 ? 'bg-red-500 hover:bg-red-600 text-white'
-                : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                : ''
             }`}
             title={isRecording ? 'Stop recording' : 'Start voice input'}
           >
@@ -239,11 +240,11 @@ const ChatInput = ({ onSendMessage, disabled = false, placeholder = "Ask me anyt
           <button
             type="submit"
             disabled={disabled || isProcessingImage || (!message.trim() && !selectedImage)}
-            className="bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white p-2 sm:p-3 rounded-lg transition-colors"
+            className="neo-icon-button h-11 w-11 bg-neo-accent text-white hover:bg-neo-accent-strong disabled:cursor-not-allowed disabled:opacity-50"
             title={isProcessingImage ? 'Processing image...' : 'Send message'}
           >
             {isProcessingImage ? (
-              <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+              <SkeletonBlock className="h-4 w-4" rounded="rounded-full" tone="light" />
             ) : (
               <FaPaperPlane className="text-sm" />
             )}

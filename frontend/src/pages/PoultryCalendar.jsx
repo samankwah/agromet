@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
-import { FaDownload, FaShareAlt, FaSpinner, FaExclamationTriangle, FaSync, FaDatabase } from "react-icons/fa";
+import { FaDownload, FaShareAlt, FaExclamationTriangle, FaSync, FaDatabase } from "react-icons/fa";
 import agriculturalDataService from '../services/agriculturalDataService';
 import dynamicCalendarManager from '../services/dynamicCalendarManager';
 import PageTitle from '../components/PageTitle';
+import Breadcrumb from '../components/common/Breadcrumb';
 import { InlineOfflineWarning } from '../components/common/OfflineNotification';
 import SmartCalendarRenderer from '../components/common/SmartCalendarRenderer';
+import { TableSkeleton } from '../components/common/SkeletonLoading';
 import { getSafeDistrictsByRegion } from '../utils/regionDistrictHelpers';
 import { SafeDistrictOptions } from '../components/common/SafeSelectOptions';
 import { getAllRegionNames } from '../data/ghanaCodes';
@@ -1095,7 +1097,7 @@ const PoultryCalendar = () => {
           return <FaExclamationTriangle className="text-red-500" />;
         case 'data_loading':
         case 'poultry_fetch':
-          return <FaSpinner className="text-yellow-500" />;
+          return <FaSync className="text-yellow-500" />;
         case 'download':
           return <FaDownload className="text-blue-500" />;
         case 'share':
@@ -1173,9 +1175,10 @@ const PoultryCalendar = () => {
   return (
     <>
       <PageTitle title="Poultry Calendar" />
-      <div className="min-h-screen bg-gray-100 pt-20 lg:pt-24">
+      <div className="neo-page min-h-screen pt-32 md:pt-36">
         {/* Main Container */}
         <div className="px-4 md:px-8 py-6 md:py-8">
+          <Breadcrumb />
           <InlineOfflineWarning
             message="Poultry calendar data may be limited while server is offline"
             className="mb-6"
@@ -1283,14 +1286,8 @@ const PoultryCalendar = () => {
 
           {/* Clean Loading state */}
           {loading && (
-            <div className="flex items-center justify-center py-16">
-              <div className="text-center">
-                <div className="relative mx-auto mb-4">
-                  <div className="w-8 h-8 rounded-full border-2 border-gray-200"></div>
-                  <div className="absolute top-0 left-0 w-8 h-8 rounded-full border-2 border-transparent border-t-blue-600 animate-spin"></div>
-                </div>
-                <p className="text-gray-600"><T>Loading poultry calendar data...</T></p>
-              </div>
+            <div className="py-8">
+              <TableSkeleton rows={6} columns={5} />
             </div>
           )}
 

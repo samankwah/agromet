@@ -1,7 +1,7 @@
 import translationService from './translationService';
 
-const DEBOUNCE_MS = 50;
-const MAX_CONCURRENT = 2;
+const DEBOUNCE_MS = 25;
+const MAX_CONCURRENT = 6;
 
 class TranslationBatchQueue {
   constructor() {
@@ -10,11 +10,27 @@ class TranslationBatchQueue {
   }
 
   enqueue(text, targetLang, sourceLang = 'en') {
+    text = String(text || '').replace(/\s+/g, ' ').trim();
+    if (!text || targetLang === sourceLang) {
+      return Promise.resolve(text);
+    }
+
+    if (
+      typeof translationService.shouldTranslateText === 'function'
+      && !translationService.shouldTranslateText(text, targetLang, sourceLang)
+    ) {
+      return Promise.resolve(text);
+    }
+
     const key = `${text}_${sourceLang}_${targetLang}`;
 
     // Check cache synchronously first
     if (translationService.cache.has(key)) {
-      return Promise.resolve(translationService.cache.get(key));
+      const cached = translationService.cache.get(key);
+      if (cached && cached !== text) {
+        return Promise.resolve(cached);
+      }
+      translationService.cache.delete(key);
     }
 
     return new Promise((resolve, reject) => {
@@ -40,26 +56,69 @@ class TranslationBatchQueue {
 
     if (items.length === 0) return;
 
-    // Process with concurrency limit
+    const groupedItems = new Map();
+    items.forEach((item) => {
+      const groupKey = `${item.sourceLang}->${item.targetLang}`;
+      if (!groupedItems.has(groupKey)) {
+        groupedItems.set(groupKey, []);
+      }
+      groupedItems.get(groupKey).push(item);
+    });
+
+    const processGroup = async (groupItems) => {
+      const { targetLang, sourceLang } = groupItems[0];
+      try {
+        const translatedMap = await translationService.translateMany(
+          groupItems.map((item) => item.text),
+          targetLang,
+          sourceLang
+        );
+
+        groupItems.forEach((item) => {
+          const result = translatedMap.get(item.text);
+          const shouldTranslate =
+            typeof translationService.shouldTranslateText !== 'function'
+            || translationService.shouldTranslateText(
+              item.text,
+              item.targetLang,
+              item.sourceLang
+            );
+
+          if (result && (result !== item.text || !shouldTranslate)) {
+            item.callbacks.forEach((cb) => cb.resolve(result));
+          } else {
+            item.callbacks.forEach((cb) => cb.reject(new Error('No usable translation')));
+          }
+        });
+      } catch {
+        await Promise.allSettled(
+          groupItems.map(async (item) => {
+            try {
+              const result = await translationService.translate(
+                item.text,
+                item.targetLang,
+                item.sourceLang
+              );
+              item.callbacks.forEach((cb) => cb.resolve(result));
+            } catch (err) {
+              item.callbacks.forEach((cb) => cb.reject(err));
+            }
+          })
+        );
+      }
+    };
+
+    const groups = [...groupedItems.values()];
     let i = 0;
     const next = async () => {
-      while (i < items.length) {
-        const item = items[i++];
-        try {
-          const result = await translationService.translate(
-            item.text,
-            item.targetLang,
-            item.sourceLang
-          );
-          item.callbacks.forEach((cb) => cb.resolve(result));
-        } catch (err) {
-          item.callbacks.forEach((cb) => cb.reject(err));
-        }
+      while (i < groups.length) {
+        const group = groups[i++];
+        await processGroup(group);
       }
     };
 
     const workers = Array.from(
-      { length: Math.min(MAX_CONCURRENT, items.length) },
+      { length: Math.min(MAX_CONCURRENT, groups.length) },
       () => next()
     );
     await Promise.allSettled(workers);

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import Breadcrumb from "../components/common/Breadcrumb";
 import { motion } from "framer-motion";
 import {
   Target,
@@ -69,11 +70,10 @@ const About = () => {
   return (
     <>
       <PageTitle title="About AgroMet" />
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-emerald-50/30 relative overflow-hidden">
-        <div className="absolute top-0 -left-40 w-[500px] h-[500px] bg-emerald-200/30 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute top-96 -right-40 w-[500px] h-[500px] bg-teal-200/30 rounded-full blur-3xl pointer-events-none" />
+      <div className="neo-page min-h-screen relative overflow-hidden">
 
         <div className="max-w-7xl mx-auto px-6 lg:px-8 pt-28 pb-20 relative">
+          <Breadcrumb />
           {/* Hero */}
           <motion.header
             initial="hidden"

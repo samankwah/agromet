@@ -15,6 +15,7 @@ import TemplateGenerationService from '../../services/templateGenerationService'
 import { safeRender, safeRenderForCard } from '../../utils/renderUtils';
 import PoultryAdvisoryUpload from './PoultryAdvisoryUpload';
 import { GHANA_REGIONS, POULTRY_TYPES, getRegionByCode, getDistrictByCode, getPoultryTypeByCode, getBreedByCode } from '../../data/ghanaCodes';
+import { TableSkeleton } from '../common/SkeletonLoading';
 
 const PoultryAdvisoryManager = () => {
   const [data, setData] = useState([]);
@@ -159,9 +160,8 @@ const PoultryAdvisoryManager = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
-        <span className="ml-2 text-gray-600">Loading poultry advisory data...</span>
+      <div className="py-6">
+        <TableSkeleton rows={6} columns={5} />
       </div>
     );
   }
@@ -186,7 +186,7 @@ const PoultryAdvisoryManager = () => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow">
+    <div className="neo-table-shell">
       {/* Header */}
       <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-3 sm:space-y-0">
@@ -224,7 +224,7 @@ const PoultryAdvisoryManager = () => {
       </div>
 
       {/* Filters */}
-      <div className="px-4 sm:px-6 py-4 bg-gray-50 border-b border-gray-200">
+      <div className="px-4 sm:px-6 py-4 bg-white/25 border-b neo-divider">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3">
           {/* Search */}
           <div className="flex items-center space-x-2">
@@ -426,7 +426,7 @@ const PoultryAdvisoryManager = () => {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
+            <div className="px-6 py-3 bg-white/25 border-t neo-divider">
               <div className="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0">
                 <div className="text-sm text-gray-700">
                   Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredData.length)} of {filteredData.length} results
@@ -472,7 +472,7 @@ const PoultryAdvisoryManager = () => {
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
             {paginatedData.map((item, index) => (
-              <div key={item.id || index} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+              <div key={item.id || index} className="neo-surface-soft p-4 transition-shadow">
                 <div className="flex justify-between items-start mb-3">
                   <div>
                     <h4 className="font-semibold text-gray-900">
@@ -528,7 +528,7 @@ const PoultryAdvisoryManager = () => {
 
           {/* Pagination for Card View */}
           {totalPages > 1 && (
-            <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
+            <div className="px-6 py-3 bg-white/25 border-t neo-divider">
               <div className="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0">
                 <div className="text-sm text-gray-700">
                   Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredData.length)} of {filteredData.length} results

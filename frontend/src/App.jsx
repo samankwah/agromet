@@ -1,13 +1,16 @@
 import { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import PropTypes from 'prop-types';
 import { ChatbotProvider } from './contexts/ChatbotContext';
-import { LanguageProvider } from './contexts/LanguageContext';
+import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import Layout from './pages/Layout';
 import Home from './pages/Home';
 import NotFound from './components/NotFound';
 import ErrorBoundary from './components/ErrorBoundary';
 import ScrollToTop from './components/ScrollToTop';
+import AutoTranslate from './components/common/AutoTranslate';
+import { PageSkeleton } from './components/common/SkeletonLoading';
 
 const About = lazy(() => import('./pages/About'));
 const Contact = lazy(() => import('./pages/Contact'));
@@ -39,11 +42,7 @@ const CombineView = lazy(() => import('./pages/CombineView'));
 const MarketPage = lazy(() => import('./components/MarketPage'));
 const CropDiagnosticTool = lazy(() => import('./components/CropDiagnosticTool'));
 
-const RouteLoader = () => (
-  <div className="flex min-h-[50vh] items-center justify-center">
-    <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-green-600"></div>
-  </div>
-);
+const RouteLoader = () => <PageSkeleton />;
 
 const withSuspense = (element) => (
   <Suspense fallback={<RouteLoader />}>
@@ -51,11 +50,28 @@ const withSuspense = (element) => (
   </Suspense>
 );
 
+const ChatbotLanguageBridge = ({ children }) => {
+  const { currentLanguage, setLanguage } = useLanguage();
+
+  return (
+    <ChatbotProvider
+      currentLanguage={currentLanguage}
+      setLanguage={setLanguage}
+    >
+      {children}
+    </ChatbotProvider>
+  );
+};
+
+ChatbotLanguageBridge.propTypes = {
+  children: PropTypes.node.isRequired,
+};
+
 function App() {
   return (
     <ErrorBoundary>
       <LanguageProvider>
-      <ChatbotProvider>
+      <ChatbotLanguageBridge>
         <Router
           future={{
             v7_startTransition: true,
@@ -63,6 +79,7 @@ function App() {
           }}
         >
           <ScrollToTop />
+          <AutoTranslate />
           <Toaster position="top-right" />
           <Routes>
             <Route element={<Layout />}>
@@ -107,26 +124,24 @@ function App() {
               <Route path="/privacy" element={withSuspense(<PrivacyPolicy />)} />
               <Route path="/terms-of-service" element={withSuspense(<TermsOfService />)} />
               <Route path="/terms" element={withSuspense(<TermsOfService />)} />
-
-              {/* Admin app routes */}
-              <Route path="/dashboard" element={withSuspense(<DashboardPage />)} />
-
-              {/* Calendar preview routes */}
-              <Route path="/calendar-preview" element={withSuspense(<CalendarPreviewPage />)} />
-              <Route path="/poultry-calendar-preview" element={withSuspense(<PoultryCalendarPreviewPage />)} />
-              <Route path="/create-poultry-calendar" element={withSuspense(<CreatePoultryCalendarPage />)} />
-              <Route path="/combine-view" element={withSuspense(<CombineView />)} />
             </Route>
 
             {/* Standalone auth routes */}
             <Route path="/admin-login" element={withSuspense(<AdminLogin />)} />
             <Route path="/admin-signup" element={withSuspense(<AdminSignUp />)} />
 
+            {/* Standalone admin app routes */}
+            <Route path="/dashboard" element={withSuspense(<DashboardPage />)} />
+            <Route path="/calendar-preview" element={withSuspense(<CalendarPreviewPage />)} />
+            <Route path="/poultry-calendar-preview" element={withSuspense(<PoultryCalendarPreviewPage />)} />
+            <Route path="/create-poultry-calendar" element={withSuspense(<CreatePoultryCalendarPage />)} />
+            <Route path="/combine-view" element={withSuspense(<CombineView />)} />
+
             {/* 404 catch-all */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Router>
-      </ChatbotProvider>
+      </ChatbotLanguageBridge>
       </LanguageProvider>
     </ErrorBoundary>
   );

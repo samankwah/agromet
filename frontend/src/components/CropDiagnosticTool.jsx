@@ -1,12 +1,12 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import PageTitle from './PageTitle';
+import Breadcrumb from './common/Breadcrumb';
 import {
   Camera,
   Upload,
   Leaf,
   AlertTriangle,
   CheckCircle,
-  Loader,
   X,
   Bell,
   RefreshCw,
@@ -21,6 +21,7 @@ import translationService from "../services/translationService";
 import diseaseDetectionService from "../services/diseaseDetectionService";
 import useTranslation from "../hooks/useTranslation";
 import SpeakButton from "./common/SpeakButton";
+import { InlineBusySkeleton, TableSkeleton } from "./common/SkeletonLoading";
 
 axiosRetry(axios, {
   retries: 3,
@@ -39,8 +40,8 @@ const PlantDiseaseDetector = () => {
   const [dragOver, setDragOver] = useState(false);
   const [cameraStream, setCameraStream] = useState(null);
 
-  // Ghana NLP Integration - shared context
-  const { currentLanguage, getDisplayText, isEnglish } = useTranslation();
+  // Language integration - shared context
+  const { currentLanguage, getDisplayText } = useTranslation();
   const [translatedResult, setTranslatedResult] = useState(null);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [diagnosisHistory, setDiagnosisHistory] = useState([]);
@@ -388,7 +389,7 @@ const PlantDiseaseDetector = () => {
     }
     try {
       return new Date(value).toLocaleString();
-    } catch (dateError) {
+    } catch {
       return value;
     }
   }, []);
@@ -516,7 +517,7 @@ const PlantDiseaseDetector = () => {
     }
   }, [result?.historyId, loadDiagnosisHistory]);
 
-  // Ghana NLP Integration Functions
+  // Language integration functions
   const translateResults = async (resultData = result) => {
     if (!resultData || currentLanguage === "en") {
       console.log("⏭️ Skipping translation - no data or English language");
@@ -719,9 +720,7 @@ const PlantDiseaseDetector = () => {
   return (
     <>
       <PageTitle title="Crop Disease Diagnosis Tool" />
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-emerald-50/30 pt-20 lg:pt-24 p-4 sm:p-8 relative overflow-hidden">
-      <div className="absolute top-0 -left-40 w-[500px] h-[500px] bg-emerald-200/30 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-96 -right-40 w-[500px] h-[500px] bg-teal-200/30 rounded-full blur-3xl pointer-events-none" />
+      <div className="neo-page min-h-screen pt-32 md:pt-36 p-4 sm:p-8 relative overflow-hidden">
       {/* Voice Controls - Fixed Responsive Positioning */}
       <div className="fixed top-4 right-4 z-[60] flex flex-col gap-2 md:flex-row mt-20">
         {/* Text-to-Speech Button */}
@@ -748,6 +747,7 @@ const PlantDiseaseDetector = () => {
       </div>
 
       <div className="max-w-7xl mx-auto relative">
+        <Breadcrumb />
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -984,10 +984,7 @@ const PlantDiseaseDetector = () => {
                     onKeyDown={(e) => handleKeyDown(e, detectDisease)}
                   >
                     {isLoading ? (
-                      <>
-                        <Loader className="w-5 h-5 mr-2 animate-spin" />
-                        {getDisplayText("analyzing", "Analyzing...")}
-                      </>
+                      <InlineBusySkeleton label={getDisplayText("analyzing", "Analyzing...")} />
                     ) : (
                       <>
                         <Leaf className="w-5 h-5 mr-2" />
@@ -1254,9 +1251,8 @@ const PlantDiseaseDetector = () => {
             )}
 
             {historyLoading ? (
-              <div className="py-10 text-center text-gray-500">
-                <Loader className="w-5 h-5 mx-auto mb-3 animate-spin" />
-                {getDisplayText("loadingHistory", "Loading diagnosis history...")}
+              <div className="py-4">
+                <TableSkeleton rows={3} columns={3} />
               </div>
             ) : diagnosisHistory.length === 0 ? (
               <div className="py-10 text-center text-gray-500">

@@ -3,8 +3,7 @@
  * Provides voice input/output and local language support for Ghana
  */
 
-import axios from 'axios';
-import API_CONFIG from '../config/apiConfig';
+import translationService from './translationService';
 
 class VoiceLanguageService {
   constructor() {
@@ -144,34 +143,20 @@ class VoiceLanguageService {
         return { success: true, translatedText: text, sourceLanguage, targetLanguage };
       }
 
-      const response = await axios.post(`${API_CONFIG.BACKEND_BASE_URL}/api/v1/translate`, {
-        in: text,
-        lang: `${sourceLanguage}-${targetLanguage}`
-      });
-      if (response && response.data) {
-        const translatedText =
-          typeof response.data === 'string'
-            ? response.data
-            : response.data.out || response.data.translation || response.data.text;
-        return {
-          success: true,
-          translatedText,
-          sourceLanguage,
-          targetLanguage,
-          confidence: 0.8
-        };
-      } else {
-        // Fallback to agricultural term replacement for basic translation
-        const basicTranslation = this.basicTermTranslation(text, targetLanguage);
-        return {
-          success: true,
-          translatedText: basicTranslation,
-          sourceLanguage,
-          targetLanguage,
-          confidence: 0.6,
-          method: 'basic_term_replacement'
-        };
-      }
+      const translatedText = await translationService.translate(
+        text,
+        targetLanguage,
+        sourceLanguage
+      );
+
+      return {
+        success: true,
+        translatedText,
+        sourceLanguage,
+        targetLanguage,
+        confidence: 0.8,
+        method: 'browser_translation'
+      };
 
     } catch (error) {
       console.error('Translation error:', error);
@@ -233,7 +218,15 @@ class VoiceLanguageService {
       utterance.rate = options.rate || this.speechSettings.rate;
       utterance.pitch = options.pitch || this.speechSettings.pitch;
       utterance.volume = options.volume || this.speechSettings.volume;
-      utterance.lang = language === 'en' ? 'en-GH' : language;
+      const speechLangMap = {
+        en: 'en-GH',
+        tw: 'ak-GH',
+        gaa: 'gaa-GH',
+        ee: 'ee-GH',
+        dag: 'en-GH',
+        ha: 'ha-NG',
+      };
+      utterance.lang = speechLangMap[language] || language;
 
       // Event handlers
       utterance.onend = () => {
@@ -280,6 +273,7 @@ class VoiceLanguageService {
 
       let finalTranscript = '';
       let isListening = true;
+      let bestConfidence = 0.8;
 
       // Event handlers
       recognition.onresult = (event) => {
@@ -290,6 +284,7 @@ class VoiceLanguageService {
           
           if (event.results[i].isFinal) {
             finalTranscript += transcript;
+            bestConfidence = event.results[i][0]?.confidence || bestConfidence;
           } else {
             interimTranscript += transcript;
           }
@@ -307,7 +302,7 @@ class VoiceLanguageService {
             success: true,
             transcript: finalTranscript,
             language,
-            confidence: event.results[0]?.[0]?.confidence || 0.8
+            confidence: bestConfidence
           });
         }
       };
@@ -405,7 +400,7 @@ class VoiceLanguageService {
     }
 
     // Check for Ga terms
-    const gaTerms = Object.values(this.agriculturalTerms.ga || {});
+    const gaTerms = Object.values(this.agriculturalTerms.gaa || {});
     if (gaTerms.some(term => lowerText.includes(term))) {
       return 'gaa';
     }
@@ -499,7 +494,8 @@ class VoiceLanguageService {
         supported: 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window
       },
       translation: {
-        backendProxyConfigured: !!API_CONFIG.BACKEND_BASE_URL,
+        backendProxyConfigured: false,
+        browserTranslation: true,
         supportedLanguages: Object.keys(this.supportedLanguages).length,
         agriculturalTerms: Object.keys(this.agriculturalTerms).length
       },

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Mic, MicOff, Loader } from "lucide-react";
+import { Mic, MicOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const VoiceInput = ({ onTranscript, onCommand, language = "en" }) => {

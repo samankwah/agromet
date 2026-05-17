@@ -1,18 +1,17 @@
 import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaPaperPlane } from "react-icons/fa";
 import PageTitle from "../components/PageTitle";
+import Breadcrumb from "../components/common/Breadcrumb";
 import T from "../components/common/T";
 
 const Contact = () => {
   return (
     <>
       <PageTitle title="Contact Us" />
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-emerald-50/30 relative overflow-hidden">
-        <div className="absolute top-20 -left-32 w-96 h-96 bg-emerald-200/30 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute top-40 -right-32 w-96 h-96 bg-teal-200/30 rounded-full blur-3xl pointer-events-none" />
-
+      <div className="neo-page min-h-screen relative">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 pt-28 pb-20 relative">
+          <Breadcrumb />
           <header className="text-center mb-16">
-            <span className="inline-block px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold uppercase tracking-wider mb-4">
+              <span className="inline-block px-4 py-2 rounded-full bg-neo-bg text-neo-accent-strong text-xs font-semibold uppercase tracking-wider mb-4 shadow-neo-pressed">
               <T>Get in Touch</T>
             </span>
             <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight mb-4">
@@ -28,7 +27,7 @@ const Contact = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
             {/* Contact Form */}
-            <div className="lg:col-span-3 bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow p-8 lg:p-10">
+            <div className="lg:col-span-3 neo-panel">
               <h2 className="text-2xl font-semibold text-slate-900 mb-6">
                 <T>Send Us a Message</T>
               </h2>
@@ -39,7 +38,7 @@ const Contact = () => {
                   </label>
                   <input
                     type="text"
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"
+                    className="neo-input"
                     placeholder="Your full name"
                   />
                 </div>
@@ -49,7 +48,7 @@ const Contact = () => {
                   </label>
                   <input
                     type="email"
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"
+                    className="neo-input"
                     placeholder="you@example.com"
                   />
                 </div>
@@ -58,14 +57,14 @@ const Contact = () => {
                     <T>Message</T>
                   </label>
                   <textarea
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition resize-none"
+                    className="neo-input rounded-neo resize-none"
                     rows="6"
                     placeholder="How can we help?"
                   ></textarea>
                 </div>
                 <button
                   type="submit"
-                  className="inline-flex items-center justify-center gap-2 w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-8 py-3 rounded-lg transition-colors"
+                  className="neo-button-primary w-full sm:w-auto"
                 >
                   <FaPaperPlane className="w-4 h-4" />
                   <T>Send Message</T>
@@ -75,13 +74,13 @@ const Contact = () => {
 
             {/* Contact Info */}
             <div className="lg:col-span-2 space-y-6">
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow p-8">
+              <div className="neo-panel">
                 <h2 className="text-2xl font-semibold text-slate-900 mb-6">
                   <T>Reach Us Directly</T>
                 </h2>
                 <div className="space-y-5">
                   <div className="flex items-start gap-4">
-                    <span className="inline-flex w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 items-center justify-center flex-shrink-0">
+                    <span className="neo-icon-button flex-shrink-0">
                       <FaMapMarkerAlt className="w-5 h-5" />
                     </span>
                     <div>
@@ -95,7 +94,7 @@ const Contact = () => {
                   </div>
 
                   <div className="flex items-start gap-4">
-                    <span className="inline-flex w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 items-center justify-center flex-shrink-0">
+                    <span className="neo-icon-button flex-shrink-0">
                       <FaPhoneAlt className="w-5 h-5" />
                     </span>
                     <div>
@@ -112,7 +111,7 @@ const Contact = () => {
                   </div>
 
                   <div className="flex items-start gap-4">
-                    <span className="inline-flex w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 items-center justify-center flex-shrink-0">
+                    <span className="neo-icon-button flex-shrink-0">
                       <FaEnvelope className="w-5 h-5" />
                     </span>
                     <div>
@@ -133,8 +132,8 @@ const Contact = () => {
           </div>
 
           {/* Map */}
-          <div className="mt-12 bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-            <div className="p-6 border-b border-slate-200">
+          <div className="neo-panel mt-12">
+            <div className="pb-6 border-b neo-divider">
               <h2 className="text-xl font-semibold text-slate-900">
                 <T>Find Us on the Map</T>
               </h2>

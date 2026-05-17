@@ -8,13 +8,13 @@ import {
   FaFileCsv,
   FaFileAlt,
   FaFileExcel,
-  FaSpinner,
   FaCheckCircle,
   FaExclamationTriangle,
 } from "react-icons/fa";
 import userService from "../../services/userService";
 import { validateFile, FileValidationError, formatFileSize } from "../../utils/fileValidation";
 import { logger } from "../../utils/logger";
+import { InlineBusySkeleton } from "../common/SkeletonLoading";
 
 const FileUploadForm = ({ reportType, onUploadSuccess }) => {
   const [file, setFile] = useState(null);
@@ -362,8 +362,7 @@ const FileUploadForm = ({ reportType, onUploadSuccess }) => {
         >
           {isUploading ? (
             <span className="flex items-center justify-center">
-              <FaSpinner className="animate-spin mr-2" />
-              Uploading...
+              <InlineBusySkeleton label="Uploading..." />
             </span>
           ) : (
             "Upload File"

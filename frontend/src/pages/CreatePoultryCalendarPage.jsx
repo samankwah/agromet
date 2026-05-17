@@ -22,7 +22,7 @@ const CreatePoultryCalendarPage = () => {
     <>
       <PageTitle title="Create Poultry Calendar" />
       <div 
-        className="min-h-screen bg-gray-100 flex items-center justify-center p-4"
+        className="neo-page min-h-screen flex items-center justify-center p-4"
         onClick={handleBackgroundClick}
       >
         <div onClick={(e) => e.stopPropagation()}>

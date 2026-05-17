@@ -15,6 +15,8 @@ import chatbotService from "../../services/chatbotService";
 import personalizedFarmingService from "../../services/personalizedFarmingService";
 import translationService from "../../services/translationService";
 import useTranslation from "../../hooks/useTranslation";
+import T from "../common/T";
+import useT from "../../hooks/useT";
 
 const ChatInterface = ({ isOpen, onClose, onMinimize, userContext = {} }) => {
   const [messages, setMessages] = useState([]);
@@ -24,8 +26,9 @@ const ChatInterface = ({ isOpen, onClose, onMinimize, userContext = {} }) => {
   const [farmProfile, setFarmProfile] = useState(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   
-  // Ghana NLP Integration - shared context
-  const { currentLanguage, setLanguage, supportedLanguages, isEnglish, getDisplayText } = useTranslation();
+  // Language integration - shared context
+  const { currentLanguage, setLanguage, supportedLanguages } = useTranslation();
+  const { t } = useT();
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
   const [translatedMessages, setTranslatedMessages] = useState(new Map());
 
@@ -42,18 +45,19 @@ const ChatInterface = ({ isOpen, onClose, onMinimize, userContext = {} }) => {
 
     if (messages.length === 0) {
       const welcomeText = profileResult.success
-        ? `${getDisplayText("welcomeMessage", "Hello! I'm AgriBot, your agricultural assistant.")} I can help you with farming questions, crop advice, weather information, and more.\n\n${getDisplayText("profileWelcome", "Welcome back!")} ${profileResult.profile.personal.name}! I have your farm profile ready for personalized advice.\n\n${getDisplayText("whatToKnow", "What would you like to know about farming today?")}`
-        : `${getDisplayText("welcomeMessage", "Hello! I'm AgriBot, your agricultural assistant.")} I can help you with farming questions, crop advice, weather information, and more.\n\n${getDisplayText("createProfile", "Create a farm profile to get personalized recommendations for your specific location and crops.")}\n\n${getDisplayText("whatToKnow", "What would you like to know about farming today?")}`;
+        ? `Hello! I'm AgriBot, your agricultural assistant. I can help you with farming questions, crop advice, weather information, and more.\n\nWelcome back, ${profileResult.profile.personal.name}. I have your farm profile ready for personalized advice.\n\nWhat would you like to know about farming today?`
+        : "Hello! I'm AgriBot, your agricultural assistant. I can help you with farming questions, crop advice, weather information, and more.\n\nCreate a farm profile to get personalized recommendations for your specific location and crops.\n\nWhat would you like to know about farming today?";
       
       const welcomeMessage = {
         id: Date.now(),
         text: welcomeText,
         isUser: false,
         timestamp: Date.now(),
+        sourceLanguage: "en",
       };
       setMessages([welcomeMessage]);
     }
-  }, [messages.length, getDisplayText]);
+  }, [messages.length]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -63,13 +67,17 @@ const ChatInterface = ({ isOpen, onClose, onMinimize, userContext = {} }) => {
   // Handle language change and translate existing messages
   useEffect(() => {
     const translateExistingMessages = async () => {
-      if (currentLanguage === "en" || messages.length === 0) return;
+      if (currentLanguage === "en" || messages.length === 0) {
+        setTranslatedMessages(new Map());
+        return;
+      }
 
       try {
         const translations = new Map();
         
         for (const message of messages) {
-          if (!message.isUser && message.text) {
+          const sourceLanguage = message.sourceLanguage || "en";
+          if (!message.isUser && message.text && sourceLanguage === "en") {
             const translatedText = await translationService.translate(
               message.text,
               currentLanguage,
@@ -125,6 +133,7 @@ const ChatInterface = ({ isOpen, onClose, onMinimize, userContext = {} }) => {
             "\n\n*This is a quick answer. Feel free to ask for more details!*",
           isUser: false,
           timestamp: Date.now(),
+          sourceLanguage: "en",
         };
         setMessages((prev) => [...prev, botMessage]);
         setIsLoading(false);
@@ -161,27 +170,12 @@ const ChatInterface = ({ isOpen, onClose, onMinimize, userContext = {} }) => {
       );
 
       if (response.success) {
-        let botMessageText = response.message;
-        
-        // Translate bot response if not in English
-        if (currentLanguage !== "en") {
-          try {
-            botMessageText = await translationService.translate(
-              response.message,
-              currentLanguage,
-              "en"
-            );
-          } catch (translationError) {
-            console.error("Translation failed:", translationError);
-            // Keep original message if translation fails
-          }
-        }
-        
         const botMessage = {
           id: Date.now() + 1,
-          text: botMessageText,
+          text: response.message,
           isUser: false,
           timestamp: Date.now(),
+          sourceLanguage: "en",
         };
         setMessages((prev) => [...prev, botMessage]);
 
@@ -206,6 +200,7 @@ const ChatInterface = ({ isOpen, onClose, onMinimize, userContext = {} }) => {
         isUser: false,
         timestamp: Date.now(),
         isError: true,
+        sourceLanguage: "en",
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
@@ -222,10 +217,15 @@ const ChatInterface = ({ isOpen, onClose, onMinimize, userContext = {} }) => {
   const downloadChat = () => {
     const chatContent = messages
       .map(
-        (msg) =>
+        (msg) => {
+          const displayText = !msg.isUser ? translatedMessages.get(msg.id) || msg.text : msg.text;
+          const speakerLabel = msg.isUser ? t("You") : "AgriBot";
+          return (
           `[${new Date(msg.timestamp).toLocaleString()}] ${
-            msg.isUser ? "You" : "AgriBot"
-          }: ${msg.text}`
+            speakerLabel
+          }: ${displayText}`
+          );
+        }
       )
       .join("\n\n");
 
@@ -247,6 +247,7 @@ const ChatInterface = ({ isOpen, onClose, onMinimize, userContext = {} }) => {
       text: `🎉 Great! Your farm profile has been created successfully. I can now provide personalized recommendations for your ${newProfile.farm.size.value} ${newProfile.farm.size.unit} farm in ${newProfile.personal.region}. \n\nFeel free to ask me about crop recommendations, seasonal planning, or any farming questions!`,
       isUser: false,
       timestamp: Date.now(),
+      sourceLanguage: "en",
     };
     setMessages((prev) => [...prev, profileMessage]);
   };
@@ -258,19 +259,19 @@ const ChatInterface = ({ isOpen, onClose, onMinimize, userContext = {} }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed top-20 left-4 right-4 bottom-4 sm:bottom-4 sm:right-4 sm:top-auto sm:left-auto sm:w-96 md:w-[420px] lg:w-[480px] sm:h-[500px] md:h-[600px] lg:h-[700px] bg-white rounded-lg shadow-2xl border border-gray-200 flex flex-col z-40">
+    <div className="neo-surface fixed top-20 left-4 right-4 bottom-4 sm:bottom-4 sm:right-4 sm:top-auto sm:left-auto sm:w-96 md:w-[420px] lg:w-[480px] sm:h-[500px] md:h-[600px] lg:h-[700px] flex flex-col z-40 overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between p-3 sm:p-4 md:p-5 border-b border-gray-200 bg-green-500 text-white rounded-t-lg">
+      <div className="flex items-center justify-between p-3 sm:p-4 md:p-5 border-b neo-divider bg-white/35 text-neo-text">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-lg sm:text-xl md:text-2xl">
+          <div className="neo-icon-button w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-lg sm:text-xl md:text-2xl">
             🤖
           </div>
           <div>
             <h3 className="font-semibold text-base sm:text-lg md:text-xl">
               AgriBot
             </h3>
-            <p className="text-xs sm:text-sm md:text-base opacity-90">
-              Your farming assistant
+            <p className="text-xs sm:text-sm md:text-base text-neo-muted">
+              <T>Your farming assistant</T>
             </p>
           </div>
         </div>
@@ -279,20 +280,20 @@ const ChatInterface = ({ isOpen, onClose, onMinimize, userContext = {} }) => {
           <div className="relative">
             <button
               onClick={() => setShowLanguageSelector(!showLanguageSelector)}
-              className="p-1.5 sm:p-2 md:p-3 hover:bg-white hover:bg-opacity-20 rounded transition-colors"
-              title="Change language"
+              className="neo-icon-button h-9 w-9 sm:h-10 sm:w-10"
+              title={t("Change language")}
             >
               <FaGlobe className="text-xs sm:text-sm md:text-base" />
             </button>
             
             {showLanguageSelector && (
-              <div className="absolute top-full right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 min-w-[120px]">
+              <div className="neo-surface-soft absolute top-full right-0 mt-2 py-2 z-50 min-w-[140px]">
                 {Object.entries(supportedLanguages).map(([code, lang]) => (
                   <button
                     key={code}
                     onClick={() => handleLanguageChange(code)}
-                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition-colors ${
-                      currentLanguage === code ? 'bg-green-50 text-green-700' : 'text-gray-700'
+                    className={`w-full text-left px-4 py-2 text-sm transition-colors ${
+                      currentLanguage === code ? 'bg-neo-bg text-neo-accent-strong shadow-neo-pressed' : 'text-neo-text hover:bg-white/60'
                     }`}
                   >
                     <span className="mr-2">{lang.flag}</span>
@@ -305,36 +306,36 @@ const ChatInterface = ({ isOpen, onClose, onMinimize, userContext = {} }) => {
 
           <button
             onClick={openProfileModal}
-            className="p-1.5 sm:p-2 md:p-3 hover:bg-white hover:bg-opacity-20 rounded transition-colors"
-            title={farmProfile ? "View farm profile" : "Create farm profile"}
+            className="neo-icon-button h-9 w-9 sm:h-10 sm:w-10"
+            title={farmProfile ? t("View farm profile") : t("Create farm profile")}
           >
             <FaUser className="text-xs sm:text-sm md:text-base" />
           </button>
           <button
             onClick={downloadChat}
-            className="p-1.5 sm:p-2 md:p-3 hover:bg-white hover:bg-opacity-20 rounded transition-colors"
-            title="Download chat"
+            className="neo-icon-button h-9 w-9 sm:h-10 sm:w-10"
+            title={t("Download chat")}
           >
             <FaDownload className="text-xs sm:text-sm md:text-base" />
           </button>
           <button
             onClick={clearChat}
-            className="p-1.5 sm:p-2 md:p-3 hover:bg-white hover:bg-opacity-20 rounded transition-colors"
-            title="Clear chat"
+            className="neo-icon-button h-9 w-9 sm:h-10 sm:w-10"
+            title={t("Clear chat")}
           >
             <FaTrash className="text-xs sm:text-sm md:text-base" />
           </button>
           <button
             onClick={onMinimize}
-            className="p-1.5 sm:p-2 md:p-3 hover:bg-white hover:bg-opacity-20 rounded transition-colors"
-            title="Minimize"
+            className="neo-icon-button h-9 w-9 sm:h-10 sm:w-10"
+            title={t("Minimize")}
           >
             <FaMinusCircle className="text-xs sm:text-sm md:text-base" />
           </button>
           <button
             onClick={onClose}
-            className="p-1.5 sm:p-2 md:p-3 hover:bg-white hover:bg-opacity-20 rounded transition-colors"
-            title="Close"
+            className="neo-icon-button h-9 w-9 sm:h-10 sm:w-10"
+            title={t("Close")}
           >
             <FaTimes className="text-xs sm:text-sm md:text-base" />
           </button>
@@ -343,7 +344,7 @@ const ChatInterface = ({ isOpen, onClose, onMinimize, userContext = {} }) => {
 
       {/* Status Bar */}
       {(userContext.region || farmProfile) && (
-        <div className="px-3 sm:px-4 md:px-6 py-2 md:py-3 bg-blue-50 text-blue-700 text-xs sm:text-sm md:text-base border-b border-gray-100">
+        <div className="px-3 sm:px-4 md:px-6 py-2 md:py-3 bg-white/35 text-neo-accent-strong text-xs sm:text-sm md:text-base border-b neo-divider">
           {farmProfile ? (
             <>
               🌱 {farmProfile.personal.name} • {farmProfile.personal.region} •{" "}
@@ -359,7 +360,7 @@ const ChatInterface = ({ isOpen, onClose, onMinimize, userContext = {} }) => {
 
       {/* Error Display */}
       {error && (
-        <div className="px-3 sm:px-4 md:px-6 py-2 md:py-3 bg-red-50 text-red-700 text-xs sm:text-sm md:text-base border-b border-gray-100">
+        <div className="px-3 sm:px-4 md:px-6 py-2 md:py-3 bg-red-50 text-red-700 text-xs sm:text-sm md:text-base border-b neo-divider">
           ⚠️ {error}
         </div>
       )}
@@ -393,7 +394,7 @@ const ChatInterface = ({ isOpen, onClose, onMinimize, userContext = {} }) => {
       <ChatInput
         onSendMessage={handleSendMessage}
         disabled={isLoading}
-        placeholder={getDisplayText("chatPlaceholder", "Ask about crops, weather, diseases, or upload a photo...")}
+        placeholder={t("Ask about crops, weather, diseases, or upload a photo...")}
         currentLanguage={currentLanguage}
       />
 

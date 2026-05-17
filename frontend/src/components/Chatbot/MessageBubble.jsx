@@ -9,15 +9,14 @@ const MessageBubble = ({
   timestamp,
   isTyping = false,
   imageData = null,
-  currentLanguage: _currentLanguage,
   translatedText = null
 }) => {
   const [copied, setCopied] = useState(false);
-  const { speak, isSpeaking, stopSpeaking } = useTranslation();
+  const { speak, isSpeaking, stopSpeaking, getDisplayText } = useTranslation();
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(message);
+      await navigator.clipboard.writeText(translatedText || message);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
@@ -38,7 +37,7 @@ const MessageBubble = ({
     return text
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 py-0.5 rounded text-sm">$1</code>')
+      .replace(/`(.*?)`/g, '<code class="bg-white/70 px-1 py-0.5 rounded text-sm">$1</code>')
       .replace(/\n/g, '<br />');
   };
 
@@ -59,11 +58,11 @@ const MessageBubble = ({
           </div>
         </div>
         <div className="flex-1">
-          <div className="bg-gray-100 rounded-lg px-4 py-3 max-w-xs">
+          <div className="neo-inset px-4 py-3 max-w-xs">
             <div className="flex space-x-1">
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-75"></div>
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-150"></div>
+              <div className="w-2 h-2 bg-neo-muted rounded-full animate-pulse"></div>
+              <div className="w-2 h-2 bg-neo-muted rounded-full animate-pulse delay-75"></div>
+              <div className="w-2 h-2 bg-neo-muted rounded-full animate-pulse delay-150"></div>
             </div>
           </div>
         </div>
@@ -75,7 +74,7 @@ const MessageBubble = ({
     <div className={`flex items-start space-x-2 sm:space-x-3 mb-3 sm:mb-4 ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`}>
       <div className="flex-shrink-0">
         <div className={`w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center ${
-          isUser ? 'bg-blue-500' : 'bg-green-500'
+          isUser ? 'bg-neo-teal' : 'bg-neo-accent'
         }`}>
           {isUser ? (
             <FaUser className="text-white text-xs sm:text-sm md:text-base" />
@@ -87,10 +86,10 @@ const MessageBubble = ({
       
       <div className="flex-1 max-w-[80%] sm:max-w-[75%] md:max-w-[80%]">
         <div
-          className={`rounded-lg px-3 sm:px-4 md:px-5 py-2 sm:py-3 md:py-4 ${
+          className={`rounded-neo px-3 sm:px-4 md:px-5 py-2 sm:py-3 md:py-4 ${
             isUser
-              ? 'bg-blue-500 text-white ml-auto'
-              : 'bg-gray-100 text-gray-800'
+              ? 'bg-neo-teal text-white ml-auto shadow-neo-soft'
+              : 'neo-inset text-neo-text'
           }`}
         >
           {/* Image Display */}
@@ -98,8 +97,8 @@ const MessageBubble = ({
             <div className="mb-3">
               <img 
                 src={URL.createObjectURL(imageData.file)} 
-                alt="Uploaded crop image" 
-                className="max-w-full h-auto rounded-lg border border-gray-300"
+                alt={getDisplayText('uploadedCropImage', 'Uploaded crop image')} 
+                className="max-w-full h-auto rounded-neo border border-neo-border"
                 style={{ maxHeight: '200px' }}
               />
               {imageData.processing && (
@@ -111,6 +110,7 @@ const MessageBubble = ({
           )}
           
           <div
+            data-no-auto-translate="true"
             className="text-xs sm:text-sm md:text-base leading-relaxed"
             dangerouslySetInnerHTML={{
               __html: formatMessage(translatedText || message)
@@ -121,8 +121,12 @@ const MessageBubble = ({
             <div className="flex items-center space-x-1 mt-1 sm:mt-2">
               <button
                 onClick={handleSpeak}
-                className="p-1 sm:p-2 text-gray-500 hover:text-gray-700 transition-colors rounded"
-                title={isSpeaking ? 'Stop speaking' : 'Listen to message'}
+                className="p-1 sm:p-2 text-neo-muted hover:text-neo-accent-strong transition-colors rounded-full"
+                title={
+                  isSpeaking
+                    ? getDisplayText('stopSpeaking', 'Stop speaking')
+                    : getDisplayText('listenToMessage', 'Listen to message')
+                }
               >
                 {isSpeaking ? (
                   <FaStop className="text-red-500 text-xs sm:text-sm md:text-base" />
@@ -132,8 +136,8 @@ const MessageBubble = ({
               </button>
               <button
                 onClick={handleCopy}
-                className="p-1 sm:p-2 text-gray-500 hover:text-gray-700 transition-colors rounded"
-                title="Copy message"
+                className="p-1 sm:p-2 text-neo-muted hover:text-neo-accent-strong transition-colors rounded-full"
+                title={getDisplayText('copyMessage', 'Copy message')}
               >
                 {copied ? (
                   <FaCheck className="text-green-500 text-xs sm:text-sm md:text-base" />
@@ -146,7 +150,10 @@ const MessageBubble = ({
         </div>
         
         {timestamp && (
-          <div className={`text-xs sm:text-sm text-gray-500 mt-1 ${isUser ? 'text-right' : 'text-left'}`}>
+          <div
+            data-no-auto-translate="true"
+            className={`text-xs sm:text-sm text-neo-muted mt-1 ${isUser ? 'text-right' : 'text-left'}`}
+          >
             {formatTimestamp(timestamp)}
           </div>
         )}

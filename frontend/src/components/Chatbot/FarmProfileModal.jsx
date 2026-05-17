@@ -2,9 +2,12 @@ import { useState } from 'react';
 import { FaTimes, FaUser, FaMapMarkerAlt, FaSeedling, FaBullseye } from 'react-icons/fa';
 import PropTypes from 'prop-types';
 import personalizedFarmingService from '../../services/personalizedFarmingService';
-import { getAllRegionNames, getDistrictsByRegionName } from '../../data/ghanaCodes';
+import { getAllRegionNames } from '../../data/ghanaCodes';
+import T from '../common/T';
+import useT from '../../hooks/useT';
 
 const FarmProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
+  const { t } = useT();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     personal: {
@@ -157,40 +160,43 @@ const FarmProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-neo-text/35 flex items-center justify-center z-50 p-4">
+      <div className="neo-surface max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-800">Create Your Farm Profile</h2>
+        <div className="flex items-center justify-between p-6 border-b neo-divider">
+          <h2 className="text-xl font-bold text-neo-text">
+            <T>Create Your Farm Profile</T>
+          </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="neo-icon-button h-10 w-10"
+            aria-label={t('Close profile form')}
           >
-            <FaTimes className="text-gray-500" />
+            <FaTimes />
           </button>
         </div>
 
         {/* Progress Indicator */}
-        <div className="px-6 py-4 border-b border-gray-100">
+        <div className="px-6 py-4 border-b neo-divider">
           <div className="flex items-center justify-between mb-2">
             {[1, 2, 3, 4].map((stepNum) => (
               <div
                 key={stepNum}
                 className={`flex items-center justify-center w-8 h-8 rounded-full ${
                   stepNum <= step 
-                    ? 'bg-green-500 text-white' 
-                    : 'bg-gray-200 text-gray-500'
+                    ? 'bg-neo-accent text-white shadow-neo-soft' 
+                    : 'bg-neo-bg text-neo-muted shadow-neo-pressed'
                 }`}
               >
                 {stepNum}
               </div>
             ))}
           </div>
-          <div className="flex justify-between text-xs text-gray-500">
-            <span>Personal Info</span>
-            <span>Farm Details</span>
-            <span>Crops & Goals</span>
-            <span>Resources</span>
+          <div className="flex justify-between text-xs text-neo-muted">
+            <span><T>Personal Info</T></span>
+            <span><T>Farm Details</T></span>
+            <span><T>Crops & Goals</T></span>
+            <span><T>Resources</T></span>
           </div>
         </div>
 
@@ -199,57 +205,59 @@ const FarmProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
           {step === 1 && (
             <div className="space-y-4">
               <div className="flex items-center space-x-2 mb-4">
-                <FaUser className="text-green-500" />
-                <h3 className="text-lg font-semibold">Personal Information</h3>
+                <FaUser className="text-neo-accent" />
+                <h3 className="text-lg font-semibold text-neo-text">
+                  <T>Personal Information</T>
+                </h3>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name *
+                  <T>Full Name</T> *
                 </label>
                 <input
                   type="text"
                   value={formData.personal.name}
                   onChange={(e) => handleInputChange('personal', 'name', e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Enter your full name"
+                  placeholder={t('Enter your full name')}
                 />
                 {errors['personal.name'] && (
-                  <p className="text-red-500 text-xs mt-1">{errors['personal.name']}</p>
+                  <p className="text-red-500 text-xs mt-1"><T>{errors['personal.name']}</T></p>
                 )}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Region *
+                  <T>Region</T> *
                 </label>
                 <select
                   value={formData.personal.region}
                   onChange={(e) => handleInputChange('personal', 'region', e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
-                  <option value="">Select your region</option>
+                  <option value="">{t('Select your region')}</option>
                   {ghanaRegions.map((region) => (
                     <option key={region} value={region}>{region}</option>
                   ))}
                 </select>
                 {errors['personal.region'] && (
-                  <p className="text-red-500 text-xs mt-1">{errors['personal.region']}</p>
+                  <p className="text-red-500 text-xs mt-1"><T>{errors['personal.region']}</T></p>
                 )}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Farming Experience
+                  <T>Farming Experience</T>
                 </label>
                 <select
                   value={formData.personal.experience}
                   onChange={(e) => handleInputChange('personal', 'experience', e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
-                  <option value="beginner">Beginner (0-2 years)</option>
-                  <option value="intermediate">Intermediate (2-5 years)</option>
-                  <option value="experienced">Experienced (5+ years)</option>
+                  <option value="beginner">{t('Beginner (0-2 years)')}</option>
+                  <option value="intermediate">{t('Intermediate (2-5 years)')}</option>
+                  <option value="experienced">{t('Experienced (5+ years)')}</option>
                 </select>
               </div>
             </div>
@@ -260,13 +268,15 @@ const FarmProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
             <div className="space-y-4">
               <div className="flex items-center space-x-2 mb-4">
                 <FaMapMarkerAlt className="text-green-500" />
-                <h3 className="text-lg font-semibold">Farm Details</h3>
+                <h3 className="text-lg font-semibold">
+                  <T>Farm Details</T>
+                </h3>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Farm Size *
+                    <T>Farm Size</T> *
                   </label>
                   <input
                     type="number"
@@ -278,64 +288,64 @@ const FarmProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
                     step="0.1"
                   />
                   {errors['farm.size.value'] && (
-                    <p className="text-red-500 text-xs mt-1">{errors['farm.size.value']}</p>
+                    <p className="text-red-500 text-xs mt-1"><T>{errors['farm.size.value']}</T></p>
                   )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Unit
+                    <T>Unit</T>
                   </label>
                   <select
                     value={formData.farm.size.unit}
                     onChange={(e) => handleInputChange('farm', 'size', { ...formData.farm.size, unit: e.target.value })}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                   >
-                    <option value="acres">Acres</option>
-                    <option value="hectares">Hectares</option>
+                    <option value="acres">{t('Acres')}</option>
+                    <option value="hectares">{t('Hectares')}</option>
                   </select>
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Soil Type *
+                  <T>Soil Type</T> *
                 </label>
                 <select
                   value={formData.farm.soilType}
                   onChange={(e) => handleInputChange('farm', 'soilType', e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
-                  <option value="">Select soil type</option>
-                  <option value="sandy">Sandy</option>
-                  <option value="clay">Clay</option>
-                  <option value="loam">Loam</option>
-                  <option value="laterite">Laterite</option>
-                  <option value="mixed">Mixed</option>
+                  <option value="">{t('Select soil type')}</option>
+                  <option value="sandy">{t('Sandy')}</option>
+                  <option value="clay">{t('Clay')}</option>
+                  <option value="loam">{t('Loam')}</option>
+                  <option value="laterite">{t('Laterite')}</option>
+                  <option value="mixed">{t('Mixed')}</option>
                 </select>
                 {errors['farm.soilType'] && (
-                  <p className="text-red-500 text-xs mt-1">{errors['farm.soilType']}</p>
+                  <p className="text-red-500 text-xs mt-1"><T>{errors['farm.soilType']}</T></p>
                 )}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Primary Water Source *
+                  <T>Primary Water Source</T> *
                 </label>
                 <select
                   value={formData.farm.waterSource}
                   onChange={(e) => handleInputChange('farm', 'waterSource', e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
-                  <option value="">Select water source</option>
-                  <option value="rain-fed">Rain-fed</option>
-                  <option value="irrigation">Irrigation system</option>
-                  <option value="borehole">Borehole</option>
-                  <option value="river">River/Stream</option>
-                  <option value="well">Well</option>
+                  <option value="">{t('Select water source')}</option>
+                  <option value="rain-fed">{t('Rain-fed')}</option>
+                  <option value="irrigation">{t('Irrigation system')}</option>
+                  <option value="borehole">{t('Borehole')}</option>
+                  <option value="river">{t('River/Stream')}</option>
+                  <option value="well">{t('Well')}</option>
                 </select>
                 {errors['farm.waterSource'] && (
-                  <p className="text-red-500 text-xs mt-1">{errors['farm.waterSource']}</p>
+                  <p className="text-red-500 text-xs mt-1"><T>{errors['farm.waterSource']}</T></p>
                 )}
               </div>
             </div>
@@ -346,12 +356,14 @@ const FarmProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
             <div className="space-y-4">
               <div className="flex items-center space-x-2 mb-4">
                 <FaSeedling className="text-green-500" />
-                <h3 className="text-lg font-semibold">Crops & Goals</h3>
+                <h3 className="text-lg font-semibold">
+                  <T>Crops & Goals</T>
+                </h3>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Current Crops * (Select all that apply)
+                  <T>Current Crops</T> * (<T>Select all that apply</T>)
                 </label>
                 <div className="grid grid-cols-3 gap-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-3">
                   {commonCrops.map((crop) => (
@@ -362,29 +374,29 @@ const FarmProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
                         onChange={(e) => handleArrayChange('crops', 'current', crop, e.target.checked)}
                         className="rounded border-gray-300 text-green-500 focus:ring-green-500"
                       />
-                      <span className="capitalize">{crop}</span>
+                      <span className="capitalize"><T>{crop}</T></span>
                     </label>
                   ))}
                 </div>
                 {errors['crops.current'] && (
-                  <p className="text-red-500 text-xs mt-1">{errors['crops.current']}</p>
+                  <p className="text-red-500 text-xs mt-1"><T>{errors['crops.current']}</T></p>
                 )}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Primary Farming Goal
+                  <T>Primary Farming Goal</T>
                 </label>
                 <select
                   value={formData.goals.primary}
                   onChange={(e) => handleInputChange('goals', 'primary', e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
-                  <option value="">Select your main goal</option>
-                  <option value="income">Generate income</option>
-                  <option value="food_security">Food security</option>
-                  <option value="export">Export market</option>
-                  <option value="processing">Value addition/processing</option>
+                  <option value="">{t('Select your main goal')}</option>
+                  <option value="income">{t('Generate income')}</option>
+                  <option value="food_security">{t('Food security')}</option>
+                  <option value="export">{t('Export market')}</option>
+                  <option value="processing">{t('Value addition/processing')}</option>
                 </select>
               </div>
             </div>
@@ -395,57 +407,59 @@ const FarmProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
             <div className="space-y-4">
               <div className="flex items-center space-x-2 mb-4">
                 <FaBullseye className="text-green-500" />
-                <h3 className="text-lg font-semibold">Resources & Preferences</h3>
+                <h3 className="text-lg font-semibold">
+                  <T>Resources & Preferences</T>
+                </h3>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Budget Range
+                  <T>Budget Range</T>
                 </label>
                 <select
                   value={formData.resources.budget.range}
                   onChange={(e) => handleInputChange('resources', 'budget', { ...formData.resources.budget, range: e.target.value })}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
-                  <option value="">Select budget range</option>
-                  <option value="limited">Limited (Under GHS 1,000)</option>
-                  <option value="moderate">Moderate (GHS 1,000 - 5,000)</option>
-                  <option value="substantial">Substantial (GHS 5,000 - 20,000)</option>
-                  <option value="extensive">Extensive (Above GHS 20,000)</option>
+                  <option value="">{t('Select budget range')}</option>
+                  <option value="limited">{t('Limited (Under GHS 1,000)')}</option>
+                  <option value="moderate">{t('Moderate (GHS 1,000 - 5,000)')}</option>
+                  <option value="substantial">{t('Substantial (GHS 5,000 - 20,000)')}</option>
+                  <option value="extensive">{t('Extensive (Above GHS 20,000)')}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Labor Source
+                  <T>Labor Source</T>
                 </label>
                 <select
                   value={formData.resources.labor}
                   onChange={(e) => handleInputChange('resources', 'labor', e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
-                  <option value="">Select labor source</option>
-                  <option value="family">Family labor</option>
-                  <option value="hired">Hired labor</option>
-                  <option value="community">Community support</option>
-                  <option value="mixed">Mixed</option>
+                  <option value="">{t('Select labor source')}</option>
+                  <option value="family">{t('Family labor')}</option>
+                  <option value="hired">{t('Hired labor')}</option>
+                  <option value="community">{t('Community support')}</option>
+                  <option value="mixed">{t('Mixed')}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Storage Facilities
+                  <T>Storage Facilities</T>
                 </label>
                 <select
                   value={formData.resources.storage}
                   onChange={(e) => handleInputChange('resources', 'storage', e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
-                  <option value="">Select storage type</option>
-                  <option value="none">No storage facility</option>
-                  <option value="on-farm">On-farm storage</option>
-                  <option value="warehouse">Warehouse</option>
-                  <option value="cooperative">Cooperative storage</option>
+                  <option value="">{t('Select storage type')}</option>
+                  <option value="none">{t('No storage facility')}</option>
+                  <option value="on-farm">{t('On-farm storage')}</option>
+                  <option value="warehouse">{t('Warehouse')}</option>
+                  <option value="cooperative">{t('Cooperative storage')}</option>
                 </select>
               </div>
             </div>
@@ -454,7 +468,7 @@ const FarmProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
           {/* Error Display */}
           {errors.general && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-4">
-              <p className="text-red-600 text-sm">{errors.general}</p>
+              <p className="text-red-600 text-sm"><T>{errors.general}</T></p>
             </div>
           )}
 
@@ -466,11 +480,11 @@ const FarmProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
               disabled={step === 1}
               className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              Previous
+              <T>Previous</T>
             </button>
 
             <span className="text-sm text-gray-500">
-              Step {step} of 4
+              <T>Step</T> {step} <T>of</T> 4
             </span>
 
             {step < 4 ? (
@@ -479,7 +493,7 @@ const FarmProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
                 onClick={nextStep}
                 className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
               >
-                Next
+                <T>Next</T>
               </button>
             ) : (
               <button
@@ -487,7 +501,7 @@ const FarmProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
                 disabled={isSubmitting}
                 className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {isSubmitting ? 'Creating Profile...' : 'Create Profile'}
+                {isSubmitting ? <T>Creating Profile...</T> : <T>Create Profile</T>}
               </button>
             )}
           </div>

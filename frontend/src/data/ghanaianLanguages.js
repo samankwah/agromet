@@ -1,4 +1,4 @@
-// Ghana NLP API integrated language data for agricultural applications
+// Ghanaian language data for agricultural applications
 // Focus on 4 main Ghanaian languages + English
 export const ghanaianLanguages = {
   languages: {

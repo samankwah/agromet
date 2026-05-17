@@ -8,6 +8,7 @@ import { toast } from 'react-hot-toast';
 import { getRegionDistrictMapping, POULTRY_TYPES } from '../../data/ghanaCodes';
 import { getSafeDistrictsByRegion, getSafeRegions } from '../../utils/regionDistrictHelpers';
 import { SafeDistrictOptions } from '../../components/common/SafeSelectOptions';
+import { InlineBusySkeleton } from '../common/SkeletonLoading';
 
 const getPoultryTypesForForm = () => {
   const formattedTypes = {};
@@ -24,7 +25,8 @@ const months = [
   'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
-const buildPoultryPreviewForViewer = (extracted, formData) => {
+const buildPoultryPreviewForViewer = (previewResult, formData) => {
+  const extracted = previewResult.extracted || {};
   const totalWeeks = extracted.totalWeeks || 8;
   const timelineColumns = Array.from({ length: totalWeeks }, (_, index) => ({
     label: `WK${index + 1}`,
@@ -70,7 +72,9 @@ const buildPoultryPreviewForViewer = (extracted, formData) => {
       metadata: {
         warnings: extracted.warnings || [],
         sheets: extracted.sheets || [],
-      }
+      },
+      sourceSheets: previewResult.sourceSheets || [],
+      workbookMeta: previewResult.workbookMeta || {},
     }
   };
 };
@@ -225,7 +229,7 @@ const PoultryCalendarForm = ({ isOpen, onClose, onSave }) => {
     try {
       const previewResult = await requestPreview();
       return {
-        viewerPayload: buildPoultryPreviewForViewer(previewResult.extracted || {}, formData)
+        viewerPayload: buildPoultryPreviewForViewer(previewResult, formData)
       };
     } catch (error) {
       console.error('Error parsing poultry calendar preview:', error);
@@ -255,7 +259,7 @@ const PoultryCalendarForm = ({ isOpen, onClose, onSave }) => {
         startWeek: formData.productionCycle.startWeek
       }
     }));
-    navigate('/production/poultry-calendar-preview');
+    navigate('/poultry-calendar-preview');
   };
 
   const handleSave = async () => {
@@ -330,13 +334,13 @@ const PoultryCalendarForm = ({ isOpen, onClose, onSave }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-start justify-center p-4 overflow-y-auto">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full my-8 max-h-[calc(100vh-4rem)]">
+    <div className="fixed inset-0 z-50 bg-neo-text/35 flex items-start justify-center p-4 overflow-y-auto">
+      <div className="neo-surface max-w-4xl w-full my-8 max-h-[calc(100vh-4rem)]">
         <div className="flex flex-col h-full max-h-[calc(100vh-4rem)]">
           <div className="flex-shrink-0">
-            <div className="flex justify-between items-center p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">Create Poultry Calendar</h2>
-              <button onClick={onClose} className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100">
+            <div className="flex justify-between items-center p-6 border-b neo-divider">
+              <h2 className="text-xl font-semibold text-neo-text">Create Poultry Calendar</h2>
+              <button onClick={onClose} className="neo-icon-button h-10 w-10">
                 <FaTimes className="h-5 w-5" />
               </button>
             </div>
@@ -345,8 +349,8 @@ const PoultryCalendarForm = ({ isOpen, onClose, onSave }) => {
           <div className="flex-1 overflow-y-auto p-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Region <span className="text-red-500">*</span></label>
-                <select value={formData.region} onChange={(e) => handleInputChange('region', e.target.value)} className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 ${errors.region ? 'border-red-500' : 'border-gray-300'}`}>
+                <label className="neo-label mb-1 block">Region <span className="text-red-500">*</span></label>
+                <select value={formData.region} onChange={(e) => handleInputChange('region', e.target.value)} className={`neo-control w-full px-3 py-2 ${errors.region ? 'border-red-500' : ''}`}>
                   <option value="">Select Region...</option>
                   {regionNames.map((region) => <option key={region} value={region}>{region}</option>)}
                 </select>
@@ -354,16 +358,16 @@ const PoultryCalendarForm = ({ isOpen, onClose, onSave }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">District <span className="text-red-500">*</span></label>
-                <select value={formData.district} onChange={(e) => handleInputChange('district', e.target.value)} className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 ${errors.district ? 'border-red-500' : 'border-gray-300'}`} disabled={!formData.region}>
+                <label className="neo-label mb-1 block">District <span className="text-red-500">*</span></label>
+                <select value={formData.district} onChange={(e) => handleInputChange('district', e.target.value)} className={`neo-control w-full px-3 py-2 ${errors.district ? 'border-red-500' : ''}`} disabled={!formData.region}>
                   <SafeDistrictOptions districts={districtData.districts} placeholder="Select District..." includeEmpty={true} />
                 </select>
                 {errors.district && <p className="text-red-500 text-xs mt-1">{errors.district}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Poultry Type <span className="text-red-500">*</span></label>
-                <select value={formData.poultryType} onChange={(e) => handleInputChange('poultryType', e.target.value)} className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 ${errors.poultryType ? 'border-red-500' : 'border-gray-300'}`}>
+                <label className="neo-label mb-1 block">Poultry Type <span className="text-red-500">*</span></label>
+                <select value={formData.poultryType} onChange={(e) => handleInputChange('poultryType', e.target.value)} className={`neo-control w-full px-3 py-2 ${errors.poultryType ? 'border-red-500' : ''}`}>
                   <option value="">Select Poultry Type...</option>
                   {Object.keys(poultryTypes).map((type) => <option key={type} value={type}>{type}</option>)}
                 </select>
@@ -371,15 +375,15 @@ const PoultryCalendarForm = ({ isOpen, onClose, onSave }) => {
               </div>
             </div>
 
-            <div className="border border-gray-200 rounded-lg p-6 mb-8">
-              <h3 className="text-lg font-medium text-gray-900 mb-6">Production Cycle</h3>
+            <div className="neo-surface-soft p-6 mb-8">
+              <h3 className="text-lg font-medium text-neo-text mb-6">Production Cycle</h3>
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Excel <span className="text-red-500">*</span></label>
+                  <label className="neo-label mb-1 block">Excel <span className="text-red-500">*</span></label>
                   <div className="flex items-center space-x-2">
                     <label className="flex-1 cursor-pointer">
                       <input type="file" accept=".xlsx,.xls,.csv" onChange={(e) => handleFileChange(e.target.files[0])} className="hidden" />
-                      <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700 hover:bg-gray-100">
+                      <div className="neo-control w-full px-3 py-2 text-neo-muted hover:text-neo-accent-strong">
                         {formData.productionCycle.file ? formData.productionCycle.file.name : 'Choose File'}
                       </div>
                     </label>
@@ -388,15 +392,15 @@ const PoultryCalendarForm = ({ isOpen, onClose, onSave }) => {
                   {errors.productionCycleFile && <p className="text-red-500 text-xs mt-1">{errors.productionCycleFile}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Production Cycle Start Month</label>
-                  <select value={formData.productionCycle.startMonth} onChange={(e) => handleCycleChange('startMonth', e.target.value)} className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 border-gray-300">
+                  <label className="neo-label mb-1 block">Production Cycle Start Month</label>
+                  <select value={formData.productionCycle.startMonth} onChange={(e) => handleCycleChange('startMonth', e.target.value)} className="neo-control w-full px-3 py-2">
                     <option value="">Select Month...</option>
                     {months.map((month) => <option key={month} value={month}>{month}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Start Week</label>
-                  <input type="date" value={formData.productionCycle.startWeek} onChange={(e) => handleCycleChange('startWeek', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
+                  <label className="neo-label mb-1 block">Start Week</label>
+                  <input type="date" value={formData.productionCycle.startWeek} onChange={(e) => handleCycleChange('startWeek', e.target.value)} className="neo-input" />
                 </div>
               </div>
             </div>
@@ -406,16 +410,16 @@ const PoultryCalendarForm = ({ isOpen, onClose, onSave }) => {
           {saveError && <div className="mx-6 mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{saveError}</div>}
           {previewError && <div className="mx-6 mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg text-sm text-orange-700">{previewError}</div>}
 
-          <div className="flex-shrink-0 border-t border-gray-200 px-6 py-4 bg-gray-50">
+          <div className="flex-shrink-0 border-t neo-divider px-6 py-4 bg-white/25">
             <div className="flex justify-between items-center">
               <div className="flex space-x-2">
-                <button onClick={handleDownloadTemplate} className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 flex items-center"><FaDownload className="mr-2" />Download Template</button>
-                <button onClick={handlePreview} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center" disabled={loading || parsingPreview}>
-                  {parsingPreview ? <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>Parsing...</> : <><FaEye className="mr-2" />Preview Calendar</>}
+                <button onClick={handleDownloadTemplate} className="neo-button"><FaDownload />Download Template</button>
+                <button onClick={handlePreview} className="neo-button" disabled={loading || parsingPreview}>
+                  {parsingPreview ? <InlineBusySkeleton label="Parsing..." tone="slate" /> : <><FaEye className="mr-2" />Preview Calendar</>}
                 </button>
               </div>
-              <button onClick={handleSave} className={`px-6 py-2 rounded-md flex items-center transition-colors ${saveSuccess ? 'bg-green-700 text-white cursor-not-allowed' : loading ? 'bg-green-500 text-white cursor-not-allowed' : 'bg-green-600 text-white hover:bg-green-700'}`} disabled={loading || saveSuccess}>
-                {loading ? <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>Saving...</> : saveSuccess ? <><svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>Saved Successfully!</> : <><FaPlus className="mr-2" />Save</>}
+              <button onClick={handleSave} className={`neo-button-primary ${saveSuccess ? 'cursor-not-allowed opacity-75' : loading ? 'cursor-not-allowed opacity-75' : ''}`} disabled={loading || saveSuccess}>
+                {loading ? <InlineBusySkeleton label="Saving..." /> : saveSuccess ? <><svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>Saved Successfully!</> : <><FaPlus className="mr-2" />Save</>}
               </button>
             </div>
           </div>

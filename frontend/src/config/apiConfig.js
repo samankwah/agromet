@@ -22,6 +22,8 @@ export const API_CONFIG = {
   TRANSLATION_BASE_URL: `${BACKEND_URL}/api/v1/translate`,
   TTS_BASE_URL: `${BACKEND_URL}/api/tts`,
   AMBEE_BASE_URL: `${BACKEND_URL}/api/ambee`,
+  OPEN_METEO_BASE_URL: 'https://api.open-meteo.com/v1',
+  OPEN_METEO_GEOCODING_BASE_URL: 'https://geocoding-api.open-meteo.com/v1',
 };
 
 API_CONFIG.AUTH_BASE_URL = API_CONFIG.BACKEND_BASE_URL;

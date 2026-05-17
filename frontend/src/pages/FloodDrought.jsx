@@ -1,5 +1,6 @@
 import { useState } from "react";
 import PageTitle from '../components/PageTitle';
+import Breadcrumb from '../components/common/Breadcrumb';
 import T from '../components/common/T';
 import {
   BarChart,
@@ -789,10 +790,9 @@ const FloodDrought = () => {
   return (
     <>
       <PageTitle title="Flood & Drought Alerts" />
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-emerald-50/30 pt-24 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      <div className="absolute top-0 -left-40 w-[500px] h-[500px] bg-emerald-200/30 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-96 -right-40 w-[500px] h-[500px] bg-teal-200/30 rounded-full blur-3xl pointer-events-none" />
+      <div className="neo-page min-h-screen pt-32 md:pt-36 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       <div className="max-w-7xl mx-auto relative">
+      <Breadcrumb />
       <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight mb-6">
         <T>Flood and Drought</T>{" "}
         <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">

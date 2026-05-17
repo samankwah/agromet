@@ -11,6 +11,7 @@ import {
 import PropTypes from "prop-types";
 import userService from "../../services/userService";
 import { safeRender, safeRenderForCard } from "../../utils/renderUtils";
+import { TableSkeleton } from "../common/SkeletonLoading";
 
 const normalizeCalendarRecord = (item, dataType) => ({
   id: item.id,
@@ -135,9 +136,8 @@ const CalendarDataPreview = ({ dataType, title, onAddNew }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
-        <span className="ml-2 text-gray-600">Loading calendar data...</span>
+      <div className="py-6">
+        <TableSkeleton rows={6} columns={5} />
       </div>
     );
   }
@@ -162,7 +162,7 @@ const CalendarDataPreview = ({ dataType, title, onAddNew }) => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow">
+    <div className="neo-table-shell">
       <div className="px-6 py-4 border-b border-gray-200">
         <div className="flex justify-between items-center">
           <div>
@@ -189,7 +189,7 @@ const CalendarDataPreview = ({ dataType, title, onAddNew }) => {
         </div>
       </div>
 
-      <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+      <div className="px-6 py-4 bg-white/25 border-b neo-divider">
         <div className="flex flex-wrap items-center space-x-4">
           <div className="flex items-center space-x-2">
             <FaSearch className="text-gray-400" />
@@ -335,7 +335,7 @@ const CalendarDataPreview = ({ dataType, title, onAddNew }) => {
           </div>
 
           {totalPages > 1 && (
-            <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
+            <div className="px-6 py-3 bg-white/25 border-t neo-divider">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-gray-700">
                   Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
@@ -381,7 +381,7 @@ const CalendarDataPreview = ({ dataType, title, onAddNew }) => {
             {paginatedData.map((item, index) => (
               <div
                 key={item.id || index}
-                className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                className="neo-surface-soft p-4 transition-shadow"
               >
                 <div className="flex justify-between items-start mb-3">
                   <div>
@@ -426,7 +426,7 @@ const CalendarDataPreview = ({ dataType, title, onAddNew }) => {
           </div>
 
           {totalPages > 1 && (
-            <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
+            <div className="px-6 py-3 bg-white/25 border-t neo-divider">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-gray-700">
                   Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}

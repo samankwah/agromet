@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { WifiOff, RefreshCw, X, AlertTriangle } from 'lucide-react';
 import serverHealthCheck from '../../utils/serverHealthCheck';
+import { InlineBusySkeleton } from './SkeletonLoading';
 
 /**
  * Offline Notification Banner
@@ -101,8 +102,14 @@ const OfflineNotification = ({
                 disabled={isRetrying}
                 className="flex items-center gap-2 px-3 py-1.5 bg-red-700 hover:bg-red-800 disabled:bg-red-800 rounded-md text-sm font-medium transition-colors"
               >
-                <RefreshCw className={`w-4 h-4 ${isRetrying ? 'animate-spin' : ''}`} />
-                {isRetrying ? 'Retrying...' : 'Retry'}
+                {isRetrying ? (
+                  <InlineBusySkeleton label="Retrying..." />
+                ) : (
+                  <>
+                    <RefreshCw className="w-4 h-4" />
+                    Retry
+                  </>
+                )}
               </button>
             )}
 

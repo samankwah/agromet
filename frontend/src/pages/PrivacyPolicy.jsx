@@ -1,4 +1,5 @@
 import PageTitle from "../components/PageTitle";
+import Breadcrumb from "../components/common/Breadcrumb";
 import {
   FaShieldAlt,
   FaRegFileAlt,
@@ -53,11 +54,10 @@ const PrivacyPolicy = () => {
   return (
     <>
       <PageTitle title="Privacy Policy" />
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-emerald-50/30 relative overflow-hidden">
-        <div className="absolute top-20 -left-32 w-96 h-96 bg-emerald-200/30 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute top-40 -right-32 w-96 h-96 bg-teal-200/30 rounded-full blur-3xl pointer-events-none" />
+      <div className="neo-page min-h-screen relative overflow-hidden">
 
         <div className="max-w-4xl mx-auto px-6 lg:px-8 pt-28 pb-20 relative">
+          <Breadcrumb />
           <header className="mb-12 text-center">
             <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight mb-4">
               <T>Privacy Policy</T>

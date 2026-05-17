@@ -4,6 +4,8 @@ import useT from "../hooks/useT";
 import { Search, TrendingUp, TrendingDown, Minus, BarChart3, ShoppingCart, X, ChevronRight, ArrowUpRight, ArrowDownRight, Info, Plus, Phone, MessageCircle, Package } from "lucide-react";
 import PropTypes from "prop-types";
 import PageTitle from "./PageTitle";
+import Breadcrumb from "./common/Breadcrumb";
+import { PageSkeleton } from "./common/SkeletonLoading";
 import toast from "react-hot-toast";
 import marketIntelligenceService from "../services/marketIntelligenceService";
 import YellowMaizeImage from "../assets/images/yellow maize.jpg";
@@ -588,11 +590,8 @@ const Marketplace = () => {
     return (
       <>
         <PageTitle title="Agricultural Market" />
-        <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-emerald-50/30 pt-20 lg:pt-24 flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-12 h-12 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-slate-500 text-sm"><T>Loading market data...</T></p>
-          </div>
+        <div className="neo-page min-h-screen">
+          <PageSkeleton />
         </div>
       </>
     );
@@ -601,11 +600,9 @@ const Marketplace = () => {
   return (
     <>
       <PageTitle title="Agricultural Market" />
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-emerald-50/30 pt-20 lg:pt-24 relative overflow-hidden">
-        <div className="absolute top-0 -left-40 w-[500px] h-[500px] bg-emerald-200/30 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute top-96 -right-40 w-[500px] h-[500px] bg-teal-200/30 rounded-full blur-3xl pointer-events-none" />
+      <div className="neo-page min-h-screen pt-32 md:pt-36 relative overflow-hidden">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 relative">
-
+          <Breadcrumb />
           {/* Header */}
           <div className="flex items-start justify-between gap-4 mb-6 sm:mb-8">
             <div className="min-w-0">

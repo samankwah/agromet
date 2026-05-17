@@ -4,9 +4,10 @@ import PropTypes from 'prop-types';
 import useTranslation from '../../hooks/useTranslation';
 
 const LanguageSelector = ({ variant = 'header' }) => {
-  const { currentLanguage, setLanguage, supportedLanguages } = useTranslation();
+  const { currentLanguage, setLanguage, supportedLanguages, getDisplayText } = useTranslation();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
+  const selectLanguageLabel = getDisplayText('selectLanguage', 'Select language');
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -25,40 +26,48 @@ const LanguageSelector = ({ variant = 'header' }) => {
   const isHeader = variant === 'header';
 
   return (
-    <div ref={ref} className={`relative ${isFloating ? 'fixed top-24 right-4 z-[60]' : ''}`}>
+    <div
+      ref={ref}
+      data-no-auto-translate="true"
+      className={`relative ${isFloating ? 'fixed top-24 right-4 z-[60]' : ''}`}
+    >
       <button
         onClick={() => setOpen(!open)}
         className={
           isHeader
-            ? 'flex items-center gap-1 px-3 py-2 text-sm font-semibold text-black border-b-2 border-transparent hover:border-black transition-all whitespace-nowrap'
-            : 'bg-white/95 backdrop-blur-sm border border-green-200 rounded-full w-10 h-10 md:w-auto md:h-auto md:px-3 md:py-1.5 flex items-center justify-center md:gap-2 shadow-lg hover:border-green-400 transition-all duration-300'
+            ? 'neo-button min-h-0 px-3 py-2 text-sm whitespace-nowrap'
+            : 'neo-button min-h-0 w-10 h-10 md:w-auto md:h-auto md:px-3 md:py-2 flex items-center justify-center md:gap-2'
         }
-        aria-label="Select language"
+        aria-label={selectLanguageLabel}
       >
-        <Globe className={isHeader ? 'w-4 h-4 text-black mr-1' : 'w-5 h-5 text-green-600 md:w-4 md:h-4'} />
-        <span className={isHeader ? '' : 'hidden lg:inline text-green-700 font-medium text-sm'}>
+        <Globe className={isHeader ? 'w-4 h-4 text-neo-accent-strong mr-1' : 'w-5 h-5 text-neo-accent-strong md:w-4 md:h-4'} />
+        <span className={isHeader ? '' : 'hidden lg:inline text-neo-accent-strong font-medium text-sm'}>
           {supportedLanguages[currentLanguage]?.name || 'English'}
         </span>
       </button>
 
       {open && (
         <div
-          className={`absolute ${isHeader ? 'top-full right-0 mt-1' : 'top-full right-0 mt-2'} bg-white rounded-xl shadow-2xl border border-green-200 overflow-hidden z-[70] w-56`}
+          className={`absolute ${isHeader ? 'top-full right-0 mt-3' : 'top-full right-0 mt-3'} z-[999] w-72 max-w-[calc(100vw-2rem)] overflow-visible rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_24px_60px_rgba(15,23,42,0.24)] ring-1 ring-slate-900/5`}
         >
-          <div className="max-h-64 overflow-y-auto py-1">
+          <div className="py-1">
             {Object.entries(supportedLanguages).map(([code, lang]) => (
               <button
                 key={code}
                 onClick={() => handleSelect(code)}
-                className={`w-full px-3 py-2.5 text-left hover:bg-green-50 transition-colors flex items-center gap-2.5 ${
-                  currentLanguage === code ? 'bg-green-100 text-green-800' : 'text-gray-700'
+                className={`w-full rounded-xl px-3 py-3 text-left transition-colors flex items-center gap-3 ${
+                  currentLanguage === code
+                    ? 'bg-emerald-50 text-emerald-800 shadow-inner'
+                    : 'text-slate-800 hover:bg-slate-50'
                 }`}
               >
-                <span className="text-base">{lang.flag}</span>
+                <span className="flex h-8 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-[11px] font-bold uppercase tracking-wide text-emerald-800">
+                  {code}
+                </span>
                 <div className="min-w-0">
-                  <div className="font-medium text-sm truncate">{lang.name}</div>
+                  <div className="font-semibold text-sm leading-5 text-inherit">{lang.name}</div>
                   {lang.region && (
-                    <div className="text-xs text-gray-500 truncate">{lang.region}</div>
+                    <div className="text-xs leading-5 text-slate-600">{lang.region}</div>
                   )}
                 </div>
               </button>

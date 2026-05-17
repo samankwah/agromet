@@ -20,7 +20,7 @@ const CombinedView = () => {
   return (
     <>
       <PageTitle title="Media & Calendar" />
-      <div className="min-h-screen bg-gray-50">
+      <div className="neo-page min-h-screen">
       <div className="flex flex-col lg:flex-row">
         {/* MediaPage Section */}
         <div

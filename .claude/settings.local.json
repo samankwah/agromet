@@ -50,7 +50,18 @@
       "Bash(node -e \"const {parse}=require\\('@babel/parser'\\);const fs=require\\('fs'\\);const src=fs.readFileSync\\('src/pages/Home.jsx','utf8'\\);try{parse\\(src,{sourceType:'module',plugins:['jsx']}\\);console.log\\('OK'\\);}catch\\(e\\){console.log\\('PARSE ERROR:',e.message\\);}\")",
       "Bash(node -e \"const {parse}=require\\('@babel/parser'\\);const fs=require\\('fs'\\);try{parse\\(fs.readFileSync\\('src/pages/Home.jsx','utf8'\\),{sourceType:'module',plugins:['jsx']}\\);console.log\\('OK'\\);}catch\\(e\\){console.log\\('ERR:',e.message\\);}\")",
       "Bash(head -n 1140 AgroBulletins.jsx)",
-      "Bash(mv AgroBulletins.jsx.tmp AgroBulletins.jsx)"
+      "Bash(mv AgroBulletins.jsx.tmp AgroBulletins.jsx)",
+      "Bash(cat AgroBulletins.jsx AgroBulletins.tail.jsx)",
+      "Bash(mv AgroBulletins.new.jsx AgroBulletins.jsx)",
+      "Bash(rm AgroBulletins.tail.jsx)",
+      "Read(//c/tmp/**)",
+      "Bash(cp \"/c/Users/CRAFT/Downloads/IDL-PROJECT FORMAT APRIL 2025.docx\" ./idl.docx)",
+      "Bash(unzip -p idl.docx word/document.xml)",
+      "Bash(python -c \"import sys,re; t=sys.stdin.read\\(\\); t=re.sub\\(r'<[^>]+>',' ',t\\); t=re.sub\\(r'\\\\s+',' ',t\\); print\\(t\\)\")",
+      "Bash(pdftotext -layout \"/c/Users/CRAFT/Downloads/osei victor Thesis.pdf\" /tmp/osei.txt)",
+      "Read(//tmp/**)",
+      "WebFetch(domain:docs.google.com)",
+      "WebFetch(domain:doc-00-7g-docstext.googleusercontent.com)"
     ]
   }
 }

@@ -405,7 +405,7 @@ const ContentManagerHub = ({ dataType, onClose }) => {
     return (
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
         {statItems.map((stat, index) => (
-          <div key={index} className="bg-white rounded-lg shadow p-4 text-center">
+          <div key={index} className="neo-table-shell p-4 text-center">
             <div className="text-2xl text-gray-400 mb-2">{stat.icon}</div>
             <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
             <div className="text-xs text-gray-500">{stat.label}</div>
@@ -418,7 +418,7 @@ const ContentManagerHub = ({ dataType, onClose }) => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="neo-table-shell p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="text-3xl">{config.icon}</div>
@@ -473,7 +473,7 @@ const ContentManagerHub = ({ dataType, onClose }) => {
         <div>
           {renderStats()}
           
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="neo-table-shell p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Data Overview</h3>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>

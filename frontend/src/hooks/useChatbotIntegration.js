@@ -21,7 +21,10 @@ export const useChatbotIntegration = () => {
           updateWeather({
             condition: regionWeather.condition,
             temperature: regionWeather.temperature,
-            humidity: Math.floor(Math.random() * 40) + 60, // Mock humidity
+            humidity: regionWeather.humidity,
+            rainfall: regionWeather.rainfall,
+            windSpeed: regionWeather.windSpeed,
+            source: regionWeather.source,
             location: regionWeather.city,
           });
         } catch (error) {

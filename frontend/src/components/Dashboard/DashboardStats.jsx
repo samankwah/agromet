@@ -18,6 +18,7 @@ import {
   FaExternalLinkAlt
 } from "react-icons/fa";
 import userService from "../../services/userService";
+import { SkeletonBlock } from "../common/SkeletonLoading";
 
 const DashboardStats = ({ agriculturalStats, recentUploads, onNavigate }) => {
   const [trendData, setTrendData] = useState({});
@@ -193,7 +194,7 @@ const DashboardStats = ({ agriculturalStats, recentUploads, onNavigate }) => {
   );
 
   const renderMetricCard = (title, value, icon, subtitle, status = 'good') => (
-    <div className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow">
+    <div className="neo-table-shell p-4 hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between mb-2">
         <div className="text-2xl text-gray-400">{icon}</div>
         <div className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -214,9 +215,14 @@ const DashboardStats = ({ agriculturalStats, recentUploads, onNavigate }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
-        <span className="ml-2 text-gray-600">Loading analytics...</span>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div key={`dashboard-stat-skeleton-${index}`} className="rounded-xl border border-gray-200 bg-white p-5">
+            <SkeletonBlock className="mb-4 h-10 w-10" rounded="rounded-full" tone="emerald" />
+            <SkeletonBlock className="mb-3 h-7 w-20" />
+            <SkeletonBlock className="h-4 w-32" />
+          </div>
+        ))}
       </div>
     );
   }
@@ -319,7 +325,7 @@ const DashboardStats = ({ agriculturalStats, recentUploads, onNavigate }) => {
       {/* Recent Activity & Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Activity */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="neo-table-shell p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900 flex items-center">
               <FaTrendUp className="mr-2 text-green-600" />
@@ -359,7 +365,7 @@ const DashboardStats = ({ agriculturalStats, recentUploads, onNavigate }) => {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="neo-table-shell p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
             <FaChartBar className="mr-2 text-blue-600" />
             Quick Actions
@@ -414,7 +420,7 @@ const DashboardStats = ({ agriculturalStats, recentUploads, onNavigate }) => {
       </div>
 
       {/* Data Health Summary */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="neo-table-shell p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
           <FaCheckCircle className="mr-2 text-green-600" />
           Data Health Summary

@@ -3,7 +3,7 @@
  * Provides weather-informed farming recommendations for Ghana
  */
 
-import ghanaRegions from '../assets/ghana-regions.json';
+import { getWeatherBundleByCoordinates } from './openMeteoService';
 
 class SmartWeatherService {
   constructor() {
@@ -103,17 +103,46 @@ class SmartWeatherService {
     }
   }
 
-  /**
-   * Generate mock weather data for Ghana regions
-   * In production, this would connect to actual weather APIs
-   */
   async getRegionalWeather(region) {
     const currentSeason = this.getCurrentSeason();
-    const month = new Date().getMonth() + 1;
-    
-    // Simulate realistic weather for Ghana
-    const baseWeather = this.generateRealisticWeather(region, currentSeason, month);
-    
+    const station = this.weatherStations[region] || this.weatherStations['Greater Accra'];
+
+    let baseWeather;
+
+    try {
+      const weather = await getWeatherBundleByCoordinates(station.lat, station.lon, {
+        forecastDays: 7,
+      });
+      const current = {
+        temperature: weather.current.temperatureValue,
+        feelsLike: weather.current.apparentTemperatureValue,
+        humidity: weather.current.humidityValue,
+        condition: weather.current.condition,
+        rainfall: weather.current.rainfallValue,
+        windSpeed: weather.current.windSpeedValue,
+        pressure: weather.current.pressureValue,
+        timestamp: weather.current.updatedAt,
+        source: weather.source,
+      };
+      const forecast = weather.daily.map((day) => ({
+        date: day.date,
+        highTemp: day.highTemp,
+        lowTemp: day.lowTemp,
+        condition: day.condition,
+        rainfall: day.rainfall,
+        humidity: day.humidity,
+      }));
+
+      baseWeather = {
+        current,
+        forecast,
+        alerts: this.generateWeatherAlerts(current, forecast, currentSeason, region),
+      };
+    } catch {
+      const month = new Date().getMonth() + 1;
+      baseWeather = this.generateRealisticWeather(region, currentSeason, month);
+    }
+
     return {
       current: baseWeather.current,
       forecast: baseWeather.forecast,
@@ -130,7 +159,7 @@ class SmartWeatherService {
   /**
    * Generate realistic weather data for Ghana
    */
-  generateRealisticWeather(region, season, month) {
+  generateRealisticWeather(region, season) {
     const isNorthern = ['Northern', 'Upper East', 'Upper West'].includes(region);
     const isCoastal = ['Greater Accra', 'Central', 'Western'].includes(region);
     
@@ -202,7 +231,7 @@ class SmartWeatherService {
   /**
    * Generate weather alerts for farming
    */
-  generateWeatherAlerts(current, forecast, season, region) {
+  generateWeatherAlerts(current, forecast, season) {
     const alerts = [];
     
     // Temperature alerts
@@ -310,7 +339,7 @@ class SmartWeatherService {
   /**
    * Smart planting recommendations
    */
-  async getPlantingRecommendation(region, crop, userQuery) {
+  async getPlantingRecommendation(region, crop) {
     const weather = await this.getRegionalWeather(region);
     const cropRequirements = this.cropWeatherRequirements[crop.toLowerCase()];
     const season = this.getCurrentSeason();
@@ -445,7 +474,7 @@ class SmartWeatherService {
   /**
    * Get harvest timing recommendations
    */
-  async getHarvestRecommendation(region, crop) {
+  async getHarvestRecommendation(region) {
     const weather = await this.getRegionalWeather(region);
     const harvestConditions = weather.agricultural.harvestConditions;
     

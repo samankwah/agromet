@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { Upload, FileSpreadsheet, Calendar, Loader2, CheckCircle, AlertCircle, Info } from 'lucide-react';
+import { Upload, FileSpreadsheet, Calendar, CheckCircle, AlertCircle, Info } from 'lucide-react';
 import { getRegionDistrictMapping, getAllRegionNames, getDistrictsByRegionName } from '../data/ghanaCodes';
 import userService from '../services/userService';
+import { InlineBusySkeleton } from './common/SkeletonLoading';
 
 const EnhancedCalendarUpload = () => {
   const [file, setFile] = useState(null);
@@ -266,10 +267,7 @@ const EnhancedCalendarUpload = () => {
           className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
         >
           {uploading ? (
-            <>
-              <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-              Processing Calendar...
-            </>
+            <InlineBusySkeleton label="Processing Calendar..." />
           ) : (
             <>
               <Upload className="h-5 w-5 mr-2" />

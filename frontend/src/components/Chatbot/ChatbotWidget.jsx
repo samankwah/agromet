@@ -50,7 +50,7 @@ const ChatbotWidget = ({ userContext = {} }) => {
         <div className="fixed bottom-4 right-4 z-50">
           <button
             onClick={handleToggleChat}
-            className={`relative bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-lg transition-all duration-300 transform hover:scale-110 ${
+            className={`neo-icon-button relative h-14 w-14 text-xl ${
               shouldPulse ? 'animate-pulse' : ''
             }`}
             title={isMinimized ? 'Expand chat' : 'Chat with AgriBot'}
@@ -71,24 +71,24 @@ const ChatbotWidget = ({ userContext = {} }) => {
             
             {/* Ripple effect for animation */}
             {isAnimating && (
-              <div className="absolute inset-0 rounded-full bg-green-400 animate-ping opacity-75"></div>
+              <div className="absolute inset-0 rounded-full bg-neo-accent animate-ping opacity-50"></div>
             )}
           </button>
           
           {/* Tooltip/Welcome Message */}
           {!isMinimized && isAnimating && (
-            <div className="absolute bottom-16 right-0 bg-white p-3 rounded-lg shadow-lg border border-gray-200 max-w-xs">
+            <div className="neo-surface-soft absolute bottom-16 right-0 max-w-xs p-3">
               <div className="flex items-start space-x-2">
-                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm">
+                <div className="w-8 h-8 bg-neo-accent rounded-full flex items-center justify-center text-white text-sm">
                   🤖
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-gray-800">
+                  <p className="text-sm text-neo-text">
                     Hi! I&apos;m AgriBot. Need help with farming? Ask me anything!
                   </p>
                 </div>
               </div>
-              <div className="absolute bottom-0 right-4 transform translate-y-1/2 rotate-45 w-2 h-2 bg-white border-r border-b border-gray-200"></div>
+              <div className="absolute bottom-0 right-4 transform translate-y-1/2 rotate-45 w-2 h-2 bg-neo-surface border-r border-b border-neo-border"></div>
             </div>
           )}
         </div>
@@ -99,7 +99,7 @@ const ChatbotWidget = ({ userContext = {} }) => {
         <div className="fixed bottom-4 right-4 z-50">
           <button
             onClick={handleToggleChat}
-            className="relative bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-lg transition-all duration-300 transform hover:scale-110"
+            className="neo-icon-button relative h-14 w-14 text-xl"
             title="Expand chat"
             aria-label="Expand chat"
           >

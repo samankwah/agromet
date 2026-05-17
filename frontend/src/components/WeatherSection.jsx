@@ -4,6 +4,7 @@ import ErrorBoundary from "./ErrorBoundary";
 import AnimatedWeatherIcon from "./AnimatedWeatherIcon";
 import Slider from "react-slick";
 import T from "./common/T";
+import { SkeletonBlock } from "./common/SkeletonLoading";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import "../styles/weatherAnimations.css";
@@ -16,8 +17,7 @@ import {
   FaBolt,
   FaSnowflake,
   FaEye,
-  FaLocationArrow,
-  FaSpinner
+  FaLocationArrow
 } from "react-icons/fa";
 import thermometer from "../assets/images/thermometer.svg";
 import PropTypes from "prop-types";
@@ -137,7 +137,7 @@ const WeatherCardSkeleton = () => (
   <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl shadow-xl p-6 mx-2 animate-pulse">
     <div className="h-5 bg-blue-400 bg-opacity-50 rounded-lg mb-3"></div>
     <div className="flex justify-center items-center my-6">
-      <div className="w-20 h-20 bg-blue-400 bg-opacity-50 rounded-full animate-spin" style={{ animationDuration: '3s' }}></div>
+      <div className="w-20 h-20 bg-blue-400 bg-opacity-50 rounded-full"></div>
     </div>
     <div className="h-4 bg-blue-400 bg-opacity-50 rounded-lg mb-4 w-3/4 mx-auto"></div>
     <div className="flex justify-center items-center mt-2">
@@ -373,7 +373,7 @@ const WeatherSection = () => {
               title="Refresh weather data"
             >
               {loading ? (
-                <FaSpinner className="animate-spin text-lg" />
+                <SkeletonBlock className="h-5 w-5" rounded="rounded-full" tone="light" />
               ) : (
                 <FaLocationArrow className="transform rotate-45 text-lg" />
               )}
@@ -399,7 +399,7 @@ const WeatherSection = () => {
               title="Get weather for your location"
             >
               {isUserLocationLoading ? (
-                <FaSpinner className="animate-spin text-lg" />
+                <SkeletonBlock className="h-5 w-5" rounded="rounded-full" tone="light" />
               ) : (
                 <FaLocationArrow className="text-lg" />
               )}

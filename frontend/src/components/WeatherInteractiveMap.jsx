@@ -1,13 +1,12 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
   MapContainer,
   TileLayer,
-  Marker,
-  CircleMarker,
   useMap,
   Polygon,
+  CircleMarker,
+  Tooltip,
 } from "react-leaflet";
-import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import PropTypes from "prop-types";
 import ghanaRegionsData from "../assets/ghana-regions.json";
@@ -15,171 +14,56 @@ import {
   Cloud,
   CloudRain,
   Sun,
-  Thermometer,
   Droplets,
   Wind,
   Eye,
-  Gauge,
   MapPin,
   RefreshCw,
 } from "lucide-react";
-import {
-  API_CONFIG,
-} from "../config/apiConfig";
+import { getCurrentWeatherByCoordinates } from "../services/openMeteoService";
+import T from "./common/T";
+import useT from "../hooks/useT";
+import { SkeletonBlock } from "./common/SkeletonLoading";
 
-const AMBEE_BASE_URL = API_CONFIG.AMBEE_BASE_URL;
-
-// Ambee Weather API service
-const ambeeWeatherService = {
-  async getWeatherByCoordinates(lat, lng) {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-
-      const response = await fetch(
-        `${AMBEE_BASE_URL}/weather/latest/by-lat-lng?lat=${lat}&lng=${lng}`,
-        {
-          headers: { "Content-type": "application/json" },
-          signal: controller.signal,
-        }
-      );
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        throw new Error(`Weather API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      if (data && data.data) {
-        return {
-          weather: this.formatWeatherData(data.data),
-          source: "live",
-        };
-      } else {
-        throw new Error("Invalid API response format");
-      }
-    } catch (error) {
-      return {
-        weather: this.getMockWeatherData(lat, lng),
-        source: "placeholder",
-        error,
-      };
-    }
-  },
-
-  formatWeatherData(data) {
-    // Convert Fahrenheit to Celsius
-    const tempCelsius = Math.round(((data.temperature - 32) * 5) / 9);
-
-    return {
-      temperature: `${tempCelsius}°C`,
-      condition: this.getWeatherCondition(data.summary),
-      summary: data.summary || "No detailed forecast available",
-      humidity: `${data.humidity}%`,
-      windSpeed: `${Math.round(data.windSpeed * 3.6)} km/h`, // Convert m/s to km/h
-      rainfall: `${(
-        data.precipIntensity ||
-        data.precipitationIntensity ||
-        0
-      ).toFixed(1)}mm`,
-      visibility: `${Math.round(data.visibility || 10)}km`, // Already in km
-      pressure: `${Math.round(data.pressure)} hPa`,
-      icon: this.getWeatherIcon(data.summary),
-    };
-  },
-
-  getWeatherCondition(summary) {
-    const summaryLower = (summary || "").toLowerCase();
-    if (summaryLower.includes("rain") || summaryLower.includes("shower"))
-      return "Rainy";
-    if (summaryLower.includes("cloud")) return "Cloudy";
-    if (summaryLower.includes("clear") || summaryLower.includes("sunny"))
-      return "Sunny";
-    if (summaryLower.includes("storm")) return "Stormy";
-    if (summaryLower.includes("fog") || summaryLower.includes("mist"))
-      return "Foggy";
-    return "Partly Cloudy";
-  },
-
-  getWeatherIcon(summary) {
-    const summaryLower = (summary || "").toLowerCase();
-    if (summaryLower.includes("rain") || summaryLower.includes("shower"))
-      return CloudRain;
-    if (summaryLower.includes("cloud")) return Cloud;
-    if (summaryLower.includes("clear") || summaryLower.includes("sunny"))
-      return Sun;
-    return Cloud;
-  },
-
-  getMockWeatherData(lat, lng) {
-    // Fallback mock data when API is unavailable
-    // Generate realistic temperature based on latitude and time of day
-    const now = new Date();
-    const hour = now.getHours();
-    const isNight = hour < 6 || hour > 18;
-
-    // Base temperature varies by latitude (northern regions are hotter)
-    const baseTemp = lat > 9 ? 30 : lat > 7 ? 28 : 26;
-    const tempVariation = isNight ? -3 : 2; // Cooler at night
-    const finalTemp = baseTemp + tempVariation + Math.random() * 4;
-
-    const humidity = 60 + Math.random() * 30;
-
-    // Time-based weather conditions - more realistic for Ghana
-    const timeBasedConditions = isNight
-      ? ["Clear", "Partly Cloudy", "Cloudy"]
-      : ["Sunny", "Partly Cloudy", "Cloudy", "Light Rain"];
-
-    const condition =
-      timeBasedConditions[
-        Math.floor(Math.random() * timeBasedConditions.length)
-      ];
-    const icons = {
-      Sunny: Sun,
-      Clear: Sun,
-      "Partly Cloudy": Cloud,
-      Cloudy: Cloud,
-      "Light Rain": CloudRain,
-    };
-
-    // Generate realistic weather summaries
-    const summaries = {
-      Sunny: "Clear skies with bright sunshine throughout the day",
-      Clear: "Clear night skies with good visibility",
-      "Partly Cloudy": "Mix of sun and clouds with occasional shade",
-      Cloudy: "Overcast skies with thick cloud cover",
-      "Light Rain": "Light rainfall with cloudy conditions",
-    };
-
-    return {
-      temperature: `${Math.round(finalTemp)}°C`,
-      condition: condition,
-      summary:
-        summaries[condition] || "Typical West African weather conditions",
-      humidity: `${Math.round(humidity)}%`,
-      windSpeed: `${Math.round(5 + Math.random() * 20)} km/h`,
-      rainfall:
-        condition === "Light Rain"
-          ? `${(2 + Math.random() * 8).toFixed(1)}mm`
-          : `${(Math.random() * 2).toFixed(1)}mm`,
-      visibility: `${Math.round(8 + Math.random() * 12)}km`,
-      pressure: `${Math.round(1010 + Math.random() * 20)} hPa`,
-      icon: icons[condition] || Cloud,
-    };
-  },
+const getWeatherIcon = (iconKey) => {
+  if (iconKey === "rain" || iconKey === "drizzle" || iconKey === "thunderstorm") {
+    return CloudRain;
+  }
+  if (iconKey === "clear") return Sun;
+  return Cloud;
 };
 
-// Fix for default markers
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-});
+const formatUpdatedStamp = (timestamp) =>
+  new Date(timestamp).toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+const getSixHourlyUpdatedDate = (date = new Date()) => {
+  const updatedAt = new Date(date);
+  updatedAt.setMinutes(0, 0, 0);
+  updatedAt.setHours(Math.floor(updatedAt.getHours() / 6) * 6);
+  return updatedAt;
+};
+
+const openMeteoWeatherService = {
+  async getWeatherByCoordinates(lat, lng) {
+    const weather = await getCurrentWeatherByCoordinates(lat, lng, {
+      timeoutMs: 5000,
+    });
+
+    return {
+      weather: {
+        ...weather,
+        icon: getWeatherIcon(weather.iconKey),
+      },
+      source: "live",
+    };
+  },
+
+};
 
 // Ghana regions with weather-style data
 const GHANA_REGIONS = {
@@ -530,22 +414,104 @@ const GHANA_REGIONS = {
   },
 };
 
-// West Africa countries data for extended coverage
-const WEST_AFRICA_COUNTRIES = {
-  Senegal: { center: [14.4974, -14.4524], color: "#059669" },
-  Gambia: { center: [13.4432, -15.3101], color: "#0EA5E9" },
-  "Guinea-Bissau": { center: [11.8037, -15.1804], color: "#8B5CF6" },
-  Guinea: { center: [9.9456, -9.6966], color: "#EC4899" },
-  "Sierra Leone": { center: [8.460555, -11.779889], color: "#F59E0B" },
-  Liberia: { center: [6.4281, -9.4295], color: "#84CC16" },
-  Mali: { center: [17.5707, -3.9962], color: "#EF4444" },
-  "Burkina Faso": { center: [12.2383, -1.5616], color: "#6366F1" },
-  Niger: { center: [17.6078, 8.0817], color: "#F97316" },
-  Nigeria: { center: [9.082, 8.6753], color: "#10B981" },
-  Benin: { center: [9.3077, 2.3158], color: "#3B82F6" },
-  Togo: { center: [8.6195, 0.8248], color: "#8B5CF6" },
-  "Ivory Coast": { center: [7.54, -5.5471], color: "#06B6D4" },
-  Mauritania: { center: [21.0079, -10.9408], color: "#DC2626" },
+const normalizeDistrictName = (name) =>
+  String(name || "")
+    .toLowerCase()
+    .replace(/\bkassena\b/g, "kasena")
+    .replace(
+      /\b(municipal|municipality|metropolitan|metropolis|district|assembly)\b/g,
+      ""
+    )
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
+const toLeafletPositions = (geometry) => {
+  if (!geometry?.coordinates) return [];
+
+  const convertRing = (ring) => ring.map(([lng, lat]) => [lat, lng]);
+
+  if (geometry.type === "Polygon") {
+    return geometry.coordinates.map(convertRing);
+  }
+
+  if (geometry.type === "MultiPolygon") {
+    return geometry.coordinates.map((polygon) => polygon.map(convertRing));
+  }
+
+  return [];
+};
+
+const flattenCoordinates = (coordinates, result = []) => {
+  if (!Array.isArray(coordinates)) return result;
+
+  if (
+    coordinates.length >= 2 &&
+    typeof coordinates[0] === "number" &&
+    typeof coordinates[1] === "number"
+  ) {
+    result.push(coordinates);
+    return result;
+  }
+
+  coordinates.forEach((item) => flattenCoordinates(item, result));
+  return result;
+};
+
+const getGeometryCenter = (geometry) => {
+  const points = flattenCoordinates(geometry?.coordinates);
+
+  if (points.length === 0) return null;
+
+  const bounds = points.reduce(
+    (acc, [lng, lat]) => ({
+      minLng: Math.min(acc.minLng, lng),
+      maxLng: Math.max(acc.maxLng, lng),
+      minLat: Math.min(acc.minLat, lat),
+      maxLat: Math.max(acc.maxLat, lat),
+    }),
+    {
+      minLng: Number.POSITIVE_INFINITY,
+      maxLng: Number.NEGATIVE_INFINITY,
+      minLat: Number.POSITIVE_INFINITY,
+      maxLat: Number.NEGATIVE_INFINITY,
+    }
+  );
+
+  return [
+    (bounds.minLng + bounds.maxLng) / 2,
+    (bounds.minLat + bounds.maxLat) / 2,
+  ];
+};
+
+const getNearestDistrictMetadata = (center, districtMetadata) => {
+  if (!center) return null;
+
+  return districtMetadata.reduce((nearest, current) => {
+    const lngDiff = center[0] - current.coordinates[0];
+    const latDiff = center[1] - current.coordinates[1];
+    const distance = lngDiff * lngDiff + latDiff * latDiff;
+
+    if (!nearest || distance < nearest.distance) {
+      return { ...current, distance };
+    }
+
+    return nearest;
+  }, null);
+};
+
+const buildDistrictMetadata = () => {
+  const metadata = ghanaRegionsData.features.map((feature) => ({
+    name: feature.properties.name,
+    region: feature.properties.region,
+    coordinates: feature.geometry.coordinates,
+  }));
+
+  return {
+    metadata,
+    byName: new Map(
+      metadata.map((district) => [normalizeDistrictName(district.name), district])
+    ),
+  };
 };
 
 // Weather overlay polygons for West Africa region
@@ -608,29 +574,35 @@ const WEST_AFRICA_COUNTRIES = {
 // ];
 
 // Map control component for zooming to regions
-const MapController = ({ selectedRegion, onRegionSelect, isMobile }) => {
+const MapController = ({ selectedRegion, isMobile, shouldZoomToRegion }) => {
   const map = useMap();
 
   useEffect(() => {
     // Only auto-zoom on desktop devices
-    if (!isMobile && selectedRegion && GHANA_REGIONS[selectedRegion]) {
+    if (
+      shouldZoomToRegion &&
+      !isMobile &&
+      selectedRegion &&
+      GHANA_REGIONS[selectedRegion]
+    ) {
       const region = GHANA_REGIONS[selectedRegion];
       map.setView(region.center, region.zoom);
     }
-  }, [selectedRegion, map, isMobile]);
+  }, [selectedRegion, map, isMobile, shouldZoomToRegion]);
 
   return null;
 };
 
 MapController.propTypes = {
   selectedRegion: PropTypes.string,
-  onRegionSelect: PropTypes.func.isRequired,
   isMobile: PropTypes.bool.isRequired,
+  shouldZoomToRegion: PropTypes.bool.isRequired,
 };
 
 // Custom Unified Zoom Control Component (includes zoom in, zoom out, and reset)
-const UnifiedZoomControl = ({ initialCenter, initialZoom, isMobile }) => {
+const UnifiedZoomControl = ({ initialCenter, isMobile }) => {
   const map = useMap();
+  const { t } = useT();
 
   const handleZoomIn = () => {
     map.zoomIn();
@@ -654,8 +626,8 @@ const UnifiedZoomControl = ({ initialCenter, initialZoom, isMobile }) => {
       <button
         onClick={handleZoomIn}
         className="w-[30px] h-[30px] flex items-center justify-center bg-white hover:bg-gray-50 text-gray-700 hover:text-gray-900 border border-gray-300 rounded-t transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-lg font-bold leading-none"
-        title="Zoom in"
-        aria-label="Zoom in"
+        title={t("Zoom in")}
+        aria-label={t("Zoom in")}
       >
         +
       </button>
@@ -664,8 +636,8 @@ const UnifiedZoomControl = ({ initialCenter, initialZoom, isMobile }) => {
       <button
         onClick={handleZoomOut}
         className="w-[30px] h-[30px] flex items-center justify-center bg-white hover:bg-gray-50 text-gray-700 hover:text-gray-900 border-l border-r border-gray-300 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-lg font-bold leading-none"
-        title="Zoom out"
-        aria-label="Zoom out"
+        title={t("Zoom out")}
+        aria-label={t("Zoom out")}
         style={{ borderTop: 'none' }}
       >
         −
@@ -675,8 +647,8 @@ const UnifiedZoomControl = ({ initialCenter, initialZoom, isMobile }) => {
       <button
         onClick={handleReset}
         className="w-[30px] h-[30px] flex items-center justify-center bg-white hover:bg-gray-50 text-gray-700 hover:text-gray-900 border border-gray-300 rounded-b transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-        title="Reset map view"
-        aria-label="Reset map to default zoom and position"
+        title={t("Reset map view")}
+        aria-label={t("Reset map to default zoom and position")}
         style={{ borderTop: 'none' }}
       >
         <RefreshCw className="w-4 h-4" />
@@ -687,7 +659,6 @@ const UnifiedZoomControl = ({ initialCenter, initialZoom, isMobile }) => {
 
 UnifiedZoomControl.propTypes = {
   initialCenter: PropTypes.array.isRequired,
-  initialZoom: PropTypes.number.isRequired,
   isMobile: PropTypes.bool.isRequired,
 };
 
@@ -697,13 +668,17 @@ const WeatherInfoPanel = ({
   selectedDistrict,
   onClose,
   realTimeWeather,
+  updatedAt,
 }) => {
+  const { t } = useT();
+
   if (!selectedRegion && !selectedDistrict) return null;
 
   const regionData = selectedRegion ? GHANA_REGIONS[selectedRegion] : null;
   const weatherKey = selectedDistrict ? selectedDistrict.name : selectedRegion;
   const weather = realTimeWeather[weatherKey] || regionData?.weather;
   const IconComponent = weather?.icon;
+  const displayUpdatedAt = updatedAt || weather?.updatedAt || new Date();
 
   return (
     <div className="weather-info-panel absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white border border-gray-200 rounded-lg shadow-xl p-2 sm:p-4 z-[1000] w-[280px] max-w-[calc(100vw-1rem)] sm:max-w-[380px] md:w-96 text-gray-800 backdrop-blur-sm bg-white/95 max-h-[70vh] overflow-y-auto">
@@ -717,18 +692,13 @@ const WeatherInfoPanel = ({
             </span>
           </h3>
           <p className="text-gray-500 text-xs">
-            {new Date().toLocaleString("en-GB", {
-              day: "2-digit",
-              month: "short",
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
+            <T>Updated</T> {formatUpdatedStamp(displayUpdatedAt)}
           </p>
         </div>
         <button
           onClick={onClose}
           className="text-gray-400 hover:text-gray-600 text-lg sm:text-xl p-1 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0 ml-1"
-          aria-label="Close weather panel"
+          aria-label={t("Close weather panel")}
         >
           ×
         </button>
@@ -748,16 +718,23 @@ const WeatherInfoPanel = ({
               </span>
             </div>
             <p className="text-xs font-medium text-gray-700 truncate px-1">
-              {weather.condition}
+              <T>{weather.condition}</T>
             </p>
+            {weather.apparentTemperature && (
+              <p className="text-[11px] text-gray-500">
+                <T>Feels like</T> {weather.apparentTemperature}
+              </p>
+            )}
           </div>
 
           {/* Weather Summary - More Compact on Mobile */}
-          {weather.summary && (
+          {(weather.conversationalSummary || weather.summary) && (
             <div className="mt-1 sm:mt-2 p-1.5 sm:p-2 bg-blue-50 rounded-md border border-blue-100">
               <p className="text-xs text-gray-700 leading-tight sm:leading-relaxed text-center">
-                <span className="font-medium text-blue-800">Forecast:</span>{" "}
-                {weather.summary}
+                <span className="font-medium text-blue-800">
+                  <T>Forecast</T>:
+                </span>{" "}
+                <T>{weather.conversationalSummary || weather.summary}</T>
               </p>
             </div>
           )}
@@ -768,7 +745,9 @@ const WeatherInfoPanel = ({
               <div className="flex items-center justify-center mb-0.5">
                 <Droplets className="w-3 h-3 text-blue-600" />
               </div>
-              <p className="text-gray-600 text-xs leading-tight">Humidity</p>
+              <p className="text-gray-600 text-xs leading-tight">
+                <T>Humidity</T>
+              </p>
               <p className="font-semibold text-gray-900 text-xs">
                 {weather.humidity}
               </p>
@@ -777,7 +756,9 @@ const WeatherInfoPanel = ({
               <div className="flex items-center justify-center mb-0.5">
                 <Wind className="w-3 h-3 text-green-600" />
               </div>
-              <p className="text-gray-600 text-xs leading-tight">Wind</p>
+              <p className="text-gray-600 text-xs leading-tight">
+                <T>Wind</T>
+              </p>
               <p className="font-semibold text-gray-900 text-xs">
                 {weather.windSpeed}
               </p>
@@ -786,7 +767,9 @@ const WeatherInfoPanel = ({
               <div className="flex items-center justify-center mb-0.5">
                 <CloudRain className="w-3 h-3 text-cyan-600" />
               </div>
-              <p className="text-gray-600 text-xs leading-tight">Rain</p>
+              <p className="text-gray-600 text-xs leading-tight">
+                <T>Rain</T>
+              </p>
               <p className="font-semibold text-gray-900 text-xs">
                 {weather.rainfall}
               </p>
@@ -795,7 +778,9 @@ const WeatherInfoPanel = ({
               <div className="flex items-center justify-center mb-0.5">
                 <Eye className="w-3 h-3 text-purple-600" />
               </div>
-              <p className="text-gray-600 text-xs leading-tight">Visibility</p>
+              <p className="text-gray-600 text-xs leading-tight">
+                <T>Visibility</T>
+              </p>
               <p className="font-semibold text-gray-900 text-xs">
                 {weather.visibility}
               </p>
@@ -809,8 +794,10 @@ const WeatherInfoPanel = ({
         <div className="mt-1 pt-1 border-t border-gray-200">
           <div className="bg-gray-50 rounded-md p-1">
             <p className="text-xs text-gray-600 text-center truncate leading-tight">
-              <span className="font-medium text-gray-800">Zone:</span>{" "}
-              {regionData.agroZone}
+              <span className="font-medium text-gray-800">
+                <T>Zone</T>:
+              </span>{" "}
+              <T>{regionData.agroZone}</T>
             </p>
           </div>
         </div>
@@ -824,6 +811,11 @@ WeatherInfoPanel.propTypes = {
   selectedDistrict: PropTypes.object,
   onClose: PropTypes.func.isRequired,
   realTimeWeather: PropTypes.object.isRequired,
+  updatedAt: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.number,
+    PropTypes.instanceOf(Date),
+  ]),
 };
 
 // Main Weather Interactive Map Component
@@ -831,12 +823,13 @@ const WeatherInteractiveMap = ({
   onRegionSelect,
   onDistrictSelect,
   initialRegion = null,
+  updatedAt = getSixHourlyUpdatedDate(),
 }) => {
   const [selectedRegion, setSelectedRegion] = useState(initialRegion);
   const [selectedDistrict, setSelectedDistrict] = useState(null);
+  const [hoveredDistrict, setHoveredDistrict] = useState(null);
   const [districts, setDistricts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadingWeather, setLoadingWeather] = useState(false);
   // const [showWeatherOverlays] = useState(true);
   const [mapCenter] = useState([7.9465, -1.0232]); // Center of West Africa
   const [mapZoom] = useState(() => {
@@ -855,131 +848,79 @@ const WeatherInteractiveMap = ({
     }
     return false;
   });
-  const [realTimeWeather, setRealTimeWeather] = useState({});
-  const weatherLoadStarted = useRef(false);
-
-  // Load weather data for all Ghana regions on component mount
-  useEffect(() => {
-    if (weatherLoadStarted.current) {
-      return;
-    }
-
-    weatherLoadStarted.current = true;
-
-    const loadAllRegionsWeather = async () => {
-      setLoadingWeather(true);
-      const weatherPromises = Object.entries(GHANA_REGIONS).map(
-        async ([regionName, regionData]) => {
-          try {
-            const weatherResult =
-              await ambeeWeatherService.getWeatherByCoordinates(
-                regionData.center[0],
-                regionData.center[1]
-              );
-            return { regionName, ...weatherResult };
-          } catch (error) {
-            return {
-              regionName,
-              weather: regionData.weather,
-              source: "static",
-              error,
-            };
-          }
-        }
-      );
-
-      try {
-        const results = await Promise.allSettled(weatherPromises);
-        const weatherDataMap = {};
-
-        results.forEach((result) => {
-          if (result.status === "fulfilled" && result.value) {
-            const { regionName, weather } = result.value;
-            weatherDataMap[regionName] = weather;
-          }
-        });
-
-        setRealTimeWeather(weatherDataMap);
-      } finally {
-        setLoadingWeather(false);
-      }
-    };
-
-    loadAllRegionsWeather();
-  }, []);
+  const [realTimeWeather, setRealTimeWeather] = useState(() =>
+    Object.fromEntries(
+      Object.entries(GHANA_REGIONS).map(([regionName, regionData]) => [
+        regionName,
+        regionData.weather,
+      ])
+    )
+  );
 
   // Load districts data
   useEffect(() => {
-    try {
-      const districtData = ghanaRegionsData.features.map((feature) => ({
-        name: feature.properties.name,
-        region: feature.properties.region,
-        coordinates: feature.geometry.coordinates,
-        radius: feature.properties.radius || 3000,
-      }));
-      setDistricts(districtData);
-      setLoading(false);
-    } catch (error) {
-      console.error("Error loading districts data:", error);
-      setLoading(false);
-    }
+    let isMounted = true;
+
+    const loadDistricts = async () => {
+      try {
+        const { default: ghanaDistrictBoundariesData } = await import(
+          "../assets/ghana-district-boundaries.json"
+        );
+        const { metadata, byName } = buildDistrictMetadata();
+        const districtData = ghanaDistrictBoundariesData.features
+          .map((feature) => {
+            const name = feature.properties.shapeName;
+            const polygon = toLeafletPositions(feature.geometry);
+            const center = getGeometryCenter(feature.geometry);
+            const matchedDistrict =
+              byName.get(normalizeDistrictName(name)) ||
+              getNearestDistrictMetadata(center, metadata);
+
+            if (polygon.length === 0 || !center) {
+              return null;
+            }
+
+            return {
+              id: feature.properties.shapeID || name,
+              name,
+              region: matchedDistrict?.region || "Ghana",
+              coordinates: matchedDistrict?.coordinates || center,
+              labelCoordinates: center,
+              polygon,
+            };
+          })
+          .filter(Boolean);
+
+        if (isMounted) {
+          setDistricts(districtData);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error("Error loading districts data:", error);
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadDistricts();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Note: districtsByRegion removed as it was unused
 
-  const handleRegionClick = async (regionName) => {
-    setSelectedRegion(regionName);
-    setSelectedDistrict(null);
-
-    // Prevent map zooming on mobile when region is clicked
-    if (isMobile) {
-      return; // Exit early to prevent map view changes
-    }
-
-    // Fetch real-time weather data for the region
-    const regionData = GHANA_REGIONS[regionName];
-    if (regionData && !realTimeWeather[regionName]) {
-      try {
-        const weatherData = await ambeeWeatherService.getWeatherByCoordinates(
-          regionData.center[0],
-          regionData.center[1]
-        );
-
-        setRealTimeWeather((prev) => ({
-          ...prev,
-          [regionName]: weatherData.weather,
-        }));
-      } catch (error) {
-        // Use fallback weather data from static data
-        if (regionData.weather) {
-          setRealTimeWeather((prev) => ({
-            ...prev,
-            [regionName]: regionData.weather,
-          }));
-        }
-      }
-    }
-
-    if (onRegionSelect) {
-      onRegionSelect(regionName, GHANA_REGIONS[regionName]);
-    }
-
-    // Only update map view on desktop
-    if (!isMobile && GHANA_REGIONS[regionName]) {
-      // Auto-zoom functionality for desktop only
-      const region = GHANA_REGIONS[regionName];
-      // Note: MapController will handle the actual zoom
-    }
-  };
-
   const handleDistrictClick = async (district) => {
     setSelectedDistrict(district);
+    setHoveredDistrict(district);
     setSelectedRegion(district.region);
 
     // Fetch real-time weather data for the district
     if (!realTimeWeather[district.name]) {
       try {
-        const weatherData = await ambeeWeatherService.getWeatherByCoordinates(
+        const weatherData = await openMeteoWeatherService.getWeatherByCoordinates(
           district.coordinates[1],
           district.coordinates[0]
         );
@@ -988,7 +929,7 @@ const WeatherInteractiveMap = ({
           ...prev,
           [district.name]: weatherData.weather,
         }));
-      } catch (error) {
+      } catch {
         // Use fallback weather data from region
         const regionData = GHANA_REGIONS[district.region];
         if (regionData && regionData.weather) {
@@ -1003,9 +944,13 @@ const WeatherInteractiveMap = ({
     if (onDistrictSelect) {
       onDistrictSelect(district);
     }
+
+    if (onRegionSelect && GHANA_REGIONS[district.region]) {
+      onRegionSelect(district.region, GHANA_REGIONS[district.region]);
+    }
   };
 
-  const handleMapClick = (e) => {
+  const handleMapClick = () => {
     // Close info panel when clicking anywhere on the map
     closeInfoPanel();
   };
@@ -1031,28 +976,33 @@ const WeatherInteractiveMap = ({
   const closeInfoPanel = () => {
     setSelectedRegion(null);
     setSelectedDistrict(null);
+    setHoveredDistrict(null);
   };
 
   if (loading) {
     return (
       <div className="w-full h-[50vh] min-h-[300px] sm:h-[60vh] md:h-[500px] lg:h-[600px] max-h-[80vh] flex items-center justify-center bg-white border border-gray-200 rounded-lg">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600 text-sm sm:text-base">
-            Loading Ghana weather map...
-          </p>
-          {loadingWeather && (
-            <p className="text-gray-500 text-xs sm:text-sm mt-2">
-              Fetching live weather data...
-            </p>
-          )}
+        <div className="w-full max-w-md space-y-4 px-6">
+          <SkeletonBlock className="mx-auto h-32 w-24" rounded="rounded-full" tone="blue" />
+          <SkeletonBlock className="mx-auto h-4 w-48" />
+          <div className="grid grid-cols-3 gap-3">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <SkeletonBlock key={`weather-map-${index}`} className="h-10" tone="blue" />
+            ))}
+          </div>
         </div>
       </div>
     );
   }
 
+  const tooltipDistrict = hoveredDistrict || selectedDistrict;
+  const tooltipCoordinates = tooltipDistrict?.labelCoordinates;
+
   return (
-    <div className="relative w-full rounded-lg overflow-hidden shadow-lg bg-white border border-gray-200">
+    <div
+      data-no-auto-translate="true"
+      className="relative w-full rounded-lg overflow-hidden shadow-lg bg-white border border-gray-200"
+    >
       <MapContainer
         center={mapCenter}
         zoom={mapZoom}
@@ -1075,15 +1025,14 @@ const WeatherInteractiveMap = ({
 
         <MapController
           selectedRegion={selectedRegion}
-          onRegionSelect={handleRegionClick}
           isMobile={isMobile}
+          shouldZoomToRegion={!selectedDistrict}
         />
 
         {/* Unified Zoom Control (Zoom In/Out + Reset) - Only show on non-mobile */}
         {!isMobile && (
           <UnifiedZoomControl
             initialCenter={mapCenter}
-            initialZoom={mapZoom}
             isMobile={isMobile}
           />
         )}
@@ -1104,111 +1053,90 @@ const WeatherInteractiveMap = ({
             />
           ))} */}
 
-        {/* Render district markers - IMD style */}
+        {/* Render selectable district areas */}
         {districts.map((district, index) => {
           const regionInfo = GHANA_REGIONS[district.region];
           const isSelected = selectedDistrict?.name === district.name;
           const isRegionSelected = selectedRegion === district.region;
+          const districtColor = regionInfo?.color || "#0F766E";
 
           return (
-            <CircleMarker
-              key={index}
-              center={[district.coordinates[1], district.coordinates[0]]}
-              radius={isSelected ? 10 : isRegionSelected ? 7 : 5}
-              fillColor={regionInfo?.color || "#2563EB"}
-              color="#ffffff"
-              weight={isSelected ? 1 : 1}
-              opacity={1}
-              fillOpacity={isSelected ? 1 : isRegionSelected ? 0.8 : 0.6}
+            <Polygon
+              key={district.id || `${district.name}-${index}`}
+              positions={district.polygon}
+              pathOptions={{
+                fillColor: districtColor,
+                color: isSelected ? "#111827" : "#4B5563",
+                weight: isSelected ? 2 : isRegionSelected ? 1.25 : 0.8,
+                opacity: isSelected ? 0.95 : 0.55,
+                fillOpacity: isSelected ? 0.42 : isRegionSelected ? 0.24 : 0.12,
+              }}
               eventHandlers={{
                 click: (e) => {
                   e.originalEvent.stopPropagation();
                   handleDistrictClick(district);
                 },
                 mouseover: (e) => {
+                  setHoveredDistrict(district);
                   e.target.setStyle({
-                    radius: 8,
-                    fillOpacity: 1,
+                    fillOpacity: 0.42,
                     weight: 2,
+                    opacity: 0.95,
                   });
                 },
                 mouseout: (e) => {
+                  setHoveredDistrict((current) =>
+                    current?.id === district.id ? null : current
+                  );
                   e.target.setStyle({
-                    radius: isSelected ? 10 : isRegionSelected ? 7 : 5,
-                    fillOpacity: isSelected ? 1 : isRegionSelected ? 0.8 : 0.6,
-                    weight: isSelected ? 2 : 1,
+                    fillOpacity: isSelected
+                      ? 0.42
+                      : isRegionSelected
+                        ? 0.24
+                        : 0.12,
+                    weight: isSelected ? 2 : isRegionSelected ? 1.25 : 0.8,
+                    opacity: isSelected ? 0.95 : 0.55,
                   });
                 },
               }}
-            ></CircleMarker>
+            />
           );
         })}
 
-        {/* Ghana regional center markers - IMD style */}
-        {Object.entries(GHANA_REGIONS).map(([regionName, regionData]) => {
-          return (
-            <Marker
-              key={regionName}
-              position={regionData.center}
-              eventHandlers={{
-                click: (e) => {
-                  e.originalEvent.stopPropagation();
-                  handleRegionClick(regionName);
-                },
-              }}
-              icon={L.divIcon({
-                html: `
-                  <div class="flex items-center justify-center w-8 h-8 bg-white border-2 border-gray-400 rounded-full shadow-lg">
-                    <div class="w-4 h-4 text-gray-700 text-sm">
-                      📍
-                    </div>
-                  </div>
-                `,
-                className: "imd-marker",
-                iconSize: [32, 32],
-                iconAnchor: [16, 16],
-              })}
-            ></Marker>
-          );
-        })}
-
-        {/* West African country markers */}
-        {Object.entries(WEST_AFRICA_COUNTRIES).map(
-          ([countryName, countryData]) => {
-            return (
-              <Marker
-                key={countryName}
-                position={countryData.center}
-                eventHandlers={{
-                  click: (e) => {
-                    e.originalEvent.stopPropagation();
-                    console.log(
-                      `${countryName} clicked - weather data coming soon`
-                    );
-                  },
-                }}
-                icon={L.divIcon({
-                  html: `
-                  <div class="flex items-center justify-center w-6 h-6 bg-white border border-gray-300 rounded-full shadow-md">
-                    <div class="w-3 h-3" style="background-color: ${countryData.color}; border-radius: 50%;"></div>
-                  </div>
-                `,
-                  className: "imd-marker west-africa-marker",
-                  iconSize: [24, 24],
-                  iconAnchor: [12, 12],
-                })}
-              ></Marker>
-            );
-          }
+        {tooltipDistrict && tooltipCoordinates && (
+          <CircleMarker
+            key={`tooltip-${tooltipDistrict.id || tooltipDistrict.name}`}
+            center={[tooltipCoordinates[1], tooltipCoordinates[0]]}
+            radius={0}
+            interactive={false}
+            pathOptions={{
+              opacity: 0,
+              fillOpacity: 0,
+            }}
+          >
+            <Tooltip
+              direction="top"
+              permanent
+              offset={[0, -6]}
+              opacity={0.95}
+            >
+              <div className="text-xs font-semibold text-gray-900">
+                {tooltipDistrict.name}
+              </div>
+              <div className="text-[11px] text-gray-600">
+                {tooltipDistrict.region}
+              </div>
+            </Tooltip>
+          </CircleMarker>
         )}
-      </MapContainer>
 
-      {/* Weather Info Panel - IMD Style */}
+      </MapContainer>
       <WeatherInfoPanel
         selectedRegion={selectedRegion}
         selectedDistrict={selectedDistrict}
         onClose={closeInfoPanel}
         realTimeWeather={realTimeWeather}
+        updatedAt={updatedAt}
       />
     </div>
   );
@@ -1218,6 +1146,11 @@ WeatherInteractiveMap.propTypes = {
   onRegionSelect: PropTypes.func,
   onDistrictSelect: PropTypes.func,
   initialRegion: PropTypes.string,
+  updatedAt: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.number,
+    PropTypes.instanceOf(Date),
+  ]),
 };
 
 export default WeatherInteractiveMap;

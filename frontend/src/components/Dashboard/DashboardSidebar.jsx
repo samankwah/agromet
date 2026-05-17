@@ -7,14 +7,8 @@ import {
   FaChevronDown,
   FaChevronRight,
   FaSeedling,
-  FaDatabase,
   FaCalendarAlt,
   FaEgg,
-  FaEye,
-  FaChartBar,
-  FaCog,
-  FaStar,
-  FaFileAlt
 } from "react-icons/fa";
 import PropTypes from "prop-types";
 
@@ -30,11 +24,26 @@ const Sidebar = ({ activePage, onNavigate }) => {
     setAdvisoryManagementExpanded(!advisoryManagementExpanded);
   };
 
+  const navButtonClass = (active) =>
+    `w-full flex items-center px-4 py-3 text-sm rounded-full transition-all ${
+      active
+        ? "bg-neo-bg text-neo-accent-strong shadow-neo-pressed"
+        : "text-neo-muted hover:bg-white/55 hover:text-neo-accent-strong hover:shadow-neo-soft"
+    }`;
+
+  const parentButtonClass = (active) =>
+    `w-full flex items-center justify-between px-4 py-3 text-sm rounded-full transition-all ${
+      active
+        ? "bg-neo-bg text-neo-accent-strong shadow-neo-pressed"
+        : "text-neo-muted hover:bg-white/55 hover:text-neo-accent-strong hover:shadow-neo-soft"
+    }`;
+
   return (
     <>
-      <div className="h-screen w-72 bg-green-800 text-white flex flex-col fixed left-0 top-0 shadow-lg">
-        <div className="p-4 border-b border-green-700">
-          <h1 className="text-xl font-bold">AgroMet AI Admin</h1>
+      <div className="neo-surface h-screen w-72 text-neo-text flex flex-col fixed left-0 top-0 rounded-none lg:rounded-r-neo-lg">
+        <div className="p-4 border-b neo-divider">
+          <h1 className="text-xl font-bold text-neo-accent-strong">AgroMet AI Admin</h1>
+          <p className="mt-1 text-xs text-neo-muted">Agricultural operations</p>
         </div>
 
         <nav className="flex-1 overflow-y-auto py-4">
@@ -43,11 +52,7 @@ const Sidebar = ({ activePage, onNavigate }) => {
             <li>
               <button
                 onClick={() => onNavigate("dashboard")}
-                className={`w-full flex items-center px-4 py-3 text-sm rounded-lg transition-all ${
-                  activePage === "dashboard"
-                    ? "bg-green-700 shadow-md"
-                    : "hover:bg-green-700 hover:shadow-sm"
-                }`}
+                className={navButtonClass(activePage === "dashboard")}
               >
                 <FaTachometerAlt className="mr-3" />
                 <span>Dashboard Overview</span>
@@ -58,11 +63,7 @@ const Sidebar = ({ activePage, onNavigate }) => {
             <li>
               <button
                 onClick={toggleCalendarManagement}
-                className={`w-full flex items-center justify-between px-4 py-3 text-sm rounded-lg transition-all ${
-                  activePage.startsWith("calendar") || activePage.startsWith("agricultural-crop") || activePage.startsWith("agricultural-poultry") || activePage.startsWith("enhanced-calendar")
-                    ? "bg-green-700 shadow-md"
-                    : "hover:bg-green-700 hover:shadow-sm"
-                }`}
+                className={parentButtonClass(activePage.startsWith("calendar") || activePage.startsWith("agricultural-crop") || activePage.startsWith("agricultural-poultry") || activePage.startsWith("enhanced-calendar"))}
               >
                 <div className="flex items-center">
                   <FaCalendarAlt className="mr-3" />
@@ -80,11 +81,7 @@ const Sidebar = ({ activePage, onNavigate }) => {
                   <li>
                     <button
                       onClick={() => onNavigate("content-management-crop-calendar")}
-                      className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all ${
-                        activePage === "content-management-crop-calendar"
-                          ? "bg-green-600"
-                          : "hover:bg-green-600"
-                      }`}
+                      className={navButtonClass(activePage === "content-management-crop-calendar")}
                     >
                       <FaSeedling className="mr-3 text-sm" />
                       <span>Crop Calendars</span>
@@ -93,11 +90,7 @@ const Sidebar = ({ activePage, onNavigate }) => {
                   <li>
                     <button
                       onClick={() => onNavigate("content-management-poultry-calendar")}
-                      className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all ${
-                        activePage === "content-management-poultry-calendar"
-                          ? "bg-green-600"
-                          : "hover:bg-green-600"
-                      }`}
+                      className={navButtonClass(activePage === "content-management-poultry-calendar")}
                     >
                       <FaEgg className="mr-3 text-sm" />
                       <span>Poultry Calendars</span>
@@ -111,11 +104,7 @@ const Sidebar = ({ activePage, onNavigate }) => {
             <li>
               <button
                 onClick={toggleAdvisoryManagement}
-                className={`w-full flex items-center justify-between px-4 py-3 text-sm rounded-lg transition-all ${
-                  activePage.startsWith("advisory") || activePage.startsWith("agricultural-agromet") || activePage.startsWith("content-management-agromet") || activePage.startsWith("content-management-poultry-advisory")
-                    ? "bg-green-700 shadow-md"
-                    : "hover:bg-green-700 hover:shadow-sm"
-                }`}
+                className={parentButtonClass(activePage.startsWith("advisory") || activePage.startsWith("agricultural-agromet") || activePage.startsWith("content-management-agromet") || activePage.startsWith("content-management-poultry-advisory"))}
               >
                 <div className="flex items-center">
                   <FaCloudSun className="mr-3" />
@@ -133,11 +122,7 @@ const Sidebar = ({ activePage, onNavigate }) => {
                   <li>
                     <button
                       onClick={() => onNavigate("content-management-agromet-advisory")}
-                      className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all ${
-                        activePage === "content-management-agromet-advisory"
-                          ? "bg-green-600"
-                          : "hover:bg-green-600"
-                      }`}
+                      className={navButtonClass(activePage === "content-management-agromet-advisory")}
                     >
                       <FaCloudSun className="mr-3 text-sm" />
                       <span>Agromet Advisories</span>
@@ -146,11 +131,7 @@ const Sidebar = ({ activePage, onNavigate }) => {
                   <li>
                     <button
                       onClick={() => onNavigate("content-management-poultry-advisory")}
-                      className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all ${
-                        activePage === "content-management-poultry-advisory"
-                          ? "bg-green-600"
-                          : "hover:bg-green-600"
-                      }`}
+                      className={navButtonClass(activePage === "content-management-poultry-advisory")}
                     >
                       <FaSeedling className="mr-3 text-sm" />
                       <span>Poultry Advisories</span>
@@ -160,17 +141,13 @@ const Sidebar = ({ activePage, onNavigate }) => {
               )}
             </li>
 
-            <div className="border-t border-green-700 my-2"></div>
+            <div className="border-t neo-divider my-2"></div>
 
             {/* System Tools */}
             <li>
               <button
                 onClick={() => onNavigate("emergency")}
-                className={`w-full flex items-center px-4 py-3 text-sm rounded-lg transition-all ${
-                  activePage === "emergency"
-                    ? "bg-green-700 shadow-md"
-                    : "hover:bg-green-700 hover:shadow-sm"
-                }`}
+                className={navButtonClass(activePage === "emergency")}
               >
                 <FaBell className="mr-3" />
                 <span>Emergency Alerts</span>
@@ -180,11 +157,7 @@ const Sidebar = ({ activePage, onNavigate }) => {
             <li>
               <button
                 onClick={() => onNavigate("news")}
-                className={`w-full flex items-center px-4 py-3 text-sm rounded-lg transition-all ${
-                  activePage === "news"
-                    ? "bg-green-700 shadow-md" 
-                    : "hover:bg-green-700 hover:shadow-sm"
-                }`}
+                className={navButtonClass(activePage === "news")}
               >
                 <FaNewspaper className="mr-3" />
                 <span>News Management</span>
@@ -193,7 +166,7 @@ const Sidebar = ({ activePage, onNavigate }) => {
           </ul>
         </nav>
 
-        <div className="p-4 border-t border-green-700 text-xs text-center">
+        <div className="p-4 border-t neo-divider text-xs text-center text-neo-muted">
           <p>© {new Date().getFullYear()} AgroMet AI</p>
           <p>Agricultural Intelligence Platform</p>
         </div>

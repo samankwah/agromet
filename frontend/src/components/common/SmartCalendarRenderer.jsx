@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { FaInfoCircle, FaCalendarAlt, FaDownload, FaExpand, FaChevronDown, FaSpinner, FaExclamationTriangle } from 'react-icons/fa';
+import { FaInfoCircle, FaCalendarAlt, FaDownload, FaExpand, FaChevronDown, FaExclamationTriangle } from 'react-icons/fa';
 import calendarExportService from '../../services/calendarExportService';
+import { TableSkeleton } from './SkeletonLoading';
 
 /**
  * Smart Calendar Renderer Component
@@ -446,22 +447,11 @@ const SmartCalendarRenderer = ({
     }
   };
 
-  // Loading state with enhanced spinner
+  // Loading state
   if (loading) {
     return (
       <div className={`border border-gray-200 rounded-lg p-8 ${className}`}>
-        <div className="flex flex-col items-center justify-center space-y-4">
-          <div className="flex items-center">
-            <FaSpinner className="animate-spin h-8 w-8 text-green-600 mr-3" />
-            <span className="text-gray-600 font-medium">Loading calendar data...</span>
-          </div>
-          <div className="text-xs text-gray-500 text-center">
-            <p>Processing agricultural calendar information</p>
-            {metadata.commodity && (
-              <p className="mt-1">Commodity: {metadata.commodity}</p>
-            )}
-          </div>
-        </div>
+        <TableSkeleton rows={5} columns={5} />
       </div>
     );
   }

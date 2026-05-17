@@ -26,7 +26,7 @@ const Layout = () => {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="neo-page flex flex-col min-h-screen">
       {/* Offline notification banner - Disabled for frontend-only development */}
       {/* <OfflineNotification /> */}
 

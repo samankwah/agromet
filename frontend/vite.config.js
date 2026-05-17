@@ -100,10 +100,7 @@ export default defineConfig({
             return "polyfills-vendor";
           }
 
-          if (
-            normalizedId.includes("/node_modules/@paakways/ghananlp-node/") ||
-            normalizedId.includes("/node_modules/es-toolkit/")
-          ) {
+          if (normalizedId.includes("/node_modules/es-toolkit/")) {
             return "ai-vendor";
           }
 

@@ -92,7 +92,7 @@ const AdminLogin = () => {
   return (
     <>
       <PageTitle title="Admin Login" />
-      <div className="min-h-screen flex flex-col lg:grid lg:grid-cols-5 bg-gray-50">
+      <div className="neo-page min-h-screen flex flex-col lg:grid lg:grid-cols-5">
         <div
           className="lg:col-span-2 flex flex-col justify-center items-center bg-cover bg-center p-6 sm:p-8 lg:p-10 text-white relative"
           style={{ backgroundImage: `url(${hero})` }}
@@ -106,17 +106,17 @@ const AdminLogin = () => {
           </p>
           <Link
             to="/admin-signup"
-            className="relative text-white bg-gray-500 hover:bg-gray-700 px-6 py-4 rounded-lg"
+            className="neo-button relative bg-white/90 text-neo-accent-strong"
           >
             Sign Up
           </Link>
         </div>
 
-        <div className="lg:col-span-3 flex flex-col justify-center items-center p-6 sm:p-8 lg:p-10 bg-white sm:bg-[#F8F8FA]">
-          <h1 className="text-xl sm:text-2xl font-bold mb-2 text-gray-800">
-            AgroMet <span className="text-blue-600">AI</span>
+        <div className="lg:col-span-3 flex flex-col justify-center items-center p-6 sm:p-8 lg:p-10">
+          <h1 className="text-xl sm:text-2xl font-bold mb-2 text-neo-text">
+            AgroMet <span className="text-neo-accent-strong">AI</span>
           </h1>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 text-gray-900">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 text-neo-text">
             Sign In to AgroMet AI
           </h2>
 
@@ -133,7 +133,7 @@ const AdminLogin = () => {
           )}
 
           <form
-            className="w-full max-w-md flex flex-col gap-5"
+            className="neo-surface w-full max-w-md flex flex-col gap-5 p-6 sm:p-8"
             onSubmit={handleSubmit}
           >
             <div className="mb-2">
@@ -144,7 +144,7 @@ const AdminLogin = () => {
                 Email
               </label>
               <input
-                className={`w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-300 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-transparent transition-all ${
+                className={`neo-input ${
                   errors.email ? "border-red-400" : ""
                 }`}
                 id="email"
@@ -166,7 +166,7 @@ const AdminLogin = () => {
                 Password
               </label>
               <input
-                className={`w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-300 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-transparent transition-all ${
+                className={`neo-input pr-12 ${
                   errors.password ? "border-red-400" : ""
                 }`}
                 id="password"
@@ -200,7 +200,7 @@ const AdminLogin = () => {
               </div>
               <Link
                 to="/forgot-password"
-                className="text-blue-500 hover:underline"
+                className="text-neo-accent-strong hover:underline"
               >
                 Forgot Password?
               </Link>
@@ -208,7 +208,7 @@ const AdminLogin = () => {
 
             <div className="flex items-center justify-center mb-4 w-1/2 mx-auto">
               <button
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50 disabled:cursor-not-allowed"
+                className="neo-button-primary w-full"
                 type="submit"
                 disabled={isLoading}
               >
@@ -219,7 +219,7 @@ const AdminLogin = () => {
             <div className="text-center text-gray-500 my-4">OR</div>
 
             <button
-              className="w-full flex justify-center items-center gap-3 bg-white border border-gray-300 text-gray-700 font-semibold py-3 rounded-lg hover:bg-gray-50 transition-all"
+              className="neo-button w-full"
               type="button"
               onClick={() =>
                 (window.location.href =
@@ -234,7 +234,7 @@ const AdminLogin = () => {
               Don't have an account?{" "}
               <Link
                 to="/admin-signup"
-                className="text-blue-500 font-semibold hover:underline"
+                className="text-neo-accent-strong font-semibold hover:underline"
               >
                 Sign Up
               </Link>

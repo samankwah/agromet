@@ -8,6 +8,7 @@
 import { useState } from 'react';
 import PropTypes from 'prop-types';
 import { FaExpand, FaCompress, FaInfoCircle, FaCalendarAlt } from 'react-icons/fa';
+import { TableSkeleton } from './SkeletonLoading';
 
 const CalendarPreviewTable = ({ 
   calendarData, 
@@ -24,10 +25,7 @@ const CalendarPreviewTable = ({
   if (loading) {
     return (
       <div className={`border border-gray-200 rounded-lg p-8 ${className}`}>
-        <div className="flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mr-3"></div>
-          <span className="text-gray-600">Parsing calendar...</span>
-        </div>
+        <TableSkeleton rows={4} columns={5} />
       </div>
     );
   }

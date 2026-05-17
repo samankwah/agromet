@@ -1,4 +1,5 @@
 import PageTitle from "../components/PageTitle";
+import Breadcrumb from "../components/common/Breadcrumb";
 import { Link } from "react-router-dom";
 import {
   FaCloudSunRain,
@@ -60,11 +61,10 @@ const OurServices = () => {
   return (
     <>
       <PageTitle title="Our Services" />
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-emerald-50/30 relative overflow-hidden">
-        <div className="absolute top-20 -left-32 w-96 h-96 bg-emerald-200/30 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute top-40 -right-32 w-96 h-96 bg-teal-200/30 rounded-full blur-3xl pointer-events-none" />
+      <div className="neo-page min-h-screen relative overflow-hidden">
 
         <div className="max-w-7xl mx-auto px-6 lg:px-8 pt-28 pb-20 relative">
+          <Breadcrumb />
           <header className="text-center mb-16">
             <span className="inline-block px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold uppercase tracking-wider mb-4">
               <T>What We Offer</T>

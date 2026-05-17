@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import PageTitle from '../components/PageTitle';
+import Breadcrumb from '../components/common/Breadcrumb';
 import T from '../components/common/T';
+import { PageSkeleton } from "../components/common/SkeletonLoading";
 import {
   TrendingUp,
   TrendingDown,
@@ -26,6 +28,19 @@ import {
   Target,
   Activity,
 } from "lucide-react";
+
+const formatUpdatedTime = (timestamp) => {
+  const date = timestamp ? new Date(timestamp) : new Date();
+
+  return date.toLocaleString("en-GB", {
+    timeZone: "Africa/Accra",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
 
 const ConfidenceDonut = ({ value, label, color = "#10b981" }) => {
   const data = [
@@ -95,6 +110,7 @@ const SubseasonalForecast = () => {
   const [forecastType, setForecastType] = useState("overview");
   const [showConfidenceLevel, setShowConfidenceLevel] = useState(false);
   const [expandedParameter, setExpandedParameter] = useState(null);
+  const [updatedAt] = useState(() => new Date().toISOString());
 
   // Define forecast periods
   const forecastPeriods = {
@@ -302,9 +318,10 @@ const SubseasonalForecast = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-600"></div>
-      </div>
+      <>
+        <PageTitle title="Subseasonal Forecast" />
+        <PageSkeleton />
+      </>
     );
   }
 
@@ -337,10 +354,9 @@ const SubseasonalForecast = () => {
   return (
     <>
       <PageTitle title="Subseasonal Forecast" />
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-emerald-50/30 pt-24 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      <div className="absolute top-0 -left-40 w-[500px] h-[500px] bg-emerald-200/30 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-96 -right-40 w-[500px] h-[500px] bg-teal-200/30 rounded-full blur-3xl pointer-events-none" />
+      <div className="neo-page min-h-screen pt-32 md:pt-36 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       <div className="max-w-7xl mx-auto relative">
+      <Breadcrumb />
       <div className="mb-8">
         <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight">
           <T>Subseasonal Agricultural</T>{" "}
@@ -348,6 +364,9 @@ const SubseasonalForecast = () => {
             <T>Forecast</T>
           </span>
         </h1>
+        <p className="mt-2 text-sm font-medium text-slate-500">
+          <T>Updated</T> {formatUpdatedTime(updatedAt)}
+        </p>
         <p className="mt-3 text-slate-600 max-w-4xl">
           <T>Extended-range weather forecasts (2-8 weeks ahead) to support strategic agricultural planning. These forecasts help farmers make informed decisions about crop selection, planting schedules, and resource allocation based on longer-term climate patterns.</T>
         </p>
@@ -954,15 +973,7 @@ const SubseasonalForecast = () => {
           <T>Data sources: ECMWF, NCEP, and regional climate models</T>
         </p>
         <p>
-          <T>Last updated:</T>{" "}
-          <T>{new Date().toLocaleDateString("en-US", {
-            weekday: "long",
-            month: "long",
-            day: "numeric",
-            year: "numeric",
-            hour: "numeric",
-            minute: "2-digit",
-          })}</T>
+          <T>Updated</T> {formatUpdatedTime(updatedAt)}
         </p>
       </div>
       </div>
