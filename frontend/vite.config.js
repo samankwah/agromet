@@ -37,6 +37,7 @@ export default defineConfig({
 
           if (
             normalizedId.includes("/node_modules/leaflet/") ||
+            normalizedId.includes("/node_modules/@react-leaflet/") ||
             normalizedId.includes("/node_modules/react-leaflet/")
           ) {
             return "map-vendor";
