@@ -202,7 +202,7 @@ const AgroMetAdvisory = () => {
                   onChange={(e) => handleFilterChange(e, "season")}
                   className="text-sm p-2 border border-gray-300 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value=""><T>Select Season</T></option>
+                  <option value="">Select Season</option>
                   {filterData.season.map((value) => (
                     <option key={value} value={value}>{value}</option>
                   ))}
@@ -217,7 +217,7 @@ const AgroMetAdvisory = () => {
                   onChange={(e) => handleFilterChange(e, "region")}
                   className="text-sm p-2 border border-gray-300 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value=""><T>Select Region</T></option>
+                  <option value="">Select Region</option>
                   {filterData.region.map((value) => (
                     <option key={value} value={value}>{value}</option>
                   ))}
@@ -233,7 +233,7 @@ const AgroMetAdvisory = () => {
                   className="text-sm p-2 border border-gray-300 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                   disabled={!selected.region}
                 >
-                  <option value="">{selected.region ? <T>Select District</T> : <T>Select Region First</T>}</option>
+                  <option value="">{selected.region ? "Select District" : "Select Region First"}</option>
                   {selected.region &&
                     districtOfGhana
                       .filter((d) => {
@@ -258,7 +258,7 @@ const AgroMetAdvisory = () => {
                   className="text-sm p-2 border border-gray-300 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                   disabled={!selected.region}
                 >
-                  <option value=""><T>Select Commodity</T></option>
+                  <option value="">Select Commodity</option>
                   {availableCropsForDropdown.map((crop) => (
                     <option key={crop} value={crop}>{crop}</option>
                   ))}

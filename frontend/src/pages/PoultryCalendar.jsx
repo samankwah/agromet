@@ -1226,7 +1226,7 @@ const PoultryCalendar = () => {
                     onChange={handleSeasonChange}
                     className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all"
                   >
-                    <option value=""><T>Select Season</T></option>
+                    <option value="">Select Season</option>
                     {seasonOptions.map((opt) => (
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
                     ))}
@@ -1239,7 +1239,7 @@ const PoultryCalendar = () => {
                     onChange={handlePoultryChange}
                     className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all"
                   >
-                    <option value=""><T>Select Poultry</T></option>
+                    <option value="">Select Poultry</option>
                     <option value="broilers">Broilers</option>
                     <option value="layers">Layers</option>
                   </select>
@@ -1251,7 +1251,7 @@ const PoultryCalendar = () => {
                     onChange={handleRegionChange}
                     className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all"
                   >
-                    <option value="All Regions"><T>Select Region</T></option>
+                    <option value="All Regions">Select Region</option>
                     {regionsOfGhana.map((region) => (
                       <option key={region} value={region}>{region}</option>
                     ))}
@@ -1265,7 +1265,7 @@ const PoultryCalendar = () => {
                     className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
                     disabled={selectedRegion === "All Regions"}
                   >
-                    <option value="All Districts"><T>Select District</T></option>
+                    <option value="All Districts">Select District</option>
                     <SafeDistrictOptions
                       districts={districtData.districts}
                       placeholder=""

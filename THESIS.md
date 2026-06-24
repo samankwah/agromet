@@ -804,37 +804,33 @@ The methodology proceeds through five overlapping phases, each repeated in multi
 
 Figure 3.1 below illustrates this iterative cycle.
 
+```plantuml
+@startuml
+title Figure 3.1 - Iterative Prototyping Methodology
 
+top to bottom direction
+skinparam shadowing false
+skinparam ArrowColor #2F855A
+skinparam rectangle {
+  BackgroundColor #F7FAFC
+  BorderColor #2F855A
+  FontColor #1A202C
+  RoundCorner 8
+}
 
+rectangle "1. Requirements\n(cycle)" as Requirements
+rectangle "2. Design" as Design
+rectangle "3. Implementation" as Implementation
+rectangle "4. Testing" as Testing
+rectangle "5. Review & refinement" as Review
 
-        +---------------------------+
-        |  1. Requirements (cycle)  |
-        +-------------+-------------+
-                      |
-                      v
-        +---------------------------+
-        |       2. Design           |
-        +-------------+-------------+
-                      |
-                      v
-        +---------------------------+
-        |    3. Implementation      |
-        +-------------+-------------+
-                      |
-                      v
-        +---------------------------+
-        |       4. Testing          |
-        +-------------+-------------+
-                      |
-                      v
-        +---------------------------+
-        |  5. Review & refinement   |
-        +-------------+-------------+
-                      |
-                      +----> back to (1) for next feature
-
-
-
+Requirements --> Design
+Design --> Implementation
+Implementation --> Testing
+Testing --> Review
+Review -up-> Requirements : back to (1)\nfor next feature
+@enduml
+```
 
 Figure 3.1 — Iterative Prototyping Methodology
 

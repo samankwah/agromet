@@ -483,10 +483,10 @@ const SubseasonalForecast = () => {
             onChange={(e) => setForecastType(e.target.value)}
             className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
-            <option value="overview"><T>Overview</T></option>
-            <option value="detailed"><T>Detailed Analysis</T></option>
-            <option value="agricultural"><T>Agricultural Focus</T></option>
-            <option value="climate"><T>Climate Patterns</T></option>
+            <option value="overview">Overview</option>
+            <option value="detailed">Detailed Analysis</option>
+            <option value="agricultural">Agricultural Focus</option>
+            <option value="climate">Climate Patterns</option>
           </select>
         </div>
       </div>

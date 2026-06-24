@@ -262,7 +262,7 @@ const FloodDrought = () => {
               value={selectedRegion}
               onChange={(e) => setSelectedRegion(e.target.value)}
             >
-              <option value="global"><T>All Agroecological Zones</T></option>
+              <option value="global">All Agroecological Zones</option>
               {climateMatrixData.map((region, index) => (
                 <option key={index} value={region.region}>
                   {region.region}

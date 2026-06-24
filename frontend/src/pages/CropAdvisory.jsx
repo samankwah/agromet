@@ -438,7 +438,7 @@ const AdvisoryPage = () => {
               onChange={handleRegionChange}
               className="border rounded-lg p-2 w-full md:w-auto"
             >
-              <option value=""><T>Select Region</T></option>
+              <option value="">Select Region</option>
               {Object.keys(regionsAndDistricts).map((region) => (
                 <option key={region} value={region}>
                   {region}
@@ -452,7 +452,7 @@ const AdvisoryPage = () => {
               className="border rounded-lg p-2 w-full md:w-auto"
               disabled={!selectedRegion}
             >
-              <option value=""><T>Select District</T></option>
+              <option value="">Select District</option>
               {selectedRegion &&
                 regionsAndDistricts[selectedRegion].map((district) => (
                   <option key={district} value={district}>
