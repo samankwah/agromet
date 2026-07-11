@@ -42,6 +42,7 @@ import T from "../components/common/T";
 import { SkeletonBlock } from "../components/common/SkeletonLoading";
 import useT from "../hooks/useT";
 import {
+  getWeatherBundleByCoordinates,
   getWeatherBundlesByCoordinates,
   getWeatherForLocationName,
   OPEN_METEO_SOURCE,
@@ -210,6 +211,110 @@ const useSixHourlyUpdatedDate = () => {
 
 const formatCardTemp = (value) =>
   Number.isFinite(Number(value)) ? `${Math.round(Number(value))}\u00B0C` : "--";
+
+const GEOLOCATION_OPTIONS = {
+  enableHighAccuracy: false,
+  timeout: 8000,
+  maximumAge: 10 * 60 * 1000,
+};
+
+const GEOLOCATION_STATUS = {
+  IDLE: "idle",
+  REQUESTING: "requesting",
+  READY: "ready",
+  DENIED: "denied",
+  UNAVAILABLE: "unavailable",
+  ERROR: "error",
+};
+
+const NEARBY_GHANA_CITY_THRESHOLD_KM = 35;
+const EARTH_RADIUS_KM = 6371;
+
+const toRadians = (degrees) => (Number(degrees) * Math.PI) / 180;
+
+const getDistanceKm = (from, to) => {
+  const fromLat = Number(from.lat);
+  const fromLng = Number(from.lng);
+  const toLat = Number(to.lat);
+  const toLng = Number(to.lng);
+
+  if (
+    !Number.isFinite(fromLat) ||
+    !Number.isFinite(fromLng) ||
+    !Number.isFinite(toLat) ||
+    !Number.isFinite(toLng)
+  ) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  const latitudeDelta = toRadians(toLat - fromLat);
+  const longitudeDelta = toRadians(toLng - fromLng);
+  const fromLatitude = toRadians(fromLat);
+  const toLatitude = toRadians(toLat);
+
+  const haversine =
+    Math.sin(latitudeDelta / 2) ** 2 +
+    Math.cos(fromLatitude) *
+      Math.cos(toLatitude) *
+      Math.sin(longitudeDelta / 2) ** 2;
+
+  return (
+    2 *
+    EARTH_RADIUS_KM *
+    Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine))
+  );
+};
+
+const getNearestKnownGhanaCity = (cities, coordinates) => {
+  const nearest = cities.reduce(
+    (best, city) => {
+      const distanceKm = getDistanceKm(coordinates, city);
+      return distanceKm < best.distanceKm ? { city, distanceKm } : best;
+    },
+    { city: null, distanceKm: Number.POSITIVE_INFINITY },
+  );
+
+  return nearest.distanceKm <= NEARBY_GHANA_CITY_THRESHOLD_KM
+    ? nearest.city
+    : null;
+};
+
+const formatWeatherDataForCard = (
+  weatherBundle,
+  city,
+  type = "Open-Meteo forecast",
+  region = "",
+) => {
+  const today = weatherBundle.daily[0] || {};
+  const current = weatherBundle.current;
+  const raw = weatherBundle.raw || {};
+
+  return {
+    city,
+    condition: current.condition,
+    minTemp: today.lowTemp ?? current.temperatureValue,
+    maxTemp: today.highTemp ?? current.temperatureValue,
+    type,
+    region,
+    summary: current.conversationalSummary || current.summary,
+    humidity: current.humidityValue,
+    windSpeed: current.windSpeedValue,
+    feelsLike: current.apparentTemperatureValue,
+    source: OPEN_METEO_SOURCE,
+    updatedAt: getUpdatedStamp(current.updatedAt),
+    latitude: raw.latitude,
+    longitude: raw.longitude,
+    timezone: raw.timezone,
+  };
+};
+
+const formatWeatherDataForCity = (cityData, weatherBundle) =>
+  formatWeatherDataForCard(
+    weatherBundle,
+    cityData.name,
+    cityData.type,
+    cityData.region,
+  );
 
 const WeatherCard = ({
   city,
@@ -440,9 +545,15 @@ const Home = () => {
   const [expandedCategory, setExpandedCategory] = useState(null);
   const [weatherData, setWeatherData] = useState([]);
   const [loadingWeather, setLoadingWeather] = useState(true);
+  const [featuredLocationWeather, setFeaturedLocationWeather] = useState(null);
+  const [featuredLocationStatus, setFeaturedLocationStatus] = useState(
+    GEOLOCATION_STATUS.IDLE,
+  );
   const sixHourlyUpdatedAt = useSixHourlyUpdatedDate();
 
   const weatherSliderRef = useRef(null);
+  const isHomeMountedRef = useRef(false);
+  const featuredLocationRequestStartedRef = useRef(false);
 
   const ghanaCities = useMemo(
     () => [
@@ -673,11 +784,21 @@ const Home = () => {
   ];
 
   const featuredWeather = useMemo(
-    () =>
-      weatherData.find((item) => item.city === "Accra") ||
-      weatherData[0] ||
-      null,
-    [weatherData],
+    () => {
+      if (
+        featuredLocationStatus === GEOLOCATION_STATUS.READY &&
+        featuredLocationWeather
+      ) {
+        return featuredLocationWeather;
+      }
+
+      return (
+        weatherData.find((item) => item.city === "Accra") ||
+        weatherData[0] ||
+        null
+      );
+    },
+    [featuredLocationStatus, featuredLocationWeather, weatherData],
   );
   const activeCapAlert = null;
   const hasActiveCapAlert = Boolean(activeCapAlert);
@@ -720,26 +841,6 @@ const Home = () => {
 
   const toggleCategory = (index) => {
     setExpandedCategory((current) => (current === index ? null : index));
-  };
-
-  const formatWeatherDataForCity = (cityData, weatherBundle) => {
-    const today = weatherBundle.daily[0] || {};
-    const current = weatherBundle.current;
-
-    return {
-      city: cityData.name,
-      condition: current.condition,
-      minTemp: today.lowTemp ?? current.temperatureValue,
-      maxTemp: today.highTemp ?? current.temperatureValue,
-      type: cityData.type,
-      region: cityData.region,
-      summary: current.conversationalSummary || current.summary,
-      humidity: current.humidityValue,
-      windSpeed: current.windSpeedValue,
-      feelsLike: current.apparentTemperatureValue,
-      source: OPEN_METEO_SOURCE,
-      updatedAt: getUpdatedStamp(current.updatedAt),
-    };
   };
 
   const getUnavailableWeatherForCity = (cityData, errorMessage) => {
@@ -814,6 +915,82 @@ const Home = () => {
     loadAllCitiesWeather();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    isHomeMountedRef.current = true;
+
+    return () => {
+      isHomeMountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (featuredLocationRequestStartedRef.current) return;
+    featuredLocationRequestStartedRef.current = true;
+
+    if (!navigator.geolocation) {
+      setFeaturedLocationStatus(GEOLOCATION_STATUS.UNAVAILABLE);
+      return;
+    }
+
+    setFeaturedLocationStatus(GEOLOCATION_STATUS.REQUESTING);
+
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        try {
+          const coordinates = {
+            lat: coords.latitude,
+            lng: coords.longitude,
+          };
+          const weatherBundle = await getWeatherBundleByCoordinates(
+            coordinates.lat,
+            coordinates.lng,
+            { forecastDays: 1, timeoutMs: 8000, timezone: "auto" },
+          );
+
+          if (!isHomeMountedRef.current) return;
+
+          const nearbyCity = getNearestKnownGhanaCity(
+            ghanaCities,
+            coordinates,
+          );
+          const locationName = nearbyCity?.name || "Current location";
+          const locationType =
+            nearbyCity?.type ||
+            weatherBundle.raw?.timezone ||
+            "Open-Meteo coordinates";
+          const locationRegion =
+            nearbyCity?.region || weatherBundle.raw?.timezone || "";
+
+          setFeaturedLocationWeather(
+            formatWeatherDataForCard(
+              weatherBundle,
+              locationName,
+              locationType,
+              locationRegion,
+            ),
+          );
+          setFeaturedLocationStatus(GEOLOCATION_STATUS.READY);
+        } catch {
+          if (!isHomeMountedRef.current) return;
+
+          setFeaturedLocationWeather(null);
+          setFeaturedLocationStatus(GEOLOCATION_STATUS.ERROR);
+        }
+      },
+      (error) => {
+        if (!isHomeMountedRef.current) return;
+
+        setFeaturedLocationWeather(null);
+        setFeaturedLocationStatus(
+          error.code === 1
+            ? GEOLOCATION_STATUS.DENIED
+            : GEOLOCATION_STATUS.UNAVAILABLE,
+        );
+      },
+      GEOLOCATION_OPTIONS,
+    );
+  }, [ghanaCities]);
 
   useEffect(() => {
     const timer = window.setTimeout(syncWeatherSliderAccessibility, 0);
@@ -1079,6 +1256,12 @@ const Home = () => {
                       <h3 className="text-xl font-semibold text-neo-text">
                         {featuredWeather.city}
                       </h3>
+                      {featuredLocationStatus ===
+                        GEOLOCATION_STATUS.REQUESTING && (
+                        <p className="mt-1 text-xs text-neo-muted">
+                          <T>Detecting your location...</T>
+                        </p>
+                      )}
                     </div>
                     <WeatherIcon condition={featuredWeather.condition} />
                   </div>
