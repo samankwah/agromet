@@ -14,6 +14,7 @@ import {
   Cloud,
   CloudRain,
   Sun,
+  Moon,
   Droplets,
   Wind,
   Eye,
@@ -29,6 +30,7 @@ const getWeatherIcon = (iconKey) => {
   if (iconKey === "rain" || iconKey === "drizzle" || iconKey === "thunderstorm") {
     return CloudRain;
   }
+  if (iconKey === "clear-night") return Moon;
   if (iconKey === "clear") return Sun;
   return Cloud;
 };

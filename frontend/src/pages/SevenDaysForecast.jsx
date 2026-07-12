@@ -157,8 +157,14 @@ const toForecastDisplay = (weatherBundle) =>
       index === 0
         ? weatherBundle.current.apparentTemperatureValue
         : day.apparentHighTemp ?? day.highTemp ?? 0,
-    condition: day.conditionSlug,
-    conditionText: day.condition,
+    condition:
+      index === 0
+        ? weatherBundle.current.conditionSlug
+        : day.conditionSlug,
+    conditionText:
+      index === 0
+        ? weatherBundle.current.condition
+        : day.condition,
     summary:
       index === 0
         ? weatherBundle.current.conversationalSummary
@@ -352,6 +358,7 @@ const SevenDaysForecast = () => {
   const getIconCondition = (condition) => {
     const conditionMap = {
       clear: "sunny",
+      "clear-night": "clear night",
       "partly-cloudy": "partly cloudy",
       cloudy: "cloudy",
       rain: "light rain",
@@ -371,6 +378,7 @@ const SevenDaysForecast = () => {
     const currentHour = new Date().getHours();
     const isNight = currentHour < 6 || currentHour >= 18;
 
+    if (condition === "clear-night") return "from-indigo-900 to-blue-950";
     if (condition === "clear")
       return isNight
         ? "from-indigo-900 to-blue-900"

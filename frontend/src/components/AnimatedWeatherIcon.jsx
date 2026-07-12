@@ -9,6 +9,7 @@ import {
   FaSnowflake,
   FaEye,
   FaCloudSun,
+  FaMoon,
   FaWind
 } from "react-icons/fa";
 import { getWeatherTheme } from "../utils/weatherThemes";
@@ -77,6 +78,11 @@ const AnimatedWeatherIcon = ({
       icon: FaSun,
       bgColor: theme.gradient,
       particles: "sparkles"
+    },
+    "clear night": {
+      icon: FaMoon,
+      bgColor: theme.gradient,
+      particles: "none"
     },
     "sunny intervals": {
       icon: FaCloudSun,

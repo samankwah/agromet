@@ -24,6 +24,7 @@ const CURRENT_VARIABLES = [
   "precipitation",
   "rain",
   "weather_code",
+  "is_day",
   "cloud_cover",
   "pressure_msl",
   "wind_speed_10m",
@@ -37,6 +38,7 @@ const HOURLY_VARIABLES = [
   "precipitation_probability",
   "precipitation",
   "weather_code",
+  "is_day",
   "wind_speed_10m",
 ];
 
@@ -295,12 +297,40 @@ const formatNumber = (value, digits = 0) => {
   return rounded === null ? "--" : String(rounded);
 };
 
-export const describeWeatherCode = (code) =>
-  WEATHER_CODES[Number(code)] || {
+const normalizeIsDay = (value) => {
+  const numericValue = Number(value);
+  if (numericValue === 1) return true;
+  if (numericValue === 0) return false;
+  return null;
+};
+
+export const describeWeatherCode = (code, { isDay = null } = {}) => {
+  const numericCode = Number(code);
+
+  if (isDay === false) {
+    if (numericCode === 0) {
+      return {
+        condition: "Clear Night",
+        slug: "clear-night",
+        summary: "Clear night",
+      };
+    }
+
+    if (numericCode === 1) {
+      return {
+        condition: "Mostly Clear",
+        slug: "clear-night",
+        summary: "Mainly clear night",
+      };
+    }
+  }
+
+  return WEATHER_CODES[numericCode] || {
     condition: "Variable Weather",
     slug: "partly-cloudy",
     summary: "Variable weather conditions",
   };
+};
 
 export const formatTemperature = (value) => `${formatNumber(value)}\u00B0C`;
 export const formatPercent = (value) => `${formatNumber(value)}%`;
@@ -399,7 +429,8 @@ const getConversationalSummary = (current, raw, details) => {
 
 const normalizeCurrentWeather = (raw) => {
   const current = raw.current || {};
-  const details = describeWeatherCode(current.weather_code);
+  const isDay = normalizeIsDay(current.is_day);
+  const details = describeWeatherCode(current.weather_code, { isDay });
   const rainfall = current.rain ?? current.precipitation ?? 0;
   const temperature = roundNumber(current.temperature_2m);
   const windSpeed = roundNumber(current.wind_speed_10m);
@@ -433,6 +464,7 @@ const normalizeCurrentWeather = (raw) => {
     pressureValue: roundNumber(current.pressure_msl),
     cloudCoverValue: roundNumber(current.cloud_cover),
     weatherCode: current.weather_code,
+    isDay,
     iconKey: details.slug,
     source: OPEN_METEO_SOURCE,
     sourceUrl: "https://open-meteo.com/en/docs",
@@ -491,7 +523,9 @@ const normalizeHourlyForecast = (raw, dateString, interval = 3) => {
     .slice(0, 8);
 
   return indexes.map(({ time, index }) => {
-    const details = describeWeatherCode(hourly.weather_code?.[index]);
+    const details = describeWeatherCode(hourly.weather_code?.[index], {
+      isDay: normalizeIsDay(hourly.is_day?.[index]),
+    });
 
     return {
       time: toHourLabel(time),

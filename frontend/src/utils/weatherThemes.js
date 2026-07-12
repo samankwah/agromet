@@ -23,6 +23,17 @@ export const weatherThemes = {
     intensity: "high"
   },
 
+  "clear night": {
+    primary: "#F8FAFC",
+    secondary: "#CBD5E1",
+    accent: "#93C5FD",
+    gradient: "from-indigo-900 via-slate-800 to-blue-950",
+    background: "from-indigo-950 to-slate-950",
+    glow: "shadow-blue-200/40",
+    particles: "#BFDBFE",
+    intensity: "low"
+  },
+
   "sunny intervals": {
     primary: "#FFD700",
     secondary: "#87CEEB",
@@ -234,7 +245,7 @@ export const getWeatherTheme = (condition, includeTimeVariation = true) => {
   const conditionKey = condition.toLowerCase();
   const baseTheme = weatherThemes[conditionKey] || weatherThemes["sunny intervals"];
 
-  if (includeTimeVariation) {
+  if (includeTimeVariation && conditionKey !== "clear night") {
     return getTimeBasedTheme(baseTheme);
   }
 
