@@ -34,6 +34,15 @@ def get_connection():
         connection.close()
 
 
+def _add_column_if_missing(connection, table: str, column: str, definition: str) -> None:
+    """SQLite has no ADD COLUMN IF NOT EXISTS, and CREATE TABLE IF NOT EXISTS
+    silently skips an existing table — so a column added to the schema above
+    never reaches a database that already exists. This closes that gap."""
+    existing = {row[1] for row in connection.execute(f"PRAGMA table_info({table})")}
+    if column not in existing:
+        connection.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
+
+
 def init_db() -> None:
     DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
 
@@ -159,6 +168,14 @@ def init_db() -> None:
                 initial_quantity INTEGER NOT NULL DEFAULT 0,
                 current_quantity INTEGER NOT NULL DEFAULT 0,
                 notes TEXT,
+                -- Copied from the calendar at creation time, because
+                -- serialize_cycle divides by it to get currentWeek and
+                -- progressPercent. Without the column every cycle reported
+                -- "week 1 of 1, 100%" regardless of its calendar's length.
+                -- Snapshotted rather than joined so a later edit to the
+                -- calendar cannot silently move a running batch's finish
+                -- date.
+                total_duration_weeks INTEGER,
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY(calendar_id) REFERENCES calendars(id)
@@ -235,6 +252,9 @@ def init_db() -> None:
             ON market_centers(region);
             """
         )
+
+        # Migrations for databases created before a column was added.
+        _add_column_if_missing(connection, "production_cycles", "total_duration_weeks", "INTEGER")
 
 
 def row_to_dict(row: sqlite3.Row | None) -> dict | None:

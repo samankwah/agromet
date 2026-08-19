@@ -39,3 +39,8 @@ backend/.env
 # Firebase
 .firebase
 firebase-debug.log
+
+# The mobile app lives in its own repository (agromet-mobile). The folder
+# stays here so it can sit beside the backend it talks to during
+# development, but its history belongs to that repo, not this one.
+mobile/
