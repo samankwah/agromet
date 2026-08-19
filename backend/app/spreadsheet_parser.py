@@ -812,6 +812,19 @@ def _build_poultry_preview(sheets: list[dict], metadata: dict) -> dict:
     }
 
 
+def _coerce_year(value) -> int | None:
+    """The upload endpoints accept a `year`, and insert_calendar_from_parsed_payload
+    writes payload["year"] into the calendars table — but the preview builders
+    below never copied it across, so it was silently dropped in between and every
+    calendar landed with year = NULL. Arrives as a string from multipart form data."""
+    if value in (None, ""):
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
 def _build_crop_calendar_preview(sheets: list[dict], metadata: dict) -> dict:
     activities = []
     warnings: list[str] = []
@@ -831,6 +844,7 @@ def _build_crop_calendar_preview(sheets: list[dict], metadata: dict) -> dict:
         "regionCode": metadata.get("region") or metadata.get("regionCode") or "",
         "districtCode": metadata.get("district") or metadata.get("districtCode") or "",
         "crop": metadata.get("crop") or metadata.get("commodity") or "",
+        "year": _coerce_year(metadata.get("year")),
         "calendarType": "seasonal",
         "totalWeeks": total_weeks or 24,
         "activities": activities,
@@ -860,6 +874,7 @@ def _build_poultry_calendar_preview(sheets: list[dict], metadata: dict) -> dict:
         "districtCode": metadata.get("district") or metadata.get("districtCode") or "",
         "crop": metadata.get("poultryType") or metadata.get("commodity") or "poultry",
         "breedType": metadata.get("breedCode") or metadata.get("breedType") or "",
+        "year": _coerce_year(metadata.get("year")),
         "calendarType": "cycle",
         "totalWeeks": total_weeks or 8,
         "activities": activities,

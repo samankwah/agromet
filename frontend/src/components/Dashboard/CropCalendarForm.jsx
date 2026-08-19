@@ -77,12 +77,23 @@ const buildCalendarPreviewForViewer = (previewResult, formData) => {
   };
 };
 
+// A calendar is usually uploaded for the season about to start, so the
+// current year is offered first, with a year either side for late uploads
+// and early planning. The backend has always accepted `year` on
+// /api/crop-calendars/preview; the form simply never sent it, which is why
+// existing crop calendars have year = NULL and cannot be filtered by year.
+const calendarYears = (() => {
+  const current = new Date().getFullYear();
+  return [current, current + 1, current - 1, current - 2];
+})();
+
 const CropCalendarForm = ({ isOpen, onClose, onSave }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     region: '',
     district: '',
     crop: '',
+    year: new Date().getFullYear(),
     majorSeason: {
       file: null,
       startMonth: '',
@@ -208,6 +219,7 @@ const CropCalendarForm = ({ isOpen, onClose, onSave }) => {
     if (!formData.region) newErrors.region = 'Region is required';
     if (!formData.district) newErrors.district = 'District is required';
     if (!formData.crop) newErrors.crop = 'Crop is required';
+    if (!formData.year) newErrors.year = 'Year is required';
     if (!formData.majorSeason.file) newErrors.majorSeasonFile = 'Major season file is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -218,6 +230,7 @@ const CropCalendarForm = ({ isOpen, onClose, onSave }) => {
     previewForm.append('region', formData.region);
     previewForm.append('district', formData.district);
     previewForm.append('crop', formData.crop);
+    previewForm.append('year', String(formData.year));
     previewForm.append('title', `${formData.crop} Calendar`);
     previewForm.append('description', `${formData.crop} calendar for ${formData.district}, ${formData.region}`);
     previewForm.append('majorSeasonMonth', formData.majorSeason.startMonth || '');
@@ -391,6 +404,13 @@ const CropCalendarForm = ({ isOpen, onClose, onSave }) => {
                 {ghanaCommonCrops.map((crop) => <option key={crop} value={crop}>{crop}</option>)}
               </select>
               {errors.crop && <p className="text-red-500 text-xs mt-1">{errors.crop}</p>}
+            </div>
+            <div>
+              <label className="neo-label mb-1 block">Year <span className="text-red-500">*</span></label>
+              <select value={formData.year} onChange={(e) => handleInputChange('year', Number(e.target.value))} className={`neo-control w-full px-3 py-2 ${errors.year ? 'border-red-500' : ''}`}>
+                {calendarYears.map((year) => <option key={year} value={year}>{year}</option>)}
+              </select>
+              {errors.year && <p className="text-red-500 text-xs mt-1">{errors.year}</p>}
             </div>
           </div>
 
