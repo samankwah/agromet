@@ -1633,10 +1633,20 @@ def create_production_cycle(payload: ProductionCycleCreateRequest):
         if not calendar_row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Calendar not found.")
         calendar = row_to_dict(calendar_row)
+        # Snapshot the calendar's length onto the cycle. serialize_cycle
+        # divides by this to derive currentWeek and progressPercent, so
+        # leaving it null made every cycle report "week 1 of 1, 100%".
+        # A poultry calendar carries its length in cycle_duration, a crop
+        # one in total_weeks.
+        duration_weeks = calendar.get("cycle_duration") or calendar.get("total_weeks") or 1
+
         cursor = connection.execute(
             """
-            INSERT INTO production_cycles(calendar_id, batch_name, commodity, start_date, status, initial_quantity, current_quantity, notes)
-            VALUES (?, ?, ?, ?, 'active', ?, ?, ?)
+            INSERT INTO production_cycles(
+                calendar_id, batch_name, commodity, start_date, status,
+                initial_quantity, current_quantity, notes, total_duration_weeks
+            )
+            VALUES (?, ?, ?, ?, 'active', ?, ?, ?, ?)
             """,
             (
                 payload.calendarId,
@@ -1646,6 +1656,7 @@ def create_production_cycle(payload: ProductionCycleCreateRequest):
                 payload.initialQuantity,
                 payload.initialQuantity,
                 payload.notes,
+                duration_weeks,
             ),
         )
         cycle_id = cursor.lastrowid
