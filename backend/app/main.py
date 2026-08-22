@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import os
 import tempfile
 from pathlib import Path
@@ -57,6 +58,8 @@ from .spreadsheet_parser import (
     get_preview_payload,
 )
 
+
+logger = logging.getLogger(__name__)
 
 BACKEND_ROOT = Path(__file__).resolve().parent.parent
 
@@ -551,7 +554,57 @@ async def ambee_request(path: str, *, params: dict, timeout: float = 20.0) -> di
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=detail) from exc
 
 
-async def build_chat_reply(message: str, user_context: dict) -> str:
+CHAT_SYSTEM_PROMPT = (
+    "You are AgroMet AI, a practical agricultural assistant focused on Ghanaian "
+    "weather and farming support."
+)
+
+# How many prior turns to replay to the model. Four exchanges is enough to
+# resolve a follow-up like "and for maize?" against the question before it, and
+# it bounds what a client can push into the prompt — `conversationHistory`
+# arrives as a free-form list off the wire with no per-entry schema.
+CHAT_HISTORY_LIMIT = 8
+
+
+def chat_input_item(role: str, text: str) -> dict:
+    """One entry of the Responses API's `input` array.
+
+    Factored out because the system prompt, every replayed turn and the latest
+    question all need the same nested shape, and three hand-written copies is
+    how one of them quietly drifts.
+    """
+    return {"role": role, "content": [{"type": "input_text", "text": text}]}
+
+
+def build_chat_input(message: str, conversation_history: list[dict] | None) -> list[dict]:
+    """The `input` array for a chat turn: system prompt, prior turns, then the
+    question just asked.
+
+    History is *filtered*, not trusted. `ChatRequest.conversationHistory` is a
+    bare `list[dict]`, so entries come from the client unvalidated: anything
+    that is not a `user` or `assistant` string turn is dropped. That is what
+    stops a caller from smuggling in a second `system` turn to displace the
+    prompt above, and stops a malformed entry from becoming an empty message or
+    a 500.
+    """
+    items = [chat_input_item("system", CHAT_SYSTEM_PROMPT)]
+
+    for entry in (conversation_history or [])[-CHAT_HISTORY_LIMIT:]:
+        if not isinstance(entry, dict):
+            continue
+        role = entry.get("role")
+        content = entry.get("content")
+        if role not in ("user", "assistant"):
+            continue
+        if not isinstance(content, str) or not content.strip():
+            continue
+        items.append(chat_input_item(role, content))
+
+    items.append(chat_input_item("user", message))
+    return items
+
+
+async def build_chat_reply(message: str, conversation_history: list[dict], user_context: dict) -> str:
     if OPENAI_API_KEY:
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
@@ -563,26 +616,7 @@ async def build_chat_reply(message: str, user_context: dict) -> str:
                     },
                     json={
                         "model": OPENAI_MODEL,
-                        "input": [
-                            {
-                                "role": "system",
-                                "content": [
-                                    {
-                                        "type": "input_text",
-                                        "text": "You are AgroMet AI, a practical agricultural assistant focused on Ghanaian weather and farming support."
-                                    }
-                                ],
-                            },
-                            {
-                                "role": "user",
-                                "content": [
-                                    {
-                                        "type": "input_text",
-                                        "text": message,
-                                    }
-                                ],
-                            },
-                        ],
+                        "input": build_chat_input(message, conversation_history),
                     },
                 )
                 response.raise_for_status()
@@ -594,7 +628,11 @@ async def build_chat_reply(message: str, user_context: dict) -> str:
                         if text:
                             return text
         except Exception:
-            pass
+            # Falling through to the canned reply below is deliberate: a chat
+            # box that answers something beats a 502. Swallowing the *reason*
+            # was not — it made every upstream failure look identical to "no
+            # API key configured", which is the one cause it usually isn't.
+            logger.exception("Chat completion failed; serving the offline fallback reply.")
 
     context_region = user_context.get("region") or "your area"
     return (
@@ -682,7 +720,7 @@ def me(current_user: dict = Depends(get_current_user)):
 
 @app.post("/api/chat")
 async def chat(payload: ChatRequest):
-    reply = await build_chat_reply(payload.message, payload.userContext)
+    reply = await build_chat_reply(payload.message, payload.conversationHistory, payload.userContext)
     return {"success": True, "message": reply}
 
 
