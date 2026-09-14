@@ -21,7 +21,21 @@ from fastapi.middleware.cors import CORSMiddleware
 from . import config
 from .database import close_all_connections, init_db, set_database_path, set_database_url
 from .logging_config import configure_logging
-from .routers import (
+
+configure_logging()
+
+# Database config has to be wired up *before* any router is imported, not
+# just before the app starts serving: `routers/market.py` calls
+# `seed_market_data()` as a side effect of being imported, and that write
+# needs `database.py` already pointed at the real target. Import a router
+# earlier than this and its seed lands in the SQLite default instead of
+# whichever database `DATABASE_URL` actually names -- silently, since
+# nothing here raises when that happens, it just seeds the wrong file.
+set_database_path(config.DATABASE_PATH)
+set_database_url(config.DATABASE_URL)
+init_db()
+
+from .routers import (  # noqa: E402 -- see the comment above; this ordering is load-bearing
     accounts,
     advisories,
     agricultural_data,
@@ -37,12 +51,6 @@ from .routers import (
     production_cycles,
     weather,
 )
-
-configure_logging()
-
-set_database_path(config.DATABASE_PATH)
-set_database_url(config.DATABASE_URL)
-init_db()
 
 
 @asynccontextmanager
