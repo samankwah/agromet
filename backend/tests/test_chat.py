@@ -7,8 +7,10 @@ from unittest.mock import patch
 import httpx
 from fastapi.testclient import TestClient
 
-from backend.app import main
-from backend.app.main import CHAT_HISTORY_LIMIT, app, build_chat_input
+from backend.app import config
+from backend.app.chat_prompt import CHAT_HISTORY_LIMIT, build_chat_input
+from backend.app.main import app
+from backend.app.routers import chat
 from backend.app.schemas import MAX_CHAT_MESSAGE_CHARS
 
 
@@ -102,13 +104,13 @@ class ChatEndpointTests(unittest.TestCase):
         # The limiter is process-wide and these tests share a process, so
         # without this the last test in the file would start life having already
         # spent the quota of every test before it.
-        main.chat_limiter.reset()
-        patcher = patch("backend.app.main.build_context_block", no_context)
+        chat.chat_limiter.reset()
+        patcher = patch("backend.app.chat_context.build_context_block", no_context)
         patcher.start()
         self.addCleanup(patcher.stop)
 
     def test_falls_back_to_the_offline_reply_without_a_provider_key(self):
-        with patch("backend.app.main.OPENAI_API_KEY", ""):
+        with patch("backend.app.config.OPENAI_API_KEY", ""):
             response = self.client.post(
                 "/api/chat",
                 json={"message": "When do the rains start?", "userContext": {"region": "Northern"}},
@@ -127,14 +129,14 @@ class ChatEndpointTests(unittest.TestCase):
         self.assertEqual(body["degradedReason"], "no_key")
 
     def test_fallback_names_a_placeholder_when_no_region_is_sent(self):
-        with patch("backend.app.main.OPENAI_API_KEY", ""):
+        with patch("backend.app.config.OPENAI_API_KEY", ""):
             response = self.client.post("/api/chat", json={"message": "Hello"})
 
         self.assertEqual(response.status_code, 200)
         self.assertIn("your area", response.json()["message"])
 
     def test_history_is_accepted_and_does_not_change_the_envelope(self):
-        with patch("backend.app.main.OPENAI_API_KEY", ""):
+        with patch("backend.app.config.OPENAI_API_KEY", ""):
             response = self.client.post(
                 "/api/chat",
                 json={
@@ -162,7 +164,7 @@ class ChatEndpointTests(unittest.TestCase):
         """The fallback is served with `success: True` and reads like an answer.
         Without this flag a farmer cannot tell canned advice from a reply that
         actually considered their question."""
-        with patch("backend.app.main.OPENAI_API_KEY", ""):
+        with patch("backend.app.config.OPENAI_API_KEY", ""):
             response = self.client.post(
                 "/api/chat",
                 json={"message": "When should I plant?", "conversationHistory": [], "userContext": {}},
@@ -172,7 +174,7 @@ class ChatEndpointTests(unittest.TestCase):
         self.assertTrue(response.json()["degraded"])
 
     def test_malformed_history_does_not_fail_the_request(self):
-        with patch("backend.app.main.OPENAI_API_KEY", ""):
+        with patch("backend.app.config.OPENAI_API_KEY", ""):
             response = self.client.post(
                 "/api/chat",
                 json={
@@ -210,8 +212,8 @@ class ChatModelCallTests(unittest.TestCase):
         cls.client = TestClient(app)
 
     def setUp(self):
-        main.chat_limiter.reset()
-        patcher = patch("backend.app.main.build_context_block", no_context)
+        chat.chat_limiter.reset()
+        patcher = patch("backend.app.chat_context.build_context_block", no_context)
         patcher.start()
         self.addCleanup(patcher.stop)
 
@@ -224,8 +226,8 @@ class ChatModelCallTests(unittest.TestCase):
             self.auth = request.headers.get("authorization")
             return handler(request)
 
-        with patch("backend.app.main.OPENAI_API_KEY", "sk-test"), patch(
-            "backend.app.main.httpx.AsyncClient", fake_openai(recording)
+        with patch("backend.app.config.OPENAI_API_KEY", "sk-test"), patch(
+            "backend.app.routers.chat.httpx.AsyncClient", fake_openai(recording)
         ):
             return self.client.post("/api/chat", json={"message": "When do I plant?", **body})
 
@@ -257,9 +259,9 @@ class ChatModelCallTests(unittest.TestCase):
         """
         self.post(self.answered())
 
-        self.assertEqual(self.sent["model"], main.OPENAI_MODEL)
-        self.assertEqual(self.sent["max_output_tokens"], main.OPENAI_MAX_OUTPUT_TOKENS)
-        self.assertEqual(self.sent["temperature"], main.OPENAI_TEMPERATURE)
+        self.assertEqual(self.sent["model"], config.OPENAI_MODEL)
+        self.assertEqual(self.sent["max_output_tokens"], config.OPENAI_MAX_OUTPUT_TOKENS)
+        self.assertEqual(self.sent["temperature"], config.OPENAI_TEMPERATURE)
         self.assertEqual(self.auth, "Bearer sk-test")
 
     def test_sends_the_prompt_the_history_the_data_and_the_question(self):
@@ -313,10 +315,10 @@ class ChatValidationTests(unittest.TestCase):
         cls.client = TestClient(app)
 
     def setUp(self):
-        main.chat_limiter.reset()
+        chat.chat_limiter.reset()
         for patcher in (
-            patch("backend.app.main.build_context_block", no_context),
-            patch("backend.app.main.OPENAI_API_KEY", ""),
+            patch("backend.app.chat_context.build_context_block", no_context),
+            patch("backend.app.config.OPENAI_API_KEY", ""),
         ):
             patcher.start()
             self.addCleanup(patcher.stop)
@@ -382,10 +384,10 @@ class ChatQuotaTests(unittest.TestCase):
         cls.client = TestClient(app)
 
     def setUp(self):
-        main.chat_limiter.reset()
+        chat.chat_limiter.reset()
         for patcher in (
-            patch("backend.app.main.build_context_block", no_context),
-            patch("backend.app.main.OPENAI_API_KEY", ""),
+            patch("backend.app.chat_context.build_context_block", no_context),
+            patch("backend.app.config.OPENAI_API_KEY", ""),
         ):
             patcher.start()
             self.addCleanup(patcher.stop)
@@ -394,7 +396,7 @@ class ChatQuotaTests(unittest.TestCase):
         return self.client.post("/api/chat", json={"message": "Hello"}, headers={"X-Device-Id": device})
 
     def test_refuses_a_burst_from_one_device(self):
-        for _ in range(main.CHAT_RATE_LIMIT):
+        for _ in range(config.CHAT_RATE_LIMIT):
             self.assertEqual(self.ask().status_code, 200)
 
         refused = self.ask()
@@ -406,7 +408,7 @@ class ChatQuotaTests(unittest.TestCase):
         self.assertIn("try again", refused.json()["detail"].lower())
 
     def test_one_device_running_hot_does_not_block_another(self):
-        for _ in range(main.CHAT_RATE_LIMIT):
+        for _ in range(config.CHAT_RATE_LIMIT):
             self.ask("device-a")
 
         self.assertEqual(self.ask("device-a").status_code, 429)
@@ -426,7 +428,7 @@ class TranscriptionEndpointTests(unittest.TestCase):
         self.client = TestClient(app)
 
     def test_says_plainly_when_no_provider_is_configured(self):
-        with patch("backend.app.main.OPENAI_API_KEY", ""):
+        with patch("backend.app.config.OPENAI_API_KEY", ""):
             response = self.client.post(
                 "/api/transcribe",
                 files={"audio": ("q.m4a", b"not-really-audio", "audio/m4a")},
@@ -435,7 +437,7 @@ class TranscriptionEndpointTests(unittest.TestCase):
         self.assertEqual(response.status_code, 503)
 
     def test_rejects_an_empty_recording(self):
-        with patch("backend.app.main.OPENAI_API_KEY", "test-key"):
+        with patch("backend.app.config.OPENAI_API_KEY", "test-key"):
             response = self.client.post(
                 "/api/transcribe",
                 files={"audio": ("q.m4a", b"", "audio/m4a")},
@@ -444,9 +446,9 @@ class TranscriptionEndpointTests(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_rejects_a_recording_past_the_size_cap(self):
-        from backend.app.main import MAX_TRANSCRIPT_AUDIO_BYTES
+        from backend.app.routers.chat import MAX_TRANSCRIPT_AUDIO_BYTES
 
-        with patch("backend.app.main.OPENAI_API_KEY", "test-key"):
+        with patch("backend.app.config.OPENAI_API_KEY", "test-key"):
             response = self.client.post(
                 "/api/transcribe",
                 files={"audio": ("q.m4a", b"x" * (MAX_TRANSCRIPT_AUDIO_BYTES + 1), "audio/m4a")},
@@ -455,7 +457,7 @@ class TranscriptionEndpointTests(unittest.TestCase):
         self.assertEqual(response.status_code, 413)
 
     def test_requires_the_audio_field(self):
-        with patch("backend.app.main.OPENAI_API_KEY", "test-key"):
+        with patch("backend.app.config.OPENAI_API_KEY", "test-key"):
             response = self.client.post("/api/transcribe")
 
         self.assertEqual(response.status_code, 422)

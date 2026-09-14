@@ -164,7 +164,10 @@ is enough. Skipped, not failed, when unset.
 
 ```
 app/
-  main.py              # FastAPI app, routes, middleware
+  main.py              # Composition root: build the app, wire the database, mount every router
+  config.py            # Every setting this service reads from its environment, in one place
+  deps.py              # Shared FastAPI dependencies -- who's asking (get_current_user & co.)
+  records.py           # Calendar/advisory insert logic two different routers both need
   database.py          # SQLite/Postgres connection, schema initialization
   schemas.py           # Pydantic request/response models
   auth.py              # JWT token creation and verification
@@ -175,6 +178,21 @@ app/
   chat_context.py      # The live forecast/hazard/price figures it answers from
   rate_limit.py        # The quota in front of the route that spends money
   logging_config.py    # Somewhere for log records to actually go
+  routers/             # One module per domain -- see below
+    accounts.py         # Register, log in, /auth/me
+    chat.py              # The assistant, transcription, translation, TTS stubs
+    weather.py            # Ambee proxy + the Open-Meteo bundle
+    diagnosis.py           # Crop disease diagnosis endpoints + history
+    content.py               # FAQ, Terms/Privacy, the Contact form
+    agricultural_data.py      # The generic record upload/list/delete path
+    calendars.py                # Crop/poultry calendar preview+commit, enhanced-calendars
+    advisories.py                 # Weekly advisory preview+commit, list/get/delete
+    production_cycles.py           # Batches tracked against a calendar
+    dashboard.py                    # Aggregate counts for the admin dashboard
+    market.py                        # Commodity prices, trends, market centers
+    hazards.py                        # Flood/drought summary, regions, overrides
+    outlook.py                        # Subseasonal outlook + precipitation field
+    health.py                          # Liveness and integration-status
 tests/
   conftest.py               # Isolates the suite from a developer's real database
   test_chat.py              # The assistant: prompt, model call, validation, quota
@@ -183,6 +201,17 @@ tests/
   test_diagnosis.py         # Diagnosis module tests
   test_database_dialects.py # SQLite/Postgres parity -- skipped without TEST_DATABASE_URL
 ```
+
+`main.py` was a single ~2,900-line file until this split -- every route, every
+domain helper and every config constant in one module that every change had
+a chance of colliding with. Splitting it changed no behavior: the same 72
+routes exist at the same paths, verified by diffing the method+path pairs
+before and after, and the full test suite (SQLite and Postgres both) passes
+unchanged. Config constants live in `config.py` and are read as
+`config.NAME` (module attribute access) rather than imported by name, on
+purpose -- it is what lets `unittest.mock.patch("backend.app.config.NAME", ...)`
+reach whichever router actually reads it at request time, regardless of
+which one that turns out to be.
 
 ### The database
 

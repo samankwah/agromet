@@ -385,13 +385,14 @@ async def _hazard_section(region: str | None) -> str | None:
     if not payload:
         return None
 
-    # Imported here rather than at module scope: `main` imports this module, so
-    # a top-level import would close the loop. Worth the lazy import to reuse the
-    # one implementation of override handling -- the advisories a farmer is shown
-    # in the app and the ones the assistant quotes have to be the same lines, and
-    # a second copy of this logic here is how they would drift apart.
+    # Imported here rather than at module scope: `routers/chat.py` imports this
+    # module, so a top-level import back from here would close a loop. Worth
+    # the lazy import to reuse the one implementation of override handling --
+    # the advisories a farmer is shown in the app and the ones the assistant
+    # quotes have to be the same lines, and a second copy of this logic here
+    # is how they would drift apart.
     try:
-        from .main import _active_overrides, _apply_overrides
+        from .routers.hazards import _active_overrides, _apply_overrides
 
         with get_connection() as connection:
             payload = _apply_overrides(payload, _active_overrides(connection))
