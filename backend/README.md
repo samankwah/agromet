@@ -6,7 +6,7 @@ REST API server for the AgroMet agricultural meteorological advisory platform. H
 
 - **Framework:** FastAPI
 - **Runtime:** Python 3.11+, Uvicorn (ASGI)
-- **Database:** SQLite
+- **Database:** SQLite (local dev, zero config) or Postgres (production -- see [The database](#the-database))
 - **Auth:** JWT (PyJWT) with OAuth2 bearer tokens
 - **HTTP Client:** httpx (async, for external API calls)
 - **External APIs:** OpenAI, Kindwise (crop health + plant ID), Google Translate fallback, Ambee (weather)
@@ -80,7 +80,7 @@ REST API server for the AgroMet agricultural meteorological advisory platform. H
 
 ## Database Schema
 
-SQLite database with the following tables:
+The same schema either way (see [The database](#the-database)) -- these tables:
 
 - **users** -- Account credentials and profile
 - **agricultural_records** -- Uploaded agricultural data (JSON payloads)
@@ -122,7 +122,9 @@ cp .env.example .env
 | Variable | Description |
 |---|---|
 | `SECRET_KEY` | JWT signing secret (change in production) |
-| `DATABASE_PATH` | SQLite database path (default: `./agromet.db`) |
+| `DATABASE_PATH` | SQLite database path (default: `./agromet.db`); ignored when `DATABASE_URL` is set |
+| `DATABASE_URL` | Postgres connection string. **Required in production** -- see [The database](#the-database) |
+| `DATABASE_POOL_MIN` / `DATABASE_POOL_MAX` | Postgres connection pool size (default `0` / `5`) |
 | `FRONTEND_ORIGINS` | Allowed CORS origins |
 | `OPENAI_API_KEY` | OpenAI API key (chatbot) |
 | `KINDWISE_API_KEY` | Kindwise crop health API key |
@@ -150,12 +152,20 @@ module imports `backend.app....`. The suite is unittest-style, so
 all. No API keys are needed: the tests that cover the assistant fake the
 provider.
 
+The suite runs against a throwaway SQLite file, never a developer's own
+`agromet.db` (`tests/conftest.py`). Set `TEST_DATABASE_URL` to a Postgres
+connection string to additionally run `test_database_dialects.py` -- schema
+parity, `RETURNING`, upsert, and cascade-delete, for real, against Postgres.
+A local `docker run -e POSTGRES_PASSWORD=test -p 5432:5432 postgres:16-alpine`
+plus `TEST_DATABASE_URL=postgresql://postgres:test@localhost:5432/postgres`
+is enough. Skipped, not failed, when unset.
+
 ## Project Structure
 
 ```
 app/
   main.py              # FastAPI app, routes, middleware
-  database.py          # SQLite connection, schema initialization
+  database.py          # SQLite/Postgres connection, schema initialization
   schemas.py           # Pydantic request/response models
   auth.py              # JWT token creation and verification
   domain.py            # Business logic (calendars, advisories, cycles)
@@ -166,11 +176,38 @@ app/
   rate_limit.py        # The quota in front of the route that spends money
   logging_config.py    # Somewhere for log records to actually go
 tests/
-  test_chat.py         # The assistant: prompt, model call, validation, quota
-  test_chat_context.py # Grounding: intent routing and the rendered figures
-  test_rate_limit.py   # The quota, including the shared-address case
-  test_diagnosis.py    # Diagnosis module tests
+  conftest.py               # Isolates the suite from a developer's real database
+  test_chat.py              # The assistant: prompt, model call, validation, quota
+  test_chat_context.py      # Grounding: intent routing and the rendered figures
+  test_rate_limit.py        # The quota, including the shared-address case
+  test_diagnosis.py         # Diagnosis module tests
+  test_database_dialects.py # SQLite/Postgres parity -- skipped without TEST_DATABASE_URL
 ```
+
+### The database
+
+SQLite is the default because it needs no setup: clone the repo, run
+`uvicorn`, and `agromet.db` appears next to it. That default is correct for
+local dev and wrong for this app's actual production target. The backend
+deploys to Vercel (`vercel.json`) as a serverless function, and Vercel's
+filesystem is read-only outside `/tmp` -- which is itself wiped on every cold
+start and not shared between concurrent instances. Point SQLite there (which
+`resolve_database_path` in `main.py` does automatically, so it at least
+doesn't crash) and every signup, uploaded calendar, diagnosis record and
+contact message survives only until that particular instance recycles, then
+is gone, with nothing in the logs to say so.
+
+Setting `DATABASE_URL` to a Postgres connection string switches the whole app
+off that path -- **do this before trusting the deployment with real farmer
+data.** Neon, Supabase and Vercel Postgres all publish a free tier and a
+*pooled* connection string (use that one, not the direct one: a serverless
+function can run several concurrent instances, each wanting its own
+connection). `database.py`'s module docstring covers how one code path
+serves both databases; `test_database_dialects.py` proves it against a real
+Postgres rather than asserting it from review.
+
+Every other piece of state in this service already lives outside process
+memory except one, and it already knows it: the chat rate limiter, next.
 
 ### The assistant
 

@@ -6,6 +6,7 @@ import logging
 import os
 import tempfile
 import time
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 import httpx
@@ -16,7 +17,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from .auth import create_access_token, decode_access_token, hash_password, verify_password
 from .chat_context import build_context_block
 from .chat_prompt import CHAT_HISTORY_LIMIT, CHAT_SYSTEM_PROMPT, build_chat_input, chat_input_item
-from .database import decode_payload, encode_payload, get_connection, init_db, row_to_dict, set_database_path
+from .database import close_all_connections, decode_payload, encode_payload, get_connection, init_db, row_to_dict, set_database_path, set_database_url
 from .logging_config import configure_logging
 from .rate_limit import Limiter, client_ip, client_keys
 from . import hazard_runtime
@@ -158,6 +159,11 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "480"
 FRONTEND_ORIGINS = [origin.strip() for origin in os.getenv("FRONTEND_ORIGINS", "http://localhost:3000,http://localhost:5173").split(",") if origin.strip()]
 LOCAL_DEV_ORIGIN_REGEX = r"https?://(localhost|127\.0\.0\.1)(:\d+)?$" if APP_ENV != "production" else None
 DATABASE_PATH = resolve_database_path(os.getenv("DATABASE_PATH"))
+# A Postgres connection string switches the whole app off SQLite. Unset
+# (the default everywhere but a real deployment) keeps the zero-config
+# SQLite file above -- see database.py's module docstring for why a
+# serverless deployment must not run on the SQLite fallback.
+DATABASE_URL = os.getenv("DATABASE_URL", "")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
 # A ceiling on the answer, in tokens. Nothing bounded this before, so a single
@@ -188,9 +194,19 @@ HUGGINGFACE_API_TOKEN = os.getenv("HUGGINGFACE_API_TOKEN", "")
 AMBEE_BASE_URL = os.getenv("AMBEE_BASE_URL", "https://api.ambeedata.com")
 
 set_database_path(DATABASE_PATH)
+set_database_url(DATABASE_URL)
 init_db()
 
-app = FastAPI(title=APP_NAME, debug=DEBUG)
+
+@asynccontextmanager
+async def _lifespan(_: FastAPI):
+    yield
+    # No-op on SQLite. On Postgres, releases the pool's connections instead
+    # of leaking them across every `uvicorn --reload` and test run.
+    close_all_connections()
+
+
+app = FastAPI(title=APP_NAME, debug=DEBUG, lifespan=_lifespan)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 app.add_middleware(
