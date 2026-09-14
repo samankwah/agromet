@@ -242,7 +242,7 @@ class DiagnosisApiTests(unittest.TestCase):
         FakeAsyncClient.calls = []
 
     def test_crop_diagnosis_returns_unavailable_without_crop_health_key(self):
-        with patch("backend.app.main.KINDWISE_CROP_HEALTH_API_KEY", ""):
+        with patch("backend.app.config.KINDWISE_CROP_HEALTH_API_KEY", ""):
             response = self.client.post("/api/crop-diagnosis", json={"image": VALID_IMAGE, "crop": "maize"})
         self.assertEqual(response.status_code, 200)
         body = response.json()
@@ -250,7 +250,7 @@ class DiagnosisApiTests(unittest.TestCase):
         self.assertEqual(body["source"], "configuration")
 
     def test_crop_diagnosis_validates_invalid_image(self):
-        with patch("backend.app.main.KINDWISE_CROP_HEALTH_API_KEY", "crop-key"):
+        with patch("backend.app.config.KINDWISE_CROP_HEALTH_API_KEY", "crop-key"):
             response = self.client.post("/api/crop-diagnosis", json={"image": "not-base64"})
         self.assertEqual(response.status_code, 200)
         body = response.json()
@@ -272,7 +272,7 @@ class DiagnosisApiTests(unittest.TestCase):
         """
         FakeAsyncClient.payloads = [crop_health_payload()]
         with patch("backend.app.diagnosis.httpx.AsyncClient", FakeAsyncClient):
-            with patch("backend.app.main.KINDWISE_CROP_HEALTH_API_KEY", "crop-key"):
+            with patch("backend.app.config.KINDWISE_CROP_HEALTH_API_KEY", "crop-key"):
                 response = self.client.post(
                     "/api/crop-diagnosis",
                     json={"image": NON_IMAGE_BASE64, "crop": "maize"},
@@ -284,7 +284,7 @@ class DiagnosisApiTests(unittest.TestCase):
 
     def test_crop_diagnosis_uses_crop_health_for_supported_crop(self):
         FakeAsyncClient.payloads = [crop_health_payload()]
-        with patch("backend.app.main.KINDWISE_CROP_HEALTH_API_KEY", "crop-key"), patch(
+        with patch("backend.app.config.KINDWISE_CROP_HEALTH_API_KEY", "crop-key"), patch(
             "backend.app.diagnosis.httpx.AsyncClient",
             FakeAsyncClient,
         ):
@@ -305,8 +305,8 @@ class DiagnosisApiTests(unittest.TestCase):
             plant_id_payload(),
             crop_health_payload(),
         ]
-        with patch("backend.app.main.KINDWISE_CROP_HEALTH_API_KEY", "crop-key"), patch(
-            "backend.app.main.KINDWISE_PLANT_ID_API_KEY",
+        with patch("backend.app.config.KINDWISE_CROP_HEALTH_API_KEY", "crop-key"), patch(
+            "backend.app.config.KINDWISE_PLANT_ID_API_KEY",
             "plant-id-key",
         ), patch(
             "backend.app.diagnosis.httpx.AsyncClient",
@@ -327,8 +327,8 @@ class DiagnosisApiTests(unittest.TestCase):
 
     def test_crop_diagnosis_uses_crop_health_when_crop_missing_and_plant_id_unconfigured(self):
         FakeAsyncClient.payloads = [crop_health_payload()]
-        with patch("backend.app.main.KINDWISE_CROP_HEALTH_API_KEY", "crop-key"), patch(
-            "backend.app.main.KINDWISE_PLANT_ID_API_KEY",
+        with patch("backend.app.config.KINDWISE_CROP_HEALTH_API_KEY", "crop-key"), patch(
+            "backend.app.config.KINDWISE_PLANT_ID_API_KEY",
             "",
         ), patch(
             "backend.app.diagnosis.httpx.AsyncClient",
@@ -351,8 +351,8 @@ class DiagnosisApiTests(unittest.TestCase):
             plant_id_payload(name="Dioscorea alata", common_names=["yam"]),
             crop_health_payload(),
         ]
-        with patch("backend.app.main.KINDWISE_CROP_HEALTH_API_KEY", "crop-key"), patch(
-            "backend.app.main.KINDWISE_PLANT_ID_API_KEY",
+        with patch("backend.app.config.KINDWISE_CROP_HEALTH_API_KEY", "crop-key"), patch(
+            "backend.app.config.KINDWISE_PLANT_ID_API_KEY",
             "plant-id-key",
         ), patch(
             "backend.app.diagnosis.httpx.AsyncClient",
@@ -378,7 +378,7 @@ class DiagnosisApiTests(unittest.TestCase):
 
     def test_image_analysis_returns_chatbot_shape(self):
         FakeAsyncClient.payloads = [crop_health_payload()]
-        with patch("backend.app.main.KINDWISE_CROP_HEALTH_API_KEY", "crop-key"), patch(
+        with patch("backend.app.config.KINDWISE_CROP_HEALTH_API_KEY", "crop-key"), patch(
             "backend.app.diagnosis.httpx.AsyncClient",
             FakeAsyncClient,
         ):
@@ -405,7 +405,7 @@ class DiagnosisApiTests(unittest.TestCase):
         token = login.json()["access_token"]
 
         FakeAsyncClient.payloads = [crop_health_payload()]
-        with patch("backend.app.main.KINDWISE_CROP_HEALTH_API_KEY", "crop-key"), patch(
+        with patch("backend.app.config.KINDWISE_CROP_HEALTH_API_KEY", "crop-key"), patch(
             "backend.app.diagnosis.httpx.AsyncClient",
             FakeAsyncClient,
         ):
