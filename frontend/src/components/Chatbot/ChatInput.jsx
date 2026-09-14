@@ -158,7 +158,7 @@ const ChatInput = ({ onSendMessage, disabled = false, placeholder = "Ask me anyt
 
 
   return (
-    <div className="border-t neo-divider bg-white/25">
+    <div className="border-t neo-divider bg-neo-surface/25">
       {/* Image Preview */}
       {imagePreview && (
         <div className="p-3 border-b neo-divider">
@@ -240,7 +240,7 @@ const ChatInput = ({ onSendMessage, disabled = false, placeholder = "Ask me anyt
           <button
             type="submit"
             disabled={disabled || isProcessingImage || (!message.trim() && !selectedImage)}
-            className="neo-icon-button h-11 w-11 bg-neo-accent text-white hover:bg-neo-accent-strong disabled:cursor-not-allowed disabled:opacity-50"
+            className="neo-icon-button h-11 w-11 bg-neo-accent text-neo-on-accent hover:bg-neo-accent-strong disabled:cursor-not-allowed disabled:opacity-50"
             title={isProcessingImage ? 'Processing image...' : 'Send message'}
           >
             {isProcessingImage ? (

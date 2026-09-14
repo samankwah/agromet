@@ -106,7 +106,7 @@ const AdminLogin = () => {
           </p>
           <Link
             to="/admin-signup"
-            className="neo-button relative bg-white/90 text-neo-accent-strong"
+            className="neo-button relative bg-neo-surface/90 text-neo-accent-strong"
           >
             Sign Up
           </Link>
@@ -138,7 +138,7 @@ const AdminLogin = () => {
           >
             <div className="mb-2">
               <label
-                className="block text-gray-700 text-sm font-semibold mb-2"
+                className="block text-neo-text text-sm font-semibold mb-2"
                 htmlFor="email"
               >
                 Email
@@ -160,7 +160,7 @@ const AdminLogin = () => {
 
             <div className="mb-2 relative">
               <label
-                className="block text-gray-700 text-sm font-semibold mb-2"
+                className="block text-neo-text text-sm font-semibold mb-2"
                 htmlFor="password"
               >
                 Password
@@ -177,7 +177,7 @@ const AdminLogin = () => {
               />
               <button
                 type="button"
-                className="absolute right-3 top-11 text-gray-500 hover:text-gray-700 transition-colors"
+                className="absolute right-3 top-11 text-neo-muted hover:text-neo-text transition-colors"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
@@ -194,7 +194,7 @@ const AdminLogin = () => {
                   type="checkbox"
                   className="h-4 w-4 text-blue-600 rounded focus:ring-blue-200"
                 />
-                <label htmlFor="remember-me" className="ml-2 text-gray-600">
+                <label htmlFor="remember-me" className="ml-2 text-neo-muted">
                   Remember me
                 </label>
               </div>
@@ -216,7 +216,7 @@ const AdminLogin = () => {
               </button>
             </div>
 
-            <div className="text-center text-gray-500 my-4">OR</div>
+            <div className="text-center text-neo-muted my-4">OR</div>
 
             <button
               className="neo-button w-full"
@@ -230,7 +230,7 @@ const AdminLogin = () => {
               Sign In with Google
             </button>
 
-            <div className="text-center text-sm mt-4 text-gray-600">
+            <div className="text-center text-sm mt-4 text-neo-muted">
               Don't have an account?{" "}
               <Link
                 to="/admin-signup"

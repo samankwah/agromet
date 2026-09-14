@@ -139,8 +139,16 @@ API docs available at `http://localhost:8000/docs` (Swagger UI).
 ### Testing
 
 ```bash
-python -m pytest tests/
+pip install -r requirements.txt -r requirements-dev.txt
+python -m pytest
 ```
+
+Runs from `backend/` or from the repo root (`python -m pytest backend/tests`);
+`pytest.ini` puts the repo root on `sys.path` either way, because every test
+module imports `backend.app....`. The suite is unittest-style, so
+`python -m unittest discover -s tests -t ..` works without installing pytest at
+all. No API keys are needed: the tests that cover the assistant fake the
+provider.
 
 ## Project Structure
 
@@ -153,9 +161,34 @@ app/
   domain.py            # Business logic (calendars, advisories, cycles)
   diagnosis.py         # Crop disease diagnosis integration
   spreadsheet_parser.py # Excel upload parsing and preview
+  chat_prompt.py       # What AgroMet AI is told, and how a turn is assembled
+  chat_context.py      # The live forecast/hazard/price figures it answers from
+  rate_limit.py        # The quota in front of the route that spends money
+  logging_config.py    # Somewhere for log records to actually go
 tests/
+  test_chat.py         # The assistant: prompt, model call, validation, quota
+  test_chat_context.py # Grounding: intent routing and the rendered figures
+  test_rate_limit.py   # The quota, including the shared-address case
   test_diagnosis.py    # Diagnosis module tests
 ```
+
+### The assistant
+
+`/api/chat` is unauthenticated, so it is metered rather than gated: a quota per
+device and a looser one per address (`CHAT_RATE_LIMIT`, `CHAT_DAILY_LIMIT`),
+plus hard ceilings on question length and on `max_output_tokens`. The quota
+counter lives in process memory, which is exact on a long-running host and best
+effort on a serverless one -- see the module docstring in `rate_limit.py`.
+
+Answers are grounded: before the model is called, `chat_context` gathers the
+forecast, flood and drought bands, and market prices for the farmer's region,
+but only the ones the question actually needs. Every source is bounded and
+optional, so a slow upstream costs a section of the answer rather than the
+answer.
+
+With no `OPENAI_API_KEY` the route still answers, with a plainly worded fallback
+and `degraded: true`; `degradedReason` says which failure it was (`no_key`,
+`timeout`, `upstream_error`, `empty_output`).
 
 ## Related
 

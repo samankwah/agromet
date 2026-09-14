@@ -208,16 +208,16 @@ const CreateCropCalendar = ({ isOpen, onClose }) => {
         style={modalAnimation}
         className="fixed inset-0 z-50 flex items-center justify-center p-4"
       >
-        <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="bg-neo-surface rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
           <div className="p-6">
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">
+              <h2 className="text-2xl font-bold text-neo-text">
                 Create Crop Calendar
               </h2>
               <button
                 onClick={handleClose}
-                className="text-gray-500 hover:text-gray-700 transition-colors"
+                className="text-neo-muted hover:text-neo-text transition-colors"
               >
                 <FaTimes className="w-6 h-6" />
               </button>
@@ -228,7 +228,7 @@ const CreateCropCalendar = ({ isOpen, onClose }) => {
               {/* Region, District, Crop */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-neo-text mb-2">
                     Region <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -236,7 +236,7 @@ const CreateCropCalendar = ({ isOpen, onClose }) => {
                     value={formData.region}
                     onChange={handleInputChange}
                     className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all ${
-                      errors.region ? 'border-red-500' : 'border-gray-300'
+                      errors.region ? 'border-red-500' : 'border-neo-border'
                     }`}
                     required
                   >
@@ -251,7 +251,7 @@ const CreateCropCalendar = ({ isOpen, onClose }) => {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-neo-text mb-2">
                     District <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -259,7 +259,7 @@ const CreateCropCalendar = ({ isOpen, onClose }) => {
                     value={formData.district}
                     onChange={handleInputChange}
                     className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all ${
-                      errors.district ? 'border-red-500' : 'border-gray-300'
+                      errors.district ? 'border-red-500' : 'border-neo-border'
                     }`}
                     required
                     disabled={!formData.region}
@@ -275,7 +275,7 @@ const CreateCropCalendar = ({ isOpen, onClose }) => {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-neo-text mb-2">
                     Crop <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -283,7 +283,7 @@ const CreateCropCalendar = ({ isOpen, onClose }) => {
                     value={formData.crop}
                     onChange={handleInputChange}
                     className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all ${
-                      errors.crop ? 'border-red-500' : 'border-gray-300'
+                      errors.crop ? 'border-red-500' : 'border-neo-border'
                     }`}
                     required
                   >
@@ -301,17 +301,17 @@ const CreateCropCalendar = ({ isOpen, onClose }) => {
               {/* Major and Minor Season */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Major Season */}
-                <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                <div className="bg-neo-bg-soft p-6 rounded-lg shadow-sm">
+                  <h3 className="text-lg font-semibold text-neo-text mb-4">
                     Major Season
                   </h3>
                   <div className="space-y-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-neo-text mb-2">
                         Excel File <span className="text-red-500">*</span>
                       </label>
                       <div className="flex items-center space-x-3">
-                        <label className="w-1/2 p-3 border border-gray-300 rounded-lg bg-white text-gray-600 cursor-pointer hover:bg-gray-100 transition-all text-center">
+                        <label className="w-1/2 p-3 border border-neo-border rounded-lg bg-neo-surface text-neo-muted cursor-pointer hover:bg-neo-surface-strong transition-all text-center">
                           <input
                             type="file"
                             accept=".xlsx, .xls"
@@ -320,20 +320,20 @@ const CreateCropCalendar = ({ isOpen, onClose }) => {
                           />
                           Choose File
                         </label>
-                        <span className="text-sm text-gray-500 truncate">
+                        <span className="text-sm text-neo-muted truncate">
                           {formData.majorExcel
                             ? formData.majorExcel.name
                             : "No file chosen"}
                         </span>
                       </div>
                       {errors.majorExcel && <p className="text-red-500 text-sm mt-1">{errors.majorExcel}</p>}
-                      <p className="text-xs text-gray-500 mt-2">
+                      <p className="text-xs text-neo-muted mt-2">
                         Upload Excel file for Major Season
                       </p>
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-neo-text mb-2">
                         Start Week <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
@@ -343,17 +343,17 @@ const CreateCropCalendar = ({ isOpen, onClose }) => {
                           value={formData.majorStartWeek}
                           onChange={handleInputChange}
                           className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all ${
-                            errors.majorStartWeek ? 'border-red-500' : 'border-gray-300'
+                            errors.majorStartWeek ? 'border-red-500' : 'border-neo-border'
                           }`}
                           required
                         />
-                        <FaCalendarAlt className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        <FaCalendarAlt className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neo-muted" />
                       </div>
                       {errors.majorStartWeek && <p className="text-red-500 text-sm mt-1">{errors.majorStartWeek}</p>}
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-neo-text mb-2">
                         Start Month <span className="text-red-500">*</span>
                       </label>
                       <select
@@ -361,7 +361,7 @@ const CreateCropCalendar = ({ isOpen, onClose }) => {
                         value={formData.majorStartMonth}
                         onChange={handleInputChange}
                         className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all ${
-                          errors.majorStartMonth ? 'border-red-500' : 'border-gray-300'
+                          errors.majorStartMonth ? 'border-red-500' : 'border-neo-border'
                         }`}
                         required
                       >
@@ -383,7 +383,7 @@ const CreateCropCalendar = ({ isOpen, onClose }) => {
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-neo-text mb-2">
                         Type <span className="text-red-500">*</span>
                       </label>
                       <select
@@ -391,7 +391,7 @@ const CreateCropCalendar = ({ isOpen, onClose }) => {
                         value={formData.majorType}
                         onChange={handleInputChange}
                         className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all ${
-                          errors.majorType ? 'border-red-500' : 'border-gray-300'
+                          errors.majorType ? 'border-red-500' : 'border-neo-border'
                         }`}
                         required
                       >
@@ -405,17 +405,17 @@ const CreateCropCalendar = ({ isOpen, onClose }) => {
                 </div>
 
                 {/* Minor Season */}
-                <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                <div className="bg-neo-bg-soft p-6 rounded-lg shadow-sm">
+                  <h3 className="text-lg font-semibold text-neo-text mb-4">
                     Minor Season (Optional)
                   </h3>
                   <div className="space-y-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-neo-text mb-2">
                         Excel File
                       </label>
                       <div className="flex items-center space-x-3">
-                        <label className="w-1/2 p-3 border border-gray-300 rounded-lg bg-white text-gray-600 cursor-pointer hover:bg-gray-100 transition-all text-center">
+                        <label className="w-1/2 p-3 border border-neo-border rounded-lg bg-neo-surface text-neo-muted cursor-pointer hover:bg-neo-surface-strong transition-all text-center">
                           <input
                             type="file"
                             accept=".xlsx, .xls"
@@ -424,20 +424,20 @@ const CreateCropCalendar = ({ isOpen, onClose }) => {
                           />
                           Choose File
                         </label>
-                        <span className="text-sm text-gray-500 truncate">
+                        <span className="text-sm text-neo-muted truncate">
                           {formData.minorExcel
                             ? formData.minorExcel.name
                             : "No file chosen"}
                         </span>
                       </div>
                       {errors.minorExcel && <p className="text-red-500 text-sm mt-1">{errors.minorExcel}</p>}
-                      <p className="text-xs text-gray-500 mt-2">
+                      <p className="text-xs text-neo-muted mt-2">
                         Upload Excel file for Minor Season (Optional)
                       </p>
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-neo-text mb-2">
                         Start Week
                       </label>
                       <div className="relative">
@@ -446,21 +446,21 @@ const CreateCropCalendar = ({ isOpen, onClose }) => {
                           name="minorStartWeek"
                           value={formData.minorStartWeek}
                           onChange={handleInputChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
+                          className="w-full p-3 border border-neo-border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
                         />
-                        <FaCalendarAlt className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        <FaCalendarAlt className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neo-muted" />
                       </div>
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-neo-text mb-2">
                         Start Month
                       </label>
                       <select
                         name="minorStartMonth"
                         value={formData.minorStartMonth}
                         onChange={handleInputChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
+                        className="w-full p-3 border border-neo-border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
                       >
                         <option value="">Select Month...</option>
                         <option value="January">January</option>
@@ -479,14 +479,14 @@ const CreateCropCalendar = ({ isOpen, onClose }) => {
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-neo-text mb-2">
                         Type
                       </label>
                       <select
                         name="minorType"
                         value={formData.minorType}
                         onChange={handleInputChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
+                        className="w-full p-3 border border-neo-border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
                       >
                         <option value="">Select...</option>
                         <option value="general">General</option>
@@ -509,7 +509,7 @@ const CreateCropCalendar = ({ isOpen, onClose }) => {
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all"
+                  className="px-6 py-2 bg-neo-border/30 text-neo-text rounded-lg hover:bg-neo-muted/35 transition-all"
                   disabled={isSubmitting}
                 >
                   Cancel

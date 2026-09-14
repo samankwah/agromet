@@ -65,9 +65,9 @@ const AdvisoryHeader = ({ advisory }) => {
   ];
 
   return (
-    <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl shadow-sm p-6 mb-6">
-      <div className="mb-4 pb-4 border-b border-slate-200">
-        <h2 className="text-2xl font-semibold text-slate-900">
+    <div className="neo-surface p-6 mb-6">
+      <div className="mb-4 pb-4 border-b border-neo-border">
+        <h2 className="text-2xl font-semibold text-neo-text">
           Activity: <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">{advisory.activity_stage || 'N/A'}</span>
         </h2>
       </div>
@@ -76,7 +76,7 @@ const AdvisoryHeader = ({ advisory }) => {
         {metadata.map((item, index) => (
           <div
             key={index}
-            className="flex items-start gap-3 p-3 bg-white/80 rounded-lg border border-slate-200 hover:border-emerald-300 hover:shadow-sm transition-all duration-200"
+            className="flex items-start gap-3 p-3 bg-neo-surface/80 rounded-lg border border-neo-border hover:border-emerald-300 hover:shadow-sm transition-all duration-200"
           >
             <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-emerald-50 rounded-full">
               {item.icon}
@@ -86,7 +86,7 @@ const AdvisoryHeader = ({ advisory }) => {
               <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">
                 {item.label}
               </p>
-              <p className="text-sm font-semibold text-slate-700 mt-0.5 truncate" title={item.value}>
+              <p className="text-sm font-semibold text-neo-text mt-0.5 truncate" title={item.value}>
                 {item.value}
               </p>
             </div>

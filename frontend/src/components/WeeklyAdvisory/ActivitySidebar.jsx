@@ -36,7 +36,7 @@ const ActivitySidebar = ({ activities, currentActivity, onSelectActivity, varian
         <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-t-lg px-4 py-2.5">
           <h2 className="text-sm font-bold text-white">Activities</h2>
         </div>
-        <div className="flex overflow-x-auto gap-2 p-2.5 bg-slate-50 border border-t-0 border-gray-200 rounded-b-lg">
+        <div className="flex overflow-x-auto gap-2 p-2.5 bg-neo-bg-soft border border-t-0 border-neo-border rounded-b-lg">
           {activities.map((activity, index) => {
             const active = isActiveItem(activity);
             return (
@@ -48,7 +48,7 @@ const ActivitySidebar = ({ activities, currentActivity, onSelectActivity, varian
                   transition-all duration-200 border whitespace-nowrap
                   ${active
                     ? 'bg-green-600 text-white border-green-600 shadow-sm [&_svg]:text-white'
-                    : 'bg-white text-slate-700 border-slate-200 hover:border-green-400 hover:bg-green-50 [&_svg]:text-green-600'
+                    : 'bg-neo-surface text-neo-text border-neo-border hover:border-green-400 hover:bg-green-50 [&_svg]:text-green-600'
                   }
                 `}
               >
@@ -64,8 +64,8 @@ const ActivitySidebar = ({ activities, currentActivity, onSelectActivity, varian
 
   // Desktop sticky vertical sidebar
   return (
-    <div className="w-80 flex-shrink-0 sticky top-24 self-start bg-gradient-to-b from-slate-50 to-slate-100 border border-gray-200 rounded-l-lg shadow-lg max-h-[calc(100vh-7rem)] overflow-y-auto">
-      <div className="p-4 border-b border-slate-300 bg-gradient-to-r from-green-500 to-emerald-600">
+    <div className="w-80 flex-shrink-0 sticky top-24 self-start bg-gradient-to-b from-neo-surface to-neo-bg-soft border border-neo-border rounded-l-lg shadow-lg max-h-[calc(100vh-7rem)] overflow-y-auto">
+      <div className="p-4 border-b border-neo-border bg-gradient-to-r from-green-500 to-emerald-600">
         <h2 className="text-base font-bold text-white">List of Activities</h2>
         <p className="text-xs text-green-50 mt-0.5">Select an activity stage</p>
       </div>
@@ -82,13 +82,13 @@ const ActivitySidebar = ({ activities, currentActivity, onSelectActivity, varian
                 transition-all duration-200 border-l-4
                 ${active
                   ? 'bg-green-50 border-green-500 text-green-700 shadow-sm'
-                  : 'bg-transparent border-transparent text-slate-700 hover:bg-slate-200 hover:border-slate-300'
+                  : 'bg-transparent border-transparent text-neo-text hover:bg-neo-border/30 hover:border-neo-border'
                 }
               `}
             >
               <div className={`
                 flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-md transition-all duration-200
-                ${active ? 'bg-white shadow-sm [&_svg]:text-green-600' : 'bg-slate-100 [&_svg]:text-green-600'}
+                ${active ? 'bg-neo-surface shadow-sm [&_svg]:text-green-600' : 'bg-neo-bg [&_svg]:text-green-600'}
               `}>
                 {getActivityIcon(getName(activity, index))}
               </div>

@@ -410,7 +410,7 @@ const PoultryCalendarForm = ({ isOpen, onClose, onSave }) => {
           {saveError && <div className="mx-6 mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{saveError}</div>}
           {previewError && <div className="mx-6 mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg text-sm text-orange-700">{previewError}</div>}
 
-          <div className="flex-shrink-0 border-t neo-divider px-6 py-4 bg-white/25">
+          <div className="flex-shrink-0 border-t neo-divider px-6 py-4 bg-neo-surface/25">
             <div className="flex justify-between items-center">
               <div className="flex space-x-2">
                 <button onClick={handleDownloadTemplate} className="neo-button"><FaDownload />Download Template</button>

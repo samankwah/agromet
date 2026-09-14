@@ -1,0 +1,33 @@
+name: Backend CI
+
+# The mobile app has had CI since it moved to its own tree; the backend has had
+# none, so its tests only ever ran on whichever machine last remembered to run
+# them. That is the half of the system holding the API key.
+on:
+  push:
+    branches: [master]
+    paths: ['backend/**', '.github/workflows/backend-ci.yml']
+  pull_request:
+    paths: ['backend/**', '.github/workflows/backend-ci.yml']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
+
+      - run: pip install -r backend/requirements.txt -r backend/requirements-dev.txt
+
+      # From the repo root, which is what the root conftest.py makes work from
+      # anywhere. No API keys are set here on purpose: the chat tests fake the
+      # provider, and a suite that needs a live key is a suite that stops
+      # running the first time the key rotates.
+      - run: python -m pytest backend/tests -q

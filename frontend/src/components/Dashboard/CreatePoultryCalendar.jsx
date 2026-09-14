@@ -217,16 +217,16 @@ const CreatePoultryCalendar = ({ isOpen, onClose }) => {
         style={modalAnimation}
         className="fixed inset-0 z-50 flex items-center justify-center p-4"
       >
-        <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="bg-neo-surface rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
           <div className="p-6">
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">
+              <h2 className="text-2xl font-bold text-neo-text">
                 Create Poultry Calendar
               </h2>
               <button
                 onClick={handleClose}
-                className="text-gray-500 hover:text-gray-700 transition-colors"
+                className="text-neo-muted hover:text-neo-text transition-colors"
               >
                 <FaTimes className="w-6 h-6" />
               </button>
@@ -237,7 +237,7 @@ const CreatePoultryCalendar = ({ isOpen, onClose }) => {
               {/* Region, District, Poultry Type */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-neo-text mb-2">
                     Region <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -245,7 +245,7 @@ const CreatePoultryCalendar = ({ isOpen, onClose }) => {
                     value={formData.region}
                     onChange={handleInputChange}
                     className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
-                      errors.region ? 'border-red-500' : 'border-gray-300'
+                      errors.region ? 'border-red-500' : 'border-neo-border'
                     }`}
                     required
                   >
@@ -260,7 +260,7 @@ const CreatePoultryCalendar = ({ isOpen, onClose }) => {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-neo-text mb-2">
                     District <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -268,7 +268,7 @@ const CreatePoultryCalendar = ({ isOpen, onClose }) => {
                     value={formData.district}
                     onChange={handleInputChange}
                     className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
-                      errors.district ? 'border-red-500' : 'border-gray-300'
+                      errors.district ? 'border-red-500' : 'border-neo-border'
                     }`}
                     required
                     disabled={!formData.region}
@@ -284,7 +284,7 @@ const CreatePoultryCalendar = ({ isOpen, onClose }) => {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-neo-text mb-2">
                     Poultry Type <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -292,7 +292,7 @@ const CreatePoultryCalendar = ({ isOpen, onClose }) => {
                     value={formData.poultryType}
                     onChange={handleInputChange}
                     className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
-                      errors.poultryType ? 'border-red-500' : 'border-gray-300'
+                      errors.poultryType ? 'border-red-500' : 'border-neo-border'
                     }`}
                     required
                   >
@@ -309,16 +309,16 @@ const CreatePoultryCalendar = ({ isOpen, onClose }) => {
 
               {/* Production Cycle Section */}
               <div className="bg-blue-50 p-6 rounded-lg shadow-sm">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                <h3 className="text-lg font-semibold text-neo-text mb-4">
                   Production Cycle
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-neo-text mb-2">
                       Excel File <span className="text-red-500">*</span>
                     </label>
                     <div className="flex items-center space-x-3">
-                      <label className="w-1/3 p-3 border border-gray-300 rounded-lg bg-white text-gray-600 cursor-pointer hover:bg-gray-100 transition-all text-center">
+                      <label className="w-1/3 p-3 border border-neo-border rounded-lg bg-neo-surface text-neo-muted cursor-pointer hover:bg-neo-surface-strong transition-all text-center">
                         <input
                           type="file"
                           accept=".xlsx, .xls"
@@ -327,20 +327,20 @@ const CreatePoultryCalendar = ({ isOpen, onClose }) => {
                         />
                         Choose File
                       </label>
-                      <span className="text-sm text-gray-500 truncate flex-1">
+                      <span className="text-sm text-neo-muted truncate flex-1">
                         {formData.productionCycleExcel
                           ? formData.productionCycleExcel.name
                           : "No file chosen"}
                       </span>
                     </div>
                     {errors.productionCycleExcel && <p className="text-red-500 text-sm mt-1">{errors.productionCycleExcel}</p>}
-                    <p className="text-xs text-gray-500 mt-2">
+                    <p className="text-xs text-neo-muted mt-2">
                       Upload Excel file for Production Cycle
                     </p>
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-neo-text mb-2">
                       Start Week <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
@@ -350,17 +350,17 @@ const CreatePoultryCalendar = ({ isOpen, onClose }) => {
                         value={formData.productionCycleStartWeek}
                         onChange={handleInputChange}
                         className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
-                          errors.productionCycleStartWeek ? 'border-red-500' : 'border-gray-300'
+                          errors.productionCycleStartWeek ? 'border-red-500' : 'border-neo-border'
                         }`}
                         required
                       />
-                      <FaCalendarAlt className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                      <FaCalendarAlt className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neo-muted" />
                     </div>
                     {errors.productionCycleStartWeek && <p className="text-red-500 text-sm mt-1">{errors.productionCycleStartWeek}</p>}
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-neo-text mb-2">
                       Start Month <span className="text-red-500">*</span>
                     </label>
                     <select
@@ -368,7 +368,7 @@ const CreatePoultryCalendar = ({ isOpen, onClose }) => {
                       value={formData.productionCycleStartMonth}
                       onChange={handleInputChange}
                       className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
-                        errors.productionCycleStartMonth ? 'border-red-500' : 'border-gray-300'
+                        errors.productionCycleStartMonth ? 'border-red-500' : 'border-neo-border'
                       }`}
                       required
                     >
@@ -390,7 +390,7 @@ const CreatePoultryCalendar = ({ isOpen, onClose }) => {
                   </div>
                   
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-neo-text mb-2">
                       Production Type <span className="text-red-500">*</span>
                     </label>
                     <select
@@ -398,7 +398,7 @@ const CreatePoultryCalendar = ({ isOpen, onClose }) => {
                       value={formData.productionCycleType}
                       onChange={handleInputChange}
                       className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
-                        errors.productionCycleType ? 'border-red-500' : 'border-gray-300'
+                        errors.productionCycleType ? 'border-red-500' : 'border-neo-border'
                       }`}
                       required
                     >
@@ -426,7 +426,7 @@ const CreatePoultryCalendar = ({ isOpen, onClose }) => {
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all"
+                  className="px-6 py-2 bg-neo-border/30 text-neo-text rounded-lg hover:bg-neo-muted/35 transition-all"
                   disabled={isSubmitting}
                 >
                   Cancel

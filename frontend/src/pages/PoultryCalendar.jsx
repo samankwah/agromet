@@ -107,7 +107,7 @@ const DownloadButton = ({ onDownload }) => {
       </button>
       <span
         className={`
-          absolute bg-gray-800 text-white rounded py-1.5 px-3 opacity-0 transition-opacity duration-200
+          absolute bg-neo-text text-neo-bg rounded py-1.5 px-3 opacity-0 transition-opacity duration-200
           ${isTooltipOpen ? "opacity-100" : "opacity-0"}
           md:group-hover:opacity-100
           md:top-[-40px] md:left-1/2 md:-translate-x-1/2 md:text-xs
@@ -146,7 +146,7 @@ const ShareButton = ({ onShare }) => {
       </button>
       <span
         className={`
-          absolute bg-gray-800 text-white rounded py-1.5 px-3 opacity-0 transition-opacity duration-200
+          absolute bg-neo-text text-neo-bg rounded py-1.5 px-3 opacity-0 transition-opacity duration-200
           ${isTooltipOpen ? "opacity-100" : "opacity-0"}
           md:group-hover:opacity-100
           md:top-[-40px] md:left-1/2 md:-translate-x-1/2 md:text-xs
@@ -239,7 +239,7 @@ const basePoultryActivities = {
       activity: "Egg Collection",
       start: 16,
       end: 20,
-      color: "bg-gray-300",
+      color: "bg-neo-muted/35",
       advisory:
         "Collect eggs at least twice daily to prevent \nbreakage and contamination.\nHandle eggs carefully to \navoid cracks, and store them in a clean, cool \nplace until they are ready for sale or consumption.",
     },
@@ -1103,7 +1103,7 @@ const PoultryCalendar = () => {
         case 'share':
           return <FaShareAlt className="text-purple-500" />;
         default:
-          return <FaExclamationTriangle className="text-gray-500" />;
+          return <FaExclamationTriangle className="text-neo-muted" />;
       }
     };
 
@@ -1120,7 +1120,7 @@ const PoultryCalendar = () => {
         case 'share':
           return 'border-purple-200 bg-purple-50';
         default:
-          return 'border-gray-200 bg-gray-50';
+          return 'border-neo-border bg-neo-bg-soft';
       }
     };
 
@@ -1130,14 +1130,14 @@ const PoultryCalendar = () => {
           <div className="flex items-start space-x-3">
             <div className="mt-1">{getErrorIcon(error.type)}</div>
             <div className="flex-1">
-              <h4 className="font-semibold text-gray-800 mb-1">{error.message}</h4>
-              <p className="text-sm text-gray-600 mb-2">{error.details}</p>
+              <h4 className="font-semibold text-neo-text mb-1">{error.message}</h4>
+              <p className="text-sm text-neo-muted mb-2">{error.details}</p>
 
               {/* Show suggestions if available */}
               {error.suggestions && error.suggestions.length > 0 && (
                 <div className="mb-3">
-                  <p className="text-sm font-medium text-gray-700 mb-1">Try these solutions:</p>
-                  <ul className="text-sm text-gray-600 list-disc list-inside space-y-1">
+                  <p className="text-sm font-medium text-neo-text mb-1">Try these solutions:</p>
+                  <ul className="text-sm text-neo-muted list-disc list-inside space-y-1">
                     {error.suggestions.map((suggestion, index) => (
                       <li key={index}>{suggestion}</li>
                     ))}
@@ -1145,7 +1145,7 @@ const PoultryCalendar = () => {
                 </div>
               )}
 
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-neo-muted">
                 {new Date(error.timestamp).toLocaleString()}
               </div>
             </div>
@@ -1162,7 +1162,7 @@ const PoultryCalendar = () => {
             )}
             <button
               onClick={onClear}
-              className="px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300 transition-colors"
+              className="px-3 py-1 bg-neo-border/30 text-neo-text text-sm rounded hover:bg-neo-muted/35 transition-colors"
             >
               Dismiss
             </button>
@@ -1192,14 +1192,14 @@ const PoultryCalendar = () => {
           />
 
           {/* Header Card - Separate White Container */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 px-4 md:px-8 py-6 md:py-8 mb-6">
+          <div className="bg-neo-surface rounded-lg shadow-sm border border-neo-border px-4 md:px-8 py-6 md:py-8 mb-6">
             <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
               <div className="flex-1">
                 <h1 className="text-3xl md:text-5xl font-bold mb-3">
                   <span className="text-green-600"><T>Poultry Production</T> </span>
                   <span className="text-blue-600"><T>Calendar</T></span>
                 </h1>
-                <p className="text-gray-500 text-base md:text-lg">
+                <p className="text-neo-muted text-base md:text-lg">
                   <T>Production cycle management and advisory for poultry operations across Ghana</T>
                 </p>
               </div>
@@ -1216,15 +1216,15 @@ const PoultryCalendar = () => {
           </div>
 
           {/* Filter Bar */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 px-6 py-5 mb-6">
+          <div className="bg-neo-surface rounded-lg shadow-sm border border-neo-border px-6 py-5 mb-6">
             <div className="flex flex-col lg:flex-row lg:items-end gap-4">
               <div className="flex-1 grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1"><T>Season</T></label>
+                  <label className="block text-xs font-semibold text-neo-muted uppercase tracking-wide mb-1"><T>Season</T></label>
                   <select
                     value={selectedSeason}
                     onChange={handleSeasonChange}
-                    className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all"
+                    className="w-full px-3 py-2.5 bg-neo-bg-soft border border-neo-border rounded-lg text-sm font-medium text-neo-text focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-neo-surface-strong transition-all"
                   >
                     <option value="">Select Season</option>
                     {seasonOptions.map((opt) => (
@@ -1233,11 +1233,11 @@ const PoultryCalendar = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1"><T>Poultry Type</T> <span className="text-red-400">*</span></label>
+                  <label className="block text-xs font-semibold text-neo-muted uppercase tracking-wide mb-1"><T>Poultry Type</T> <span className="text-red-400">*</span></label>
                   <select
                     value={selectedPoultry}
                     onChange={handlePoultryChange}
-                    className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all"
+                    className="w-full px-3 py-2.5 bg-neo-bg-soft border border-neo-border rounded-lg text-sm font-medium text-neo-text focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-neo-surface-strong transition-all"
                   >
                     <option value="">Select Poultry</option>
                     <option value="broilers">Broilers</option>
@@ -1245,11 +1245,11 @@ const PoultryCalendar = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1"><T>Region</T> <span className="text-red-400">*</span></label>
+                  <label className="block text-xs font-semibold text-neo-muted uppercase tracking-wide mb-1"><T>Region</T> <span className="text-red-400">*</span></label>
                   <select
                     value={selectedRegion}
                     onChange={handleRegionChange}
-                    className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all"
+                    className="w-full px-3 py-2.5 bg-neo-bg-soft border border-neo-border rounded-lg text-sm font-medium text-neo-text focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-neo-surface-strong transition-all"
                   >
                     <option value="All Regions">Select Region</option>
                     {regionsOfGhana.map((region) => (
@@ -1258,11 +1258,11 @@ const PoultryCalendar = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1"><T>District</T> <span className="text-red-400">*</span></label>
+                  <label className="block text-xs font-semibold text-neo-muted uppercase tracking-wide mb-1"><T>District</T> <span className="text-red-400">*</span></label>
                   <select
                     value={selectedDistrict}
                     onChange={handleDistrictChange}
-                    className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
+                    className="w-full px-3 py-2.5 bg-neo-bg-soft border border-neo-border rounded-lg text-sm font-medium text-neo-text focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-neo-surface-strong transition-all disabled:bg-neo-bg disabled:text-neo-muted disabled:cursor-not-allowed"
                     disabled={selectedRegion === "All Regions"}
                   >
                     <option value="All Districts">Select District</option>
@@ -1296,15 +1296,15 @@ const PoultryCalendar = () => {
             <div className="py-8 md:py-16 text-center px-4">
               <div className="max-w-md mx-auto">
                 {/* Simple Plant Icon - Matching Target */}
-                <div className="w-16 h-16 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+                <div className="w-16 h-16 mx-auto mb-6 bg-neo-bg rounded-full flex items-center justify-center">
                   <div className="text-2xl">🐔</div>
                 </div>
 
-                <h3 className="text-xl md:text-2xl font-semibold text-gray-900 mb-3"><T>No Poultry Calendar Data</T></h3>
+                <h3 className="text-xl md:text-2xl font-semibold text-neo-text mb-3"><T>No Poultry Calendar Data</T></h3>
 
                 {/* Enhanced messaging based on user selection and server status */}
                 {error && error.type === 'calendar_manager' ? (
-                  <div className="text-gray-600 mb-6 text-sm md:text-base">
+                  <div className="text-neo-muted mb-6 text-sm md:text-base">
                     <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
                       <div className="flex items-center gap-2 text-red-700 mb-2">
                         <FaExclamationTriangle />
@@ -1314,7 +1314,7 @@ const PoultryCalendar = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-gray-600 mb-6 text-sm md:text-base">
+                  <div className="text-neo-muted mb-6 text-sm md:text-base">
                     {selectedRegion === 'All Regions' && selectedDistrict === 'All Districts' ? (
                       <p>Select a specific region and district to view poultry calendar data.</p>
                     ) : selectedRegion !== 'All Regions' && selectedDistrict === 'All Districts' ? (

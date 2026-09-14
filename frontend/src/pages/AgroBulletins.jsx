@@ -26,7 +26,7 @@ const toneClasses = {
   sky: 'bg-sky-50 text-sky-700 border-sky-200',
   red: 'bg-red-50 text-red-700 border-red-200',
   violet: 'bg-violet-50 text-violet-700 border-violet-200',
-  slate: 'bg-slate-50 text-slate-700 border-slate-200',
+  slate: 'bg-neo-bg-soft text-neo-text border-neo-border',
 };
 
 const AgroBulletins = () => {
@@ -419,7 +419,7 @@ const AgroBulletins = () => {
         },
         {
           id: 3,
-          icon: <Wind className="text-gray-600" />,
+          icon: <Wind className="text-neo-muted" />,
           title: "Wind Conditions",
           content:
             dekadPeriod === "past"
@@ -1095,9 +1095,9 @@ const AgroBulletins = () => {
           conditions[conditionIndex].includes("cloudy") ||
           conditions[conditionIndex].includes("Partly")
         ) {
-          weatherIcon = <Cloud className="text-gray-400" />;
+          weatherIcon = <Cloud className="text-neo-muted" />;
         } else if (conditions[conditionIndex].includes("fog")) {
-          weatherIcon = <Cloud className="text-gray-300" />;
+          weatherIcon = <Cloud className="text-neo-muted" />;
         } else if (
           conditions[conditionIndex].includes("light rain") ||
           conditions[conditionIndex].includes("scattered")
@@ -1111,7 +1111,7 @@ const AgroBulletins = () => {
         ) {
           weatherIcon = <CloudLightning className="text-purple-600" />;
         } else {
-          weatherIcon = <Cloud className="text-gray-400" />;
+          weatherIcon = <Cloud className="text-neo-muted" />;
         }
 
         // Add a historical comparison data when viewing past data
@@ -1235,22 +1235,22 @@ const AgroBulletins = () => {
             <span className="inline-block px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold uppercase tracking-wider mb-4">
               <T>10-Day Dekadal Bulletin</T>
             </span>
-            <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight mb-4">
+            <h1 className="text-4xl lg:text-5xl font-bold text-neo-text tracking-tight mb-4">
               <T>10-Day Agromet</T>{' '}
               <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
                 <T>Outlook</T>
               </span>
             </h1>
-            <p className="text-slate-600 text-lg max-w-3xl mx-auto">
+            <p className="text-neo-muted text-lg max-w-3xl mx-auto">
               <T>Weather, crop impact and pest alerts at a glance — tailored to your region and dekad.</T>
             </p>
           </div>
 
           {/* Control bar */}
-          <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm mb-6 flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
+          <div className="neo-surface p-4 sm:p-5 mb-6 flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider"><T>Dekad</T></span>
-              <div className="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-1">
+              <span className="text-xs font-semibold text-neo-muted uppercase tracking-wider"><T>Dekad</T></span>
+              <div className="inline-flex rounded-lg border border-neo-border bg-neo-bg-soft p-1">
                 {[
                   { id: 'past', label: 'Past' },
                   { id: 'current', label: 'Current' },
@@ -1262,7 +1262,7 @@ const AgroBulletins = () => {
                     className={`px-4 py-1.5 text-sm font-semibold rounded-md transition-colors ${
                       dekadPeriod === p.id
                         ? 'bg-emerald-600 text-white shadow-sm'
-                        : 'text-slate-600 hover:text-emerald-700'
+                        : 'text-neo-muted hover:text-emerald-700'
                     }`}
                   >
                     <T>{p.label}</T>
@@ -1271,13 +1271,13 @@ const AgroBulletins = () => {
               </div>
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+              <span className="text-xs font-semibold text-neo-muted uppercase tracking-wider flex items-center gap-1.5">
                 <Map className="w-3.5 h-3.5" /> <T>Region</T>
               </span>
               <select
                 value={selectedRegion}
                 onChange={(e) => setSelectedRegion(e.target.value)}
-                className="px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="px-3 py-2 rounded-lg border border-neo-border bg-neo-surface text-sm font-medium text-neo-text focus:outline-none focus:ring-2 focus:ring-emerald-500"
               >
                 {Object.entries(regionsByZone).map(([zone, list]) => (
                   <optgroup key={zone} label={zone}>
@@ -1288,8 +1288,8 @@ const AgroBulletins = () => {
                 ))}
               </select>
             </div>
-            <div className="text-sm text-slate-500">
-              <span className="font-semibold text-slate-700">{dekadLabel}</span> · {dateRange}
+            <div className="text-sm text-neo-muted">
+              <span className="font-semibold text-neo-text">{dekadLabel}</span> · {dateRange}
             </div>
           </div>
 
@@ -1298,28 +1298,28 @@ const AgroBulletins = () => {
             {kpis.map((k) => (
               <div
                 key={k.label}
-                className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all"
+                className="neo-surface neo-hover-accent p-5"
               >
                 <div className={`inline-flex w-10 h-10 rounded-lg items-center justify-center border ${toneClasses[k.tone]}`}>
                   {k.icon}
                 </div>
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-4"><T>{k.label}</T></p>
-                <p className="text-2xl lg:text-3xl font-bold text-slate-900 mt-1">{k.value}</p>
-                <p className="text-xs text-slate-500 mt-1"><T>{k.sub}</T></p>
+                <p className="text-xs font-semibold text-neo-muted uppercase tracking-wider mt-4"><T>{k.label}</T></p>
+                <p className="text-2xl lg:text-3xl font-bold text-neo-text mt-1">{k.value}</p>
+                <p className="text-xs text-neo-muted mt-1"><T>{k.sub}</T></p>
               </div>
             ))}
           </div>
 
           {/* 10-day timeline */}
-          <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm mb-8">
+          <div className="neo-surface p-5 sm:p-6 mb-8">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <span className="inline-flex w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 items-center justify-center">
                   <Cloud className="w-5 h-5" />
                 </span>
                 <div>
-                  <h2 className="text-xl font-semibold text-slate-900"><T>10-Day Forecast</T></h2>
-                  <p className="text-xs text-slate-500"><T>Tap a day to see farming guidance</T></p>
+                  <h2 className="text-xl font-semibold text-neo-text"><T>10-Day Forecast</T></h2>
+                  <p className="text-xs text-neo-muted"><T>Tap a day to see farming guidance</T></p>
                 </div>
               </div>
             </div>
@@ -1334,14 +1334,14 @@ const AgroBulletins = () => {
                     className={`flex flex-col items-center text-center rounded-xl border p-3 transition-all ${
                       isOpen
                         ? 'border-emerald-500 bg-emerald-50 shadow-sm'
-                        : 'border-slate-200 bg-white hover:border-emerald-300 hover:shadow-sm'
+                        : 'border-neo-border bg-neo-surface hover:border-emerald-300 hover:shadow-sm'
                     }`}
                   >
-                    <span className="text-[11px] font-semibold text-slate-500 uppercase">{b.title.split(',')[0]}</span>
-                    <span className="text-xs text-slate-500">{b.title.split(',')[1]?.trim()}</span>
+                    <span className="text-[11px] font-semibold text-neo-muted uppercase">{b.title.split(',')[0]}</span>
+                    <span className="text-xs text-neo-muted">{b.title.split(',')[1]?.trim()}</span>
                     <div className="my-2 text-2xl">{b.icon}</div>
-                    <span className="text-sm font-bold text-slate-900">{b.maxTemp}°</span>
-                    <span className="text-xs text-slate-500">{b.minTemp}°</span>
+                    <span className="text-sm font-bold text-neo-text">{b.maxTemp}°</span>
+                    <span className="text-xs text-neo-muted">{b.minTemp}°</span>
                     <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-sky-700">
                       <Droplet className="w-3 h-3" /> {b.rainProbability}%
                     </span>
@@ -1357,39 +1357,39 @@ const AgroBulletins = () => {
                 <div className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50/60 p-5">
                   <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
                     <div>
-                      <h3 className="text-lg font-semibold text-slate-900">{b.fullDate}</h3>
-                      <p className="text-sm text-slate-600">{b.condition}</p>
+                      <h3 className="text-lg font-semibold text-neo-text">{b.fullDate}</h3>
+                      <p className="text-sm text-neo-muted">{b.condition}</p>
                     </div>
                     <div className="flex flex-wrap gap-2 text-xs font-semibold">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-700">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-neo-surface border border-neo-border text-neo-text">
                         <Thermometer className="w-3 h-3" /> {b.maxTemp}° / {b.minTemp}°
                       </span>
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-slate-200 text-sky-700">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-neo-surface border border-neo-border text-sky-700">
                         <Droplet className="w-3 h-3" /> {b.rainProbability}%
                       </span>
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-700">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-neo-surface border border-neo-border text-neo-text">
                         <Wind className="w-3 h-3" /> {b.windSpeed} km/h
                       </span>
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-slate-200 text-emerald-700">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-neo-surface border border-neo-border text-emerald-700">
                         {b.humidity}% RH
                       </span>
                     </div>
                   </div>
-                  <p className="text-sm text-slate-700 leading-relaxed">{b.content}</p>
+                  <p className="text-sm text-neo-text leading-relaxed">{b.content}</p>
                 </div>
               );
             })()}
           </div>
 
           {/* Crop impact matrix */}
-          <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm mb-8">
+          <div className="neo-surface p-5 sm:p-6 mb-8">
             <div className="flex items-center gap-3 mb-5">
               <span className="inline-flex w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 items-center justify-center">
                 <Leaf className="w-5 h-5" />
               </span>
               <div>
-                <h2 className="text-xl font-semibold text-slate-900"><T>Crop Impact Matrix</T></h2>
-                <p className="text-xs text-slate-500"><T>Status by commodity group</T></p>
+                <h2 className="text-xl font-semibold text-neo-text"><T>Crop Impact Matrix</T></h2>
+                <p className="text-xs text-neo-muted"><T>Status by commodity group</T></p>
               </div>
             </div>
 
@@ -1399,7 +1399,7 @@ const AgroBulletins = () => {
                 return (
                   <details
                     key={c.id}
-                    className="group rounded-xl border border-slate-200 bg-white p-4 open:shadow-sm open:border-emerald-300 transition-all"
+                    className="group rounded-xl border border-neo-border bg-neo-surface p-4 open:shadow-sm open:border-emerald-300 transition-all"
                   >
                     <summary className="flex items-start justify-between gap-3 cursor-pointer list-none">
                       <div className="flex items-start gap-3 min-w-0">
@@ -1407,18 +1407,18 @@ const AgroBulletins = () => {
                           {c.icon}
                         </span>
                         <div className="min-w-0">
-                          <h3 className="text-sm font-semibold text-slate-900 truncate">{c.title}</h3>
-                          <p className="text-xs text-slate-500 line-clamp-2">{firstSentence(c.content)}</p>
+                          <h3 className="text-sm font-semibold text-neo-text truncate">{c.title}</h3>
+                          <p className="text-xs text-neo-muted line-clamp-2">{firstSentence(c.content)}</p>
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
                         <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase border ${toneClasses[status.tone]}`}>
                           {status.label}
                         </span>
-                        <ChevronDown className="w-4 h-4 text-slate-400 group-open:rotate-180 transition-transform" />
+                        <ChevronDown className="w-4 h-4 text-neo-muted group-open:rotate-180 transition-transform" />
                       </div>
                     </summary>
-                    <p className="mt-3 pt-3 border-t border-slate-100 text-sm text-slate-600 leading-relaxed">{c.content}</p>
+                    <p className="mt-3 pt-3 border-t border-neo-border/50 text-sm text-neo-muted leading-relaxed">{c.content}</p>
                   </details>
                 );
               })}
@@ -1426,14 +1426,14 @@ const AgroBulletins = () => {
           </div>
 
           {/* Pest & disease alerts */}
-          <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm mb-8">
+          <div className="neo-surface p-5 sm:p-6 mb-8">
             <div className="flex items-center gap-3 mb-5">
               <span className="inline-flex w-10 h-10 rounded-lg bg-red-50 text-red-600 items-center justify-center">
                 <AlertTriangle className="w-5 h-5" />
               </span>
               <div>
-                <h2 className="text-xl font-semibold text-slate-900"><T>Pest & Disease Alerts</T></h2>
-                <p className="text-xs text-slate-500"><T>Prioritized by severity for this dekad</T></p>
+                <h2 className="text-xl font-semibold text-neo-text"><T>Pest & Disease Alerts</T></h2>
+                <p className="text-xs text-neo-muted"><T>Prioritized by severity for this dekad</T></p>
               </div>
             </div>
 
@@ -1443,7 +1443,7 @@ const AgroBulletins = () => {
                 return (
                   <details
                     key={p.id}
-                    className="group rounded-xl border border-slate-200 bg-white p-4 open:shadow-sm open:border-emerald-300 transition-all"
+                    className="group rounded-xl border border-neo-border bg-neo-surface p-4 open:shadow-sm open:border-emerald-300 transition-all"
                   >
                     <summary className="flex items-start justify-between gap-3 cursor-pointer list-none">
                       <div className="min-w-0">
@@ -1452,12 +1452,12 @@ const AgroBulletins = () => {
                             {sev.label}
                           </span>
                         </div>
-                        <h3 className="text-sm font-semibold text-slate-900">{p.title}</h3>
-                        <p className="text-xs text-slate-500 line-clamp-2 mt-1">{firstSentence(p.content)}</p>
+                        <h3 className="text-sm font-semibold text-neo-text">{p.title}</h3>
+                        <p className="text-xs text-neo-muted line-clamp-2 mt-1">{firstSentence(p.content)}</p>
                       </div>
-                      <ChevronDown className="flex-shrink-0 w-4 h-4 text-slate-400 group-open:rotate-180 transition-transform" />
+                      <ChevronDown className="flex-shrink-0 w-4 h-4 text-neo-muted group-open:rotate-180 transition-transform" />
                     </summary>
-                    <p className="mt-3 pt-3 border-t border-slate-100 text-sm text-slate-600 leading-relaxed">{p.content}</p>
+                    <p className="mt-3 pt-3 border-t border-neo-border/50 text-sm text-neo-muted leading-relaxed">{p.content}</p>
                   </details>
                 );
               })}
@@ -1465,32 +1465,32 @@ const AgroBulletins = () => {
           </div>
 
           {/* Period summary */}
-          <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm mb-8">
+          <div className="neo-surface p-5 sm:p-6 mb-8">
             <div className="flex items-center gap-3 mb-4">
               <span className="inline-flex w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 items-center justify-center">
                 <Info className="w-5 h-5" />
               </span>
               <div>
-                <h2 className="text-xl font-semibold text-slate-900"><T>Period Outlook</T></h2>
-                <p className="text-xs text-slate-500">{dekadLabel} · {selectedRegion}</p>
+                <h2 className="text-xl font-semibold text-neo-text"><T>Period Outlook</T></h2>
+                <p className="text-xs text-neo-muted">{dekadLabel} · {selectedRegion}</p>
               </div>
             </div>
-            <p className="text-sm text-slate-700 leading-relaxed mb-5">{agroBulletins.general.summary}</p>
+            <p className="text-sm text-neo-text leading-relaxed mb-5">{agroBulletins.general.summary}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {agroBulletins.general.bulletins.slice(0, 6).map((g) => (
-                <div key={g.id} className="rounded-xl border border-slate-200 bg-white p-4">
+                <div key={g.id} className="rounded-xl border border-neo-border bg-neo-surface p-4">
                   <div className="flex items-center gap-2 mb-1.5">
                     <span className="text-lg">{g.icon}</span>
-                    <h3 className="text-sm font-semibold text-slate-900">{g.title}</h3>
+                    <h3 className="text-sm font-semibold text-neo-text">{g.title}</h3>
                   </div>
-                  <p className="text-xs text-slate-600 leading-relaxed line-clamp-3">{firstSentence(g.content)}</p>
+                  <p className="text-xs text-neo-muted leading-relaxed line-clamp-3">{firstSentence(g.content)}</p>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Footer note */}
-          <div className="text-center text-xs text-slate-500">
+          <div className="text-center text-xs text-neo-muted">
             <p>
               <T>Data sources: Ghana Meteorological Agency, regional agromet stations. Updated dekadally.</T>
             </p>

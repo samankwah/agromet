@@ -7,7 +7,7 @@ This repository now contains:
 
 ## Frontend setup
 
-```bash
+```powershell
 cd frontend
 npm install
 npm run dev
@@ -15,10 +15,22 @@ npm run dev
 
 ## Backend setup
 
-```bash
+```powershell
 cd backend
 python -m pip install -r requirements.txt
-python -m uvicorn app.main:app --reload --port 8000
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
+```
+
+For the standard local dev flow, run the backend first in one terminal, then run the frontend in another:
+
+```powershell
+cd backend
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
+```
+
+```powershell
+cd frontend
+npm run dev
 ```
 
 ## Root scripts
@@ -37,6 +49,26 @@ npm run backend:dev
 
 The frontend now expects a single backend base URL:
 
-```bash
+```env
 VITE_BACKEND_BASE_URL=http://localhost:8000
 ```
+
+If the crop calendar shows "server is offline" or "All API requests failed", verify that `frontend/.env` uses the same backend port that Uvicorn is running on, then restart the Vite dev server after changing any `VITE_*` environment value.
+
+## Netlify deployment
+
+This repo includes `netlify.toml` for deploying the Vite frontend from `frontend/`:
+
+```text
+Base directory: frontend
+Build command: npm run build
+Publish directory: dist
+```
+
+Set this environment variable in Netlify before deploying:
+
+```env
+VITE_BACKEND_BASE_URL=https://your-deployed-backend.example.com
+```
+
+Do not use `http://localhost:8000` on Netlify. A deployed frontend cannot reach a backend running on your local machine. After changing any `VITE_*` variable in Netlify, trigger a new deploy so Vite rebuilds the production bundle.

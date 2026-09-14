@@ -26,8 +26,8 @@ class ErrorBoundary extends React.Component {
     if (this.state.hasError) {
       // You can render any custom fallback UI
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-6">
+        <div className="min-h-screen flex items-center justify-center bg-neo-bg-soft">
+          <div className="max-w-md w-full bg-neo-surface shadow-lg rounded-lg p-6">
             <div className="flex items-center justify-center w-16 h-16 mx-auto bg-red-100 rounded-full mb-4">
               <svg
                 className="w-8 h-8 text-red-600"
@@ -45,10 +45,10 @@ class ErrorBoundary extends React.Component {
             </div>
             
             <div className="text-center">
-              <h1 className="text-xl font-semibold text-gray-900 mb-2">
+              <h1 className="text-xl font-semibold text-neo-text mb-2">
                 Something went wrong
               </h1>
-              <p className="text-gray-600 mb-6">
+              <p className="text-neo-muted mb-6">
                 We encountered an unexpected error. Please try refreshing the page.
               </p>
               
@@ -62,7 +62,7 @@ class ErrorBoundary extends React.Component {
                 
                 <button
                   onClick={() => this.setState({ hasError: false, error: null, errorInfo: null })}
-                  className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                  className="w-full px-4 py-2 border border-neo-border text-neo-text rounded-md hover:bg-neo-surface-strong transition-colors"
                 >
                   Try Again
                 </button>
@@ -70,10 +70,10 @@ class ErrorBoundary extends React.Component {
               
               {process.env.NODE_ENV === 'development' && this.state.error && (
                 <details className="mt-6 text-left">
-                  <summary className="cursor-pointer text-sm text-gray-500 mb-2">
+                  <summary className="cursor-pointer text-sm text-neo-muted mb-2">
                     Technical Details (Development Mode)
                   </summary>
-                  <div className="bg-gray-100 p-3 rounded text-xs font-mono text-gray-800 overflow-auto max-h-40">
+                  <div className="bg-neo-bg p-3 rounded text-xs font-mono text-neo-text overflow-auto max-h-40">
                     <div className="mb-2">
                       <strong>Error:</strong> {this.state.error.toString()}
                     </div>

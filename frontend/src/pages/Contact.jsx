@@ -11,13 +11,13 @@ const Contact = () => {
         <div className="max-w-7xl mx-auto px-6 lg:px-8 pt-28 pb-20 relative">
           <Breadcrumb />
           <header className="text-center mb-16">
-              <span className="inline-block px-4 py-2 rounded-full bg-neo-bg text-neo-accent-strong text-xs font-semibold uppercase tracking-wider mb-4 shadow-neo-pressed">
+              <span className="inline-block px-4 py-2 rounded-full bg-neo-bg text-neo-accent-strong text-xs font-semibold uppercase tracking-wider mb-4">
               <T>Get in Touch</T>
             </span>
-            <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight mb-4">
+            <h1 className="text-4xl lg:text-5xl font-bold text-neo-text tracking-tight mb-4">
               <T>Contact Us</T>
             </h1>
-            <p className="text-lg text-slate-600 leading-relaxed max-w-2xl mx-auto">
+            <p className="text-lg text-neo-muted leading-relaxed max-w-2xl mx-auto">
               <T>
                 We'd love to hear from you. Send us a message and our team will
                 respond within one business day.
@@ -28,12 +28,12 @@ const Contact = () => {
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
             {/* Contact Form */}
             <div className="lg:col-span-3 neo-panel">
-              <h2 className="text-2xl font-semibold text-slate-900 mb-6">
+              <h2 className="text-2xl font-semibold text-neo-text mb-6">
                 <T>Send Us a Message</T>
               </h2>
               <form className="space-y-5">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  <label className="block text-sm font-semibold text-neo-text mb-2">
                     <T>Name</T>
                   </label>
                   <input
@@ -43,7 +43,7 @@ const Contact = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  <label className="block text-sm font-semibold text-neo-text mb-2">
                     <T>Email</T>
                   </label>
                   <input
@@ -53,7 +53,7 @@ const Contact = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  <label className="block text-sm font-semibold text-neo-text mb-2">
                     <T>Message</T>
                   </label>
                   <textarea
@@ -75,7 +75,7 @@ const Contact = () => {
             {/* Contact Info */}
             <div className="lg:col-span-2 space-y-6">
               <div className="neo-panel">
-                <h2 className="text-2xl font-semibold text-slate-900 mb-6">
+                <h2 className="text-2xl font-semibold text-neo-text mb-6">
                   <T>Reach Us Directly</T>
                 </h2>
                 <div className="space-y-5">
@@ -84,10 +84,10 @@ const Contact = () => {
                       <FaMapMarkerAlt className="w-5 h-5" />
                     </span>
                     <div>
-                      <h3 className="font-semibold text-slate-900 mb-1">
+                      <h3 className="font-semibold text-neo-text mb-1">
                         <T>Our Office</T>
                       </h3>
-                      <p className="text-sm text-slate-600">
+                      <p className="text-sm text-neo-muted">
                         <T>Accra, Ghana</T>
                       </p>
                     </div>
@@ -98,12 +98,12 @@ const Contact = () => {
                       <FaPhoneAlt className="w-5 h-5" />
                     </span>
                     <div>
-                      <h3 className="font-semibold text-slate-900 mb-1">
+                      <h3 className="font-semibold text-neo-text mb-1">
                         <T>Phone</T>
                       </h3>
                       <a
                         href="tel:+233243999631"
-                        className="text-sm text-slate-600 hover:text-emerald-700 transition-colors"
+                        className="text-sm text-neo-muted hover:text-emerald-700 transition-colors"
                       >
                         +233 24 399 9631
                       </a>
@@ -115,12 +115,12 @@ const Contact = () => {
                       <FaEnvelope className="w-5 h-5" />
                     </span>
                     <div>
-                      <h3 className="font-semibold text-slate-900 mb-1">
+                      <h3 className="font-semibold text-neo-text mb-1">
                         <T>Email</T>
                       </h3>
                       <a
                         href="mailto:agromet@gmail.com"
-                        className="text-sm text-slate-600 hover:text-emerald-700 transition-colors"
+                        className="text-sm text-neo-muted hover:text-emerald-700 transition-colors"
                       >
                         agromet@gmail.com
                       </a>
@@ -134,7 +134,7 @@ const Contact = () => {
           {/* Map */}
           <div className="neo-panel mt-12">
             <div className="pb-6 border-b neo-divider">
-              <h2 className="text-xl font-semibold text-slate-900">
+              <h2 className="text-xl font-semibold text-neo-text">
                 <T>Find Us on the Map</T>
               </h2>
             </div>

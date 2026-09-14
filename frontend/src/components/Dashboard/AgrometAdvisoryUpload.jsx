@@ -244,27 +244,27 @@ const AgrometAdvisoryUpload = ({ isOpen, onClose, onSave }) => {
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-start sm:items-center justify-center p-2 sm:p-4">
       <div className="neo-table-shell-xl w-full max-w-7xl max-h-screen sm:max-h-[95vh] overflow-y-auto mt-2 sm:mt-0">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 sm:p-6 border-b border-gray-200 sticky top-0 bg-white z-10 space-y-3 sm:space-y-0">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 sm:p-6 border-b border-neo-border sticky top-0 bg-neo-surface z-10 space-y-3 sm:space-y-0">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Upload Agromet Advisory</h2>
+            <h2 className="text-xl font-semibold text-neo-text">Upload Agromet Advisory</h2>
             <div className="flex flex-wrap items-center mt-2 gap-2 sm:gap-4">
-              <div className={`flex items-center text-sm ${uploadStep >= 1 ? 'text-blue-600' : 'text-gray-400'}`}>
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 text-xs font-semibold ${uploadStep >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'}`}>1</div>
+              <div className={`flex items-center text-sm ${uploadStep >= 1 ? 'text-blue-600' : 'text-neo-muted'}`}>
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 text-xs font-semibold ${uploadStep >= 1 ? 'bg-blue-600 text-white' : 'bg-neo-muted/35 text-neo-muted'}`}>1</div>
                 Select & Upload
               </div>
-              <div className={`flex items-center text-sm ${uploadStep >= 2 ? 'text-blue-600' : 'text-gray-400'}`}>
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 text-xs font-semibold ${uploadStep >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'}`}>2</div>
+              <div className={`flex items-center text-sm ${uploadStep >= 2 ? 'text-blue-600' : 'text-neo-muted'}`}>
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 text-xs font-semibold ${uploadStep >= 2 ? 'bg-blue-600 text-white' : 'bg-neo-muted/35 text-neo-muted'}`}>2</div>
                 Preview Data
               </div>
-              <div className={`flex items-center text-sm ${uploadStep >= 3 ? 'text-blue-600' : 'text-gray-400'}`}>
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 text-xs font-semibold ${uploadStep >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'}`}>3</div>
+              <div className={`flex items-center text-sm ${uploadStep >= 3 ? 'text-blue-600' : 'text-neo-muted'}`}>
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 text-xs font-semibold ${uploadStep >= 3 ? 'bg-blue-600 text-white' : 'bg-neo-muted/35 text-neo-muted'}`}>3</div>
                 Confirm & Save
               </div>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100"
+            className="text-neo-muted hover:text-neo-text p-1 rounded-full hover:bg-neo-surface-strong"
           >
             <FaTimes className="h-5 w-5" />
           </button>
@@ -277,14 +277,14 @@ const AgrometAdvisoryUpload = ({ isOpen, onClose, onSave }) => {
               {/* Location and Commodity Selection */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-neo-text mb-1">
                     Region <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={formData.regionCode}
                     onChange={(e) => handleInputChange('regionCode', e.target.value)}
                     className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.regionCode ? 'border-red-500' : 'border-gray-300'
+                      errors.regionCode ? 'border-red-500' : 'border-neo-border'
                     }`}
                   >
                     <option value="">Select Region...</option>
@@ -298,14 +298,14 @@ const AgrometAdvisoryUpload = ({ isOpen, onClose, onSave }) => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-neo-text mb-1">
                     District <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={formData.districtCode}
                     onChange={(e) => handleInputChange('districtCode', e.target.value)}
                     className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.districtCode ? 'border-red-500' : 'border-gray-300'
+                      errors.districtCode ? 'border-red-500' : 'border-neo-border'
                     }`}
                     disabled={!formData.regionCode}
                   >
@@ -320,14 +320,14 @@ const AgrometAdvisoryUpload = ({ isOpen, onClose, onSave }) => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-neo-text mb-1">
                     Commodity <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={formData.commodityCode}
                     onChange={(e) => handleInputChange('commodityCode', e.target.value)}
                     className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.commodityCode ? 'border-red-500' : 'border-gray-300'
+                      errors.commodityCode ? 'border-red-500' : 'border-neo-border'
                     }`}
                   >
                     <option value="">Select Commodity...</option>
@@ -344,7 +344,7 @@ const AgrometAdvisoryUpload = ({ isOpen, onClose, onSave }) => {
               {/* Title and Description */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-neo-text mb-1">
                     Advisory Title <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -353,14 +353,14 @@ const AgrometAdvisoryUpload = ({ isOpen, onClose, onSave }) => {
                     onChange={(e) => handleInputChange('title', e.target.value)}
                     placeholder="e.g., Weekly Crop Advisory for Tomato Production"
                     className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.title ? 'border-red-500' : 'border-gray-300'
+                      errors.title ? 'border-red-500' : 'border-neo-border'
                     }`}
                   />
                   {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-neo-text mb-1">
                     Description (Optional)
                   </label>
                   <input
@@ -368,17 +368,17 @@ const AgrometAdvisoryUpload = ({ isOpen, onClose, onSave }) => {
                     value={formData.description}
                     onChange={(e) => handleInputChange('description', e.target.value)}
                     placeholder="Brief description of the advisory content"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-neo-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
 
               {/* File Upload */}
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 sm:p-8 text-center">
-                <FaFileUpload className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-gray-400 mb-3 sm:mb-4" />
+              <div className="border-2 border-dashed border-neo-border rounded-lg p-4 sm:p-8 text-center">
+                <FaFileUpload className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-neo-muted mb-3 sm:mb-4" />
                 <div className="space-y-2">
-                  <p className="text-base sm:text-lg font-medium text-gray-900">Upload Multi-Sheet Excel File</p>
-                  <p className="text-xs sm:text-sm text-gray-500">
+                  <p className="text-base sm:text-lg font-medium text-neo-text">Upload Multi-Sheet Excel File</p>
+                  <p className="text-xs sm:text-sm text-neo-muted">
                     Support for .xlsx and .xls files with multiple sheets containing agricultural advisory data
                   </p>
                   <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 mt-4">
@@ -417,7 +417,7 @@ const AgrometAdvisoryUpload = ({ isOpen, onClose, onSave }) => {
 
               {loading && (
                 <div className="text-center">
-                  <InlineBusySkeleton label="Processing file..." tone="blue" className="text-xs text-gray-600 sm:text-sm" />
+                  <InlineBusySkeleton label="Processing file..." tone="blue" className="text-xs text-neo-muted sm:text-sm" />
                 </div>
               )}
 
@@ -451,18 +451,18 @@ const AgrometAdvisoryUpload = ({ isOpen, onClose, onSave }) => {
               {/* Sheet Selection */}
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold text-gray-900">Select Sheets to Include</h3>
+                  <h3 className="text-lg font-semibold text-neo-text">Select Sheets to Include</h3>
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-600">View:</span>
+                    <span className="text-sm text-neo-muted">View:</span>
                     <button
                       onClick={() => setViewMode('table')}
-                      className={`p-2 rounded ${viewMode === 'table' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'}`}
+                      className={`p-2 rounded ${viewMode === 'table' ? 'bg-blue-100 text-blue-800' : 'bg-neo-bg text-neo-muted'}`}
                     >
                       <FaTable />
                     </button>
                     <button
                       onClick={() => setViewMode('card')}
-                      className={`p-2 rounded ${viewMode === 'card' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'}`}
+                      className={`p-2 rounded ${viewMode === 'card' ? 'bg-blue-100 text-blue-800' : 'bg-neo-bg text-neo-muted'}`}
                     >
                       <FaTh />
                     </button>
@@ -470,7 +470,7 @@ const AgrometAdvisoryUpload = ({ isOpen, onClose, onSave }) => {
                 </div>
 
                 {parsedSheets.map((sheet, index) => (
-                  <div key={index} className={`border rounded-lg ${selectedSheets.includes(sheet.name) ? 'border-blue-300 bg-blue-50' : 'border-gray-200'}`}>
+                  <div key={index} className={`border rounded-lg ${selectedSheets.includes(sheet.name) ? 'border-blue-300 bg-blue-50' : 'border-neo-border'}`}>
                     <div className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
@@ -478,18 +478,18 @@ const AgrometAdvisoryUpload = ({ isOpen, onClose, onSave }) => {
                             type="checkbox"
                             checked={selectedSheets.includes(sheet.name)}
                             onChange={() => toggleSheetSelection(sheet.name)}
-                            className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            className="h-4 w-4 text-blue-600 border-neo-border rounded focus:ring-blue-500"
                           />
                           <div>
-                            <h4 className="font-medium text-gray-900">{sheet.name}</h4>
-                            <p className="text-sm text-gray-500">
+                            <h4 className="font-medium text-neo-text">{sheet.name}</h4>
+                            <p className="text-sm text-neo-muted">
                               {sheet.totalRows} records • {sheet.headers.length} columns
                             </p>
                           </div>
                         </div>
                         <button
                           onClick={() => toggleSheetExpansion(sheet.name)}
-                          className="p-2 text-gray-400 hover:text-gray-600"
+                          className="p-2 text-neo-muted hover:text-neo-text"
                         >
                           {expandedSheets[sheet.name] ? <FaChevronUp /> : <FaChevronDown />}
                         </button>
@@ -498,43 +498,43 @@ const AgrometAdvisoryUpload = ({ isOpen, onClose, onSave }) => {
                       {/* Sheet Summary */}
                     <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div>
-                        <span className="font-medium text-gray-700">Activities:</span>
-                        <span className="ml-1 text-gray-600">{sheet.summary.sections?.length || 0}</span>
+                        <span className="font-medium text-neo-text">Activities:</span>
+                        <span className="ml-1 text-neo-muted">{sheet.summary.sections?.length || 0}</span>
                       </div>
                       <div>
-                        <span className="font-medium text-gray-700">Sections:</span>
-                        <span className="ml-1 text-gray-600">{sheet.summary.sections?.length || 0}</span>
+                        <span className="font-medium text-neo-text">Sections:</span>
+                        <span className="ml-1 text-neo-muted">{sheet.summary.sections?.length || 0}</span>
                       </div>
                       <div>
-                        <span className="font-medium text-gray-700">Colors:</span>
-                        <span className="ml-1 text-gray-600">{sheet.summary.colorsDetected?.length || 0}</span>
+                        <span className="font-medium text-neo-text">Colors:</span>
+                        <span className="ml-1 text-neo-muted">{sheet.summary.colorsDetected?.length || 0}</span>
                       </div>
                       <div>
-                        <span className="font-medium text-gray-700">Records:</span>
-                          <span className="ml-1 text-gray-600">{sheet.totalRows}</span>
+                        <span className="font-medium text-neo-text">Records:</span>
+                          <span className="ml-1 text-neo-muted">{sheet.totalRows}</span>
                         </div>
                       </div>
 
                       {/* Expanded View */}
                       {expandedSheets[sheet.name] && (
                         <div className="mt-4 border-t pt-4">
-                          <h5 className="font-medium text-gray-900 mb-2">Sample Data Preview</h5>
+                          <h5 className="font-medium text-neo-text mb-2">Sample Data Preview</h5>
                           <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200 text-sm">
-                              <thead className="bg-gray-50">
+                            <table className="min-w-full divide-y divide-neo-border text-sm">
+                              <thead className="bg-neo-bg-soft">
                                 <tr>
                                   {sheet.headers.map((header, idx) => (
-                                    <th key={idx} className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th key={idx} className="px-3 py-2 text-left text-xs font-medium text-neo-muted uppercase tracking-wider">
                                       {header}
                                     </th>
                                   ))}
                                 </tr>
                               </thead>
-                              <tbody className="bg-white divide-y divide-gray-200">
+                              <tbody className="bg-neo-surface divide-y divide-neo-border">
                                 {(sheet.sampleData || []).slice(0, 3).map((row, rowIdx) => (
                                   <tr key={rowIdx}>
                                     {sheet.headers.map((_, colIdx) => (
-                                      <td key={colIdx} className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                                      <td key={colIdx} className="px-3 py-2 whitespace-nowrap text-sm text-neo-text">
                                         {row[colIdx] || '-'}
                                       </td>
                                     ))}
@@ -544,7 +544,7 @@ const AgrometAdvisoryUpload = ({ isOpen, onClose, onSave }) => {
                             </table>
                           </div>
                           {sheet.totalRows > 3 && (
-                            <p className="text-xs text-gray-500 mt-2">
+                            <p className="text-xs text-neo-muted mt-2">
                               Showing 3 of {sheet.totalRows} records
                             </p>
                           )}
@@ -561,7 +561,7 @@ const AgrometAdvisoryUpload = ({ isOpen, onClose, onSave }) => {
               <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0">
                 <button
                   onClick={() => setUploadStep(1)}
-                  className="px-4 sm:px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 touch-manipulation"
+                  className="px-4 sm:px-6 py-2 bg-neo-text text-neo-bg rounded-md hover:bg-neo-accent-strong touch-manipulation"
                 >
                   Back
                 </button>
@@ -593,55 +593,55 @@ const AgrometAdvisoryUpload = ({ isOpen, onClose, onSave }) => {
 
               {/* Upload Summary */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white neo-surface-soft p-4">
-                  <h3 className="font-semibold text-gray-900 mb-3">Upload Details</h3>
+                <div className="bg-neo-surface neo-surface-soft p-4">
+                  <h3 className="font-semibold text-neo-text mb-3">Upload Details</h3>
                   <div className="space-y-2 text-sm">
                     <div>
-                      <span className="font-medium text-gray-700">Unique ID:</span>
-                      <span className="ml-2 font-mono text-xs bg-gray-100 px-2 py-1 rounded">{previewData.uniqueId}</span>
+                      <span className="font-medium text-neo-text">Unique ID:</span>
+                      <span className="ml-2 font-mono text-xs bg-neo-bg px-2 py-1 rounded">{previewData.uniqueId}</span>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-700">Region:</span>
+                      <span className="font-medium text-neo-text">Region:</span>
                       <span className="ml-2">{previewData.regionCode} - {previewData.regionName}</span>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-700">District:</span>
+                      <span className="font-medium text-neo-text">District:</span>
                       <span className="ml-2">{previewData.districtCode} - {previewData.districtName}</span>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-700">Commodity:</span>
+                      <span className="font-medium text-neo-text">Commodity:</span>
                       <span className="ml-2">{previewData.commodityCode} - {previewData.commodityName}</span>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-700">Title:</span>
+                      <span className="font-medium text-neo-text">Title:</span>
                       <span className="ml-2">{previewData.title}</span>
                     </div>
                     {previewData.description && (
                       <div>
-                        <span className="font-medium text-gray-700">Description:</span>
+                        <span className="font-medium text-neo-text">Description:</span>
                         <span className="ml-2">{previewData.description}</span>
                       </div>
                     )}
                   </div>
                 </div>
 
-                <div className="bg-white neo-surface-soft p-4">
-                  <h3 className="font-semibold text-gray-900 mb-3">Data Summary</h3>
+                <div className="bg-neo-surface neo-surface-soft p-4">
+                  <h3 className="font-semibold text-neo-text mb-3">Data Summary</h3>
                   <div className="space-y-2 text-sm">
                     <div>
-                      <span className="font-medium text-gray-700">Total Sheets:</span>
+                      <span className="font-medium text-neo-text">Total Sheets:</span>
                       <span className="ml-2">{previewData.totalSheets}</span>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-700">Total Records:</span>
+                      <span className="font-medium text-neo-text">Total Records:</span>
                       <span className="ml-2">{previewData.totalRecords}</span>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-700">File Size:</span>
+                      <span className="font-medium text-neo-text">File Size:</span>
                       <span className="ml-2">{Math.round(formData.file.size / 1024)} KB</span>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-700">Selected Sheets:</span>
+                      <span className="font-medium text-neo-text">Selected Sheets:</span>
                       <div className="ml-2 mt-1 space-y-1">
                         {previewData.sheets.map((sheet, index) => (
                           <div key={index} className="text-xs bg-blue-100 px-2 py-1 rounded">
@@ -690,7 +690,7 @@ const AgrometAdvisoryUpload = ({ isOpen, onClose, onSave }) => {
               <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0">
                 <button
                   onClick={() => setUploadStep(2)}
-                  className="px-4 sm:px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 touch-manipulation"
+                  className="px-4 sm:px-6 py-2 bg-neo-text text-neo-bg rounded-md hover:bg-neo-accent-strong touch-manipulation"
                   disabled={loading}
                 >
                   Back
@@ -698,7 +698,7 @@ const AgrometAdvisoryUpload = ({ isOpen, onClose, onSave }) => {
                 <div className="flex flex-col sm:flex-row gap-3 sm:space-x-3">
                   <button
                     onClick={handleReset}
-                    className="px-4 sm:px-6 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 touch-manipulation"
+                    className="px-4 sm:px-6 py-2 bg-neo-muted/35 text-neo-text rounded-md hover:bg-neo-muted/45 touch-manipulation"
                     disabled={loading}
                   >
                     Start Over

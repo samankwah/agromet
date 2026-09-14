@@ -34,7 +34,7 @@ const SpeakButton = ({ text, label, className = '' }) => {
       className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-all text-sm font-medium ${
         isSpeaking
           ? 'border-purple-300 bg-purple-50 text-purple-700'
-          : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50 text-gray-600 hover:text-purple-700'
+          : 'border-neo-border hover:border-purple-300 hover:bg-purple-50 text-neo-muted hover:text-purple-700'
       } ${className}`}
       aria-label={isSpeaking ? 'Stop speaking' : `Read aloud${!isEnglish ? ` in ${currentLanguage}` : ''}`}
       title={isSpeaking ? 'Stop' : 'Listen'}

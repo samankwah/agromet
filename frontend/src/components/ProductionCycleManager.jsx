@@ -92,7 +92,7 @@ const ProductionCycleManager = () => {
       case 'paused':
         return <Pause className="h-5 w-5 text-yellow-600" />;
       default:
-        return <Square className="h-5 w-5 text-gray-600" />;
+        return <Square className="h-5 w-5 text-neo-muted" />;
     }
   };
 
@@ -104,7 +104,7 @@ const ProductionCycleManager = () => {
     };
     
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium border ${colors[status] || 'bg-gray-100 text-gray-800 border-gray-200'}`}>
+      <span className={`px-2 py-1 rounded-full text-xs font-medium border ${colors[status] || 'bg-neo-bg text-neo-text border-neo-border'}`}>
         {status?.charAt(0).toUpperCase() + status?.slice(1) || 'Unknown'}
       </span>
     );
@@ -114,7 +114,7 @@ const ProductionCycleManager = () => {
     if (percent >= 80) return 'text-blue-600';
     if (percent >= 50) return 'text-green-600';
     if (percent >= 25) return 'text-yellow-600';
-    return 'text-gray-600';
+    return 'text-neo-muted';
   };
 
   const formatDate = (dateString) => {
@@ -144,13 +144,13 @@ const ProductionCycleManager = () => {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow-lg p-8">
+      <div className="bg-neo-surface rounded-lg shadow-lg p-8">
         <div className="animate-pulse space-y-4">
-          <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+          <div className="h-4 bg-neo-border/30 rounded w-1/4"></div>
           <div className="space-y-2">
-            <div className="h-20 bg-gray-200 rounded"></div>
-            <div className="h-20 bg-gray-200 rounded"></div>
-            <div className="h-20 bg-gray-200 rounded"></div>
+            <div className="h-20 bg-neo-border/30 rounded"></div>
+            <div className="h-20 bg-neo-border/30 rounded"></div>
+            <div className="h-20 bg-neo-border/30 rounded"></div>
           </div>
         </div>
       </div>
@@ -158,19 +158,19 @@ const ProductionCycleManager = () => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
+    <div className="bg-neo-surface rounded-lg shadow-lg p-6">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Production Cycle Management</h2>
-        <p className="text-gray-600">
+        <h2 className="text-2xl font-bold text-neo-text mb-2">Production Cycle Management</h2>
+        <p className="text-neo-muted">
           Monitor and manage your active poultry production cycles.
         </p>
       </div>
 
       {cycles.length === 0 ? (
         <div className="text-center py-12">
-          <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Active Cycles</h3>
-          <p className="text-gray-500">
+          <Calendar className="h-16 w-16 text-neo-muted mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-neo-text mb-2">No Active Cycles</h3>
+          <p className="text-neo-muted">
             Start your first production cycle from a calendar template to begin tracking.
           </p>
         </div>
@@ -178,32 +178,32 @@ const ProductionCycleManager = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Cycles List */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-gray-900 mb-4">Your Production Cycles</h3>
+            <h3 className="font-semibold text-neo-text mb-4">Your Production Cycles</h3>
             {cycles.map((cycle) => (
               <div 
                 key={cycle.id}
                 className={`border rounded-lg p-4 cursor-pointer transition-colors ${
                   selectedCycle?.id === cycle.id 
                     ? 'border-green-500 bg-green-50' 
-                    : 'border-gray-200 hover:border-gray-300'
+                    : 'border-neo-border hover:border-neo-border'
                 }`}
                 onClick={() => selectCycle(cycle)}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center space-x-2">
                     {getStatusIcon(cycle.status)}
-                    <h4 className="font-medium text-gray-900">{cycle.batchName}</h4>
+                    <h4 className="font-medium text-neo-text">{cycle.batchName}</h4>
                   </div>
                   {getStatusBadge(cycle.status)}
                 </div>
                 
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm text-gray-600">
+                  <div className="flex items-center justify-between text-sm text-neo-muted">
                     <span className="capitalize">{cycle.commodity}</span>
                     <span>Week {cycle.currentWeek} of {cycle.totalDurationWeeks}</span>
                   </div>
                   
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-neo-border/30 rounded-full h-2">
                     <div 
                       className={`h-2 rounded-full transition-all duration-300 ${
                         cycle.progressPercent >= 100 ? 'bg-blue-500' : 'bg-green-500'
@@ -212,7 +212,7 @@ const ProductionCycleManager = () => {
                     ></div>
                   </div>
                   
-                  <div className="flex items-center justify-between text-xs text-gray-500">
+                  <div className="flex items-center justify-between text-xs text-neo-muted">
                     <span>Started: {formatDate(cycle.startDate)}</span>
                     <span className="flex items-center">
                       <Users className="h-3 w-3 mr-1" />
@@ -221,7 +221,7 @@ const ProductionCycleManager = () => {
                   </div>
                   
                   {cycle.status === 'active' && (
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-neo-muted">
                       {getDaysRemaining(cycle.expectedEndDate)} days remaining
                     </div>
                   )}
@@ -274,50 +274,50 @@ const ProductionCycleManager = () => {
             {selectedCycle ? (
               <div className="space-y-6">
                 {/* Cycle Details */}
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-900 mb-4">Cycle Details</h3>
+                <div className="bg-neo-bg-soft rounded-lg p-4">
+                  <h3 className="font-semibold text-neo-text mb-4">Cycle Details</h3>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="font-medium text-gray-700">Batch Name:</span>
-                      <p className="text-gray-900">{selectedCycle.batchName}</p>
+                      <span className="font-medium text-neo-text">Batch Name:</span>
+                      <p className="text-neo-text">{selectedCycle.batchName}</p>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-700">Commodity:</span>
-                      <p className="text-gray-900 capitalize">{selectedCycle.commodity}</p>
+                      <span className="font-medium text-neo-text">Commodity:</span>
+                      <p className="text-neo-text capitalize">{selectedCycle.commodity}</p>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-700">Start Date:</span>
-                      <p className="text-gray-900">{formatDate(selectedCycle.startDate)}</p>
+                      <span className="font-medium text-neo-text">Start Date:</span>
+                      <p className="text-neo-text">{formatDate(selectedCycle.startDate)}</p>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-700">Expected End:</span>
-                      <p className="text-gray-900">{formatDate(selectedCycle.expectedEndDate)}</p>
+                      <span className="font-medium text-neo-text">Expected End:</span>
+                      <p className="text-neo-text">{formatDate(selectedCycle.expectedEndDate)}</p>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-700">Initial Quantity:</span>
-                      <p className="text-gray-900">{selectedCycle.initialQuantity}</p>
+                      <span className="font-medium text-neo-text">Initial Quantity:</span>
+                      <p className="text-neo-text">{selectedCycle.initialQuantity}</p>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-700">Current Quantity:</span>
-                      <p className="text-gray-900">{selectedCycle.currentQuantity}</p>
+                      <span className="font-medium text-neo-text">Current Quantity:</span>
+                      <p className="text-neo-text">{selectedCycle.currentQuantity}</p>
                     </div>
                   </div>
                   
                   {selectedCycle.notes && (
                     <div className="mt-4">
-                      <span className="font-medium text-gray-700">Notes:</span>
-                      <p className="text-gray-900 text-sm mt-1">{selectedCycle.notes}</p>
+                      <span className="font-medium text-neo-text">Notes:</span>
+                      <p className="text-neo-text text-sm mt-1">{selectedCycle.notes}</p>
                     </div>
                   )}
                 </div>
 
                 {/* Current Week Activities */}
-                <div className="bg-white border rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
+                <div className="bg-neo-surface border rounded-lg p-4">
+                  <h3 className="font-semibold text-neo-text mb-4 flex items-center">
                     <Clock className="h-5 w-5 mr-2 text-green-600" />
                     This Week's Activities
                     {currentActivities && (
-                      <span className="ml-2 text-sm text-gray-500">
+                      <span className="ml-2 text-sm text-neo-muted">
                         (Week {currentActivities.currentWeek})
                       </span>
                     )}
@@ -331,7 +331,7 @@ const ProductionCycleManager = () => {
                           
                           return (
                             <div key={index} className={`flex items-start space-x-3 p-3 rounded-lg ${
-                              isCompleted ? 'bg-green-50 border border-green-200' : 'bg-gray-50'
+                              isCompleted ? 'bg-green-50 border border-green-200' : 'bg-neo-bg-soft'
                             }`}>
                               <div className="flex-shrink-0 mt-0.5">
                                 {isCompleted ? (
@@ -341,7 +341,7 @@ const ProductionCycleManager = () => {
                                 )}
                               </div>
                               <div className="flex-1">
-                                <h4 className="font-medium text-gray-900">{activity.activityName}</h4>
+                                <h4 className="font-medium text-neo-text">{activity.activityName}</h4>
                                 {activity.periods && activity.periods.length > 0 && (
                                   <div className="flex flex-wrap gap-1 mt-1">
                                     {activity.periods.map((period, pidx) => (
@@ -357,22 +357,22 @@ const ProductionCycleManager = () => {
                         })
                       ) : (
                         <div className="text-center py-8">
-                          <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-2" />
-                          <p className="text-gray-500">No specific activities for this week</p>
+                          <Calendar className="h-12 w-12 text-neo-muted mx-auto mb-2" />
+                          <p className="text-neo-muted">No specific activities for this week</p>
                         </div>
                       )}
                     </div>
                   ) : (
                     <div className="animate-pulse space-y-2">
-                      <div className="h-12 bg-gray-200 rounded"></div>
-                      <div className="h-12 bg-gray-200 rounded"></div>
+                      <div className="h-12 bg-neo-border/30 rounded"></div>
+                      <div className="h-12 bg-neo-border/30 rounded"></div>
                     </div>
                   )}
                 </div>
 
                 {/* Progress Metrics */}
                 <div className="bg-blue-50 rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
+                  <h3 className="font-semibold text-neo-text mb-4 flex items-center">
                     <TrendingUp className="h-5 w-5 mr-2 text-blue-600" />
                     Progress Metrics
                   </h3>
@@ -381,22 +381,22 @@ const ProductionCycleManager = () => {
                       <div className={`text-2xl font-bold ${getProgressColor(selectedCycle.progressPercent)}`}>
                         {Math.round(selectedCycle.progressPercent || 0)}%
                       </div>
-                      <p className="text-gray-600">Completion</p>
+                      <p className="text-neo-muted">Completion</p>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-gray-900">
+                      <div className="text-2xl font-bold text-neo-text">
                         {selectedCycle.currentWeek}/{selectedCycle.totalDurationWeeks}
                       </div>
-                      <p className="text-gray-600">Weeks</p>
+                      <p className="text-neo-muted">Weeks</p>
                     </div>
                   </div>
                 </div>
               </div>
             ) : (
               <div className="text-center py-12">
-                <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Select a Cycle</h3>
-                <p className="text-gray-500">
+                <Calendar className="h-16 w-16 text-neo-muted mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-neo-text mb-2">Select a Cycle</h3>
+                <p className="text-neo-muted">
                   Click on a production cycle to view details and current activities.
                 </p>
               </div>

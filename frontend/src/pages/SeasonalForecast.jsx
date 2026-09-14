@@ -197,7 +197,7 @@ const SeasonalForecast = () => {
       <Breadcrumb />
       {/* Header Section */}
       <div className="mb-6">
-        <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight">
+        <h1 className="text-3xl lg:text-4xl font-bold text-neo-text tracking-tight">
           {selectedZone}{" "}
           <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
             <T>Seasonal Forecast</T>
@@ -206,7 +206,7 @@ const SeasonalForecast = () => {
         <p className="mt-2 text-sm font-semibold text-emerald-700 uppercase tracking-wider">
           <T>Normal Onset and Early Cessation</T>
         </p>
-        <p className="mt-2 text-sm font-medium text-slate-500">
+        <p className="mt-2 text-sm font-medium text-neo-muted">
           <T>Updated</T> {formatUpdatedTime(updatedAt)}
         </p>
       </div>
@@ -223,7 +223,7 @@ const SeasonalForecast = () => {
                 className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
                   active
                     ? "bg-emerald-600 text-white shadow-sm"
-                    : "bg-white border border-slate-200 text-slate-600 hover:border-emerald-300 hover:text-emerald-700"
+                    : "bg-neo-surface border border-neo-border text-neo-muted hover:border-emerald-300 hover:text-emerald-700"
                 }`}
               >
                 {zone}
@@ -245,7 +245,7 @@ const SeasonalForecast = () => {
       {/* Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Map Section */}
-        <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-4 shadow-sm">
+        <div className="neo-surface p-4">
           <img
             src={SON}
             alt="Agro-Ecological Zones Map"
@@ -254,26 +254,26 @@ const SeasonalForecast = () => {
         </div>
 
         {/* LTM and Forecast Table */}
-        <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-6 shadow-sm">
+        <div className="neo-surface p-6">
           <div className="flex items-center gap-3 mb-4">
             <span className="inline-flex w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 items-center justify-center">
               <FaCloudSun style={{ fontSize: "1.25rem" }} />
             </span>
-            <h3 className="text-xl font-semibold text-slate-900"><T>Season Length</T></h3>
+            <h3 className="text-xl font-semibold text-neo-text"><T>Season Length</T></h3>
           </div>
 
           {/* Season length range bars */}
           <div className="mb-5 space-y-4">
             {[
-              { label: "LTM", range: lengthLTM, color: "bg-slate-300", dot: "bg-slate-500" },
+              { label: "LTM", range: lengthLTM, color: "bg-neo-muted/35", dot: "bg-neo-muted" },
               { label: "2026 Forecast", range: lengthForecast, color: "bg-emerald-200", dot: "bg-emerald-600" },
             ].map((row) => (
               <div key={row.label}>
-                <div className="flex justify-between text-xs font-semibold text-slate-500 mb-1">
+                <div className="flex justify-between text-xs font-semibold text-neo-muted mb-1">
                   <span>{row.label}</span>
                   <span>{row.range.min}–{row.range.max} days</span>
                 </div>
-                <div className="relative h-3 rounded-full bg-slate-100">
+                <div className="relative h-3 rounded-full bg-neo-bg">
                   <div
                     className={`absolute top-0 h-3 rounded-full ${row.color}`}
                     style={{
@@ -288,7 +288,7 @@ const SeasonalForecast = () => {
                 </div>
               </div>
             ))}
-            <div className="flex justify-between text-[10px] text-slate-400">
+            <div className="flex justify-between text-[10px] text-neo-muted">
               <span>{lengthDomainMin}d</span>
               <span>{(lengthDomainMin + lengthDomainMax) / 2}d</span>
               <span>{lengthDomainMax}d</span>
@@ -296,41 +296,41 @@ const SeasonalForecast = () => {
           </div>
 
           <div className="overflow-x-auto">
-          <table className="w-full table-fixed border border-slate-200 text-sm">
+          <table className="w-full table-fixed border border-neo-border text-sm">
             <thead>
               <tr>
-                <th className="p-2 bg-slate-50 border border-slate-200 text-slate-600 text-center"></th>
-                <th className="p-2 bg-slate-50 border border-slate-200 text-slate-600 text-center">LTM</th>
-                <th className="p-2 bg-slate-50 border border-slate-200 text-slate-600 text-center">
+                <th className="p-2 bg-neo-bg-soft border border-neo-border text-neo-muted text-center"></th>
+                <th className="p-2 bg-neo-bg-soft border border-neo-border text-neo-muted text-center">LTM</th>
+                <th className="p-2 bg-neo-bg-soft border border-neo-border text-neo-muted text-center">
                   2026 Forecast
                 </th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td className="p-2 text-center border border-slate-200 text-slate-700"><T>Start</T></td>
-                <td className="p-2 text-center border border-slate-200 text-slate-700">
+                <td className="p-2 text-center border border-neo-border text-neo-text"><T>Start</T></td>
+                <td className="p-2 text-center border border-neo-border text-neo-text">
                   {currentData.startLTM}
                 </td>
-                <td className="p-2 text-center border border-slate-200 text-slate-700">
+                <td className="p-2 text-center border border-neo-border text-neo-text">
                   {currentData.startForecast}
                 </td>
               </tr>
               <tr>
-                <td className="p-2 text-center border border-slate-200 text-slate-700"><T>End</T></td>
-                <td className="p-2 text-center border border-slate-200 text-slate-700">{currentData.endLTM}</td>
-                <td className="p-2 text-center border border-slate-200 text-slate-700">
+                <td className="p-2 text-center border border-neo-border text-neo-text"><T>End</T></td>
+                <td className="p-2 text-center border border-neo-border text-neo-text">{currentData.endLTM}</td>
+                <td className="p-2 text-center border border-neo-border text-neo-text">
                   {currentData.endForecast}
                 </td>
               </tr>
               <tr>
-                <td className="p-2 text-center border border-slate-200 text-slate-700">
+                <td className="p-2 text-center border border-neo-border text-neo-text">
                   <T>Length of Season (Days)</T>
                 </td>
-                <td className="p-2 text-center border border-slate-200 text-slate-700">
+                <td className="p-2 text-center border border-neo-border text-neo-text">
                   {currentData.lengthLTM}
                 </td>
-                <td className="p-2 text-center border border-slate-200 text-slate-700">
+                <td className="p-2 text-center border border-neo-border text-neo-text">
                   {currentData.lengthForecast}
                 </td>
               </tr>
@@ -340,12 +340,12 @@ const SeasonalForecast = () => {
         </div>
 
         {/* Rainfall Table */}
-        <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-6 shadow-sm">
+        <div className="neo-surface p-6">
           <div className="flex items-center gap-3 mb-4">
             <span className="inline-flex w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 items-center justify-center">
               <FaCloudRain style={{ fontSize: "1.25rem" }} />
             </span>
-            <h3 className="text-xl font-semibold text-slate-900"><T>Cumulative Rainfall</T></h3>
+            <h3 className="text-xl font-semibold text-neo-text"><T>Cumulative Rainfall</T></h3>
           </div>
           <div className="mb-5" style={{ width: "100%", height: 220 }}>
             <ResponsiveContainer>
@@ -368,30 +368,30 @@ const SeasonalForecast = () => {
             </ResponsiveContainer>
           </div>
           <div className="overflow-x-auto">
-          <table className="w-full table-fixed border border-slate-200 text-sm">
+          <table className="w-full table-fixed border border-neo-border text-sm">
             <thead>
               <tr>
-                <th className="p-2 bg-slate-50 border border-slate-200 text-slate-600"><T>Season</T></th>
-                <th className="p-2 bg-slate-50 border border-slate-200 text-slate-600">LTM</th>
-                <th className="p-2 bg-slate-50 border border-slate-200 text-slate-600">2026 Forecast</th>
+                <th className="p-2 bg-neo-bg-soft border border-neo-border text-neo-muted"><T>Season</T></th>
+                <th className="p-2 bg-neo-bg-soft border border-neo-border text-neo-muted">LTM</th>
+                <th className="p-2 bg-neo-bg-soft border border-neo-border text-neo-muted">2026 Forecast</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td className="p-2 text-center border border-slate-200 text-slate-700">MAM</td>
-                <td className="p-2 text-center border border-slate-200 text-slate-700">
+                <td className="p-2 text-center border border-neo-border text-neo-text">MAM</td>
+                <td className="p-2 text-center border border-neo-border text-neo-text">
                   {currentData.rainfallLTM.mam}
                 </td>
-                <td className="p-2 text-center border border-slate-200 text-slate-700">
+                <td className="p-2 text-center border border-neo-border text-neo-text">
                   {currentData.rainfallForecast.mam}
                 </td>
               </tr>
               <tr>
-                <td className="p-2 text-center border border-slate-200 text-slate-700">AMJ</td>
-                <td className="p-2 text-center border border-slate-200 text-slate-700">
+                <td className="p-2 text-center border border-neo-border text-neo-text">AMJ</td>
+                <td className="p-2 text-center border border-neo-border text-neo-text">
                   {currentData.rainfallLTM.amj}
                 </td>
-                <td className="p-2 text-center border border-slate-200 text-slate-700">
+                <td className="p-2 text-center border border-neo-border text-neo-text">
                   {currentData.rainfallForecast.amj}
                 </td>
               </tr>
@@ -403,7 +403,7 @@ const SeasonalForecast = () => {
               <FaExclamationCircle className="text-red-600 h-5 w-5 mr-2" />
               <T>Advisories:</T>
             </h4>
-            <ul className="list-disc ml-5 text-sm text-slate-600 mt-1 space-y-1">
+            <ul className="list-disc ml-5 text-sm text-neo-muted mt-1 space-y-1">
               <li><T>Harvest rain water and store for irrigation.</T></li>
               <li><T>Cultivate early short cycle crops.</T></li>
               <li><T>Contact agricultural experts for information</T></li>
@@ -412,12 +412,12 @@ const SeasonalForecast = () => {
         </div>
 
         {/* Dry Spells Table */}
-        <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-6 shadow-sm">
+        <div className="neo-surface p-6">
           <div className="flex items-center gap-3 mb-4">
             <span className="inline-flex w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 items-center justify-center">
               <FaSun style={{ fontSize: "1.25rem" }} />
             </span>
-            <h3 className="text-xl font-semibold text-slate-900"><T>Dry Spells</T></h3>
+            <h3 className="text-xl font-semibold text-neo-text"><T>Dry Spells</T></h3>
           </div>
           <div className="mb-5" style={{ width: "100%", height: 220 }}>
             <ResponsiveContainer>
@@ -440,30 +440,30 @@ const SeasonalForecast = () => {
             </ResponsiveContainer>
           </div>
           <div className="overflow-x-auto">
-          <table className="w-full table-fixed border border-slate-200 text-sm">
+          <table className="w-full table-fixed border border-neo-border text-sm">
             <thead>
               <tr>
-                <th className="p-2 bg-slate-50 border border-slate-200 text-slate-600"><T>TYPE</T></th>
-                <th className="p-2 bg-slate-50 border border-slate-200 text-slate-600">LTM</th>
-                <th className="p-2 bg-slate-50 border border-slate-200 text-slate-600">2026 Forecast</th>
+                <th className="p-2 bg-neo-bg-soft border border-neo-border text-neo-muted"><T>TYPE</T></th>
+                <th className="p-2 bg-neo-bg-soft border border-neo-border text-neo-muted">LTM</th>
+                <th className="p-2 bg-neo-bg-soft border border-neo-border text-neo-muted">2026 Forecast</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td className="p-2 text-center border border-slate-200 text-slate-700"><T>Early</T></td>
-                <td className="p-2 text-center border border-slate-200 text-slate-700">
+                <td className="p-2 text-center border border-neo-border text-neo-text"><T>Early</T></td>
+                <td className="p-2 text-center border border-neo-border text-neo-text">
                   {currentData.drySpellsLTM.early}
                 </td>
-                <td className="p-2 text-center border border-slate-200 text-slate-700">
+                <td className="p-2 text-center border border-neo-border text-neo-text">
                   {currentData.drySpellsForecast.early}
                 </td>
               </tr>
               <tr>
-                <td className="p-2 text-center border border-slate-200 text-slate-700"><T>Late</T></td>
-                <td className="p-2 text-center border border-slate-200 text-slate-700">
+                <td className="p-2 text-center border border-neo-border text-neo-text"><T>Late</T></td>
+                <td className="p-2 text-center border border-neo-border text-neo-text">
                   {currentData.drySpellsLTM.late}
                 </td>
-                <td className="p-2 text-center border border-slate-200 text-slate-700">
+                <td className="p-2 text-center border border-neo-border text-neo-text">
                   {currentData.drySpellsForecast.late}
                 </td>
               </tr>
@@ -476,7 +476,7 @@ const SeasonalForecast = () => {
               <FaExclamationCircle className="text-red-600 h-5 w-5 mr-2" />
               <T>Advisories:</T>
             </h4>
-            <ul className="list-disc ml-5 text-sm text-slate-600 mt-1 space-y-1">
+            <ul className="list-disc ml-5 text-sm text-neo-muted mt-1 space-y-1">
               <li><T>Monitor weather updates regularly.</T></li>
               <li><T>Prepare for potential irrigation needs.</T></li>
               <li><T>Consult with local agronomists for crop management.</T></li>
@@ -486,7 +486,7 @@ const SeasonalForecast = () => {
       </div>
 
       {/* Footer Section */}
-      <footer className="text-center mt-10 text-xs text-slate-500">
+      <footer className="text-center mt-10 text-xs text-neo-muted">
         <T>Long Term Mean (LTM) is the 30-year average condition of a given zone from 1991 - 2020</T>
       </footer>
       </div>

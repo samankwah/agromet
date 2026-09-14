@@ -165,27 +165,27 @@ const AgroMetAdvisory = () => {
             <span className="inline-block px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold uppercase tracking-wider mb-3">
               <T>Weekly Advisory</T>
             </span>
-            <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight mb-3">
+            <h1 className="text-4xl lg:text-5xl font-bold text-neo-text tracking-tight mb-3">
               <T>Agro-Meteorological</T>{" "}
               <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
                 <T>Advisory</T>
               </span>
             </h1>
-            <p className="text-slate-600 text-base sm:text-lg">
+            <p className="text-neo-muted text-base sm:text-lg">
               <T>Get weather-based farming recommendations for your region</T>
             </p>
           </div>
 
           {/* Filter Bar */}
-          <div className="bg-white rounded border border-gray-200 shadow-sm px-4 py-3 mb-6">
+          <div className="bg-neo-surface rounded border border-neo-border shadow-sm px-4 py-3 mb-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
               {/* Year */}
               <div className="flex flex-col">
-                <label className="text-xs font-medium mb-1 text-gray-600"><T>Year</T></label>
+                <label className="text-xs font-medium mb-1 text-neo-muted"><T>Year</T></label>
                 <select
                   value={selected.year || ""}
                   onChange={(e) => handleFilterChange(e, "year")}
-                  className="text-sm p-2 border border-gray-300 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  className="text-sm p-2 border border-neo-border rounded bg-neo-surface focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">2025</option>
                   {filterData.year.map((value) => (
@@ -196,11 +196,11 @@ const AgroMetAdvisory = () => {
 
               {/* Season */}
               <div className="flex flex-col">
-                <label className="text-xs font-medium mb-1 text-gray-600"><T>Season</T></label>
+                <label className="text-xs font-medium mb-1 text-neo-muted"><T>Season</T></label>
                 <select
                   value={selected.season || ""}
                   onChange={(e) => handleFilterChange(e, "season")}
-                  className="text-sm p-2 border border-gray-300 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  className="text-sm p-2 border border-neo-border rounded bg-neo-surface focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">Select Season</option>
                   {filterData.season.map((value) => (
@@ -211,11 +211,11 @@ const AgroMetAdvisory = () => {
 
               {/* Region */}
               <div className="flex flex-col">
-                <label className="text-xs font-medium mb-1 text-gray-600"><T>Region</T></label>
+                <label className="text-xs font-medium mb-1 text-neo-muted"><T>Region</T></label>
                 <select
                   value={selected.region || ""}
                   onChange={(e) => handleFilterChange(e, "region")}
-                  className="text-sm p-2 border border-gray-300 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  className="text-sm p-2 border border-neo-border rounded bg-neo-surface focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">Select Region</option>
                   {filterData.region.map((value) => (
@@ -226,11 +226,11 @@ const AgroMetAdvisory = () => {
 
               {/* District */}
               <div className="flex flex-col">
-                <label className="text-xs font-medium mb-1 text-gray-600"><T>District</T></label>
+                <label className="text-xs font-medium mb-1 text-neo-muted"><T>District</T></label>
                 <select
                   value={selected.district || ""}
                   onChange={(e) => handleFilterChange(e, "district")}
-                  className="text-sm p-2 border border-gray-300 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  className="text-sm p-2 border border-neo-border rounded bg-neo-surface focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-neo-bg disabled:cursor-not-allowed"
                   disabled={!selected.region}
                 >
                   <option value="">{selected.region ? "Select District" : "Select Region First"}</option>
@@ -251,11 +251,11 @@ const AgroMetAdvisory = () => {
 
               {/* Commodity */}
               <div className="flex flex-col">
-                <label className="text-xs font-medium mb-1 text-gray-600"><T>Commodity</T></label>
+                <label className="text-xs font-medium mb-1 text-neo-muted"><T>Commodity</T></label>
                 <select
                   value={selected.crop || ""}
                   onChange={(e) => handleFilterChange(e, "crop")}
-                  className="text-sm p-2 border border-gray-300 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  className="text-sm p-2 border border-neo-border rounded bg-neo-surface focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-neo-bg disabled:cursor-not-allowed"
                   disabled={!selected.region}
                 >
                   <option value="">Select Commodity</option>
@@ -295,7 +295,7 @@ const AgroMetAdvisory = () => {
                   currentActivity={{ activity_stage: selectedActivityData?.activity || selectedAdvisory.title, name: selectedActivityData?.activity || selectedAdvisory.title }}
                   onSelectActivity={handleSelectActivity}
                 />
-                <div className="flex-1 min-w-0 p-6 bg-white border border-gray-200 border-l-0 rounded-r-lg">
+                <div className="flex-1 min-w-0 p-6 bg-neo-surface border border-neo-border border-l-0 rounded-r-lg">
                   <AdvisoryHeader advisory={{
                     ...selectedAdvisory,
                     activity_stage: selectedActivityData?.activity || selectedAdvisory.title,
@@ -329,7 +329,7 @@ const AgroMetAdvisory = () => {
               </div>
 
               {/* Mobile: Content only (sidebar strip already rendered above) */}
-              <div className="lg:hidden p-4 bg-white border border-gray-200 rounded-lg">
+              <div className="lg:hidden p-4 bg-neo-surface border border-neo-border rounded-lg">
                 <AdvisoryHeader advisory={{
                   ...selectedAdvisory,
                   activity_stage: selectedActivityData?.activity || selectedAdvisory.title,
@@ -363,15 +363,15 @@ const AgroMetAdvisory = () => {
             </div>
           ) : !loadingWeekly && showAdvisory && (
             /* No Data State */
-            <div className="text-center py-16 bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-              <div className="text-gray-400 text-5xl mb-4">📋</div>
-              <div className="text-gray-600 text-lg mb-2 font-semibold">
+            <div className="text-center py-16 bg-neo-surface rounded-lg shadow-sm border border-neo-border mb-6">
+              <div className="text-neo-muted text-5xl mb-4">📋</div>
+              <div className="text-neo-muted text-lg mb-2 font-semibold">
                 <T>No advisory data available</T>
               </div>
-              <p className="text-gray-500 mb-2">
-                <T>No advisory data found for</T> <span className="font-medium text-gray-700">{selected.crop}</span> <T>in</T> <span className="font-medium text-gray-700">{selected.district}</span> <T>district.</T>
+              <p className="text-neo-muted mb-2">
+                <T>No advisory data found for</T> <span className="font-medium text-neo-text">{selected.crop}</span> <T>in</T> <span className="font-medium text-neo-text">{selected.district}</span> <T>district.</T>
               </p>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-neo-muted">
                 <T>Advisory data is uploaded by administrators through the dashboard.</T>
               </p>
             </div>

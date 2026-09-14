@@ -1,0 +1,19 @@
+# Datasets are large and come from Kaggle; nobody should commit them.
+# `data/*` rather than `data/`, because git cannot re-include a file inside an
+# excluded directory, and the collection protocol below has to be committed.
+data/*
+!data/FIELD_COLLECTION.md
+
+# Model binaries are build outputs. The one the app ships lives at
+# mobile/assets/models/cassava.tflite and is committed there deliberately,
+# because the app cannot run without it.
+models/*
+!models/.gitkeep
+!models/labels.json
+# Measured results, not a build output: the report cites these numbers.
+!models/metrics.json
+
+.venv/
+
+__pycache__/
+*.pyc

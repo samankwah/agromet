@@ -28,7 +28,7 @@ const SMSSection = ({ smsText }) => {
         {/* Header */}
         <div className="flex items-center justify-between mb-4 pb-3 border-b border-sky-200">
           <div className="flex items-center gap-3">
-            <div className="flex-shrink-0 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm">
+            <div className="flex-shrink-0 w-10 h-10 bg-neo-surface rounded-full flex items-center justify-center shadow-sm">
               <FaSms className="text-sky-600 text-lg" />
             </div>
             <div>
@@ -64,13 +64,13 @@ const SMSSection = ({ smsText }) => {
         </div>
 
         {/* SMS Text */}
-        <div className="bg-white rounded-lg p-4 border border-sky-200 shadow-sm">
+        <div className="bg-neo-surface rounded-lg p-4 border border-sky-200 shadow-sm">
           {smsText && smsText.trim() !== '' && smsText.trim() !== '-' ? (
-            <p className="text-sm text-slate-700 font-mono leading-relaxed">
+            <p className="text-sm text-neo-text font-mono leading-relaxed">
               {smsText}
             </p>
           ) : (
-            <p className="text-sm text-slate-400 italic">
+            <p className="text-sm text-neo-muted italic">
               <T>No SMS text available for this advisory</T>
             </p>
           )}

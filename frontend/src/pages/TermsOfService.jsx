@@ -48,13 +48,13 @@ const TermsOfService = () => {
         <div className="max-w-4xl mx-auto px-6 lg:px-8 pt-28 pb-20 relative">
           <Breadcrumb />
           <header className="mb-12 text-center">
-            <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight mb-4">
+            <h1 className="text-4xl lg:text-5xl font-bold text-neo-text tracking-tight mb-4">
               <T>Terms of Service</T>
             </h1>
-            <p className="text-sm text-slate-500 mb-6">
+            <p className="text-sm text-neo-muted mb-6">
               <T>Last updated: April 2026</T>
             </p>
-            <p className="text-base text-slate-600 leading-relaxed max-w-2xl mx-auto">
+            <p className="text-base text-neo-muted leading-relaxed max-w-2xl mx-auto">
               <T>
                 Welcome to AgroMet. Please read these Terms of Service carefully
                 before using our platform.
@@ -62,20 +62,20 @@ const TermsOfService = () => {
             </p>
           </header>
 
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200 shadow-sm p-8 lg:p-12 space-y-10">
+          <div className="neo-surface p-8 lg:p-12 space-y-10">
             {sections.map(({ icon: Icon, title, body, list }) => (
               <section key={title}>
-                <h2 className="text-2xl font-semibold text-slate-900 mb-3 flex items-center gap-3">
+                <h2 className="text-2xl font-semibold text-neo-text mb-3 flex items-center gap-3">
                   <span className="inline-flex w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 items-center justify-center">
                     <Icon className="w-5 h-5" />
                   </span>
                   <T>{title}</T>
                 </h2>
-                <p className="text-base text-slate-600 leading-relaxed">
+                <p className="text-base text-neo-muted leading-relaxed">
                   <T>{body}</T>
                 </p>
                 {list && (
-                  <ul className="mt-3 space-y-2 text-slate-600">
+                  <ul className="mt-3 space-y-2 text-neo-muted">
                     {list.map((item) => (
                       <li key={item} className="flex items-start gap-2">
                         <span className="mt-2 w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
@@ -89,17 +89,17 @@ const TermsOfService = () => {
               </section>
             ))}
 
-            <section className="pt-8 border-t border-slate-200">
-              <h2 className="text-2xl font-semibold text-slate-900 mb-4">
+            <section className="pt-8 border-t border-neo-border">
+              <h2 className="text-2xl font-semibold text-neo-text mb-4">
                 <T>Contact Us</T>
               </h2>
-              <p className="text-base text-slate-600 leading-relaxed mb-4">
+              <p className="text-base text-neo-muted leading-relaxed mb-4">
                 <T>
                   If you have any questions about these Terms of Service, please
                   contact us:
                 </T>
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 text-slate-700">
+              <div className="flex flex-col sm:flex-row gap-4 text-neo-text">
                 <a
                   href="mailto:agromet@gmail.com"
                   className="inline-flex items-center gap-2 hover:text-emerald-700 transition-colors"

@@ -37,7 +37,7 @@ const MessageBubble = ({
     return text
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/`(.*?)`/g, '<code class="bg-white/70 px-1 py-0.5 rounded text-sm">$1</code>')
+      .replace(/`(.*?)`/g, '<code class="bg-neo-surface/70 px-1 py-0.5 rounded text-sm">$1</code>')
       .replace(/\n/g, '<br />');
   };
 
@@ -88,7 +88,7 @@ const MessageBubble = ({
         <div
           className={`rounded-neo px-3 sm:px-4 md:px-5 py-2 sm:py-3 md:py-4 ${
             isUser
-              ? 'bg-neo-teal text-white ml-auto shadow-neo-soft'
+              ? 'ml-auto bg-neo-teal text-neo-on-teal'
               : 'neo-inset text-neo-text'
           }`}
         >

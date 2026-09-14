@@ -3,11 +3,11 @@ import PropTypes from "prop-types";
 const joinClasses = (...classes) => classes.filter(Boolean).join(" ");
 
 const toneClasses = {
-  slate: "bg-slate-200/90",
-  light: "bg-white/70",
+  slate: "bg-neo-border/50",
+  light: "bg-neo-surface/70",
   blue: "bg-blue-100/80",
   emerald: "bg-emerald-100/80",
-  neo: "bg-white/55",
+  neo: "bg-neo-surface/55",
 };
 
 export const SkeletonBlock = ({
@@ -55,15 +55,15 @@ export const TableSkeleton = ({
   className = "",
   showHeader = true,
 }) => (
-  <div className={joinClasses("overflow-hidden rounded-xl border border-slate-200 bg-white", className)}>
+  <div className={joinClasses("overflow-hidden rounded-xl border border-neo-border bg-neo-surface", className)}>
     {showHeader && (
-      <div className="grid gap-4 border-b border-slate-100 bg-slate-50 px-4 py-3" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
+      <div className="grid gap-4 border-b border-neo-border/50 bg-neo-bg-soft px-4 py-3" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
         {Array.from({ length: columns }).map((_, index) => (
           <SkeletonBlock key={`table-head-${index}`} className="h-3 w-20 max-w-full" />
         ))}
       </div>
     )}
-    <div className="divide-y divide-slate-100">
+    <div className="divide-y divide-neo-border">
       {Array.from({ length: rows }).map((_, rowIndex) => (
         <div
           key={`table-row-${rowIndex}`}
@@ -134,7 +134,7 @@ export const ForecastSkeleton = ({ className = "", showSearch = true }) => (
           <SkeletonBlock className="h-6 w-40" tone="light" />
           <div className="flex gap-4 overflow-hidden">
             {Array.from({ length: 6 }).map((_, index) => (
-              <div key={`forecast-hour-${index}`} className="min-w-[70px] rounded-lg bg-white/10 p-3">
+              <div key={`forecast-hour-${index}`} className="min-w-[70px] rounded-lg bg-neo-surface/10 p-3">
                 <SkeletonBlock className="mx-auto mb-3 h-4 w-10" tone="light" />
                 <SkeletonBlock className="mx-auto mb-3 h-8 w-8" rounded="rounded-full" tone="light" />
                 <SkeletonBlock className="mx-auto h-4 w-9" tone="light" />
@@ -144,11 +144,11 @@ export const ForecastSkeleton = ({ className = "", showSearch = true }) => (
         </div>
       </div>
 
-      <div className="bg-slate-900/30 p-4">
+      <div className="bg-neo-text/30 p-4">
         <SkeletonBlock className="mb-3 h-5 w-36" tone="light" />
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-7">
           {Array.from({ length: 7 }).map((_, index) => (
-            <div key={`forecast-day-${index}`} className="rounded-lg bg-white/10 p-3">
+            <div key={`forecast-day-${index}`} className="rounded-lg bg-neo-surface/10 p-3">
               <SkeletonBlock className="mx-auto mb-3 h-4 w-12" tone="light" />
               <SkeletonBlock className="mx-auto mb-3 h-8 w-8" rounded="rounded-full" tone="light" />
               <SkeletonBlock className="mx-auto h-4 w-10" tone="light" />
@@ -177,7 +177,7 @@ export const PageSkeleton = ({ className = "" }) => (
       </div>
       <div className="grid gap-4 md:grid-cols-3">
         {Array.from({ length: 3 }).map((_, index) => (
-          <div key={`page-card-${index}`} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div key={`page-card-${index}`} className="rounded-xl border border-neo-border bg-neo-surface p-4 shadow-sm">
             <SkeletonBlock className="mb-4 h-32 w-full" rounded="rounded-lg" />
             <SkeletonBlock className="mb-2 h-5 w-3/4" />
             <SkeletonBlock className="h-4 w-full" />

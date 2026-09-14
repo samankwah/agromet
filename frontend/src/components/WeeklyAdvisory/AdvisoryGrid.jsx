@@ -83,7 +83,7 @@ const AdvisoryGrid = ({ advisory }) => {
       {/* Section Header */}
       <div className="mb-5 flex items-center gap-2">
         <div className="w-1 h-6 bg-gradient-to-b from-green-500 to-emerald-600 rounded-full"></div>
-        <h3 className="text-lg font-bold text-slate-800">Advisory</h3>
+        <h3 className="text-lg font-bold text-neo-text">Advisory</h3>
       </div>
 
       {/* Grid */}

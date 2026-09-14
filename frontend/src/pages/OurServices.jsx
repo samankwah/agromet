@@ -69,10 +69,10 @@ const OurServices = () => {
             <span className="inline-block px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold uppercase tracking-wider mb-4">
               <T>What We Offer</T>
             </span>
-            <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight mb-4">
+            <h1 className="text-4xl lg:text-5xl font-bold text-neo-text tracking-tight mb-4">
               <T>Our Services</T>
             </h1>
-            <p className="text-lg text-slate-600 leading-relaxed max-w-2xl mx-auto">
+            <p className="text-lg text-neo-muted leading-relaxed max-w-2xl mx-auto">
               <T>
                 A complete agrometeorological toolkit — forecasts, advisories,
                 diagnostics, and market intelligence — built for farmers and
@@ -86,15 +86,15 @@ const OurServices = () => {
               <Link
                 key={title}
                 to={to}
-                className="group bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:border-emerald-300 hover:-translate-y-1 p-8 transition-all duration-300"
+                className="neo-surface neo-hover-accent group p-8"
               >
                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center mb-5 shadow-md shadow-emerald-500/20 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
                   <Icon className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-semibold text-slate-900 mb-2">
+                <h3 className="text-xl font-semibold text-neo-text mb-2">
                   <T>{title}</T>
                 </h3>
-                <p className="text-sm text-slate-600 leading-relaxed mb-5">
+                <p className="text-sm text-neo-muted leading-relaxed mb-5">
                   <T>{description}</T>
                 </p>
                 <span className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 group-hover:text-emerald-700">
@@ -119,13 +119,13 @@ const OurServices = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 to="/"
-                className="inline-flex items-center justify-center gap-2 bg-white text-emerald-700 hover:bg-emerald-50 font-semibold px-6 py-3 rounded-lg transition-colors"
+                className="inline-flex items-center justify-center gap-2 bg-neo-surface text-emerald-700 hover:bg-emerald-50 font-semibold px-6 py-3 rounded-lg transition-colors"
               >
                 <T>Explore the App</T>
               </Link>
               <Link
                 to="/contact"
-                className="inline-flex items-center justify-center gap-2 border-2 border-white text-white hover:bg-white hover:text-emerald-700 font-semibold px-6 py-3 rounded-lg transition-colors"
+                className="inline-flex items-center justify-center gap-2 border-2 border-neo-border text-white hover:bg-neo-surface-strong hover:text-emerald-700 font-semibold px-6 py-3 rounded-lg transition-colors"
               >
                 <T>Contact Us</T>
               </Link>

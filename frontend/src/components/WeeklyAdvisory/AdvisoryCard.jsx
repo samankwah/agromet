@@ -65,7 +65,7 @@ const AdvisoryCard = ({ title, icon, advisory, accentColor = 'green' }) => {
   const colors = colorClasses[accentColor] || colorClasses.green;
 
   return (
-    <div className="bg-white rounded-lg border border-slate-200 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 overflow-hidden h-full flex flex-col">
+    <div className="bg-neo-surface rounded-lg border border-neo-border shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 overflow-hidden h-full flex flex-col">
       {/* Card Header */}
       <div className={`bg-gradient-to-r ${colors.header} px-4 py-3`}>
         <h4 className="text-white font-bold text-sm uppercase tracking-wide text-center">
@@ -88,7 +88,7 @@ const AdvisoryCard = ({ title, icon, advisory, accentColor = 'green' }) => {
         <div className="flex-1">
           {advisory && advisory.trim() !== '-' && advisory.trim() !== '' ? (
             <>
-              <p className="text-slate-700 text-sm leading-relaxed text-center">
+              <p className="text-neo-text text-sm leading-relaxed text-center">
                 {advisory}
               </p>
               <div className="flex justify-center mt-3">
@@ -96,7 +96,7 @@ const AdvisoryCard = ({ title, icon, advisory, accentColor = 'green' }) => {
               </div>
             </>
           ) : (
-            <p className="text-slate-400 text-sm italic text-center">
+            <p className="text-neo-muted text-sm italic text-center">
               <T>No specific advisory for this parameter</T>
             </p>
           )}

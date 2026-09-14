@@ -65,7 +65,7 @@ const ChatbotWidget = ({ userContext = {} }) => {
             {/* New message indicator */}
             {hasNewMessage && (
               <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-                <div className="w-2 h-2 bg-white rounded-full"></div>
+                <div className="w-2 h-2 bg-neo-surface rounded-full"></div>
               </div>
             )}
             
@@ -79,7 +79,7 @@ const ChatbotWidget = ({ userContext = {} }) => {
           {!isMinimized && isAnimating && (
             <div className="neo-surface-soft absolute bottom-16 right-0 max-w-xs p-3">
               <div className="flex items-start space-x-2">
-                <div className="w-8 h-8 bg-neo-accent rounded-full flex items-center justify-center text-white text-sm">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-neo-accent text-sm text-neo-on-accent">
                   🤖
                 </div>
                 <div className="flex-1">
@@ -108,7 +108,7 @@ const ChatbotWidget = ({ userContext = {} }) => {
             {/* New message indicator */}
             {hasNewMessage && (
               <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-                <div className="w-2 h-2 bg-white rounded-full"></div>
+                <div className="w-2 h-2 bg-neo-surface rounded-full"></div>
               </div>
             )}
           </button>

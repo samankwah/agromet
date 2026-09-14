@@ -196,7 +196,7 @@ const DashboardStats = ({ agriculturalStats, recentUploads, onNavigate }) => {
   const renderMetricCard = (title, value, icon, subtitle, status = 'good') => (
     <div className="neo-table-shell p-4 hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between mb-2">
-        <div className="text-2xl text-gray-400">{icon}</div>
+        <div className="text-2xl text-neo-muted">{icon}</div>
         <div className={`px-2 py-1 rounded-full text-xs font-medium ${
           status === 'good' ? 'bg-green-100 text-green-800' :
           status === 'warning' ? 'bg-yellow-100 text-yellow-800' :
@@ -207,9 +207,9 @@ const DashboardStats = ({ agriculturalStats, recentUploads, onNavigate }) => {
           {status.toUpperCase()}
         </div>
       </div>
-      <div className="text-2xl font-bold text-gray-900 mb-1">{value}</div>
-      <div className="text-sm text-gray-600">{title}</div>
-      {subtitle && <div className="text-xs text-gray-500 mt-1">{subtitle}</div>}
+      <div className="text-2xl font-bold text-neo-text mb-1">{value}</div>
+      <div className="text-sm text-neo-muted">{title}</div>
+      {subtitle && <div className="text-xs text-neo-muted mt-1">{subtitle}</div>}
     </div>
   );
 
@@ -217,7 +217,7 @@ const DashboardStats = ({ agriculturalStats, recentUploads, onNavigate }) => {
     return (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, index) => (
-          <div key={`dashboard-stat-skeleton-${index}`} className="rounded-xl border border-gray-200 bg-white p-5">
+          <div key={`dashboard-stat-skeleton-${index}`} className="rounded-xl border border-neo-border bg-neo-surface p-5">
             <SkeletonBlock className="mb-4 h-10 w-10" rounded="rounded-full" tone="emerald" />
             <SkeletonBlock className="mb-3 h-7 w-20" />
             <SkeletonBlock className="h-4 w-32" />
@@ -327,36 +327,36 @@ const DashboardStats = ({ agriculturalStats, recentUploads, onNavigate }) => {
         {/* Recent Activity */}
         <div className="neo-table-shell p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+            <h3 className="text-lg font-semibold text-neo-text flex items-center">
               <FaTrendUp className="mr-2 text-green-600" />
               Recent Activity
             </h3>
-            <span className="text-sm text-gray-500">Last 7 days</span>
+            <span className="text-sm text-neo-muted">Last 7 days</span>
           </div>
           
           <div className="space-y-3">
             {activityData.length > 0 ? activityData.map((day, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+              <div key={index} className="flex items-center justify-between p-3 bg-neo-bg-soft rounded-md">
                 <div className="flex-1">
                   <div className="flex items-center space-x-2">
                     <FaFileAlt className="text-green-500 text-sm" />
-                    <span className="text-sm font-medium text-gray-900">
+                    <span className="text-sm font-medium text-neo-text">
                       {day.count} upload{day.count !== 1 ? 's' : ''}
                     </span>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-neo-muted">
                       • {day.records} records
                     </span>
                   </div>
-                  <div className="text-xs text-gray-600 mt-1">
+                  <div className="text-xs text-neo-muted mt-1">
                     {day.types.join(', ')}
                   </div>
                 </div>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-neo-muted">
                   {new Date(day.date).toLocaleDateString()}
                 </div>
               </div>
             )) : (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-neo-muted">
                 <FaFileAlt className="mx-auto h-8 w-8 mb-3 opacity-50" />
                 <p className="text-sm">No recent activity</p>
               </div>
@@ -366,7 +366,7 @@ const DashboardStats = ({ agriculturalStats, recentUploads, onNavigate }) => {
 
         {/* Quick Actions */}
         <div className="neo-table-shell p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <h3 className="text-lg font-semibold text-neo-text mb-4 flex items-center">
             <FaChartBar className="mr-2 text-blue-600" />
             Quick Actions
           </h3>
@@ -421,14 +421,14 @@ const DashboardStats = ({ agriculturalStats, recentUploads, onNavigate }) => {
 
       {/* Data Health Summary */}
       <div className="neo-table-shell p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+        <h3 className="text-lg font-semibold text-neo-text mb-4 flex items-center">
           <FaCheckCircle className="mr-2 text-green-600" />
           Data Health Summary
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
-            <h4 className="font-medium text-gray-700 mb-2">Coverage Analysis</h4>
+            <h4 className="font-medium text-neo-text mb-2">Coverage Analysis</h4>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span>Records with Location:</span>
@@ -452,7 +452,7 @@ const DashboardStats = ({ agriculturalStats, recentUploads, onNavigate }) => {
           </div>
           
           <div>
-            <h4 className="font-medium text-gray-700 mb-2">Content Breakdown</h4>
+            <h4 className="font-medium text-neo-text mb-2">Content Breakdown</h4>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span>Crop Calendars:</span>
@@ -477,7 +477,7 @@ const DashboardStats = ({ agriculturalStats, recentUploads, onNavigate }) => {
           </div>
           
           <div>
-            <h4 className="font-medium text-gray-700 mb-2">Recent Activity</h4>
+            <h4 className="font-medium text-neo-text mb-2">Recent Activity</h4>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span>Updated This Month:</span>

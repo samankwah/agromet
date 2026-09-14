@@ -44,3 +44,8 @@ firebase-debug.log
 # stays here so it can sit beside the backend it talks to during
 # development, but its history belongs to that repo, not this one.
 mobile/
+
+# Raw multi-decade download cache for the hazard climatology bake.
+# Regenerable via `python -m backend.scripts.build_hazard_climatology`;
+# only the fitted hazard_climatology.json is committed.
+backend/app/data/.climatology_cache.json

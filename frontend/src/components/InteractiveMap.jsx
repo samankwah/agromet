@@ -220,14 +220,14 @@ const RegionInfoPanel = ({ selectedRegion, selectedDistrict, onClose }) => {
   const regionData = selectedRegion ? GHANA_REGIONS[selectedRegion] : null;
 
   return (
-    <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg p-4 z-[1000] max-w-sm">
+    <div className="absolute top-4 right-4 bg-neo-surface rounded-lg shadow-lg p-4 z-[1000] max-w-sm">
       <div className="flex justify-between items-start mb-3">
-        <h3 className="text-lg font-bold text-gray-800">
+        <h3 className="text-lg font-bold text-neo-text">
           {selectedDistrict ? selectedDistrict.name : selectedRegion}
         </h3>
         <button
           onClick={onClose}
-          className="text-gray-500 hover:text-gray-700 text-xl"
+          className="text-neo-muted hover:text-neo-text text-xl"
         >
           ×
         </button>
@@ -246,11 +246,11 @@ const RegionInfoPanel = ({ selectedRegion, selectedDistrict, onClose }) => {
           <p><strong>Population:</strong> {regionData.population}</p>
           <p><strong>Agro-Zone:</strong> {regionData.agroZone}</p>
           <p><strong>Major Crops:</strong> {regionData.majorCrops.join(', ')}</p>
-          <p className="text-sm text-gray-600">{regionData.description}</p>
+          <p className="text-sm text-neo-muted">{regionData.description}</p>
         </div>
       )}
 
-      <div className="mt-3 pt-3 border-t border-gray-200">
+      <div className="mt-3 pt-3 border-t border-neo-border">
         <button
           className="text-blue-600 hover:text-blue-800 text-sm font-medium"
           onClick={() => window.open(`https://en.wikipedia.org/wiki/${encodeURIComponent(selectedRegion || selectedDistrict?.region)}_Region`, '_blank')}
@@ -332,7 +332,7 @@ const InteractiveMap = ({
 
   if (loading) {
     return (
-      <div className="w-full h-96 flex items-center justify-center bg-gray-100 rounded-lg">
+      <div className="w-full h-96 flex items-center justify-center bg-neo-bg rounded-lg">
         <div className="w-full max-w-sm space-y-4 px-6">
           <SkeletonBlock className="mx-auto h-28 w-24" rounded="rounded-full" tone="blue" />
           <SkeletonBlock className="mx-auto h-4 w-44" />
@@ -399,7 +399,7 @@ const InteractiveMap = ({
               <Popup>
                 <div className="p-2">
                   <h4 className="font-bold text-sm">{district.name}</h4>
-                  <p className="text-xs text-gray-600">Region: {district.region}</p>
+                  <p className="text-xs text-neo-muted">Region: {district.region}</p>
                   {regionInfo && (
                     <div className="mt-2 text-xs">
                       <p><strong>Agro-Zone:</strong> {regionInfo.agroZone}</p>
@@ -424,7 +424,7 @@ const InteractiveMap = ({
             <Popup>
               <div className="p-2">
                 <h4 className="font-bold">{regionName} Region</h4>
-                <p className="text-sm text-gray-600">{regionData.description}</p>
+                <p className="text-sm text-neo-muted">{regionData.description}</p>
                 <p className="text-xs mt-1">
                   <strong>Population:</strong> {regionData.population}
                 </p>
@@ -445,7 +445,7 @@ const InteractiveMap = ({
       />
 
       {/* Map Legend */}
-      <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-3 z-[1000]">
+      <div className="absolute bottom-4 left-4 bg-neo-surface rounded-lg shadow-lg p-3 z-[1000]">
         <h4 className="font-bold text-sm mb-2">Map Legend</h4>
         <div className="space-y-1 text-xs">
           <div className="flex items-center space-x-2">
@@ -456,19 +456,19 @@ const InteractiveMap = ({
             <div className="w-3 h-3 bg-red-500"></div>
             <span>Regional Centers</span>
           </div>
-          <p className="text-gray-600 mt-2">Click on markers for details</p>
+          <p className="text-neo-muted mt-2">Click on markers for details</p>
         </div>
       </div>
 
       {/* Region Selector */}
-      <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-3 z-[1000] max-w-48">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+      <div className="absolute top-4 left-4 bg-neo-surface rounded-lg shadow-lg p-3 z-[1000] max-w-48">
+        <label className="block text-sm font-medium text-neo-text mb-2">
           Select Region:
         </label>
         <select
           value={selectedRegion || ''}
           onChange={(e) => handleRegionClick(e.target.value)}
-          className="w-full text-xs border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full text-xs border border-neo-border rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="">All Regions</option>
           {Object.keys(GHANA_REGIONS).map(region => (
@@ -478,7 +478,7 @@ const InteractiveMap = ({
         
         {selectedRegion && districtsByRegion[selectedRegion] && (
           <div className="mt-2">
-            <label className="block text-xs font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-medium text-neo-text mb-1">
               Districts ({districtsByRegion[selectedRegion].length}):
             </label>
             <div className="max-h-32 overflow-y-auto text-xs space-y-1">

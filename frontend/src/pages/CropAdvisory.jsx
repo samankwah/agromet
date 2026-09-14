@@ -330,13 +330,13 @@ const AdvisoryPage = () => {
           <span className="inline-block px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold uppercase tracking-wider mb-4">
             <T>Crop Advisory</T>
           </span>
-          <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight mb-4">
+          <h1 className="text-4xl lg:text-5xl font-bold text-neo-text tracking-tight mb-4">
             <T>Agro-Characteristics Advisory for</T>{" "}
             <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
               <T>Ghana</T>
             </span>
           </h1>
-          <p className="text-slate-600 text-lg max-w-3xl mx-auto">
+          <p className="text-neo-muted text-lg max-w-3xl mx-auto">
             <T>Stay informed about the best practices for crop production in
             Ghana’s tropical climate. Get advice on soil preparation,
             irrigation, pest control, and planting based on the local crop
@@ -346,23 +346,23 @@ const AdvisoryPage = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {/* Season: Major Rainy Season */}
-          <div className="bg-white/80 backdrop-blur-sm border border-slate-200 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all rounded-2xl p-6">
+          <div className="neo-surface neo-hover-accent p-6">
             <FaSeedling className="text-emerald-600 text-3xl mb-4" />
-            <h2 className="text-xl font-semibold text-slate-900 mb-2">
+            <h2 className="text-xl font-semibold text-neo-text mb-2">
               <T>Major Rainy Season, Southern Ghana (March - July)</T>
             </h2>
-            <p className="text-gray-700">
+            <p className="text-neo-text">
               <T>Recommended crops: Maize, Rice, Cassava. The start of the major
               rainy season is the optimal time to plant maize and rice. Ensure
               proper land preparation and consider organic fertilizers.</T>
             </p>
           </div>
-          <div className="bg-white/80 backdrop-blur-sm border border-slate-200 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all rounded-2xl p-6">
+          <div className="neo-surface neo-hover-accent p-6">
             <FaSeedling className="text-emerald-600 text-3xl mb-4" />
-            <h2 className="text-xl font-semibold text-slate-900 mb-2">
+            <h2 className="text-xl font-semibold text-neo-text mb-2">
               <T>Northern Rainy Season (May - October)</T>
             </h2>
-            <p className="text-gray-700">
+            <p className="text-neo-text">
               <T>Recommended crops: Maize, Rice, Sorghum, Cowpea, Peanut, Soyabean.
               The start of the major rainy season is the optimal time to plant
               maize and rice. Ensure proper land preparation and consider
@@ -371,12 +371,12 @@ const AdvisoryPage = () => {
           </div>
 
           {/* Season: Minor Rainy Season */}
-          <div className="bg-white/80 backdrop-blur-sm border border-slate-200 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all rounded-2xl p-6">
+          <div className="neo-surface neo-hover-accent p-6">
             <FaWater className="text-emerald-600 text-3xl mb-4" />
-            <h2 className="text-xl font-semibold text-slate-900 mb-2">
+            <h2 className="text-xl font-semibold text-neo-text mb-2">
               <T>Minor Rainy Season (September - November)</T>
             </h2>
-            <p className="text-gray-700">
+            <p className="text-neo-text">
               <T>Recommended crops: Vegetables (Tomatoe, Pepper), Groundnut, Yam.
               Take advantage of the shorter rainy season to plant vegetables and
               short-cycle crops like groundnuts and yams.</T>
@@ -384,12 +384,12 @@ const AdvisoryPage = () => {
           </div>
 
           {/* Season: Dry Season */}
-          <div className="bg-white/80 backdrop-blur-sm border border-slate-200 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all rounded-2xl p-6">
+          <div className="neo-surface neo-hover-accent p-6">
             <FaSun className="text-amber-500 text-3xl mb-4" />
-            <h2 className="text-xl font-semibold text-slate-900 mb-2">
+            <h2 className="text-xl font-semibold text-neo-text mb-2">
               <T>Dry Season (December - March)</T>
             </h2>
-            <p className="text-gray-700">
+            <p className="text-neo-text">
               <T>Recommended tasks: Irrigation for vegetables (onion, carrot), Land
               preparation for the next rainy season. Use irrigation systems
               during the dry season to sustain vegetable growth.</T>
@@ -398,10 +398,10 @@ const AdvisoryPage = () => {
         </div>
         {/* Advisory Cards */}
         <div className="text-center py-8">
-          <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight mb-3">
+          <h2 className="text-3xl lg:text-4xl font-bold text-neo-text tracking-tight mb-3">
             <T>Crop Advisory</T>
           </h2>
-          <p className="text-slate-600">
+          <p className="text-neo-muted">
             <T>Get specific guidance on maize and rice farming in Ghana.</T>
           </p>
         </div>
@@ -413,7 +413,7 @@ const AdvisoryPage = () => {
               className={`px-6 py-3 rounded-lg font-semibold transition-colors w-full md:w-auto ${
                 selectedCrop === "maize"
                   ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                  : "bg-white border border-slate-300 text-slate-700 hover:border-emerald-600 hover:text-emerald-700"
+                  : "bg-neo-surface border border-neo-border text-neo-text hover:border-emerald-600 hover:text-emerald-700"
               }`}
               onClick={() => handleCropChange("maize")}
             >
@@ -423,7 +423,7 @@ const AdvisoryPage = () => {
               className={`px-6 py-3 rounded-lg font-semibold transition-colors w-full md:w-auto ${
                 selectedCrop === "rice"
                   ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                  : "bg-white border border-slate-300 text-slate-700 hover:border-emerald-600 hover:text-emerald-700"
+                  : "bg-neo-surface border border-neo-border text-neo-text hover:border-emerald-600 hover:text-emerald-700"
               }`}
               onClick={() => handleCropChange("rice")}
             >
@@ -467,13 +467,13 @@ const AdvisoryPage = () => {
           {advisoryData[selectedCrop].stages.map((stage, index) => (
             <div
               key={index}
-              className="p-6 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl shadow-sm hover:shadow-md hover:border-emerald-300 transition-all text-center"
+              className="neo-surface neo-hover-accent p-6 text-center"
             >
               <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 text-2xl flex items-center justify-center mx-auto mb-4">{stage.icon}</div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">
+              <h3 className="text-lg font-semibold text-neo-text mb-2">
                 {stage.title}
               </h3>
-              <p className="text-slate-600 text-sm">{stage.advice}</p>
+              <p className="text-neo-muted text-sm">{stage.advice}</p>
               <button
                 className="mt-3 text-sm font-semibold text-emerald-700 hover:text-emerald-800"
                 onClick={() => handleShowDetails(stage)}
@@ -505,10 +505,10 @@ const AdvisoryPage = () => {
 
         <div className="mb-4">
           <div className="mt-12 text-center">
-            <h3 className="text-2xl font-semibold text-slate-900 mb-4">
+            <h3 className="text-2xl font-semibold text-neo-text mb-4">
               <T>Need More Advice?</T>
             </h3>
-            <p className="text-slate-600 mb-6">
+            <p className="text-neo-muted mb-6">
               <T>Reach out to our agricultural experts for personalized advice
               tailored to Ghana climate and your specific region.</T>
             </p>
@@ -528,7 +528,7 @@ const AdvisoryPage = () => {
             {/* Email Button */}
             <a
               href="mailto:stephen.amankwah@meteo.gov.gh"
-              className="inline-flex items-center justify-center gap-2 border border-slate-300 hover:border-emerald-600 hover:text-emerald-700 text-slate-700 font-semibold px-6 py-3 rounded-lg transition-colors"
+              className="inline-flex items-center justify-center gap-2 border border-neo-border hover:border-emerald-600 hover:text-emerald-700 text-neo-text font-semibold px-6 py-3 rounded-lg transition-colors"
             >
               <FaEnvelope />
               <T>Email an Expert</T>
@@ -538,10 +538,10 @@ const AdvisoryPage = () => {
           {modalData && (
             <Modal title={modalData.title} onClose={handleCloseModal}>
               <div className="p-4">
-                <h3 className="text-lg font-bold text-slate-900 mb-6">
+                <h3 className="text-lg font-bold text-neo-text mb-6">
                   {modalData.title}
                 </h3>
-                <p className="text-slate-600">{modalData.details}</p>
+                <p className="text-neo-muted">{modalData.details}</p>
               </div>
             </Modal>
           )}

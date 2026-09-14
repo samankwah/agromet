@@ -27,15 +27,15 @@ const Sidebar = ({ activePage, onNavigate }) => {
   const navButtonClass = (active) =>
     `w-full flex items-center px-4 py-3 text-sm rounded-full transition-all ${
       active
-        ? "bg-neo-bg text-neo-accent-strong shadow-neo-pressed"
-        : "text-neo-muted hover:bg-white/55 hover:text-neo-accent-strong hover:shadow-neo-soft"
+        ? "bg-neo-bg text-neo-accent-strong shadow-neo-active"
+        : "text-neo-muted hover:bg-neo-surface-strong/70 hover:text-neo-accent-strong"
     }`;
 
   const parentButtonClass = (active) =>
     `w-full flex items-center justify-between px-4 py-3 text-sm rounded-full transition-all ${
       active
-        ? "bg-neo-bg text-neo-accent-strong shadow-neo-pressed"
-        : "text-neo-muted hover:bg-white/55 hover:text-neo-accent-strong hover:shadow-neo-soft"
+        ? "bg-neo-bg text-neo-accent-strong shadow-neo-active"
+        : "text-neo-muted hover:bg-neo-surface-strong/70 hover:text-neo-accent-strong"
     }`;
 
   return (

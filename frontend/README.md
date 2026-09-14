@@ -86,11 +86,11 @@ cp .env.example .env
 
 ### Development
 
-```bash
+```powershell
 npm run dev
 ```
 
-App runs at `http://localhost:5173` by default.
+App runs at `http://localhost:3000` by default.
 
 ### Production Build
 

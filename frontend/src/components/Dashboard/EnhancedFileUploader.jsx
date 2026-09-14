@@ -51,7 +51,7 @@ const EnhancedFileUploader = ({
       case "jpg": case "jpeg": case "png": case "gif": 
         return <FaFileImage className="text-blue-500" />;
       case "csv": return <FaFileCsv className="text-green-500" />;
-      case "txt": return <FaFileAlt className="text-gray-500" />;
+      case "txt": return <FaFileAlt className="text-neo-muted" />;
       case "xlsx": case "xls": return <FaFileExcel className="text-green-700" />;
       default: return <FaFile />;
     }
@@ -298,13 +298,13 @@ const EnhancedFileUploader = ({
   return (
     <div className={`neo-table-shell-lg ${className}`}>
       {/* Header */}
-      <div className="p-6 border-b border-gray-200">
+      <div className="p-6 border-b border-neo-border">
         <div className="flex justify-between items-center">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-semibold text-neo-text">
               Upload {title}
             </h3>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-neo-muted mt-1">
               Upload Excel/CSV files containing {title.toLowerCase()} data
             </p>
           </div>
@@ -327,7 +327,7 @@ const EnhancedFileUploader = ({
           className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
             dragActive 
               ? 'border-green-500 bg-green-50' 
-              : 'border-gray-300 hover:border-green-400'
+              : 'border-neo-border hover:border-green-400'
           }`}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
@@ -344,15 +344,15 @@ const EnhancedFileUploader = ({
           />
 
           <div className="space-y-4">
-            <div className="mx-auto w-12 h-12 text-gray-400">
+            <div className="mx-auto w-12 h-12 text-neo-muted">
               <FaUpload className="w-full h-full" />
             </div>
             
             <div>
-              <p className="text-lg font-medium text-gray-900">
+              <p className="text-lg font-medium text-neo-text">
                 {dragActive ? 'Drop files here' : 'Drag and drop files here'}
               </p>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-neo-muted">
                 or{' '}
                 <button
                   onClick={() => fileInputRef.current?.click()}
@@ -363,7 +363,7 @@ const EnhancedFileUploader = ({
               </p>
             </div>
 
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-neo-muted">
               <p>Accepted formats: {acceptedTypes.join(', ')}</p>
               <p>Maximum file size: {formatFileSize(maxFileSize)}</p>
               {allowMultiple && <p>Multiple files allowed</p>}
@@ -374,7 +374,7 @@ const EnhancedFileUploader = ({
         {/* File List */}
         {files.length > 0 && (
           <div className="mt-6">
-            <h4 className="text-sm font-medium text-gray-900 mb-4">
+            <h4 className="text-sm font-medium text-neo-text mb-4">
               Files to Upload ({files.length})
             </h4>
             
@@ -382,7 +382,7 @@ const EnhancedFileUploader = ({
               {files.map((fileItem) => (
                 <div
                   key={fileItem.id}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-md"
+                  className="flex items-center justify-between p-3 bg-neo-bg-soft rounded-md"
                 >
                   <div className="flex items-center flex-1 min-w-0">
                     <div className="flex-shrink-0 mr-3">
@@ -390,10 +390,10 @@ const EnhancedFileUploader = ({
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
+                      <p className="text-sm font-medium text-neo-text truncate">
                         {fileItem.name}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-neo-muted">
                         {formatFileSize(fileItem.size)}
                       </p>
                     </div>
@@ -420,7 +420,7 @@ const EnhancedFileUploader = ({
                   {fileItem.status === 'ready' && (
                     <button
                       onClick={() => removeFile(fileItem.id)}
-                      className="ml-2 p-1 text-gray-400 hover:text-red-500"
+                      className="ml-2 p-1 text-neo-muted hover:text-red-500"
                     >
                       <FaTimes />
                     </button>
@@ -432,13 +432,13 @@ const EnhancedFileUploader = ({
             {/* Upload Progress */}
             {uploading && (
               <div className="mt-4">
-                <div className="flex justify-between text-sm text-gray-600 mb-2">
+                <div className="flex justify-between text-sm text-neo-muted mb-2">
                   <span>Uploading files...</span>
                   <span>
                     {files.filter(f => f.status === 'success').length} of {files.length} completed
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-neo-border/30 rounded-full h-2">
                   <div
                     className="bg-green-600 h-2 rounded-full transition-all duration-300"
                     style={{
@@ -500,7 +500,7 @@ const EnhancedFileUploader = ({
         {/* Upload Results */}
         {uploadResults.length > 0 && (
           <div className="mt-6">
-            <h4 className="text-sm font-medium text-gray-900 mb-4">Upload Results</h4>
+            <h4 className="text-sm font-medium text-neo-text mb-4">Upload Results</h4>
             <div className="space-y-2">
               {uploadResults.map((result) => (
                 <div

@@ -200,21 +200,21 @@ const ContentManager = ({ dataType, title }) => {
 
   const renderTableView = () => (
     <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
+      <table className="min-w-full divide-y divide-neo-border">
+        <thead className="bg-neo-bg-soft">
           <tr>
             <th className="px-6 py-3 text-left">
               <input
                 type="checkbox"
                 checked={selectedItems.length === filteredData.length && filteredData.length > 0}
                 onChange={handleSelectAll}
-                className="rounded border-gray-300"
+                className="rounded border-neo-border"
               />
             </th>
             {filteredData.length > 0 && Object.keys(filteredData[0]).slice(0, 6).map(header => (
               <th
                 key={header}
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                className="px-6 py-3 text-left text-xs font-medium text-neo-muted uppercase tracking-wider cursor-pointer hover:bg-neo-surface-strong"
                 onClick={() => handleSort(header)}
               >
                 <div className="flex items-center space-x-1">
@@ -223,24 +223,24 @@ const ContentManager = ({ dataType, title }) => {
                 </div>
               </th>
             ))}
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-neo-muted uppercase tracking-wider">
               Actions
             </th>
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
+        <tbody className="bg-neo-surface divide-y divide-neo-border">
           {filteredData.slice((pagination.page - 1) * pagination.limit, pagination.page * pagination.limit).map((item) => (
-            <tr key={item.id} className="hover:bg-gray-50">
+            <tr key={item.id} className="hover:bg-neo-surface-strong">
               <td className="px-6 py-4 whitespace-nowrap">
                 <input
                   type="checkbox"
                   checked={selectedItems.includes(item.id)}
                   onChange={() => handleSelectItem(item.id)}
-                  className="rounded border-gray-300"
+                  className="rounded border-neo-border"
                 />
               </td>
               {Object.values(item).slice(0, 6).map((value, index) => (
-                <td key={index} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td key={index} className="px-6 py-4 whitespace-nowrap text-sm text-neo-text">
                   {safeRenderForTable(value, 'truncated', 50)}
                 </td>
               ))}
@@ -270,13 +270,13 @@ const ContentManager = ({ dataType, title }) => {
   const renderCardView = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {filteredData.slice((pagination.page - 1) * pagination.limit, pagination.page * pagination.limit).map((item) => (
-        <div key={item.id} className="bg-white border rounded-lg shadow-sm p-4">
+        <div key={item.id} className="bg-neo-surface border rounded-lg shadow-sm p-4">
           <div className="flex items-center justify-between mb-3">
             <input
               type="checkbox"
               checked={selectedItems.includes(item.id)}
               onChange={() => handleSelectItem(item.id)}
-              className="rounded border-gray-300"
+              className="rounded border-neo-border"
             />
             <div className="flex space-x-2">
               <button className="text-blue-600 hover:text-blue-900">
@@ -297,10 +297,10 @@ const ContentManager = ({ dataType, title }) => {
           <div className="space-y-2">
             {Object.entries(item).slice(0, 4).map(([key, value]) => (
               <div key={key} className="flex justify-between">
-                <span className="text-sm font-medium text-gray-500 capitalize">
+                <span className="text-sm font-medium text-neo-muted capitalize">
                   {key.replace(/([A-Z])/g, ' $1').toLowerCase()}:
                 </span>
-                <span className="text-sm text-gray-900">
+                <span className="text-sm text-neo-text">
                   {safeRenderForCard(value)}
                 </span>
               </div>
@@ -322,19 +322,19 @@ const ContentManager = ({ dataType, title }) => {
   return (
     <div className="neo-table-shell">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200">
+      <div className="px-6 py-4 border-b border-neo-border">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium text-gray-900">{title} Management</h3>
+          <h3 className="text-lg font-medium text-neo-text">{title} Management</h3>
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setViewMode(viewMode === "table" ? "cards" : "table")}
-              className="p-2 text-gray-400 hover:text-gray-600"
+              className="p-2 text-neo-muted hover:text-neo-text"
             >
               {viewMode === "table" ? <FaList /> : <FaTable />}
             </button>
             <button
               onClick={exportToCSV}
-              className="flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              className="flex items-center px-3 py-2 border border-neo-border rounded-md text-sm font-medium text-neo-text bg-neo-surface hover:bg-neo-surface-strong"
             >
               <FaDownload className="mr-2" />
               Export
@@ -344,24 +344,24 @@ const ContentManager = ({ dataType, title }) => {
       </div>
 
       {/* Filters */}
-      <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+      <div className="px-6 py-4 border-b border-neo-border bg-neo-bg-soft">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0">
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neo-muted" />
               <input
                 type="text"
                 placeholder="Search..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className="pl-10 pr-4 py-2 border border-neo-border rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
               />
             </div>
             
             <select
               value={filterRegion}
               onChange={(e) => setFilterRegion(e.target.value)}
-              className="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              className="border border-neo-border rounded-md px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500"
             >
               <option value="">All Regions</option>
               {regions.map(region => (
@@ -372,7 +372,7 @@ const ContentManager = ({ dataType, title }) => {
 
           {selectedItems.length > 0 && (
             <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-neo-muted">
                 {selectedItems.length} selected
               </span>
               <button
@@ -391,7 +391,7 @@ const ContentManager = ({ dataType, title }) => {
       <div className="px-6 py-4">
         {filteredData.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-gray-500">No records found.</p>
+            <p className="text-neo-muted">No records found.</p>
           </div>
         ) : (
           <>
@@ -399,7 +399,7 @@ const ContentManager = ({ dataType, title }) => {
             
             {/* Pagination */}
             <div className="flex items-center justify-between mt-6">
-              <div className="text-sm text-gray-700">
+              <div className="text-sm text-neo-text">
                 Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
                 {Math.min(pagination.page * pagination.limit, filteredData.length)} of{" "}
                 {filteredData.length} results
@@ -409,14 +409,14 @@ const ContentManager = ({ dataType, title }) => {
                 <button
                   onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
                   disabled={pagination.page === 1}
-                  className="px-3 py-2 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  className="px-3 py-2 border border-neo-border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neo-surface-strong"
                 >
                   Previous
                 </button>
                 <button
                   onClick={() => setPagination(prev => ({ ...prev, page: Math.min(Math.ceil(filteredData.length / prev.limit), prev.page + 1) }))}
                   disabled={pagination.page >= Math.ceil(filteredData.length / pagination.limit)}
-                  className="px-3 py-2 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  className="px-3 py-2 border border-neo-border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neo-surface-strong"
                 >
                   Next
                 </button>

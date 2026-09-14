@@ -386,7 +386,7 @@ Overall assessment: Current weather conditions are particularly important for we
     <>
       <PageTitle title="Media" />
       <div
-        className="min-h-screen bg-gray-950 mx-auto px-4 py-2 md:px-8 lg:px-12"
+        className="min-h-screen bg-neo-bg mx-auto px-4 py-2 md:px-8 lg:px-12"
       style={{
         backgroundImage: `url(${prismaImage})`,
         backgroundSize: "1400px 1200px",
@@ -397,26 +397,26 @@ Overall assessment: Current weather conditions are particularly important for we
         MozBackgroundSize: "1200px 800px",
       }}
     >
-      <div className="container mx-auto p-3 md:p-5 shadow-xl rounded-lg mt-32 md:mt-36 mb-12 bg-white/90 backdrop-blur-md">
+      <div className="container mx-auto p-3 md:p-5 shadow-xl rounded-lg mt-32 md:mt-36 mb-12 bg-neo-surface/90 backdrop-blur-md">
         <Breadcrumb />
         <div className="relative text-center mb-5 bg-gradient-to-r from-green-500 to-blue-600 py-5 rounded-t-lg shadow-lg">
           <h1 className="text-2xl md:text-3xl font-bold uppercase text-white">
             Media Advisory - {currentDate.month} {currentDate.year}, Week{" "}
             {currentDate.weekRange}
           </h1>
-          <h2 className="text-md md:text-xl font-semibold text-gray-100"></h2>
+          <h2 className="text-md md:text-xl font-semibold text-neo-bg"></h2>
         </div>
 
-        <div className="p-4 bg-gradient-to-br from-gray-50 to-gray-200 rounded-lg shadow-lg mb-5">
+        <div className="p-4 bg-gradient-to-br from-neo-surface to-neo-bg-soft rounded-lg shadow-lg mb-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
             <div className="flex flex-col">
-              <label className="text-sm font-medium mb-1 capitalize text-gray-800">
+              <label className="text-sm font-medium mb-1 capitalize text-neo-text">
                 Region
               </label>
               <select
                 value={selected.region || ""}
                 onChange={(e) => handleFilterChange(e, "region")}
-                className="p-2 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 focus:ring-2 focus:ring-green-500 transition-all duration-300"
+                className="p-2 border border-neo-border rounded-lg bg-neo-surface hover:bg-neo-surface-strong focus:ring-2 focus:ring-green-500 transition-all duration-300"
               >
                 <option value="">Select Region</option>
                 {filterData.region.map((value) => (
@@ -428,13 +428,13 @@ Overall assessment: Current weather conditions are particularly important for we
             </div>
 
             <div className="flex flex-col">
-              <label className="text-sm font-medium mb-1 capitalize text-gray-800">
+              <label className="text-sm font-medium mb-1 capitalize text-neo-text">
                 District
               </label>
               <select
                 value={selected.district || ""}
                 onChange={(e) => handleFilterChange(e, "district")}
-                className="p-2 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 focus:ring-2 focus:ring-green-500 transition-all duration-300"
+                className="p-2 border border-neo-border rounded-lg bg-neo-surface hover:bg-neo-surface-strong focus:ring-2 focus:ring-green-500 transition-all duration-300"
                 disabled={!selected.region}
               >
                 <option value="">Select District</option>
@@ -452,13 +452,13 @@ Overall assessment: Current weather conditions are particularly important for we
             </div>
             {/* Only show crop and location filters */}
             <div className="flex flex-col">
-              <label className="text-sm font-medium mb-1 capitalize text-gray-800">
+              <label className="text-sm font-medium mb-1 capitalize text-neo-text">
                 Commodity
               </label>
               <select
                 value={selected.crop || ""}
                 onChange={(e) => handleFilterChange(e, "crop")}
-                className="p-2 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 focus:ring-2 focus:ring-green-500 transition-all duration-300"
+                className="p-2 border border-neo-border rounded-lg bg-neo-surface hover:bg-neo-surface-strong focus:ring-2 focus:ring-green-500 transition-all duration-300"
               >
                 <option value="">Select Crop</option>
                 {filterData.crop.map((value) => (
@@ -488,7 +488,7 @@ Overall assessment: Current weather conditions are particularly important for we
               }
               className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 shadow-md ${
                 !selected.crop || !selected.region || !selected.district
-                  ? "bg-gray-400 cursor-not-allowed text-gray-100"
+                  ? "bg-neo-muted/50 cursor-not-allowed text-neo-bg"
                   : "bg-green-500 text-white hover:bg-green-600"
               }`}
             >
@@ -501,14 +501,14 @@ Overall assessment: Current weather conditions are particularly important for we
         {showAdvisory && (
           <div ref={pdfContentRef}>
             {/* Production Calendar Activities */}
-            <div className="mb-5 p-4 bg-white rounded-lg shadow-lg border-2 border-green-200">
-              <h3 className="text-lg font-bold text-gray-800 mb-2 text-center">
+            <div className="mb-5 p-4 bg-neo-surface rounded-lg shadow-lg border-2 border-green-200">
+              <h3 className="text-lg font-bold text-neo-text mb-2 text-center">
                 SEASONAL ACTIVITIES FOR {selected.crop.toUpperCase()} IN{" "}
                 {currentDate.month.toUpperCase()}
               </h3>
               <ul className="list-disc pl-5 space-y-1">
                 {activities.map((activity, index) => (
-                  <li key={index} className="text-gray-800">
+                  <li key={index} className="text-neo-text">
                     {activity}
                   </li>
                 ))}
@@ -517,17 +517,17 @@ Overall assessment: Current weather conditions are particularly important for we
 
             {/* Weather Advisory Table - Updated header to reflect focus */}
             <div className="mb-5 overflow-x-auto">
-              <h3 className="text-lg font-bold text-gray-800 mb-2 text-center">
+              <h3 className="text-lg font-bold text-neo-text mb-2 text-center">
                 WEED MANAGEMENT & FERTILIZER APPLICATION ADVISORY
               </h3>
-              <table className="min-w-max mx-auto border-collapse bg-white rounded-lg shadow-md">
+              <table className="min-w-max mx-auto border-collapse bg-neo-surface rounded-lg shadow-md">
                 <thead>
                   <tr className="bg-gradient-to-r from-green-500 to-blue-600 text-white">
-                    <th className="border border-gray-200 p-2.5"></th>
+                    <th className="border border-neo-border p-2.5"></th>
                     {data.advisoryTable.parameters.map((param, index) => (
                       <th
                         key={index}
-                        className="border border-gray-200 p-2.5 text-center"
+                        className="border border-neo-border p-2.5 text-center"
                       >
                         {param}
                       </th>
@@ -538,17 +538,17 @@ Overall assessment: Current weather conditions are particularly important for we
                   {["forecast", "implication", "advisory"].map((type) => (
                     <tr
                       key={type}
-                      className="hover:bg-gray-50 transition-colors duration-200"
+                      className="hover:bg-neo-surface-strong transition-colors duration-200"
                     >
-                      <td className="border border-gray-200 p-3 bg-gray-100 font-semibold text-gray-800">
+                      <td className="border border-neo-border p-3 bg-neo-bg font-semibold text-neo-text">
                         {type.toUpperCase()}
                       </td>
                       {data.advisoryTable[type].map((item, index) => (
                         <td
                           key={index}
-                          className="border border-gray-200 p-3 text-left"
+                          className="border border-neo-border p-3 text-left"
                         >
-                          <p className="text-sm text-gray-800 whitespace-normal break-words leading-relaxed">
+                          <p className="text-sm text-neo-text whitespace-normal break-words leading-relaxed">
                             {item}
                           </p>
                         </td>
@@ -560,8 +560,8 @@ Overall assessment: Current weather conditions are particularly important for we
             </div>
 
             {/* Summary Section - Updated to focus on weed management and fertilizer application */}
-            <div className="mt-5 p-4 bg-white rounded-lg shadow-lg border-2 border-gradient-to-br from-green-500 to-blue-600">
-              <p className="text-center text-base md:text-lg font-semibold text-gray-800 mb-2">
+            <div className="mt-5 p-4 bg-neo-surface rounded-lg shadow-lg border-2 border-gradient-to-br from-green-500 to-blue-600">
+              <p className="text-center text-base md:text-lg font-semibold text-neo-text mb-2">
                 WEED MANAGEMENT & FERTILIZER APPLICATION ADVISORY FOR{" "}
                 <span className="text-green-600">
                   {selected.crop.toUpperCase()}
@@ -578,7 +578,7 @@ Overall assessment: Current weather conditions are particularly important for we
                   {currentDate.month.toUpperCase()} {currentDate.year}
                 </span>
               </p>
-              <p className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
+              <p className="text-sm text-neo-text whitespace-pre-wrap leading-relaxed">
                 {simpleSummary}
               </p>
             </div>

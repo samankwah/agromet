@@ -26,16 +26,27 @@ class MarketIntelligenceService {
       'soybeans': { price: 399.99, unit: 'per bag', trend: 'stable', demand: 'growing' },
       'sorghum': { price: 189.99, unit: 'per bag', trend: 'stable', demand: 'low' },
       'groundnuts': { price: 249.99, unit: 'per bag', trend: 'rising', demand: 'moderate' },
-      'cocoa': { price: 850.00, unit: 'per bag', trend: 'volatile', demand: 'export' }
+      'cocoa': { price: 850.00, unit: 'per bag', trend: 'volatile', demand: 'export' },
+      'poultry': { price: 45.00, unit: 'per kg', trend: 'rising', demand: 'very-high' }
     };
 
-    // Historical price trends (simulated - would use real historical data)
+    // Historical price trends. Kept in step with SEED_TRENDS in
+    // backend/app/main.py: this is the offline fallback, and the market UI
+    // draws a sparkline per card and a full chart per commodity page, so a
+    // commodity missing a trend here is a visibly broken page when the API
+    // is unreachable. Every slug in currentPrices must appear below.
     this.historicalTrends = {
       'yellow-maize': {
         '6months': [280, 285, 290, 295, 298, 299.99],
         'seasonal_pattern': 'Low during harvest (July-August), High during planting (March-April)',
         'peak_months': [3, 4, 5], // March-May
         'low_months': [7, 8, 9] // July-September
+      },
+      'white-maize': {
+        '6months': [265, 270, 276, 282, 287, 289.99],
+        'seasonal_pattern': 'Tracks yellow maize, but firmer when household demand for banku and kenkey is strong',
+        'peak_months': [3, 4, 5],
+        'low_months': [8, 9, 10]
       },
       'rice': {
         '6months': [150, 152, 155, 157, 158, 159.99],
@@ -54,6 +65,66 @@ class MarketIntelligenceService {
         'seasonal_pattern': 'Peaks before harvest, drops after new yam season',
         'peak_months': [6, 7, 8], // June-August
         'low_months': [9, 10, 11] // September-November
+      },
+      'cassava': {
+        '6months': [126, 127, 128, 128.5, 129, 129.99],
+        'seasonal_pattern': 'Flat year-round; roots can be left in the ground until they are needed',
+        'peak_months': [2, 3],
+        'low_months': [8, 9]
+      },
+      'pepper': {
+        '6months': [48, 51, 54, 57, 59, 59.99],
+        'seasonal_pattern': 'Climbs through the dry season as irrigated volumes thin out',
+        'peak_months': [12, 1, 2],
+        'low_months': [6, 7, 8]
+      },
+      'onion': {
+        '6months': [110, 102, 95, 90, 88, 89.99],
+        'seasonal_pattern': 'Strongly seasonal; falls once northern and Sahel stock arrives',
+        'peak_months': [4, 5, 6],
+        'low_months': [10, 11, 12]
+      },
+      'plantain': {
+        '6months': [72, 75, 82, 85, 81, 79.99],
+        'seasonal_pattern': 'Cannot be stored, so the price follows that week\'s arrivals',
+        'peak_months': [1, 2, 3],
+        'low_months': [7, 8, 9]
+      },
+      'beans': {
+        '6months': [178, 183, 189, 194, 197, 199.99],
+        'seasonal_pattern': 'Stores well, so the price rises steadily through the lean season',
+        'peak_months': [4, 5, 6],
+        'low_months': [11, 12]
+      },
+      'soybeans': {
+        '6months': [372, 380, 388, 393, 397, 399.99],
+        'seasonal_pattern': 'Crusher demand outruns local supply, so harvest dips stay shallow',
+        'peak_months': [2, 3, 4],
+        'low_months': [11, 12]
+      },
+      'sorghum': {
+        '6months': [180, 182, 185, 187, 188, 189.99],
+        'seasonal_pattern': 'Steady brewer and feed-mill demand; thin volumes move slowly',
+        'peak_months': [3, 4],
+        'low_months': [10, 11]
+      },
+      'groundnuts': {
+        '6months': [225, 231, 238, 243, 247, 249.99],
+        'seasonal_pattern': 'Rises through the lean season once the northern harvest is sold down',
+        'peak_months': [4, 5, 6],
+        'low_months': [10, 11, 12]
+      },
+      'cocoa': {
+        '6months': [790, 815, 870, 905, 862, 850.00],
+        'seasonal_pattern': 'Volatile; set by the world price and the announced farmgate rate',
+        'peak_months': [10, 11, 12],
+        'low_months': [5, 6, 7]
+      },
+      'poultry': {
+        '6months': [41, 42, 43, 44, 44.5, 45.00],
+        'seasonal_pattern': 'Spikes in December and around Easter; feed-grain cost sets the floor',
+        'peak_months': [12, 4],
+        'low_months': [6, 7, 8]
       }
     };
 
@@ -116,24 +187,30 @@ class MarketIntelligenceService {
           fetch(`${base}${API_ENDPOINTS.MARKET.REGIONS}`),
         ]);
 
+        // Merged over the seeded defaults, not swapped for them. A server
+        // that is a deployment behind — or whose SQLite seed never survived
+        // a read-only filesystem — answers with a subset, and replacing
+        // wholesale would delete commodities and trends we already have,
+        // putting "Price unavailable" and a missing sparkline on cards that
+        // worked a moment earlier. Live data still wins key by key.
         if (commoditiesRes.ok) {
           const { data } = await commoditiesRes.json();
           if (data && Object.keys(data).length > 0) {
-            this.currentPrices = data;
+            this.currentPrices = { ...this.currentPrices, ...data };
           }
         }
 
         if (trendsRes.ok) {
           const { data } = await trendsRes.json();
           if (data && Object.keys(data).length > 0) {
-            this.historicalTrends = data;
+            this.historicalTrends = { ...this.historicalTrends, ...data };
           }
         }
 
         if (regionsRes.ok) {
           const { data } = await regionsRes.json();
           if (data && Object.keys(data).length > 0) {
-            this.marketCenters = data;
+            this.marketCenters = { ...this.marketCenters, ...data };
           }
         }
 

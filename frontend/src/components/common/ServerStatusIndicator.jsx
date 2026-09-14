@@ -61,8 +61,8 @@ const ServerStatusIndicator = ({
     if (healthStatus.isHealthy === null) {
       return {
         icon: Clock,
-        color: 'text-gray-500',
-        bgColor: 'bg-gray-100',
+        color: 'text-neo-muted',
+        bgColor: 'bg-neo-bg',
         text: 'Checking...',
         description: 'Checking server status'
       };
@@ -107,14 +107,14 @@ const ServerStatusIndicator = ({
   }
 
   return (
-    <div className={`bg-white rounded-lg border shadow-sm p-4 ${className}`}>
+    <div className={`bg-neo-surface rounded-lg border shadow-sm p-4 ${className}`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className={`p-2 rounded-full ${statusInfo.bgColor}`}>
             <StatusIcon className={`w-5 h-5 ${statusInfo.color}`} />
           </div>
           <div>
-            <h3 className="font-medium text-gray-900">Server Status</h3>
+            <h3 className="font-medium text-neo-text">Server Status</h3>
             <p className={`text-sm ${statusInfo.color}`}>
               {statusInfo.description}
             </p>
@@ -124,7 +124,7 @@ const ServerStatusIndicator = ({
         <button
           onClick={handleForceCheck}
           disabled={isLoading}
-          className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+          className="flex items-center gap-2 px-3 py-1.5 text-sm text-neo-muted hover:text-neo-text hover:bg-neo-surface-strong rounded-md transition-colors"
         >
           {isLoading ? (
             <InlineBusySkeleton label="Checking..." tone="slate" />
@@ -138,14 +138,14 @@ const ServerStatusIndicator = ({
       </div>
 
       {showDetails && (
-        <div className="mt-4 pt-4 border-t border-gray-200">
+        <div className="mt-4 pt-4 border-t border-neo-border">
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-gray-500">Last Check:</span>
+              <span className="text-neo-muted">Last Check:</span>
               <p className="font-medium">{lastCheckTime}</p>
             </div>
             <div>
-              <span className="text-gray-500">Monitoring:</span>
+              <span className="text-neo-muted">Monitoring:</span>
               <p className="font-medium">
                 {healthStatus.isMonitoring ? 'Active' : 'Inactive'}
               </p>
@@ -153,13 +153,13 @@ const ServerStatusIndicator = ({
             {!healthStatus.isHealthy && healthStatus.consecutiveFailures > 0 && (
               <>
                 <div>
-                  <span className="text-gray-500">Failures:</span>
+                  <span className="text-neo-muted">Failures:</span>
                   <p className="font-medium text-red-600">
                     {healthStatus.consecutiveFailures}
                   </p>
                 </div>
                 <div>
-                  <span className="text-gray-500">Next Retry:</span>
+                  <span className="text-neo-muted">Next Retry:</span>
                   <p className="font-medium">~30 seconds</p>
                 </div>
               </>

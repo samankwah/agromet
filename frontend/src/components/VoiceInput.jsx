@@ -145,7 +145,7 @@ const VoiceInput = ({ onTranscript, onCommand, language = "en" }) => {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-xl p-3 min-w-[200px]"
+            className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-neo-surface rounded-lg shadow-xl p-3 min-w-[200px]"
           >
             <div className="flex items-center space-x-2 mb-2">
               <div className="flex space-x-1">
@@ -153,10 +153,10 @@ const VoiceInput = ({ onTranscript, onCommand, language = "en" }) => {
                 <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse delay-75"></span>
                 <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse delay-150"></span>
               </div>
-              <span className="text-sm text-gray-600">Listening...</span>
+              <span className="text-sm text-neo-muted">Listening...</span>
             </div>
             {transcript && (
-              <p className="text-sm text-gray-800">{transcript}</p>
+              <p className="text-sm text-neo-text">{transcript}</p>
             )}
           </motion.div>
         )}
