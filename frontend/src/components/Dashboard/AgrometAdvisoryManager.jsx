@@ -233,11 +233,11 @@ const AgrometAdvisoryManager = () => {
   return (
     <div className="neo-table-shell">
       {/* Header */}
-      <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+      <div className="px-4 sm:px-6 py-4 border-b border-neo-border">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-3 sm:space-y-0">
           <div>
-            <h3 className="text-lg font-medium text-gray-900">Agromet Advisory Management</h3>
-            <p className="text-sm text-gray-500">
+            <h3 className="text-lg font-medium text-neo-text">Agromet Advisory Management</h3>
+            <p className="text-sm text-neo-muted">
               {filteredData.length} advisories found from {data.length} total records
             </p>
           </div>
@@ -270,7 +270,7 @@ const AgrometAdvisoryManager = () => {
 
       {/* Upload Progress */}
       {uploading && (
-        <div className="px-4 sm:px-6 py-4 bg-blue-50 border-b border-gray-200">
+        <div className="px-4 sm:px-6 py-4 bg-blue-50 border-b border-neo-border">
           <div className="flex items-center">
             <div className="flex-1">
               <div className="flex justify-between text-sm text-blue-700 mb-1">
@@ -289,17 +289,17 @@ const AgrometAdvisoryManager = () => {
       )}
 
       {/* Filters */}
-      <div className="px-4 sm:px-6 py-4 bg-white/25 border-b neo-divider">
+      <div className="px-4 sm:px-6 py-4 bg-neo-surface/25 border-b neo-divider">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3">
           {/* Search */}
           <div className="flex items-center space-x-2">
-            <FaSearch className="text-gray-400 flex-shrink-0" />
+            <FaSearch className="text-neo-muted flex-shrink-0" />
             <input
               type="text"
               placeholder="Search..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+              className="w-full px-3 py-2 border border-neo-border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
             />
           </div>
           
@@ -307,7 +307,7 @@ const AgrometAdvisoryManager = () => {
           <select
             value={selectedRegionCode}
             onChange={(e) => setSelectedRegionCode(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+            className="px-3 py-2 border border-neo-border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
           >
             <option value="">All Regions</option>
             {Object.values(GHANA_REGIONS).map(region => (
@@ -319,7 +319,7 @@ const AgrometAdvisoryManager = () => {
           <select
             value={selectedDistrictCode}
             onChange={(e) => setSelectedDistrictCode(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+            className="px-3 py-2 border border-neo-border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
             disabled={!selectedRegionCode}
           >
             <option value="">All Districts</option>
@@ -332,7 +332,7 @@ const AgrometAdvisoryManager = () => {
           <select
             value={selectedCommodityCode}
             onChange={(e) => setSelectedCommodityCode(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+            className="px-3 py-2 border border-neo-border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
           >
             <option value="">All Commodities</option>
             {Object.entries(COMMODITY_CODES).map(([code, name]) => (
@@ -344,7 +344,7 @@ const AgrometAdvisoryManager = () => {
           <select
             value={selectedActivity}
             onChange={(e) => setSelectedActivity(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+            className="px-3 py-2 border border-neo-border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
           >
             <option value="">All Activities</option>
             {uniqueActivities.map(activity => (
@@ -355,23 +355,23 @@ const AgrometAdvisoryManager = () => {
           {/* Clear Filters */}
           <button
             onClick={clearFilters}
-            className="px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-sm"
+            className="px-3 py-2 bg-neo-border/30 text-neo-text rounded-md hover:bg-neo-muted/35 text-sm"
           >
             Clear Filters
           </button>
 
           {/* View Mode */}
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">View:</span>
+            <span className="text-sm text-neo-muted">View:</span>
             <button
               onClick={() => setViewMode('table')}
-              className={`p-2 rounded ${viewMode === 'table' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}
+              className={`p-2 rounded ${viewMode === 'table' ? 'bg-green-100 text-green-800' : 'bg-neo-bg text-neo-muted'}`}
             >
               <FaTable />
             </button>
             <button
               onClick={() => setViewMode('card')}
-              className={`p-2 rounded ${viewMode === 'card' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}
+              className={`p-2 rounded ${viewMode === 'card' ? 'bg-green-100 text-green-800' : 'bg-neo-bg text-neo-muted'}`}
             >
               <FaTh />
             </button>
@@ -382,11 +382,11 @@ const AgrometAdvisoryManager = () => {
       {/* Data Display */}
       {filteredData.length === 0 ? (
         <div className="px-6 py-8 text-center">
-          <div className="text-gray-400 mb-4">
+          <div className="text-neo-muted mb-4">
             <FaEye className="mx-auto h-12 w-12" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Advisory Data Available</h3>
-          <p className="text-gray-500 mb-4">
+          <h3 className="text-lg font-medium text-neo-text mb-2">No Advisory Data Available</h3>
+          <p className="text-neo-muted mb-4">
             No agromet advisory data has been uploaded yet. Upload a multi-sheet Excel file to get started.
           </p>
           <button
@@ -400,25 +400,25 @@ const AgrometAdvisoryManager = () => {
       ) : viewMode === 'table' ? (
         <>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-neo-border">
+              <thead className="bg-neo-bg-soft">
                 <tr>
                   {Object.keys(paginatedData[0] || {}).map((key) => (
                     <th
                       key={key}
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      className="px-6 py-3 text-left text-xs font-medium text-neo-muted uppercase tracking-wider"
                     >
                       {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                     </th>
                   ))}
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-neo-muted uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-neo-surface divide-y divide-neo-border">
                 {paginatedData.map((item, index) => (
-                  <tr key={item.id || index} className="hover:bg-gray-50">
+                  <tr key={item.id || index} className="hover:bg-neo-surface-strong">
                     {Object.entries(item).map(([key, value]) => {
                       // Handle display with codes
                       let displayValue = value;
@@ -441,7 +441,7 @@ const AgrometAdvisoryManager = () => {
                       }
                       
                       return (
-                        <td key={key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td key={key} className="px-6 py-4 whitespace-nowrap text-sm text-neo-text">
                           {className ? (
                             <span className={className}>
                               {safeRender(displayValue)}
@@ -487,16 +487,16 @@ const AgrometAdvisoryManager = () => {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="px-6 py-3 bg-white/25 border-t neo-divider">
+            <div className="px-6 py-3 bg-neo-surface/25 border-t neo-divider">
               <div className="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0">
-                <div className="text-sm text-gray-700">
+                <div className="text-sm text-neo-text">
                   Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredData.length)} of {filteredData.length} results
                 </div>
                 <div className="flex space-x-1">
                   <button
                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                     disabled={currentPage === 1}
-                    className="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 text-sm"
+                    className="px-3 py-1 border border-neo-border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neo-surface-strong text-sm"
                   >
                     Previous
                   </button>
@@ -510,7 +510,7 @@ const AgrometAdvisoryManager = () => {
                       className={`px-3 py-1 border rounded-md text-sm ${
                         currentPage === page 
                           ? 'bg-green-500 text-white border-green-500' 
-                          : 'border-gray-300 hover:bg-gray-50'
+                          : 'border-neo-border hover:bg-neo-surface-strong'
                       }`}
                     >
                       {page}
@@ -519,7 +519,7 @@ const AgrometAdvisoryManager = () => {
                   <button
                     onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                     disabled={currentPage === totalPages}
-                    className="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 text-sm"
+                    className="px-3 py-1 border border-neo-border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neo-surface-strong text-sm"
                   >
                     Next
                   </button>
@@ -536,14 +536,14 @@ const AgrometAdvisoryManager = () => {
               <div key={item.id || index} className="neo-surface-soft p-4 transition-shadow">
                 <div className="flex justify-between items-start mb-3">
                   <div>
-                    <h4 className="font-semibold text-gray-900">
+                    <h4 className="font-semibold text-neo-text">
                       {item.commodityCode ? getCommodityByCode(item.commodityCode) || 'Unknown Commodity' : 'Unknown Commodity'}
                     </h4>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-neo-muted">
                       {item.regionCode && getRegionByCode(item.regionCode)?.name} - {item.districtCode && getDistrictByCode(item.districtCode)?.name}
                     </p>
                     <p className="text-sm text-purple-600 font-medium">{item.activity}</p>
-                    <p className="text-xs text-gray-500">ID: {item.uniqueId || item.id}</p>
+                    <p className="text-xs text-neo-muted">ID: {item.uniqueId || item.id}</p>
                   </div>
                   <div className="flex space-x-1">
                     <button
@@ -570,7 +570,7 @@ const AgrometAdvisoryManager = () => {
                   </div>
                 </div>
                 
-                <div className="text-sm text-gray-600 space-y-1">
+                <div className="text-sm text-neo-muted space-y-1">
                   {Object.entries(item)
                     .filter(([key]) => !['id', 'uniqueId', 'regionCode', 'districtCode', 'commodityCode', 'activity'].includes(key))
                     .slice(0, 3)
@@ -589,16 +589,16 @@ const AgrometAdvisoryManager = () => {
 
           {/* Pagination for Card View */}
           {totalPages > 1 && (
-            <div className="px-6 py-3 bg-white/25 border-t neo-divider">
+            <div className="px-6 py-3 bg-neo-surface/25 border-t neo-divider">
               <div className="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0">
-                <div className="text-sm text-gray-700">
+                <div className="text-sm text-neo-text">
                   Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredData.length)} of {filteredData.length} results
                 </div>
                 <div className="flex space-x-1">
                   <button
                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                     disabled={currentPage === 1}
-                    className="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 text-sm"
+                    className="px-3 py-1 border border-neo-border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neo-surface-strong text-sm"
                   >
                     Previous
                   </button>
@@ -612,7 +612,7 @@ const AgrometAdvisoryManager = () => {
                       className={`px-3 py-1 border rounded-md text-sm ${
                         currentPage === page 
                           ? 'bg-green-500 text-white border-green-500' 
-                          : 'border-gray-300 hover:bg-gray-50'
+                          : 'border-neo-border hover:bg-neo-surface-strong'
                       }`}
                     >
                       {page}
@@ -621,7 +621,7 @@ const AgrometAdvisoryManager = () => {
                   <button
                     onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                     disabled={currentPage === totalPages}
-                    className="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 text-sm"
+                    className="px-3 py-1 border border-neo-border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neo-surface-strong text-sm"
                   >
                     Next
                   </button>

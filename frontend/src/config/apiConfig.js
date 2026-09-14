@@ -117,6 +117,16 @@ export const API_ENDPOINTS = {
     GET: '/user/weather',
   },
 
+  // Flood and drought monitoring
+  HAZARDS: {
+    SUMMARY: '/api/hazards/summary',
+    REGION: (region) => `/api/hazards/regions/${encodeURIComponent(region)}`,
+    METHODOLOGY: '/api/hazards/methodology',
+    REFRESH: '/api/hazards/refresh',
+    OVERRIDES: '/api/hazards/overrides',
+    OVERRIDE: (id) => `/api/hazards/overrides/${id}`,
+  },
+
   // Market
   MARKET: {
     COMMODITIES: '/api/market/commodities',

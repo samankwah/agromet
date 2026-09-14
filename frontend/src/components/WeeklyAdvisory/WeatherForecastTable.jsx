@@ -2,7 +2,7 @@
  * WeatherForecastTable Component
  * Displays weather forecast table with 9 parameters
  * Three rows: Forecast, Implications, Advisory
- * Dark slate header with cyan weather icons
+ * Branded header with cyan weather icons
  */
 
 import React from 'react';
@@ -79,21 +79,21 @@ const WeatherForecastTable = ({ advisory, activityData }) => {
     return (
       <div className="mb-6">
         <div className="mb-4 flex items-center gap-2">
-          <div className="w-1 h-6 bg-gradient-to-b from-slate-800 to-slate-900 rounded-full"></div>
-          <h3 className="text-lg font-bold text-slate-800">Detailed Forecast</h3>
+          <div className="w-1 h-6 bg-gradient-to-b from-emerald-700 to-teal-700 rounded-full"></div>
+          <h3 className="text-lg font-bold text-neo-text">Detailed Forecast</h3>
         </div>
 
-        <div className="overflow-x-auto rounded-lg shadow-lg border border-slate-300">
-          <table className="min-w-full bg-white">
+        <div className="overflow-x-auto rounded-lg shadow-lg border border-neo-border">
+          <table className="min-w-full bg-neo-surface">
             <thead>
-              <tr className="bg-gradient-to-r from-slate-800 to-slate-900">
-                <th className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider border-r border-slate-700 min-w-[120px]">
+              <tr className="bg-gradient-to-r from-emerald-700 to-teal-700">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider border-r border-neo-border min-w-[120px]">
                   Parameter
                 </th>
                 {params.map((param, index) => (
                   <th
                     key={index}
-                    className="px-4 py-3 text-center text-xs font-semibold text-white uppercase tracking-wider border-r border-slate-700 last:border-r-0 min-w-[140px]"
+                    className="px-4 py-3 text-center text-xs font-semibold text-white uppercase tracking-wider border-r border-neo-border last:border-r-0 min-w-[140px]"
                   >
                     <div className="flex flex-col items-center gap-2">
                       <div className="text-2xl">{iconMap[param.toUpperCase()] || <FaSun className="text-cyan-400" />}</div>
@@ -105,12 +105,12 @@ const WeatherForecastTable = ({ advisory, activityData }) => {
             </thead>
             <tbody>
               {/* FORECAST Row */}
-              <tr className="bg-white hover:bg-slate-50 transition-colors duration-200">
-                <td className="px-4 py-4 text-sm font-bold text-slate-900 uppercase border-r border-slate-200 bg-slate-100">
+              <tr className="bg-neo-surface hover:bg-neo-surface-strong transition-colors duration-200">
+                <td className="px-4 py-4 text-sm font-bold text-neo-text uppercase border-r border-neo-border bg-neo-bg">
                   FORECAST
                 </td>
                 {params.map((param, index) => (
-                  <td key={index} className="px-4 py-4 text-sm text-slate-900 text-center border-r border-slate-200 last:border-r-0">
+                  <td key={index} className="px-4 py-4 text-sm text-neo-text text-center border-r border-neo-border last:border-r-0">
                     <div className="font-medium leading-relaxed">
                       {formatForecastValue(activityData.forecast?.[param] || '-', param)}
                     </div>
@@ -119,12 +119,12 @@ const WeatherForecastTable = ({ advisory, activityData }) => {
               </tr>
 
               {/* IMPLICATIONS Row */}
-              <tr className="bg-slate-50 hover:bg-slate-100 transition-colors duration-200">
-                <td className="px-4 py-4 text-sm font-bold text-slate-900 uppercase border-r border-slate-200 bg-slate-100">
+              <tr className="bg-neo-bg-soft hover:bg-neo-surface-strong transition-colors duration-200">
+                <td className="px-4 py-4 text-sm font-bold text-neo-text uppercase border-r border-neo-border bg-neo-bg">
                   IMPLICATIONS
                 </td>
                 {params.map((param, index) => (
-                  <td key={index} className="px-4 py-4 text-sm text-slate-700 text-center border-r border-slate-200 last:border-r-0">
+                  <td key={index} className="px-4 py-4 text-sm text-neo-text text-center border-r border-neo-border last:border-r-0">
                     <div className="leading-relaxed">
                       {activityData.implication?.[param] || '-'}
                     </div>
@@ -134,11 +134,11 @@ const WeatherForecastTable = ({ advisory, activityData }) => {
 
               {/* ADVISORY Row */}
               <tr className="bg-emerald-50 hover:bg-emerald-100 transition-colors duration-200">
-                <td className="px-4 py-4 text-sm font-bold text-emerald-900 uppercase border-r border-slate-200 bg-emerald-100">
+                <td className="px-4 py-4 text-sm font-bold text-emerald-900 uppercase border-r border-neo-border bg-emerald-100">
                   ADVISORY
                 </td>
                 {params.map((param, index) => (
-                  <td key={index} className="px-4 py-4 text-sm text-emerald-800 text-center border-r border-slate-200 last:border-r-0">
+                  <td key={index} className="px-4 py-4 text-sm text-emerald-800 text-center border-r border-neo-border last:border-r-0">
                     <div className="leading-relaxed">
                       {activityData.advisory?.[param] || '-'}
                     </div>
@@ -222,21 +222,21 @@ const WeatherForecastTable = ({ advisory, activityData }) => {
   return (
     <div className="mb-6">
       <div className="mb-4 flex items-center gap-2">
-        <div className="w-1 h-6 bg-gradient-to-b from-slate-800 to-slate-900 rounded-full"></div>
-        <h3 className="text-lg font-bold text-slate-800">Detailed Forecast</h3>
+        <div className="w-1 h-6 bg-gradient-to-b from-emerald-700 to-teal-700 rounded-full"></div>
+        <h3 className="text-lg font-bold text-neo-text">Detailed Forecast</h3>
       </div>
 
-      <div className="overflow-x-auto rounded-lg shadow-lg border border-slate-300">
-        <table className="min-w-full bg-white">
+      <div className="overflow-x-auto rounded-lg shadow-lg border border-neo-border">
+        <table className="min-w-full bg-neo-surface">
           <thead>
-            <tr className="bg-gradient-to-r from-slate-800 to-slate-900">
-              <th className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider border-r border-slate-700 min-w-[120px]">
+            <tr className="bg-gradient-to-r from-emerald-700 to-teal-700">
+              <th className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider border-r border-neo-border min-w-[120px]">
                 Parameter
               </th>
               {weatherParameters.map((param, index) => (
                 <th
                   key={index}
-                  className="px-4 py-3 text-center text-xs font-semibold text-white uppercase tracking-wider border-r border-slate-700 last:border-r-0 min-w-[140px]"
+                  className="px-4 py-3 text-center text-xs font-semibold text-white uppercase tracking-wider border-r border-neo-border last:border-r-0 min-w-[140px]"
                 >
                   <div className="flex flex-col items-center gap-2">
                     <div className="text-2xl">{param.icon}</div>
@@ -247,32 +247,32 @@ const WeatherForecastTable = ({ advisory, activityData }) => {
             </tr>
           </thead>
           <tbody>
-            <tr className="bg-white hover:bg-slate-50 transition-colors duration-200">
-              <td className="px-4 py-4 text-sm font-bold text-slate-900 uppercase border-r border-slate-200 bg-slate-100">
+            <tr className="bg-neo-surface hover:bg-neo-surface-strong transition-colors duration-200">
+              <td className="px-4 py-4 text-sm font-bold text-neo-text uppercase border-r border-neo-border bg-neo-bg">
                 FORECAST
               </td>
               {weatherParameters.map((param, index) => (
-                <td key={index} className="px-4 py-4 text-sm text-slate-900 text-center border-r border-slate-200 last:border-r-0">
+                <td key={index} className="px-4 py-4 text-sm text-neo-text text-center border-r border-neo-border last:border-r-0">
                   <div className="font-medium leading-relaxed">{param.forecast}</div>
                 </td>
               ))}
             </tr>
-            <tr className="bg-slate-50 hover:bg-slate-100 transition-colors duration-200">
-              <td className="px-4 py-4 text-sm font-bold text-slate-900 uppercase border-r border-slate-200 bg-slate-100">
+            <tr className="bg-neo-bg-soft hover:bg-neo-surface-strong transition-colors duration-200">
+              <td className="px-4 py-4 text-sm font-bold text-neo-text uppercase border-r border-neo-border bg-neo-bg">
                 IMPLICATIONS
               </td>
               {weatherParameters.map((param, index) => (
-                <td key={index} className="px-4 py-4 text-sm text-slate-700 text-center border-r border-slate-200 last:border-r-0">
+                <td key={index} className="px-4 py-4 text-sm text-neo-text text-center border-r border-neo-border last:border-r-0">
                   <div className="leading-relaxed">{param.implication}</div>
                 </td>
               ))}
             </tr>
             <tr className="bg-emerald-50 hover:bg-emerald-100 transition-colors duration-200">
-              <td className="px-4 py-4 text-sm font-bold text-emerald-900 uppercase border-r border-slate-200 bg-emerald-100">
+              <td className="px-4 py-4 text-sm font-bold text-emerald-900 uppercase border-r border-neo-border bg-emerald-100">
                 ADVISORY
               </td>
               {weatherParameters.map((param, index) => (
-                <td key={index} className="px-4 py-4 text-sm text-emerald-800 text-center border-r border-slate-200 last:border-r-0">
+                <td key={index} className="px-4 py-4 text-sm text-emerald-800 text-center border-r border-neo-border last:border-r-0">
                   <div className="leading-relaxed">{param.advisoryText}</div>
                 </td>
               ))}

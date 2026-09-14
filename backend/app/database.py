@@ -250,6 +250,52 @@ def init_db() -> None:
 
             CREATE INDEX IF NOT EXISTS idx_market_centers_region
             ON market_centers(region);
+
+            -- Published GMet flood/drought bulletins. These override the
+            -- computed index for a region, because local knowledge (dam
+            -- spillage, a failed drain, an evacuation order) is not visible to
+            -- a global hydrological model. The computed value is still shown
+            -- alongside so an override is never silent.
+            CREATE TABLE IF NOT EXISTS hazard_overrides (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                region TEXT NOT NULL,
+                hazard TEXT NOT NULL CHECK (hazard IN ('flood', 'drought')),
+                band TEXT NOT NULL,
+                headline TEXT,
+                advisory_json TEXT NOT NULL DEFAULT '[]',
+                issued_by TEXT NOT NULL DEFAULT 'GMet',
+                effective_from TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                effective_to TEXT,
+                created_by INTEGER,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(created_by) REFERENCES users(id)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_hazard_overrides_lookup
+            ON hazard_overrides(region, hazard, effective_from);
+
+            -- Messages sent from the apps' Contact screen.
+            --
+            -- Stored rather than emailed straight out: an SMTP failure would
+            -- lose a farmer's message with nothing to recover it from, and a
+            -- table can be read by whoever is on duty regardless of whose
+            -- mailbox is configured. `handled_at` is the whole workflow --
+            -- unset means nobody has answered it yet.
+            CREATE TABLE IF NOT EXISTS contact_messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                email TEXT,
+                phone TEXT,
+                subject TEXT NOT NULL,
+                message TEXT NOT NULL,
+                -- Which app it came from, so a bug report can be reproduced.
+                source TEXT NOT NULL DEFAULT 'mobile',
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                handled_at TEXT
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_contact_messages_unhandled
+            ON contact_messages(handled_at, created_at);
             """
         )
 

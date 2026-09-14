@@ -9,7 +9,7 @@
 }
 
 body {
-  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: 'Space Grotesk', 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -17,6 +17,14 @@ body {
   min-width: 320px;
   background: var(--neo-bg);
   color: var(--neo-text);
+  line-height: 1.5;
+}
+
+html:lang(ak) body,
+html:lang(gaa) body,
+html:lang(ee) body,
+html:lang(dag) body {
+  font-family: 'Noto Sans', 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
 }
 
 html,
@@ -31,69 +39,161 @@ code {
 }
 
 :root {
-  --neo-bg: #e9eff4;
+  --neo-bg: #e4ebf1;
+  --neo-bg-rgb: 228 235 241;
   --neo-bg-soft: #f1f5f8;
-  --neo-surface: #eef3f7;
+  --neo-bg-soft-rgb: 241 245 248;
+  --neo-surface: #f6f9fb;
+  --neo-surface-rgb: 246 249 251;
   --neo-surface-strong: #f7fafc;
+  --neo-surface-strong-rgb: 247 250 252;
   --neo-text: #20303b;
-  --neo-muted: #667887;
-  --neo-border: rgba(126, 145, 158, 0.28);
+  --neo-text-rgb: 32 48 59;
+  --neo-muted: #586b78;
+  --neo-muted-rgb: 88 107 120;
+  --neo-border-rgb: 203 214 223;
+  --neo-border: rgb(var(--neo-border-rgb));
   --neo-focus: #52b788;
-  --neo-accent: #2f9e79;
-  --neo-accent-strong: #177258;
-  --neo-teal: #139a9a;
+  --neo-focus-rgb: 82 183 136;
+  --neo-accent: #23785c;
+  --neo-accent-rgb: 35 120 92;
+  --neo-accent-strong: #145e49;
+  --neo-accent-strong-rgb: 20 94 73;
+  --neo-teal: #0b7070;
+  --neo-teal-rgb: 11 112 112;
   --neo-warning: #d9a441;
-  --neo-danger: #d65a5a;
+  --neo-warning-rgb: 217 164 65;
+  --neo-danger: #be4141;
+  --neo-danger-rgb: 190 65 65;
+  --neo-on-accent-rgb: 255 255 255;
+  --neo-on-teal-rgb: 255 255 255;
+  --neo-on-warning-rgb: 46 33 5;
+  --neo-on-danger-rgb: 255 255 255;
   --neo-shadow-dark: rgba(112, 128, 141, 0.36);
   --neo-shadow-light: rgba(255, 255, 255, 0.9);
+  /* Flat, outline-first edges: separation comes from the border + fill
+     contrast, never from a shadow. Do not restore the soft dual-light
+     shadows -- strengthen --neo-border instead. */
+  --neo-shadow: none;
+  --neo-shadow-soft: none;
+  --neo-shadow-inset: none;
+  --neo-shadow-pressed: none;
+  --neo-ring-active: inset 0 0 0 1px rgb(var(--neo-accent-rgb) / 0.6);
+  --neo-page-glow: transparent;
+  --neo-surface-soft-bg: rgba(245, 248, 251, 0.86);
+  --neo-surface-soft-border: rgb(var(--neo-border-rgb) / 0.8);
+  --neo-control-border: rgb(var(--neo-border-rgb));
+  --neo-control-focus-shadow: 0 0 0 4px rgba(82, 183, 136, 0.22);
+  --neo-radius-card: 20px;
+  --neo-radius-nested: 12px;
+}
+
+[data-theme="dark"] {
+  --neo-bg: #111a18;
+  --neo-bg-rgb: 17 26 24;
+  --neo-bg-soft: #16221f;
+  --neo-bg-soft-rgb: 22 34 31;
+  --neo-surface: #1b2925;
+  --neo-surface-rgb: 27 41 37;
+  --neo-surface-strong: #253730;
+  --neo-surface-strong-rgb: 37 55 48;
+  --neo-text: #ecf5ef;
+  --neo-text-rgb: 236 245 239;
+  --neo-muted: #a8b8ad;
+  --neo-muted-rgb: 168 184 173;
+  --neo-border-rgb: 74 96 86;
+  --neo-border: rgb(var(--neo-border-rgb));
+  --neo-focus: #6fd8a8;
+  --neo-focus-rgb: 111 216 168;
+  --neo-accent: #60d394;
+  --neo-accent-rgb: 96 211 148;
+  --neo-accent-strong: #94e2b8;
+  --neo-accent-strong-rgb: 148 226 184;
+  --neo-teal: #5ccccc;
+  --neo-teal-rgb: 92 204 204;
+  --neo-warning: #e4bb62;
+  --neo-warning-rgb: 228 187 98;
+  --neo-danger: #ff8585;
+  --neo-danger-rgb: 255 133 133;
+  --neo-on-accent-rgb: 9 31 22;
+  --neo-on-teal-rgb: 7 30 30;
+  --neo-on-warning-rgb: 42 28 2;
+  --neo-on-danger-rgb: 49 10 10;
+  --neo-shadow-dark: rgba(0, 0, 0, 0.42);
+  --neo-shadow-light: rgba(80, 112, 96, 0.16);
+  /* Flat, outline-first edges: separation comes from the border + fill
+     contrast, never from a shadow. Do not restore the soft dual-light
+     shadows -- strengthen --neo-border instead. */
+  --neo-shadow: none;
+  --neo-shadow-soft: none;
+  --neo-shadow-inset: none;
+  --neo-shadow-pressed: none;
+  --neo-ring-active: inset 0 0 0 1px rgb(var(--neo-accent-rgb) / 0.6);
+  --neo-page-glow: transparent;
+  --neo-surface-soft-bg: rgba(34, 50, 45, 0.78);
+  --neo-surface-soft-border: rgb(var(--neo-border-rgb) / 0.8);
+  --neo-control-border: rgb(var(--neo-border-rgb));
+  --neo-control-focus-shadow: 0 0 0 4px rgba(111, 216, 168, 0.18);
 }
 
 @layer components {
   .neo-page {
     @apply min-h-screen;
-    background:
-      radial-gradient(circle at 18% 10%, rgba(255, 255, 255, 0.9), transparent 28%),
-      linear-gradient(145deg, var(--neo-bg-soft), var(--neo-bg));
+    background: var(--neo-bg);
     color: var(--neo-text);
   }
 
+  /* Outer card tier. Flat by design -- the hairline carries separation. */
   .neo-surface {
     background: var(--neo-surface);
     border: 1px solid var(--neo-border);
-    border-radius: 24px;
-    box-shadow: 14px 14px 30px var(--neo-shadow-dark),
-      -14px -14px 30px var(--neo-shadow-light);
+    border-radius: var(--neo-radius-card);
+    box-shadow: none;
   }
 
   .neo-surface-soft {
-    background: rgba(245, 248, 251, 0.78);
-    border: 1px solid rgba(255, 255, 255, 0.82);
-    border-radius: 20px;
-    box-shadow: 8px 8px 20px rgba(117, 133, 145, 0.2),
-      -8px -8px 20px rgba(255, 255, 255, 0.82);
+    background: var(--neo-surface-soft-bg);
+    border: 1px solid var(--neo-surface-soft-border);
+    border-radius: var(--neo-radius-card);
+    box-shadow: none;
   }
 
+  /* Nested tier: blocks sitting inside a .neo-surface card. */
   .neo-inset {
     background: var(--neo-bg);
-    border: 1px solid rgba(255, 255, 255, 0.72);
-    border-radius: 18px;
-    box-shadow: inset 7px 7px 14px rgba(117, 133, 145, 0.24),
-      inset -7px -7px 14px rgba(255, 255, 255, 0.86);
+    border: 1px solid var(--neo-control-border);
+    border-radius: var(--neo-radius-nested);
+    box-shadow: none;
+  }
+
+  /* Hover cue for interactive cards: accent the outline, never lift or shadow. */
+  .neo-hover-accent {
+    @apply transition-colors duration-200;
+  }
+
+  .neo-hover-accent:hover {
+    border-color: rgb(var(--neo-accent-rgb) / 0.55);
   }
 
   .neo-panel {
     @apply neo-surface p-4 md:p-5 lg:p-6;
   }
 
+  .neo-table-shell,
+  .neo-table-shell-lg,
+  .neo-table-shell-xl {
+    @apply neo-surface overflow-hidden;
+  }
+
   .neo-control,
   .neo-input {
     @apply transition-all duration-200;
+    min-height: 2.75rem;
     background: var(--neo-bg);
-    border: 1px solid rgba(255, 255, 255, 0.76);
-    border-radius: 999px;
+    border: 1px solid var(--neo-control-border);
+    border-radius: var(--neo-radius-nested);
     color: var(--neo-text);
-    box-shadow: inset 5px 5px 10px rgba(117, 133, 145, 0.22),
-      inset -5px -5px 10px rgba(255, 255, 255, 0.84);
+    box-shadow: none;
   }
 
   .neo-input {
@@ -105,53 +205,47 @@ code {
   .neo-control:focus-visible,
   .neo-input:focus-visible {
     border-color: rgba(47, 158, 121, 0.46);
-    box-shadow: inset 4px 4px 9px rgba(117, 133, 145, 0.2),
-      inset -4px -4px 9px rgba(255, 255, 255, 0.85),
-      0 0 0 4px rgba(82, 183, 136, 0.22);
+    box-shadow: var(--neo-control-focus-shadow);
   }
 
   .neo-button {
     @apply inline-flex items-center justify-center gap-2 font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60;
     min-height: 2.75rem;
     padding: 0.75rem 1.25rem;
-    border-radius: 999px;
+    border-radius: var(--neo-radius-nested);
     background: var(--neo-surface);
-    border: 1px solid rgba(255, 255, 255, 0.76);
+    border: 1px solid var(--neo-control-border);
     color: var(--neo-text);
-    box-shadow: 7px 7px 15px rgba(117, 133, 145, 0.25),
-      -7px -7px 15px rgba(255, 255, 255, 0.86);
+    box-shadow: none;
   }
 
   .neo-button:hover {
     color: var(--neo-accent-strong);
-    transform: translateY(-1px);
+    border-color: rgb(var(--neo-accent-rgb) / 0.55);
   }
 
   .neo-button:active,
   .neo-button.is-active {
-    transform: translateY(0);
-    box-shadow: inset 5px 5px 10px rgba(117, 133, 145, 0.24),
-      inset -5px -5px 10px rgba(255, 255, 255, 0.88);
+    box-shadow: var(--neo-ring-active);
+    border-color: rgb(var(--neo-accent-rgb) / 0.6);
   }
 
   .neo-button:focus-visible,
   .neo-icon-button:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 4px rgba(82, 183, 136, 0.24),
-      7px 7px 15px rgba(117, 133, 145, 0.25),
-      -7px -7px 15px rgba(255, 255, 255, 0.86);
+    box-shadow: var(--neo-control-focus-shadow);
   }
 
   .neo-button-primary {
-    @apply neo-button text-white;
-    background: linear-gradient(145deg, var(--neo-accent), var(--neo-accent-strong));
-    border-color: rgba(255, 255, 255, 0.24);
-    box-shadow: 8px 8px 18px rgba(35, 97, 78, 0.28),
-      -7px -7px 15px rgba(255, 255, 255, 0.76);
+    @apply neo-button;
+    background: var(--neo-accent);
+    color: rgb(var(--neo-on-accent-rgb));
+    border-color: var(--neo-accent);
+    box-shadow: none;
   }
 
   .neo-button-primary:hover {
-    color: #fff;
+    color: rgb(var(--neo-on-accent-rgb));
     filter: saturate(1.05);
   }
 
@@ -161,24 +255,20 @@ code {
     height: 2.75rem;
     border-radius: 999px;
     background: var(--neo-surface);
-    border: 1px solid rgba(255, 255, 255, 0.76);
+    border: 1px solid var(--neo-control-border);
     color: var(--neo-accent-strong);
-    box-shadow: 6px 6px 13px rgba(117, 133, 145, 0.24),
-      -6px -6px 13px rgba(255, 255, 255, 0.88);
+    box-shadow: none;
   }
 
   .neo-icon-button:hover,
   .neo-icon-button.is-active {
-    color: #fff;
-    background: linear-gradient(145deg, var(--neo-accent), var(--neo-teal));
+    color: rgb(var(--neo-on-accent-rgb));
+    background: var(--neo-accent);
+    border-color: var(--neo-accent);
   }
 
   .neo-stat {
     @apply neo-surface-soft p-4 sm:p-5;
-  }
-
-  .neo-table-shell {
-    @apply neo-surface overflow-hidden;
   }
 
   .neo-label {
@@ -191,6 +281,301 @@ code {
   }
 
   .neo-divider {
-    border-color: rgba(126, 145, 158, 0.22);
+    border-color: var(--neo-border);
   }
+}
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid rgb(var(--neo-focus-rgb) / 0.9) !important;
+  outline-offset: 3px !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dark-mode safety net for legacy Tailwind light utilities that remain in older screens. */
+[data-theme="dark"] .bg-white,
+[data-theme="dark"] .bg-gray-50,
+[data-theme="dark"] .bg-gray-100,
+[data-theme="dark"] .bg-slate-50,
+[data-theme="dark"] .bg-slate-100,
+[data-theme="dark"] .bg-neutral-50,
+[data-theme="dark"] .bg-neutral-100,
+[data-theme="dark"] .bg-stone-50,
+[data-theme="dark"] .bg-stone-100,
+[data-theme="dark"] .hover\:bg-white:hover,
+[data-theme="dark"] .hover\:bg-gray-50:hover,
+[data-theme="dark"] .hover\:bg-gray-100:hover,
+[data-theme="dark"] .hover\:bg-slate-50:hover,
+[data-theme="dark"] .hover\:bg-slate-100:hover {
+  background-color: rgb(var(--neo-surface-rgb) / var(--tw-bg-opacity, 1));
+}
+
+[data-theme="dark"] .bg-blue-50,
+[data-theme="dark"] .bg-blue-100,
+[data-theme="dark"] .bg-indigo-50,
+[data-theme="dark"] .bg-indigo-100,
+[data-theme="dark"] .bg-purple-50,
+[data-theme="dark"] .bg-purple-100,
+[data-theme="dark"] .bg-sky-50,
+[data-theme="dark"] .bg-sky-100,
+[data-theme="dark"] .hover\:bg-blue-50:hover,
+[data-theme="dark"] .hover\:bg-blue-100:hover,
+[data-theme="dark"] .hover\:bg-indigo-50:hover,
+[data-theme="dark"] .hover\:bg-indigo-100:hover,
+[data-theme="dark"] .hover\:bg-purple-50:hover,
+[data-theme="dark"] .hover\:bg-purple-100:hover {
+  background-color: rgb(var(--neo-accent-rgb) / 0.14);
+}
+
+[data-theme="dark"] .bg-green-50,
+[data-theme="dark"] .bg-green-100,
+[data-theme="dark"] .bg-green-50\/50,
+[data-theme="dark"] .bg-emerald-50,
+[data-theme="dark"] .bg-emerald-100,
+[data-theme="dark"] .bg-emerald-50\/60,
+[data-theme="dark"] .bg-emerald-50\/70,
+[data-theme="dark"] .bg-emerald-50\/50,
+[data-theme="dark"] .hover\:bg-green-50:hover,
+[data-theme="dark"] .hover\:bg-green-100:hover,
+[data-theme="dark"] .hover\:bg-emerald-50:hover,
+[data-theme="dark"] .hover\:bg-emerald-100:hover {
+  background-color: rgb(var(--neo-accent-rgb) / 0.16);
+}
+
+[data-theme="dark"] .bg-amber-50,
+[data-theme="dark"] .bg-amber-100,
+[data-theme="dark"] .bg-yellow-50,
+[data-theme="dark"] .bg-yellow-100,
+[data-theme="dark"] .bg-orange-50,
+[data-theme="dark"] .bg-orange-100,
+[data-theme="dark"] .hover\:bg-amber-50:hover,
+[data-theme="dark"] .hover\:bg-amber-100:hover,
+[data-theme="dark"] .hover\:bg-yellow-50:hover,
+[data-theme="dark"] .hover\:bg-yellow-100:hover,
+[data-theme="dark"] .hover\:bg-orange-50:hover,
+[data-theme="dark"] .hover\:bg-orange-100:hover {
+  background-color: rgb(var(--neo-warning-rgb) / 0.16);
+}
+
+[data-theme="dark"] .bg-red-50,
+[data-theme="dark"] .bg-red-100,
+[data-theme="dark"] .bg-rose-50,
+[data-theme="dark"] .bg-rose-100,
+[data-theme="dark"] .bg-pink-50,
+[data-theme="dark"] .bg-pink-100,
+[data-theme="dark"] .hover\:bg-red-50:hover,
+[data-theme="dark"] .hover\:bg-red-100:hover,
+[data-theme="dark"] .hover\:bg-rose-50:hover,
+[data-theme="dark"] .hover\:bg-rose-100:hover {
+  background-color: rgb(var(--neo-danger-rgb) / 0.16);
+}
+
+[data-theme="dark"] .text-black,
+[data-theme="dark"] .text-gray-900,
+[data-theme="dark"] .text-gray-800,
+[data-theme="dark"] .text-slate-900,
+[data-theme="dark"] .text-slate-800,
+[data-theme="dark"] .text-neutral-900,
+[data-theme="dark"] .text-neutral-800,
+[data-theme="dark"] .text-stone-900,
+[data-theme="dark"] .text-stone-800 {
+  color: rgb(var(--neo-text-rgb) / var(--tw-text-opacity, 1));
+}
+
+[data-theme="dark"] .text-gray-700,
+[data-theme="dark"] .text-gray-600,
+[data-theme="dark"] .text-gray-500,
+[data-theme="dark"] .text-slate-700,
+[data-theme="dark"] .text-slate-600,
+[data-theme="dark"] .text-slate-500,
+[data-theme="dark"] .text-neutral-700,
+[data-theme="dark"] .text-neutral-600,
+[data-theme="dark"] .text-neutral-500,
+[data-theme="dark"] .text-stone-700,
+[data-theme="dark"] .text-stone-600,
+[data-theme="dark"] .text-stone-500 {
+  color: rgb(var(--neo-muted-rgb) / var(--tw-text-opacity, 1));
+}
+
+[data-theme="dark"] .text-blue-900,
+[data-theme="dark"] .text-blue-800,
+[data-theme="dark"] .text-blue-700,
+[data-theme="dark"] .text-indigo-900,
+[data-theme="dark"] .text-indigo-800,
+[data-theme="dark"] .text-indigo-700,
+[data-theme="dark"] .text-purple-900,
+[data-theme="dark"] .text-purple-800,
+[data-theme="dark"] .text-purple-700,
+[data-theme="dark"] .hover\:text-blue-900:hover,
+[data-theme="dark"] .hover\:text-blue-800:hover,
+[data-theme="dark"] .hover\:text-indigo-900:hover,
+[data-theme="dark"] .hover\:text-purple-900:hover {
+  color: #bfdbfe;
+}
+
+[data-theme="dark"] .text-green-900,
+[data-theme="dark"] .text-green-800,
+[data-theme="dark"] .text-green-700,
+[data-theme="dark"] .text-emerald-900,
+[data-theme="dark"] .text-emerald-800,
+[data-theme="dark"] .text-emerald-700,
+[data-theme="dark"] .hover\:text-green-900:hover,
+[data-theme="dark"] .hover\:text-green-800:hover,
+[data-theme="dark"] .hover\:text-emerald-900:hover {
+  color: #bbf7d0;
+}
+
+[data-theme="dark"] .text-red-900,
+[data-theme="dark"] .text-red-800,
+[data-theme="dark"] .text-red-700,
+[data-theme="dark"] .text-rose-900,
+[data-theme="dark"] .text-rose-800,
+[data-theme="dark"] .text-rose-700,
+[data-theme="dark"] .hover\:text-red-900:hover,
+[data-theme="dark"] .hover\:text-red-800:hover,
+[data-theme="dark"] .hover\:text-rose-900:hover {
+  color: #fecaca;
+}
+
+[data-theme="dark"] .text-amber-900,
+[data-theme="dark"] .text-amber-800,
+[data-theme="dark"] .text-amber-700,
+[data-theme="dark"] .text-yellow-900,
+[data-theme="dark"] .text-yellow-800,
+[data-theme="dark"] .text-yellow-700,
+[data-theme="dark"] .text-orange-900,
+[data-theme="dark"] .text-orange-800,
+[data-theme="dark"] .text-orange-700,
+[data-theme="dark"] .hover\:text-yellow-900:hover,
+[data-theme="dark"] .hover\:text-amber-900:hover,
+[data-theme="dark"] .hover\:text-orange-900:hover {
+  color: #fde68a;
+}
+
+[data-theme="dark"] .border-gray-100,
+[data-theme="dark"] .border-gray-200,
+[data-theme="dark"] .border-slate-100,
+[data-theme="dark"] .border-slate-200,
+[data-theme="dark"] .border-neutral-100,
+[data-theme="dark"] .border-neutral-200,
+[data-theme="dark"] .border-stone-100,
+[data-theme="dark"] .border-stone-200,
+[data-theme="dark"] .border-blue-100,
+[data-theme="dark"] .border-blue-200,
+[data-theme="dark"] .border-green-100,
+[data-theme="dark"] .border-green-200,
+[data-theme="dark"] .border-emerald-100,
+[data-theme="dark"] .border-emerald-200,
+[data-theme="dark"] .border-red-100,
+[data-theme="dark"] .border-red-200,
+[data-theme="dark"] .border-amber-100,
+[data-theme="dark"] .border-amber-200,
+[data-theme="dark"] .border-yellow-100,
+[data-theme="dark"] .border-yellow-200,
+[data-theme="dark"] .border-orange-100,
+[data-theme="dark"] .border-orange-200,
+[data-theme="dark"] .border-purple-100,
+[data-theme="dark"] .border-purple-200,
+[data-theme="dark"] .border-indigo-100,
+[data-theme="dark"] .border-indigo-200,
+[data-theme="dark"] .divide-gray-100 > :not([hidden]) ~ :not([hidden]),
+[data-theme="dark"] .divide-gray-200 > :not([hidden]) ~ :not([hidden]),
+[data-theme="dark"] .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+[data-theme="dark"] .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgb(var(--neo-border-rgb) / var(--tw-border-opacity, 0.46));
+}
+
+[data-theme="dark"] .placeholder-gray-400::placeholder,
+[data-theme="dark"] .placeholder-gray-500::placeholder,
+[data-theme="dark"] .placeholder-slate-400::placeholder,
+[data-theme="dark"] .placeholder-slate-500::placeholder {
+  color: rgb(var(--neo-muted-rgb) / 0.82);
+}
+
+[data-theme="dark"] .focus\:ring-blue-100:focus,
+[data-theme="dark"] .focus\:ring-green-100:focus,
+[data-theme="dark"] .focus\:ring-emerald-100:focus,
+[data-theme="dark"] .focus\:ring-gray-100:focus,
+[data-theme="dark"] .focus\:ring-slate-100:focus {
+  --tw-ring-color: rgb(var(--neo-focus-rgb) / 0.2);
+}
+
+[data-theme="dark"] .bg-blue-100\/80,
+[data-theme="dark"] .bg-emerald-100\/80 {
+  background-color: rgb(var(--neo-surface-strong-rgb) / 0.72);
+}
+
+[data-theme="dark"] .from-blue-50,
+[data-theme="dark"] .from-indigo-50,
+[data-theme="dark"] .from-purple-50,
+[data-theme="dark"] .from-sky-50 {
+  --tw-gradient-from: rgb(var(--neo-accent-rgb) / 0.18) var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(var(--neo-accent-rgb) / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+[data-theme="dark"] .to-blue-50,
+[data-theme="dark"] .to-blue-100,
+[data-theme="dark"] .to-indigo-50,
+[data-theme="dark"] .to-indigo-100,
+[data-theme="dark"] .to-purple-50,
+[data-theme="dark"] .to-purple-100,
+[data-theme="dark"] .to-sky-50 {
+  --tw-gradient-to: rgb(var(--neo-accent-rgb) / 0.08) var(--tw-gradient-to-position);
+}
+
+[data-theme="dark"] .from-green-50,
+[data-theme="dark"] .from-emerald-50 {
+  --tw-gradient-from: rgb(var(--neo-accent-rgb) / 0.18) var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(var(--neo-accent-rgb) / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+[data-theme="dark"] .to-green-50,
+[data-theme="dark"] .to-green-100,
+[data-theme="dark"] .to-emerald-50,
+[data-theme="dark"] .to-emerald-100 {
+  --tw-gradient-to: rgb(var(--neo-accent-rgb) / 0.08) var(--tw-gradient-to-position);
+}
+
+[data-theme="dark"] .from-red-50,
+[data-theme="dark"] .from-rose-50,
+[data-theme="dark"] .from-pink-50 {
+  --tw-gradient-from: rgb(var(--neo-danger-rgb) / 0.18) var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(var(--neo-danger-rgb) / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+[data-theme="dark"] .to-red-50,
+[data-theme="dark"] .to-red-100,
+[data-theme="dark"] .to-rose-50,
+[data-theme="dark"] .to-rose-100,
+[data-theme="dark"] .to-pink-50 {
+  --tw-gradient-to: rgb(var(--neo-danger-rgb) / 0.08) var(--tw-gradient-to-position);
+}
+
+[data-theme="dark"] .from-amber-50,
+[data-theme="dark"] .from-yellow-50,
+[data-theme="dark"] .from-orange-50 {
+  --tw-gradient-from: rgb(var(--neo-warning-rgb) / 0.18) var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(var(--neo-warning-rgb) / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+[data-theme="dark"] .to-amber-50,
+[data-theme="dark"] .to-amber-100,
+[data-theme="dark"] .to-yellow-50,
+[data-theme="dark"] .to-yellow-100,
+[data-theme="dark"] .to-orange-50,
+[data-theme="dark"] .to-orange-100 {
+  --tw-gradient-to: rgb(var(--neo-warning-rgb) / 0.08) var(--tw-gradient-to-position);
 }

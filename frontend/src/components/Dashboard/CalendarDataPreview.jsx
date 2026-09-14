@@ -163,11 +163,11 @@ const CalendarDataPreview = ({ dataType, title, onAddNew }) => {
 
   return (
     <div className="neo-table-shell">
-      <div className="px-6 py-4 border-b border-gray-200">
+      <div className="px-6 py-4 border-b border-neo-border">
         <div className="flex justify-between items-center">
           <div>
-            <h3 className="text-lg font-medium text-gray-900">{title} Data</h3>
-            <p className="text-sm text-gray-500">{filteredData.length} records found</p>
+            <h3 className="text-lg font-medium text-neo-text">{title} Data</h3>
+            <p className="text-sm text-neo-muted">{filteredData.length} records found</p>
           </div>
           <div className="flex space-x-2">
             <button
@@ -189,25 +189,25 @@ const CalendarDataPreview = ({ dataType, title, onAddNew }) => {
         </div>
       </div>
 
-      <div className="px-6 py-4 bg-white/25 border-b neo-divider">
+      <div className="px-6 py-4 bg-neo-surface/25 border-b neo-divider">
         <div className="flex flex-wrap items-center space-x-4">
           <div className="flex items-center space-x-2">
-            <FaSearch className="text-gray-400" />
+            <FaSearch className="text-neo-muted" />
             <input
               type="text"
               placeholder="Search..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="px-3 py-2 border border-neo-border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
             />
           </div>
 
           <div className="flex items-center space-x-2">
-            <FaFilter className="text-gray-400" />
+            <FaFilter className="text-neo-muted" />
             <select
               value={selectedRegion}
               onChange={(e) => setSelectedRegion(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="px-3 py-2 border border-neo-border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
             >
               <option value="">All Regions</option>
               {uniqueRegions.map((region) => (
@@ -219,13 +219,13 @@ const CalendarDataPreview = ({ dataType, title, onAddNew }) => {
           </div>
 
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">View:</span>
+            <span className="text-sm text-neo-muted">View:</span>
             <button
               onClick={() => setViewMode("table")}
               className={`px-3 py-1 rounded ${
                 viewMode === "table"
                   ? "bg-green-100 text-green-800"
-                  : "bg-gray-100 text-gray-600"
+                  : "bg-neo-bg text-neo-muted"
               }`}
             >
               Table
@@ -235,7 +235,7 @@ const CalendarDataPreview = ({ dataType, title, onAddNew }) => {
               className={`px-3 py-1 rounded ${
                 viewMode === "card"
                   ? "bg-green-100 text-green-800"
-                  : "bg-gray-100 text-gray-600"
+                  : "bg-neo-bg text-neo-muted"
               }`}
             >
               Cards
@@ -246,11 +246,11 @@ const CalendarDataPreview = ({ dataType, title, onAddNew }) => {
 
       {filteredData.length === 0 ? (
         <div className="px-6 py-8 text-center">
-          <div className="text-gray-400 mb-4">
+          <div className="text-neo-muted mb-4">
             <FaEye className="mx-auto h-12 w-12" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Data Available</h3>
-          <p className="text-gray-500 mb-4">
+          <h3 className="text-lg font-medium text-neo-text mb-2">No Data Available</h3>
+          <p className="text-neo-muted mb-4">
             No {title.toLowerCase()} data has been uploaded yet.
           </p>
           <button
@@ -264,31 +264,31 @@ const CalendarDataPreview = ({ dataType, title, onAddNew }) => {
       ) : viewMode === "table" ? (
         <>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-neo-border">
+              <thead className="bg-neo-bg-soft">
                 <tr>
                   {Object.keys(paginatedData[0] || {}).map((key) => (
                     <th
                       key={key}
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      className="px-6 py-3 text-left text-xs font-medium text-neo-muted uppercase tracking-wider"
                     >
                       {key
                         .replace(/([A-Z])/g, " $1")
                         .replace(/^./, (str) => str.toUpperCase())}
                     </th>
                   ))}
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-neo-muted uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-neo-surface divide-y divide-neo-border">
                 {paginatedData.map((item, index) => (
-                  <tr key={item.id || index} className="hover:bg-gray-50">
+                  <tr key={item.id || index} className="hover:bg-neo-surface-strong">
                     {Object.entries(item).map(([key, value]) => (
                       <td
                         key={key}
-                        className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                        className="px-6 py-4 whitespace-nowrap text-sm text-neo-text"
                       >
                         {key === "region" ? (
                           <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
@@ -335,9 +335,9 @@ const CalendarDataPreview = ({ dataType, title, onAddNew }) => {
           </div>
 
           {totalPages > 1 && (
-            <div className="px-6 py-3 bg-white/25 border-t neo-divider">
+            <div className="px-6 py-3 bg-neo-surface/25 border-t neo-divider">
               <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-700">
+                <div className="text-sm text-neo-text">
                   Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
                   {Math.min(currentPage * itemsPerPage, filteredData.length)} of{" "}
                   {filteredData.length} results
@@ -346,7 +346,7 @@ const CalendarDataPreview = ({ dataType, title, onAddNew }) => {
                   <button
                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                     disabled={currentPage === 1}
-                    className="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                    className="px-3 py-1 border border-neo-border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neo-surface-strong"
                   >
                     Previous
                   </button>
@@ -357,7 +357,7 @@ const CalendarDataPreview = ({ dataType, title, onAddNew }) => {
                       className={`px-3 py-1 border rounded-md ${
                         currentPage === page
                           ? "bg-green-500 text-white border-green-500"
-                          : "border-gray-300 hover:bg-gray-50"
+                          : "border-neo-border hover:bg-neo-surface-strong"
                       }`}
                     >
                       {page}
@@ -366,7 +366,7 @@ const CalendarDataPreview = ({ dataType, title, onAddNew }) => {
                   <button
                     onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                     disabled={currentPage === totalPages}
-                    className="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                    className="px-3 py-1 border border-neo-border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neo-surface-strong"
                   >
                     Next
                   </button>
@@ -385,10 +385,10 @@ const CalendarDataPreview = ({ dataType, title, onAddNew }) => {
               >
                 <div className="flex justify-between items-start mb-3">
                   <div>
-                    <h4 className="font-semibold text-gray-900">
+                    <h4 className="font-semibold text-neo-text">
                       {item.crop || item.poultryType || item.title || "Unknown"}
                     </h4>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-neo-muted">
                       {item.region} - {item.district}
                     </p>
                   </div>
@@ -405,7 +405,7 @@ const CalendarDataPreview = ({ dataType, title, onAddNew }) => {
                   </div>
                 </div>
 
-                <div className="text-sm text-gray-600 space-y-1">
+                <div className="text-sm text-neo-muted space-y-1">
                   {Object.entries(item)
                     .filter(([key]) => !["id", "crop", "poultryType", "region", "district"].includes(key))
                     .slice(0, 3)
@@ -426,9 +426,9 @@ const CalendarDataPreview = ({ dataType, title, onAddNew }) => {
           </div>
 
           {totalPages > 1 && (
-            <div className="px-6 py-3 bg-white/25 border-t neo-divider">
+            <div className="px-6 py-3 bg-neo-surface/25 border-t neo-divider">
               <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-700">
+                <div className="text-sm text-neo-text">
                   Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
                   {Math.min(currentPage * itemsPerPage, filteredData.length)} of{" "}
                   {filteredData.length} results
@@ -437,7 +437,7 @@ const CalendarDataPreview = ({ dataType, title, onAddNew }) => {
                   <button
                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                     disabled={currentPage === 1}
-                    className="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                    className="px-3 py-1 border border-neo-border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neo-surface-strong"
                   >
                     Previous
                   </button>
@@ -451,7 +451,7 @@ const CalendarDataPreview = ({ dataType, title, onAddNew }) => {
                       className={`px-3 py-1 border rounded-md ${
                         currentPage === page
                           ? "bg-green-500 text-white border-green-500"
-                          : "border-gray-300 hover:bg-gray-50"
+                          : "border-neo-border hover:bg-neo-surface-strong"
                       }`}
                     >
                       {page}
@@ -460,7 +460,7 @@ const CalendarDataPreview = ({ dataType, title, onAddNew }) => {
                   <button
                     onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                     disabled={currentPage === totalPages}
-                    className="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                    className="px-3 py-1 border border-neo-border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neo-surface-strong"
                   >
                     Next
                   </button>

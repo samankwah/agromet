@@ -17,7 +17,7 @@ const SummarySection = ({ summary }) => {
       <div className="bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-300/60 rounded-xl shadow-lg shadow-emerald-200/50 p-6">
         {/* Header */}
         <div className="flex items-center gap-3 mb-4 pb-4 border-b border-emerald-200">
-          <div className="flex-shrink-0 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md">
+          <div className="flex-shrink-0 w-12 h-12 bg-neo-surface rounded-full flex items-center justify-center shadow-md">
             <FaFileAlt className="text-emerald-600 text-xl" />
           </div>
           <div className="flex-1">
@@ -34,9 +34,9 @@ const SummarySection = ({ summary }) => {
         </div>
 
         {/* Summary Content */}
-        <div className="bg-white/60 rounded-lg p-5 border border-emerald-200/60">
+        <div className="bg-neo-surface/60 rounded-lg p-5 border border-emerald-200/60">
           {summary && summary.trim() !== '' && summary.trim() !== '-' ? (
-            <p className="text-base text-slate-700 leading-relaxed whitespace-pre-wrap">
+            <p className="text-base text-neo-text leading-relaxed whitespace-pre-wrap">
               {summary}
             </p>
           ) : (

@@ -128,7 +128,7 @@ const AdminSignUp = () => {
         </p>
         <Link
           to="/admin-login"
-          className="neo-button relative bg-white/90 text-neo-accent-strong"
+          className="neo-button relative bg-neo-surface/90 text-neo-accent-strong"
         >
           Sign In
         </Link>
@@ -155,7 +155,7 @@ const AdminSignUp = () => {
         >
           <div className="mb-2">
             <label
-              className="block text-gray-700 text-sm font-semibold mb-2"
+              className="block text-neo-text text-sm font-semibold mb-2"
               htmlFor="name"
             >
               Full Name
@@ -177,7 +177,7 @@ const AdminSignUp = () => {
 
           <div className="mb-2">
             <label
-              className="block text-gray-700 text-sm font-semibold mb-2"
+              className="block text-neo-text text-sm font-semibold mb-2"
               htmlFor="email"
             >
               Email
@@ -199,7 +199,7 @@ const AdminSignUp = () => {
 
           <div className="mb-2 relative">
             <label
-              className="block text-gray-700 text-sm font-semibold mb-2"
+              className="block text-neo-text text-sm font-semibold mb-2"
               htmlFor="password"
             >
               Password
@@ -216,7 +216,7 @@ const AdminSignUp = () => {
             />
             <button
               type="button"
-              className="absolute right-3 top-11 text-gray-500 hover:text-gray-700 transition-colors"
+              className="absolute right-3 top-11 text-neo-muted hover:text-neo-text transition-colors"
               onClick={() => setShowPassword(!showPassword)}
             >
               {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
@@ -228,7 +228,7 @@ const AdminSignUp = () => {
 
           <div className="mb-2 relative">
             <label
-              className="block text-gray-700 text-sm font-semibold mb-2"
+              className="block text-neo-text text-sm font-semibold mb-2"
               htmlFor="confirmPassword"
             >
               Confirm Password
@@ -245,7 +245,7 @@ const AdminSignUp = () => {
             />
             <button
               type="button"
-              className="absolute right-3 top-11 text-gray-500 hover:text-gray-700 transition-colors"
+              className="absolute right-3 top-11 text-neo-muted hover:text-neo-text transition-colors"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
             >
               {showConfirmPassword ? (
@@ -271,7 +271,7 @@ const AdminSignUp = () => {
             </button>
           </div>
 
-          <div className="text-center text-gray-500 my-4">OR</div>
+          <div className="text-center text-neo-muted my-4">OR</div>
 
           <button
             className="neo-button w-full"
@@ -285,7 +285,7 @@ const AdminSignUp = () => {
             Sign Up with Google
           </button>
 
-          <div className="text-center text-sm mt-4 text-gray-600">
+          <div className="text-center text-sm mt-4 text-neo-muted">
             Already have an account?{" "}
             <Link
               to="/admin-login"

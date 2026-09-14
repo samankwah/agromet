@@ -1,0 +1,7 @@
+# Training and export only. Never installed by the backend or shipped anywhere.
+tensorflow==2.21.0
+numpy>=2.0
+scikit-learn>=1.5
+matplotlib>=3.9
+pandas>=2.2
+httpx==0.28.1

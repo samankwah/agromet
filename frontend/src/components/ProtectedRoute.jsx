@@ -8,7 +8,7 @@ const ProtectedRoute = ({ children }) => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-neo-bg-soft">
         <PageSkeleton />
       </div>
     );

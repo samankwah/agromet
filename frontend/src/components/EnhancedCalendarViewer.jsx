@@ -63,7 +63,7 @@ const EnhancedCalendarViewer = () => {
       case 'cycle':
         return <Clock className="h-5 w-5 text-blue-600" />;
       default:
-        return <Layers className="h-5 w-5 text-gray-600" />;
+        return <Layers className="h-5 w-5 text-neo-muted" />;
     }
   };
 
@@ -74,7 +74,7 @@ const EnhancedCalendarViewer = () => {
     };
     
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium border ${colors[calendarType] || 'bg-gray-100 text-gray-800 border-gray-200'}`}>
+      <span className={`px-2 py-1 rounded-full text-xs font-medium border ${colors[calendarType] || 'bg-neo-bg text-neo-text border-neo-border'}`}>
         {calendarType === 'seasonal' ? 'Seasonal' : 'Production Cycle'}
       </span>
     );
@@ -111,7 +111,7 @@ const EnhancedCalendarViewer = () => {
     const activities = calendar.sampleActivities || [];
     
     if (!activities || activities.length === 0) {
-      return <p className="text-gray-500 text-sm">No activities timeline available</p>;
+      return <p className="text-neo-muted text-sm">No activities timeline available</p>;
     }
 
     // Filter out header rows and empty activities
@@ -128,8 +128,8 @@ const EnhancedCalendarViewer = () => {
     if (cleanActivities.length === 0) {
       return (
         <div className="space-y-2">
-          <p className="text-gray-500 text-sm mb-2">Raw Excel data detected:</p>
-          <div className="bg-gray-50 p-2 rounded text-xs">
+          <p className="text-neo-muted text-sm mb-2">Raw Excel data detected:</p>
+          <div className="bg-neo-bg-soft p-2 rounded text-xs">
             <p className="font-medium mb-1">File: {calendar.fileData?.filename}</p>
             <p>Sheets: {Object.keys(calendar.fileData?.sheets || {}).join(', ')}</p>
             <p>Records: {calendar.fileData?.totalRecords || 0}</p>
@@ -141,10 +141,10 @@ const EnhancedCalendarViewer = () => {
     return (
       <div className="space-y-2">
         {cleanActivities.slice(0, 5).map((activity, index) => (
-          <div key={index} className="flex items-start space-x-3 p-2 bg-gray-50 rounded">
+          <div key={index} className="flex items-start space-x-3 p-2 bg-neo-bg-soft rounded">
             <div className="flex-shrink-0 w-2 h-2 bg-green-500 rounded-full mt-2"></div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm text-gray-900">{activity}</p>
+              <p className="font-medium text-sm text-neo-text">{activity}</p>
               <div className="flex flex-wrap gap-1 mt-1">
                 <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">
                   {calendar.calendarType === 'seasonal' ? 'Seasonal timing' : `Activity ${index + 1}`}
@@ -154,7 +154,7 @@ const EnhancedCalendarViewer = () => {
           </div>
         ))}
         {cleanActivities.length > 5 && (
-          <p className="text-sm text-gray-500 text-center">
+          <p className="text-sm text-neo-muted text-center">
             +{cleanActivities.length - 5} more activities
           </p>
         )}
@@ -210,13 +210,13 @@ const EnhancedCalendarViewer = () => {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow-lg p-8">
+      <div className="bg-neo-surface rounded-lg shadow-lg p-8">
         <div className="animate-pulse space-y-4">
-          <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+          <div className="h-4 bg-neo-border/30 rounded w-1/4"></div>
           <div className="space-y-2">
-            <div className="h-16 bg-gray-200 rounded"></div>
-            <div className="h-16 bg-gray-200 rounded"></div>
-            <div className="h-16 bg-gray-200 rounded"></div>
+            <div className="h-16 bg-neo-border/30 rounded"></div>
+            <div className="h-16 bg-neo-border/30 rounded"></div>
+            <div className="h-16 bg-neo-border/30 rounded"></div>
           </div>
         </div>
       </div>
@@ -224,10 +224,10 @@ const EnhancedCalendarViewer = () => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
+    <div className="bg-neo-surface rounded-lg shadow-lg p-6">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Enhanced Agricultural Calendars</h2>
-        <p className="text-gray-600">
+        <h2 className="text-2xl font-bold text-neo-text mb-2">Enhanced Agricultural Calendars</h2>
+        <p className="text-neo-muted">
           View and manage seasonal crop calendars and production cycle templates.
         </p>
       </div>
@@ -235,11 +235,11 @@ const EnhancedCalendarViewer = () => {
       {/* Filters */}
       <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Calendar Type</label>
+          <label className="block text-sm font-medium text-neo-text mb-1">Calendar Type</label>
           <select
             value={filters.calendarType}
             onChange={(e) => setFilters({...filters, calendarType: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+            className="w-full px-3 py-2 border border-neo-border rounded-md text-sm"
           >
             <option value="">All Types</option>
             <option value="seasonal">Seasonal</option>
@@ -248,11 +248,11 @@ const EnhancedCalendarViewer = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Commodity</label>
+          <label className="block text-sm font-medium text-neo-text mb-1">Commodity</label>
           <select
             value={filters.commodity}
             onChange={(e) => setFilters({...filters, commodity: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+            className="w-full px-3 py-2 border border-neo-border rounded-md text-sm"
           >
             <option value="">All Commodities</option>
             {getUniqueValues('commodity').map(commodity => (
@@ -262,11 +262,11 @@ const EnhancedCalendarViewer = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Region</label>
+          <label className="block text-sm font-medium text-neo-text mb-1">Region</label>
           <select
             value={filters.regionCode}
             onChange={(e) => setFilters({...filters, regionCode: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+            className="w-full px-3 py-2 border border-neo-border rounded-md text-sm"
           >
             <option value="">All Regions</option>
             {getUniqueValues('regionCode').map(regionCode => (
@@ -278,11 +278,11 @@ const EnhancedCalendarViewer = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
+          <label className="block text-sm font-medium text-neo-text mb-1">Year</label>
           <select
             value={filters.year}
             onChange={(e) => setFilters({...filters, year: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+            className="w-full px-3 py-2 border border-neo-border rounded-md text-sm"
           >
             <option value="">All Years</option>
             {getUniqueValues('year').sort((a, b) => b - a).map(year => (
@@ -295,9 +295,9 @@ const EnhancedCalendarViewer = () => {
       {/* Calendar List */}
       {calendars.length === 0 ? (
         <div className="text-center py-12">
-          <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Calendars Found</h3>
-          <p className="text-gray-500">
+          <Calendar className="h-16 w-16 text-neo-muted mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-neo-text mb-2">No Calendars Found</h3>
+          <p className="text-neo-muted">
             No enhanced calendars match your current filters. Try adjusting the filters or upload a new calendar.
           </p>
         </div>
@@ -308,19 +308,19 @@ const EnhancedCalendarViewer = () => {
             const isExpanded = expandedCalendars.has(calendar.id);
             
             return (
-              <div key={calendar.id} className="border border-gray-200 rounded-lg overflow-hidden">
-                <div className="p-4 bg-gray-50">
+              <div key={calendar.id} className="border border-neo-border rounded-lg overflow-hidden">
+                <div className="p-4 bg-neo-bg-soft">
                   <div className="flex items-center justify-between">
                     <div className="flex items-start space-x-4">
                       {getCalendarTypeIcon(calendar.calendarType)}
                       <div className="flex-1">
                         <div className="flex items-center space-x-2 mb-1">
-                          <h3 className="font-semibold text-lg text-gray-900">
+                          <h3 className="font-semibold text-lg text-neo-text">
                             {calendar.title || `${calendar.crop} Calendar`}
                           </h3>
                           {getCalendarTypeBadge(calendar.calendarType)}
                         </div>
-                        <div className="flex items-center space-x-4 text-sm text-gray-600">
+                        <div className="flex items-center space-x-4 text-sm text-neo-muted">
                           <span className="flex items-center">
                             <MapPin className="h-4 w-4 mr-1" />
                             {calendar.region} - {calendar.district}
@@ -342,12 +342,12 @@ const EnhancedCalendarViewer = () => {
                       )}
                       <button
                         onClick={() => toggleExpandCalendar(calendar.id)}
-                        className="p-2 hover:bg-gray-200 rounded-md transition-colors"
+                        className="p-2 hover:bg-neo-border/40 rounded-md transition-colors"
                       >
                         {isExpanded ? (
-                          <ChevronDown className="h-5 w-5 text-gray-600" />
+                          <ChevronDown className="h-5 w-5 text-neo-muted" />
                         ) : (
-                          <ChevronRight className="h-5 w-5 text-gray-600" />
+                          <ChevronRight className="h-5 w-5 text-neo-muted" />
                         )}
                       </button>
                     </div>
@@ -355,11 +355,11 @@ const EnhancedCalendarViewer = () => {
                 </div>
 
                 {isExpanded && (
-                  <div className="p-4 bg-white border-t border-gray-200">
+                  <div className="p-4 bg-neo-surface border-t border-neo-border">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       {/* Calendar Details */}
                       <div>
-                        <h4 className="font-medium text-gray-900 mb-3">Calendar Details</h4>
+                        <h4 className="font-medium text-neo-text mb-3">Calendar Details</h4>
                         <div className="space-y-2 text-sm">
                           <div>
                             <span className="font-medium">Commodity:</span>
@@ -380,7 +380,7 @@ const EnhancedCalendarViewer = () => {
                           {calendar.description && (
                             <div>
                               <span className="font-medium">Description:</span>
-                              <p className="ml-2 text-gray-600">{calendar.description}</p>
+                              <p className="ml-2 text-neo-muted">{calendar.description}</p>
                             </div>
                           )}
                         </div>
@@ -388,7 +388,7 @@ const EnhancedCalendarViewer = () => {
 
                       {/* Activity Timeline */}
                       <div>
-                        <h4 className="font-medium text-gray-900 mb-3">Activity Timeline</h4>
+                        <h4 className="font-medium text-neo-text mb-3">Activity Timeline</h4>
                         {renderActivityTimeline(calendar)}
                       </div>
                     </div>

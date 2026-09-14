@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import PropTypes from 'prop-types';
 import { ChatbotProvider } from './contexts/ChatbotContext';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
+import { MarketCartProvider } from './contexts/MarketCartContext';
 import Layout from './pages/Layout';
 import Home from './pages/Home';
 import NotFound from './components/NotFound';
@@ -39,7 +40,8 @@ const CalendarPreviewPage = lazy(() => import('./pages/CalendarPreviewPage'));
 const PoultryCalendarPreviewPage = lazy(() => import('./pages/PoultryCalendarPreviewPage'));
 const CreatePoultryCalendarPage = lazy(() => import('./pages/CreatePoultryCalendarPage'));
 const CombineView = lazy(() => import('./pages/CombineView'));
-const MarketPage = lazy(() => import('./components/MarketPage'));
+const MarketPage = lazy(() => import('./components/Market/MarketPage'));
+const CommodityDetail = lazy(() => import('./pages/CommodityDetail'));
 const CropDiagnosticTool = lazy(() => import('./components/CropDiagnosticTool'));
 
 const RouteLoader = () => <PageSkeleton />;
@@ -71,6 +73,7 @@ function App() {
   return (
     <ErrorBoundary>
       <LanguageProvider>
+      <MarketCartProvider>
       <ChatbotLanguageBridge>
         <Router
           future={{
@@ -114,6 +117,7 @@ function App() {
               <Route path="/media" element={withSuspense(<MediaPage />)} />
               <Route path="/media-page" element={withSuspense(<MediaPage />)} />
               <Route path="/market-page" element={withSuspense(<MarketPage />)} />
+              <Route path="/market-page/:slug" element={withSuspense(<CommodityDetail />)} />
 
               {/* General pages */}
               <Route path="/news-updates" element={withSuspense(<NewsUpdates />)} />
@@ -142,6 +146,7 @@ function App() {
           </Routes>
         </Router>
       </ChatbotLanguageBridge>
+      </MarketCartProvider>
       </LanguageProvider>
     </ErrorBoundary>
   );

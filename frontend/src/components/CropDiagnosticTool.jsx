@@ -728,7 +728,7 @@ const PlantDiseaseDetector = () => {
           <SpeakButton
             text={`${(translatedResult || result)?.disease || ''}. ${(translatedResult || result)?.remedy || ''}`}
             label="Read Results"
-            className="bg-white/95 backdrop-blur-sm border-purple-200 rounded-full shadow-lg"
+            className="bg-neo-surface/95 backdrop-blur-sm border-purple-200 rounded-full shadow-lg"
           />
         )}
 
@@ -737,7 +737,7 @@ const PlantDiseaseDetector = () => {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setShowHelpModal(true)}
-          className="bg-white/95 backdrop-blur-sm border border-blue-200 rounded-full w-12 h-12 md:w-auto md:h-auto md:px-4 md:py-2 flex items-center justify-center md:gap-2 shadow-lg hover:border-blue-400 transition-all duration-300 text-blue-600"
+          className="bg-neo-surface/95 backdrop-blur-sm border border-blue-200 rounded-full w-12 h-12 md:w-auto md:h-auto md:px-4 md:py-2 flex items-center justify-center md:gap-2 shadow-lg hover:border-blue-400 transition-all duration-300 text-blue-600"
         >
           <HelpCircle className="w-6 h-6 md:w-4 md:h-4" />
           <span className="hidden lg:inline font-medium text-sm">
@@ -758,18 +758,18 @@ const PlantDiseaseDetector = () => {
           <span className="inline-block px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold uppercase tracking-wider mb-4 mt-20">
             {getDisplayText("cropDiagnosis", "Crop Diagnosis")}
           </span>
-          <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight mb-4">
+          <h1 className="text-4xl lg:text-5xl font-bold text-neo-text tracking-tight mb-4">
             <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
               {getDisplayText("welcome", "Health Check")}
             </span>
           </h1>
-          <p className="text-slate-600 text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed">
+          <p className="text-neo-muted text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed">
             {getDisplayText(
               "uploadImage",
               "AI-powered plant disease detection for healthier crops"
             )}
           </p>
-          <div className="mt-6 flex flex-wrap justify-center gap-4 sm:gap-6 text-sm text-gray-500">
+          <div className="mt-6 flex flex-wrap justify-center gap-4 sm:gap-6 text-sm text-neo-muted">
             <div className="flex items-center">
               <CheckCircle className="w-4 h-4 mr-2 text-green-500" />
               <span>{getDisplayText("accuracy", "99.2% Accuracy")}</span>
@@ -796,9 +796,9 @@ const PlantDiseaseDetector = () => {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
-            className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-6 sm:p-8 border border-white/20"
+            className="neo-surface p-6 sm:p-8"
           >
-            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-8 flex items-center">
+            <h2 className="text-2xl sm:text-3xl font-bold text-neo-text mb-8 flex items-center">
               <div className="bg-emerald-50 text-emerald-600 p-3 rounded-xl mr-4">
                 <Camera className="w-6 h-6" />
               </div>
@@ -825,7 +825,7 @@ const PlantDiseaseDetector = () => {
                   }
                 >
                   <Upload className="w-12 h-12 text-green-500 mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
-                  <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                  <h3 className="text-lg font-semibold text-neo-text mb-2">
                     {dragOver
                       ? getDisplayText("dropImageHere", "Drop your image here!")
                       : getDisplayText(
@@ -833,13 +833,13 @@ const PlantDiseaseDetector = () => {
                           "Drag & drop your plant image"
                         )}
                   </h3>
-                  <p className="text-gray-500 mb-4">
+                  <p className="text-neo-muted mb-4">
                     {getDisplayText(
                       "browseFiles",
                       "or click to browse your files"
                     )}
                   </p>
-                  <div className="flex items-center justify-center space-x-2 text-sm text-gray-400">
+                  <div className="flex items-center justify-center space-x-2 text-sm text-neo-muted">
                     <FileImage className="w-4 h-4" />
                     <span>
                       {getDisplayText(
@@ -871,7 +871,7 @@ const PlantDiseaseDetector = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => fileInputRef.current?.click()}
-                    className="border border-slate-300 hover:border-emerald-600 hover:text-emerald-700 text-slate-700 py-3 px-4 rounded-xl font-semibold flex items-center justify-center transition-colors"
+                    className="border border-neo-border hover:border-emerald-600 hover:text-emerald-700 text-neo-text py-3 px-4 rounded-xl font-semibold flex items-center justify-center transition-colors"
                     aria-label="Choose file from device"
                     onKeyDown={(e) =>
                       handleKeyDown(e, () => fileInputRef.current?.click())
@@ -905,7 +905,7 @@ const PlantDiseaseDetector = () => {
                 <motion.video
                   ref={videoRef}
                   autoPlay
-                  className="w-full h-64 rounded-xl border-2 border-white shadow-lg"
+                  className="w-full h-64 rounded-xl border-2 border-neo-border shadow-lg"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.5 }}
@@ -946,7 +946,7 @@ const PlantDiseaseDetector = () => {
                   <img
                     src={imagePreview}
                     alt="Selected plant"
-                    className="w-full h-64 sm:h-80 object-cover rounded-3xl border-4 border-white shadow-2xl group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-64 sm:h-80 object-cover rounded-3xl border-4 border-neo-border shadow-2xl group-hover:scale-105 transition-transform duration-300"
                   />
                   <motion.button
                     whileHover={{ scale: 1.1 }}
@@ -964,7 +964,7 @@ const PlantDiseaseDetector = () => {
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="w-full bg-gray-200 rounded-full h-2.5"
+                    className="w-full bg-neo-border/30 rounded-full h-2.5"
                   >
                     <div
                       className="bg-green-500 h-2.5 rounded-full transition-all duration-300"
@@ -979,7 +979,7 @@ const PlantDiseaseDetector = () => {
                     whileTap={{ scale: 0.95 }}
                     onClick={detectDisease}
                     disabled={isLoading}
-                    className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-400 text-white py-3 px-4 rounded-xl font-semibold flex items-center justify-center transition-colors"
+                    className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-neo-muted/50 disabled:text-neo-bg text-white py-3 px-4 rounded-xl font-semibold flex items-center justify-center transition-colors"
                     aria-label="Analyze plant image"
                     onKeyDown={(e) => handleKeyDown(e, detectDisease)}
                   >
@@ -996,7 +996,7 @@ const PlantDiseaseDetector = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => fileInputRef.current?.click()}
-                    className="border border-slate-300 hover:border-emerald-600 hover:text-emerald-700 text-slate-700 py-3 px-4 rounded-xl font-semibold flex items-center justify-center transition-colors"
+                    className="border border-neo-border hover:border-emerald-600 hover:text-emerald-700 text-neo-text py-3 px-4 rounded-xl font-semibold flex items-center justify-center transition-colors"
                     aria-label="Change image"
                     onKeyDown={(e) =>
                       handleKeyDown(e, () => fileInputRef.current?.click())
@@ -1033,9 +1033,9 @@ const PlantDiseaseDetector = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
-            className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-6 sm:p-8 border border-white/20"
+            className="neo-surface p-6 sm:p-8"
           >
-            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-8 flex items-center">
+            <h2 className="text-2xl sm:text-3xl font-bold text-neo-text mb-8 flex items-center">
               <div className="bg-emerald-50 text-emerald-600 p-3 rounded-xl mr-4">
                 <CheckCircle className="w-6 h-6" />
               </div>
@@ -1049,12 +1049,12 @@ const PlantDiseaseDetector = () => {
                   animate={{ rotate: [0, 10, -10, 0] }}
                   transition={{ repeat: Infinity, duration: 2 }}
                 >
-                  <Leaf className="w-20 h-20 text-gray-300 mx-auto" />
+                  <Leaf className="w-20 h-20 text-neo-muted mx-auto" />
                 </motion.div>
-                <h3 className="text-lg font-semibold text-gray-500 mb-3">
+                <h3 className="text-lg font-semibold text-neo-muted mb-3">
                   {getDisplayText("readyForAnalysis", "Ready for Analysis")}
                 </h3>
-                <p className="text-gray-400 text-base sm:text-lg leading-relaxed max-w-md mx-auto">
+                <p className="text-neo-muted text-base sm:text-lg leading-relaxed max-w-md mx-auto">
                   {getDisplayText(
                     "uploadDescription",
                     "Upload a plant image to get instant AI-powered disease detection and treatment recommendations"
@@ -1174,7 +1174,7 @@ const PlantDiseaseDetector = () => {
                       )}
                     </h3>
                   </div>
-                  <div className="bg-white/60 rounded-xl p-1 border border-blue-200">
+                  <div className="bg-neo-surface/60 rounded-xl p-1 border border-blue-200">
                     <p className="text-blue-800 leading-relaxed text-justify sm:text-lg font-medium whitespace-pre-line">
                       {translatedResult?.remedy || result.remedy}
                     </p>
@@ -1201,11 +1201,11 @@ const PlantDiseaseDetector = () => {
                     handleKeyDown(e, () => setShowNotificationForm(true))
                   }
                 >
-                  <div className="bg-white/20 p-2 rounded-lg mr-4">
+                  <div className="bg-neo-surface/20 p-2 rounded-lg mr-4">
                     <Bell className="w-6 h-6" />
                   </div>
                   {getDisplayText("notifyFarmers", "Alert Nearby Farmers")}
-                  <div className="ml-4 bg-white/20 px-3 py-1 rounded-full text-sm">
+                  <div className="ml-4 bg-neo-surface/20 px-3 py-1 rounded-full text-sm">
                     {getDisplayText("communityAlert", "Community Alert")}
                   </div>
                 </motion.button>
@@ -1219,14 +1219,14 @@ const PlantDiseaseDetector = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="mt-8 bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-6 sm:p-8 border border-white/20"
+            className="neo-surface mt-8 p-6 sm:p-8"
           >
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <div>
-                <h2 className="text-2xl font-semibold text-slate-900">
+                <h2 className="text-2xl font-semibold text-neo-text">
                   {getDisplayText("diagnosisHistory", "Diagnosis History")}
                 </h2>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-neo-muted mt-1">
                   {getDisplayText(
                     "diagnosisHistoryHelp",
                     "Recent diagnoses saved to your account."
@@ -1255,8 +1255,8 @@ const PlantDiseaseDetector = () => {
                 <TableSkeleton rows={3} columns={3} />
               </div>
             ) : diagnosisHistory.length === 0 ? (
-              <div className="py-10 text-center text-gray-500">
-                <FileImage className="w-10 h-10 mx-auto mb-3 text-gray-300" />
+              <div className="py-10 text-center text-neo-muted">
+                <FileImage className="w-10 h-10 mx-auto mb-3 text-neo-muted" />
                 <p>
                   {getDisplayText(
                     "noDiagnosisHistory",
@@ -1269,7 +1269,7 @@ const PlantDiseaseDetector = () => {
                 {diagnosisHistory.map((item) => (
                   <div
                     key={item.id}
-                    className="bg-gradient-to-r from-slate-50 to-white border border-slate-200 rounded-2xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+                    className="bg-gradient-to-r from-neo-surface to-neo-bg-soft border border-neo-border rounded-2xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4"
                   >
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -1280,16 +1280,16 @@ const PlantDiseaseDetector = () => {
                           {item.providerProduct || "kindwise"}
                         </span>
                         {typeof item.confidence === "number" && (
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-neo-muted">
                             {getDisplayText("confidence", "Confidence")}:{" "}
                             {(item.confidence * 100).toFixed(0)}%
                           </span>
                         )}
                       </div>
-                      <h3 className="text-base sm:text-lg font-semibold text-slate-900">
+                      <h3 className="text-base sm:text-lg font-semibold text-neo-text">
                         {item.disease || getDisplayText("couldNotDetect", "Could not detect disease")}
                       </h3>
-                      <p className="text-sm text-gray-500 mt-1">
+                      <p className="text-sm text-neo-muted mt-1">
                         {formatHistoryDate(item.createdAt)}
                       </p>
                     </div>
@@ -1307,7 +1307,7 @@ const PlantDiseaseDetector = () => {
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.97 }}
                         onClick={() => deleteHistoryItem(item.id)}
-                        className="bg-gray-200 text-gray-700 py-2 px-3 rounded-xl font-semibold flex items-center justify-center"
+                        className="bg-neo-border/30 text-neo-text py-2 px-3 rounded-xl font-semibold flex items-center justify-center"
                         aria-label="Delete diagnosis history item"
                       >
                         <X className="w-4 h-4" />
@@ -1333,19 +1333,19 @@ const PlantDiseaseDetector = () => {
                 initial={{ scale: 0.8, y: 50 }}
                 animate={{ scale: 1, y: 0 }}
                 exit={{ scale: 0.8, y: 50 }}
-                className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-lg shadow-2xl border-4 border-orange-200"
+                className="bg-neo-surface rounded-3xl p-6 sm:p-8 w-full max-w-lg shadow-2xl border-4 border-orange-200"
               >
                 <div className="text-center mb-8">
                   <div className="bg-gradient-to-r from-orange-500 to-red-500 p-4 rounded-full inline-block mb-4">
                     <Bell className="w-8 h-8 text-white" />
                   </div>
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
+                  <h3 className="text-xl sm:text-2xl font-bold text-neo-text mb-2">
                     {getDisplayText(
                       "communityAlert",
                       "Community Disease Alert"
                     )}
                   </h3>
-                  <p className="text-gray-600 text-sm sm:text-base">
+                  <p className="text-neo-muted text-sm sm:text-base">
                     {getDisplayText(
                       "shareWithCommunity",
                       "Help protect your farming community by sharing this disease detection"
@@ -1356,7 +1356,7 @@ const PlantDiseaseDetector = () => {
                 <div className="space-y-6">
                   <div>
                     <label
-                      className="block text-sm font-bold text-gray-700 mb-3"
+                      className="block text-sm font-bold text-neo-text mb-3"
                       htmlFor="user-name"
                     >
                       {getDisplayText("yourName", "Your Name")}
@@ -1366,7 +1366,7 @@ const PlantDiseaseDetector = () => {
                       type="text"
                       value={userName}
                       onChange={(e) => setUserName(e.target.value)}
-                      className="w-full p-4 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-orange-200 focus:border-orange-500 transition-all duration-300 text-base sm:text-lg"
+                      className="w-full p-4 border-2 border-neo-border rounded-xl focus:ring-4 focus:ring-orange-200 focus:border-orange-500 transition-all duration-300 text-base sm:text-lg"
                       placeholder={getDisplayText(
                         "enterName",
                         "Enter your name"
@@ -1375,11 +1375,11 @@ const PlantDiseaseDetector = () => {
                     />
                   </div>
 
-                  <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-2xl border-2 border-gray-200">
-                    <h4 className="font-bold text-gray-700 mb-3">
+                  <div className="bg-gradient-to-r from-neo-surface to-neo-bg-soft p-6 rounded-2xl border-2 border-neo-border">
+                    <h4 className="font-bold text-neo-text mb-3">
                       {getDisplayText("alertDetails", "Alert Details")}
                     </h4>
-                    <div className="space-y-2 text-gray-600 text-sm sm:text-base">
+                    <div className="space-y-2 text-neo-muted text-sm sm:text-base">
                       <p>
                         <span className="font-semibold">
                           {getDisplayText("plantLabel", "Plant")}:
@@ -1400,7 +1400,7 @@ const PlantDiseaseDetector = () => {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setShowNotificationForm(false)}
-                      className="flex-1 bg-gray-500 text-white py-3 px-4 rounded-xl font-semibold"
+                      className="flex-1 bg-neo-muted text-neo-bg py-3 px-4 rounded-xl font-semibold"
                       aria-label="Cancel notification"
                       onKeyDown={(e) =>
                         handleKeyDown(e, () => setShowNotificationForm(false))
@@ -1440,17 +1440,17 @@ const PlantDiseaseDetector = () => {
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.95, opacity: 0 }}
-                className="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] md:max-h-[90vh] shadow-xl border overflow-hidden flex flex-col"
+                className="bg-neo-surface rounded-2xl w-full max-w-2xl max-h-[85vh] md:max-h-[90vh] shadow-xl border overflow-hidden flex flex-col"
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 md:p-6 border-b bg-white">
-                  <h2 className="text-lg md:text-xl font-semibold text-gray-900">
+                <div className="flex items-center justify-between p-4 md:p-6 border-b bg-neo-surface">
+                  <h2 className="text-lg md:text-xl font-semibold text-neo-text">
                     {getDisplayText("howItWorks", "How It Works")}
                   </h2>
                   <button
                     onClick={() => setShowHelpModal(false)}
-                    className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+                    className="text-neo-muted hover:text-neo-text transition-colors p-1"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -1472,10 +1472,10 @@ const PlantDiseaseDetector = () => {
                             {step.icon}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-medium text-gray-900 mb-1">
+                            <h3 className="font-medium text-neo-text mb-1">
                               {getDisplayText(step.key, `Step ${index + 1}`)}
                             </h3>
-                            <p className="text-sm text-gray-600 leading-relaxed">
+                            <p className="text-sm text-neo-muted leading-relaxed">
                               {getDisplayText(step.desc, "Description")}
                             </p>
                           </div>
@@ -1485,7 +1485,7 @@ const PlantDiseaseDetector = () => {
 
                     {/* Separator */}
                     <div className="border-t pt-6">
-                      <h3 className="font-medium text-gray-900 mb-4">
+                      <h3 className="font-medium text-neo-text mb-4">
                         {getDisplayText("tipsTitle", "Tips for Better Results")}
                       </h3>
 
@@ -1499,7 +1499,7 @@ const PlantDiseaseDetector = () => {
                         ].map((tip) => (
                           <div
                             key={tip.key}
-                            className="flex items-center gap-2 text-sm text-gray-600"
+                            className="flex items-center gap-2 text-sm text-neo-muted"
                           >
                             <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
                             <span>{getDisplayText(tip.key, tip.text)}</span>
@@ -1511,7 +1511,7 @@ const PlantDiseaseDetector = () => {
                 </div>
 
                 {/* Footer */}
-                <div className="p-4 md:p-6 border-t bg-gray-50 flex-shrink-0">
+                <div className="p-4 md:p-6 border-t bg-neo-bg-soft flex-shrink-0">
                   <button
                     onClick={() => setShowHelpModal(false)}
                     className="w-full bg-green-600 hover:bg-green-700 text-white py-2.5 px-4 rounded-lg font-medium transition-colors"
@@ -1531,7 +1531,7 @@ const PlantDiseaseDetector = () => {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="text-center mt-12 sm:mt-16 py-8 border-t border-green-200"
         >
-          <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-sm text-gray-500">
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-sm text-neo-muted">
             <span>
               {getDisplayText(
                 "protectingCrops",

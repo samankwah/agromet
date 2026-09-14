@@ -80,7 +80,7 @@ const CalendarFullPageView = ({
             Back
           </button>
           
-          <div className="border border-gray-200 rounded-lg p-6 text-center text-gray-500">
+          <div className="border border-neo-border rounded-lg p-6 text-center text-neo-muted">
             <p>No calendar data to display</p>
           </div>
         </div>
@@ -362,7 +362,7 @@ const CalendarFullPageView = ({
         key={cellIndex}
         colSpan={cell?.colSpan || 1}
         rowSpan={cell?.rowSpan || 1}
-        className="border border-gray-400 px-2 py-1 text-xs min-w-[56px] h-7 align-middle"
+        className="border border-neo-border px-2 py-1 text-xs min-w-[56px] h-7 align-middle"
         style={{
           backgroundColor: background,
           color: '#111827',
@@ -377,8 +377,8 @@ const CalendarFullPageView = ({
 
   if (sourceSheets.length > 0) {
     return (
-      <div className="min-h-screen bg-white">
-        <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
+      <div className="min-h-screen bg-neo-surface">
+        <div className="bg-neo-bg-soft border-b border-neo-border px-6 py-4">
           <div className="max-w-full mx-auto">
             <button
               onClick={handleBack}
@@ -393,7 +393,7 @@ const CalendarFullPageView = ({
         <div className="px-6 py-8">
           <div className="max-w-full mx-auto">
             <div className="text-center mb-8">
-              <h1 className="text-2xl font-bold text-gray-900 uppercase">
+              <h1 className="text-2xl font-bold text-neo-text uppercase">
                 {calendarTitle}
               </h1>
             </div>
@@ -403,15 +403,15 @@ const CalendarFullPageView = ({
                 <section key={`${sheet.name}-${sheetIndex}`}>
                   {sourceSheets.length > 1 && (
                     <div className="mb-3">
-                      <h2 className="text-lg font-semibold text-gray-900">{sheet.name}</h2>
+                      <h2 className="text-lg font-semibold text-neo-text">{sheet.name}</h2>
                       {sheet.sourceFileName && (
-                        <p className="text-sm text-gray-500">{sheet.sourceFileName}</p>
+                        <p className="text-sm text-neo-muted">{sheet.sourceFileName}</p>
                       )}
                     </div>
                   )}
 
                   <div className="overflow-x-auto shadow-lg">
-                    <table className="border-collapse border border-gray-400 bg-white" style={{ minWidth: 'max-content' }}>
+                    <table className="border-collapse border border-neo-border bg-neo-surface" style={{ minWidth: 'max-content' }}>
                       <tbody>
                         {(sheet.rows || []).map((row, rowIndex) => (
                           <tr key={rowIndex}>
@@ -425,7 +425,7 @@ const CalendarFullPageView = ({
               ))}
             </div>
 
-            <div className="mt-8 text-center text-sm text-gray-500">
+            <div className="mt-8 text-center text-sm text-neo-muted">
               <p className="mt-1">
                 Generated from Excel calendar • {sourceSheets.length} sheet{sourceSheets.length === 1 ? '' : 's'} • {activities?.length || 0} activities
               </p>
@@ -437,9 +437,9 @@ const CalendarFullPageView = ({
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-neo-surface">
       {/* Header with back button */}
-      <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
+      <div className="bg-neo-bg-soft border-b border-neo-border px-6 py-4">
         <div className="max-w-full mx-auto">
           <button
             onClick={handleBack}
@@ -456,7 +456,7 @@ const CalendarFullPageView = ({
         <div className="max-w-full mx-auto">
           {/* Calendar Title */}
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-gray-900 uppercase">
+            <h1 className="text-2xl font-bold text-neo-text uppercase">
               {calendarTitle}
             </h1>
           </div>
@@ -464,17 +464,17 @@ const CalendarFullPageView = ({
           {/* Calendar Table with enhanced horizontal scroll */}
           <div className="overflow-x-auto shadow-lg" style={{ maxHeight: '90vh' }}>
             <div className="min-w-max"> {/* Ensure table maintains its width */}
-              <table className="border-collapse border border-gray-400" style={{ minWidth: 'max-content' }}>
+              <table className="border-collapse border border-neo-border" style={{ minWidth: 'max-content' }}>
               {/* Month Headers */}
               <thead>
                 <tr>
-                  <th className="border border-gray-400 bg-gray-100 px-4 py-2 text-left font-semibold text-sm sticky left-0 z-10 min-w-[300px] max-w-[350px]">
+                  <th className="border border-neo-border bg-neo-bg px-4 py-2 text-left font-semibold text-sm sticky left-0 z-10 min-w-[300px] max-w-[350px]">
                     S/N STAGE OF ACTIVITY
                   </th>
                   {monthHeaders.map((month, index) => (
                     <th
                       key={index}
-                      className="border border-gray-400 bg-blue-100 px-2 py-2 text-center font-bold text-sm min-w-[240px]"
+                      className="border border-neo-border bg-blue-100 px-2 py-2 text-center font-bold text-sm min-w-[240px]"
                       colSpan={month.colspan}
                     >
                       {month.name}
@@ -484,11 +484,11 @@ const CalendarFullPageView = ({
 
                 {/* Week Headers */}
                 <tr>
-                  <th className="border border-gray-400 bg-gray-100 px-4 py-2 sticky left-0 z-10 min-w-[300px] max-w-[350px]"></th>
+                  <th className="border border-neo-border bg-neo-bg px-4 py-2 sticky left-0 z-10 min-w-[300px] max-w-[350px]"></th>
                   {getWeekHeaders().map((week, index) => (
                     <th
                       key={index}
-                      className="border border-gray-400 bg-gray-50 px-1 py-1 text-center text-xs font-medium min-w-[60px]"
+                      className="border border-neo-border bg-neo-bg-soft px-1 py-1 text-center text-xs font-medium min-w-[60px]"
                     >
                       {week.label}
                     </th>
@@ -497,13 +497,13 @@ const CalendarFullPageView = ({
 
                 {/* Date Headers */}
                 <tr>
-                  <th className="border border-gray-400 bg-gray-100 px-4 py-1 text-xs font-medium sticky left-0 z-10 min-w-[300px] max-w-[350px]">
+                  <th className="border border-neo-border bg-neo-bg px-4 py-1 text-xs font-medium sticky left-0 z-10 min-w-[300px] max-w-[350px]">
                     Calendar Date
                   </th>
                   {getDateRanges().map((dateRange, index) => (
                     <th
                       key={index}
-                      className="border border-gray-400 bg-white px-1 py-1 text-center text-xs"
+                      className="border border-neo-border bg-neo-surface px-1 py-1 text-center text-xs"
                     >
                       {dateRange}
                     </th>
@@ -529,9 +529,9 @@ const CalendarFullPageView = ({
                   return (
                     <tr key={rowIndex}>
                       {/* Activity Name Column - Enhanced for full name display */}
-                      <td className="border border-gray-400 bg-gray-50 px-4 py-2 text-sm font-medium sticky left-0 z-10 min-w-[300px] max-w-[350px]">
+                      <td className="border border-neo-border bg-neo-bg-soft px-4 py-2 text-sm font-medium sticky left-0 z-10 min-w-[300px] max-w-[350px]">
                         <div className="flex items-start">
-                          <span className="mr-2 text-gray-600 flex-shrink-0">{rowIndex + 1}</span>
+                          <span className="mr-2 text-neo-muted flex-shrink-0">{rowIndex + 1}</span>
                           <span className="break-words leading-tight" title={row.activity}>
                             {row.activity}
                           </span>
@@ -542,7 +542,7 @@ const CalendarFullPageView = ({
                       {cells.map((cell, cellIndex) => (
                         <td
                           key={cellIndex}
-                          className="border border-gray-400 text-center text-xs h-8 min-w-[60px]"
+                          className="border border-neo-border text-center text-xs h-8 min-w-[60px]"
                           style={{
                             backgroundColor: getCellBackgroundColor(cell, row.activity),
                             color: getCellTextColor(cell)
@@ -560,7 +560,7 @@ const CalendarFullPageView = ({
           </div>
 
           {/* File Info Footer */}
-          <div className="mt-8 text-center text-sm text-gray-500">
+          <div className="mt-8 text-center text-sm text-neo-muted">
             {calendarData.fileName && (
               <p>Source File: {calendarData.fileName}</p>
             )}

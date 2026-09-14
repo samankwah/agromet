@@ -15,22 +15,23 @@ import {
 } from "react-icons/fa";
 import LanguageSelector from "./common/LanguageSelector";
 import T from "./common/T";
+import ThemeToggle from "./ThemeToggle";
 import { Link, useLocation } from "react-router-dom";
 import logo2 from "../assets/images/agromet-high-resolution-logo-transparent.png";
 import { useChatbotIntegration } from "../hooks/useChatbotIntegration";
 
 const navPillBase =
-  "inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-sm font-semibold text-neo-text transition-all duration-200 hover:text-neo-accent-strong focus:outline-none focus-visible:ring-4 focus-visible:ring-neo-focus/25";
+  "inline-flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-2 text-sm font-semibold text-neo-text transition-all duration-200 hover:text-neo-accent-strong focus:outline-none focus-visible:ring-4 focus-visible:ring-neo-focus/25";
 
 const navPillState = (active) =>
   active
-    ? "bg-neo-bg shadow-neo-pressed text-neo-accent-strong"
-    : "hover:bg-white/45 hover:shadow-neo-soft";
+    ? "bg-neo-bg shadow-neo-active text-neo-accent-strong"
+    : "hover:bg-neo-surface-strong/60";
 
 const mobileNavState = (active) =>
   active
-    ? "bg-neo-bg shadow-neo-pressed text-neo-accent-strong"
-    : "text-neo-text hover:bg-white/50 hover:shadow-neo-soft";
+    ? "bg-neo-bg shadow-neo-active text-neo-accent-strong"
+    : "text-neo-text hover:bg-neo-surface-strong/60";
 
 const Header = () => {
   const location = useLocation();
@@ -136,7 +137,7 @@ const Header = () => {
         <div className="flex items-center space-x-2 mb-0 md:mb-0">
           <Link
             to="/"
-            className="inline-flex items-center rounded-full bg-neo-surface px-3 py-1.5 shadow-neo-soft transition hover:shadow-neo"
+            className="inline-flex items-center rounded-full bg-neo-surface px-3 py-1.5 transition"
             aria-label="AgroMet home"
           >
             <img
@@ -147,7 +148,8 @@ const Header = () => {
           </Link>
         </div>
         {/* Mobile menu button */}
-        <div className="flex items-center lg:hidden">
+        <div className="flex items-center gap-2 xl:hidden">
+          <ThemeToggle />
           <button
             ref={menuButtonRef}
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -159,7 +161,10 @@ const Header = () => {
           </button>
         </div>
         {/* Desktop Navbar Links */}
-        <div className="hidden lg:flex align-middle items-center justify-center flex-1 gap-2 xl:gap-3">
+        <nav
+          className="hidden min-w-0 flex-1 items-center justify-center gap-1.5 xl:flex 2xl:gap-3"
+          aria-label="Primary navigation"
+        >
           <Link
             to="/"
             className={`${navPillBase} ${navPillState(location.pathname === "/")}`}
@@ -189,17 +194,21 @@ const Header = () => {
             <FaShoppingCart className="text-base" />
             <span><T>Market</T></span>
           </Link>
-        </div>
+        </nav>
 
-        <div className="hidden lg:flex items-center">
+        <div className="hidden items-center xl:flex">
           <LanguageSelector variant="header" />
         </div>
 
-        <div className="hidden lg:flex h-8 w-px bg-neo-border mx-2" />
+        <div className="hidden items-center xl:flex">
+          <ThemeToggle />
+        </div>
+
+        <div className="mx-1 hidden h-8 w-px bg-neo-border xl:flex 2xl:mx-2" />
 
         <Link
           to="/admin-login"
-          className={`neo-icon-button hidden lg:flex ${location.pathname === "/admin-login" ? "is-active" : ""}`}
+          className={`neo-icon-button hidden xl:flex ${location.pathname === "/admin-login" ? "is-active" : ""}`}
           aria-label="Admin login"
         >
           <FaUser className="text-base" />
@@ -209,7 +218,7 @@ const Header = () => {
         {/* Mobile Menu Overlay */}
         {isMobileMenuOpen && (
           <div
-            className="fixed inset-0 z-50 bg-neo-text/15 lg:hidden transition-opacity duration-300"
+            className="fixed inset-0 z-50 bg-neo-text/15 transition-opacity duration-300 xl:hidden"
             aria-modal="true"
             role="dialog"
           >
@@ -298,15 +307,15 @@ const Header = () => {
                   </button>
 
                   {expandedSection === "weather" && (
-                    <div className="mx-4 mb-2 rounded-neo bg-white/40 p-2">
+                    <div className="mx-4 mb-2 rounded-neo bg-neo-surface-strong/50 p-2">
                       {forecastLinks.map((link, index) => (
                         <Link
                           key={index}
                           to={link.to}
                           className={`flex items-center rounded-full px-4 py-2 text-sm ${
                             location.pathname === link.to
-                              ? "bg-neo-bg text-neo-accent-strong shadow-neo-pressed"
-                              : "text-neo-muted hover:bg-white/60"
+                              ? "bg-neo-bg text-neo-accent-strong shadow-neo-active"
+                              : "text-neo-muted hover:bg-neo-surface-strong/70"
                           }`}
                         >
                           <FaChevronRight className="mr-2 text-xs text-neo-muted" />
@@ -336,15 +345,15 @@ const Header = () => {
                   </button>
 
                   {expandedSection === "agriculture" && (
-                    <div className="mx-4 mb-2 rounded-neo bg-white/40 p-2">
+                    <div className="mx-4 mb-2 rounded-neo bg-neo-surface-strong/50 p-2">
                       {agricultureLinks.map((link, index) => (
                         <Link
                           key={index}
                           to={link.to}
                           className={`flex items-center rounded-full px-4 py-2 text-sm ${
                             location.pathname === link.to
-                              ? "bg-neo-bg text-neo-accent-strong shadow-neo-pressed"
-                              : "text-neo-muted hover:bg-white/60"
+                              ? "bg-neo-bg text-neo-accent-strong shadow-neo-active"
+                              : "text-neo-muted hover:bg-neo-surface-strong/70"
                           }`}
                         >
                           <FaChevronRight className="mr-2 text-xs text-neo-muted" />

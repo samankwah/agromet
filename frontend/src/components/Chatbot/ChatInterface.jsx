@@ -261,7 +261,7 @@ const ChatInterface = ({ isOpen, onClose, onMinimize, userContext = {} }) => {
   return (
     <div className="neo-surface fixed top-20 left-4 right-4 bottom-4 sm:bottom-4 sm:right-4 sm:top-auto sm:left-auto sm:w-96 md:w-[420px] lg:w-[480px] sm:h-[500px] md:h-[600px] lg:h-[700px] flex flex-col z-40 overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between p-3 sm:p-4 md:p-5 border-b neo-divider bg-white/35 text-neo-text">
+      <div className="flex items-center justify-between p-3 sm:p-4 md:p-5 border-b neo-divider bg-neo-surface/35 text-neo-text">
         <div className="flex items-center space-x-3">
           <div className="neo-icon-button w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-lg sm:text-xl md:text-2xl">
             🤖
@@ -293,7 +293,7 @@ const ChatInterface = ({ isOpen, onClose, onMinimize, userContext = {} }) => {
                     key={code}
                     onClick={() => handleLanguageChange(code)}
                     className={`w-full text-left px-4 py-2 text-sm transition-colors ${
-                      currentLanguage === code ? 'bg-neo-bg text-neo-accent-strong shadow-neo-pressed' : 'text-neo-text hover:bg-white/60'
+                      currentLanguage === code ? 'bg-neo-bg text-neo-accent-strong shadow-neo-active' : 'text-neo-text hover:bg-neo-surface-strong/75'
                     }`}
                   >
                     <span className="mr-2">{lang.flag}</span>
@@ -344,7 +344,7 @@ const ChatInterface = ({ isOpen, onClose, onMinimize, userContext = {} }) => {
 
       {/* Status Bar */}
       {(userContext.region || farmProfile) && (
-        <div className="px-3 sm:px-4 md:px-6 py-2 md:py-3 bg-white/35 text-neo-accent-strong text-xs sm:text-sm md:text-base border-b neo-divider">
+        <div className="px-3 sm:px-4 md:px-6 py-2 md:py-3 bg-neo-surface/35 text-neo-accent-strong text-xs sm:text-sm md:text-base border-b neo-divider">
           {farmProfile ? (
             <>
               🌱 {farmProfile.personal.name} • {farmProfile.personal.region} •{" "}

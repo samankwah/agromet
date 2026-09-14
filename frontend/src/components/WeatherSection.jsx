@@ -171,7 +171,7 @@ const WeatherCard = ({ city, condition, minTemp, maxTemp, onRemove }) => {
       <p className="text-center capitalize text-sm mb-3 opacity-90">{condition}</p>
 
       <div className="flex justify-center items-center mt-2">
-        <div className="flex items-center bg-white bg-opacity-20 rounded-full px-3 py-1">
+        <div className="flex items-center bg-neo-surface bg-opacity-20 rounded-full px-3 py-1">
           <img src={thermometer} alt="Thermometer" className="w-3 h-3 mr-2 opacity-80" />
           <span className="text-sm font-semibold">
             {minTemp}° / {maxTemp}°C
@@ -369,7 +369,7 @@ const WeatherSection = () => {
             <button
               onClick={handleRefresh}
               disabled={loading}
-              className="text-white hover:text-blue-200 transition-all duration-300 disabled:opacity-50 transform hover:scale-110 bg-white bg-opacity-20 rounded-full p-2"
+              className="text-white hover:text-blue-200 transition-all duration-300 disabled:opacity-50 transform hover:scale-110 bg-neo-surface bg-opacity-20 rounded-full p-2"
               title="Refresh weather data"
             >
               {loading ? (
@@ -388,7 +388,7 @@ const WeatherSection = () => {
                 onChange={(e) => setLocation(e.target.value)}
                 onKeyPress={searchLocation}
                 placeholder="🔍 Enter city name..."
-                className="px-5 py-3 rounded-full text-gray-900 w-full md:w-52 focus:outline-none focus:ring-3 focus:ring-blue-300 focus:ring-opacity-50 transition-all duration-300 shadow-lg backdrop-blur-sm bg-white bg-opacity-95 placeholder-gray-500"
+                className="px-5 py-3 rounded-full text-neo-text w-full md:w-52 focus:outline-none focus:ring-3 focus:ring-blue-300 focus:ring-opacity-50 transition-all duration-300 shadow-lg backdrop-blur-sm bg-neo-surface bg-opacity-95 placeholder-neo-muted"
                 disabled={loading}
               />
             </div>

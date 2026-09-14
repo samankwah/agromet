@@ -70,10 +70,10 @@ const Careers = () => {
             <span className="inline-block px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold uppercase tracking-wider mb-4">
               <T>Join Our Team</T>
             </span>
-            <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight mb-4">
+            <h1 className="text-4xl lg:text-5xl font-bold text-neo-text tracking-tight mb-4">
               <T>Careers at AgroMet</T>
             </h1>
-            <p className="text-lg text-slate-600 leading-relaxed max-w-2xl mx-auto">
+            <p className="text-lg text-neo-muted leading-relaxed max-w-2xl mx-auto">
               <T>
                 Help us build climate-smart tools that transform agriculture in
                 Ghana. We're looking for curious, mission-driven people.
@@ -82,15 +82,15 @@ const Careers = () => {
           </header>
 
           {/* Filters */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200 shadow-sm p-6 mb-8 flex flex-col md:flex-row gap-4">
+          <div className="neo-surface p-6 mb-8 flex flex-col md:flex-row gap-4">
             <div className="flex-1">
-              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-semibold text-neo-muted uppercase tracking-wider mb-2">
                 <T>Department</T>
               </label>
               <select
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition bg-white"
+                className="w-full px-4 py-2.5 border border-neo-border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition bg-neo-surface"
               >
                 {departments.map((d) => (
                   <option key={d} value={d}>
@@ -100,13 +100,13 @@ const Careers = () => {
               </select>
             </div>
             <div className="flex-1">
-              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-semibold text-neo-muted uppercase tracking-wider mb-2">
                 <T>Location</T>
               </label>
               <select
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition bg-white"
+                className="w-full px-4 py-2.5 border border-neo-border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition bg-neo-surface"
               >
                 {locations.map((l) => (
                   <option key={l} value={l}>
@@ -119,8 +119,8 @@ const Careers = () => {
 
           {/* Job Grid */}
           {filteredJobs.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-12 text-center">
-              <p className="text-slate-600">
+            <div className="bg-neo-surface rounded-2xl border border-neo-border shadow-sm p-12 text-center">
+              <p className="text-neo-muted">
                 <T>No openings match your filters right now.</T>
               </p>
             </div>
@@ -129,22 +129,22 @@ const Careers = () => {
               {filteredJobs.map((job) => (
                 <div
                   key={job.title}
-                  className="group bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:border-emerald-300 hover:-translate-y-1 p-7 transition-all duration-300 flex flex-col"
+                  className="neo-surface neo-hover-accent group p-7 flex flex-col"
                 >
                   <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center mb-4 shadow-md shadow-emerald-500/20 group-hover:scale-110 transition-transform duration-300">
                     <Briefcase className="w-5 h-5" />
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-1">
+                  <h3 className="text-lg font-semibold text-neo-text mb-1">
                     {job.title}
                   </h3>
                   <p className="text-sm text-emerald-600 font-medium mb-3">
                     {job.department}
                   </p>
-                  <div className="flex items-center gap-1.5 text-sm text-slate-500 mb-4">
+                  <div className="flex items-center gap-1.5 text-sm text-neo-muted mb-4">
                     <MapPin className="w-4 h-4" />
                     {job.location}, Ghana
                   </div>
-                  <p className="text-sm text-slate-600 leading-relaxed flex-1 mb-6">
+                  <p className="text-sm text-neo-muted leading-relaxed flex-1 mb-6">
                     {job.description}
                   </p>
                   <button className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-5 py-2.5 rounded-lg transition-colors">

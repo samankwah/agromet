@@ -60,7 +60,7 @@ const Weather = () => {
     <>
       <PageTitle title="Weather Forecast" />
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 px-8 pb-8 pt-32 md:pt-36">
-        <div className="mx-auto max-w-4xl rounded-lg bg-white p-6 shadow-lg">
+        <div className="mx-auto max-w-4xl rounded-lg bg-neo-surface p-6 shadow-lg">
           <h1 className="mb-4 text-center text-3xl font-bold text-blue-800">
             <T>Weekly Weather Forecast</T>
           </h1>
@@ -92,7 +92,7 @@ const Weather = () => {
                     {Math.round(day.highTemp)}&deg;C / {Math.round(day.lowTemp)}
                     &deg;C
                   </p>
-                  <p className="text-center text-sm text-gray-600">
+                  <p className="text-center text-sm text-neo-muted">
                     <T>{day.condition}</T>
                   </p>
                 </div>

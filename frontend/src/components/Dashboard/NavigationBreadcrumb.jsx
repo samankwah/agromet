@@ -120,7 +120,7 @@ const NavigationBreadcrumb = ({ activePage, onNavigate, className = "" }) => {
         {breadcrumbs.map((breadcrumb, index) => (
           <li key={breadcrumb.id} className="flex items-center">
             {index > 0 && (
-              <FaChevronRight className="w-3 h-3 text-gray-400 mr-2" />
+              <FaChevronRight className="w-3 h-3 text-neo-muted mr-2" />
             )}
             
             {breadcrumb.path && onNavigate ? (
@@ -129,7 +129,7 @@ const NavigationBreadcrumb = ({ activePage, onNavigate, className = "" }) => {
                 className={`flex items-center space-x-1 px-2 py-1 rounded-md transition-colors ${
                   index === breadcrumbs.length - 1
                     ? "text-green-700 bg-green-50 font-medium cursor-default"
-                    : "text-gray-600 hover:text-green-600 hover:bg-gray-50"
+                    : "text-neo-muted hover:text-green-600 hover:bg-neo-surface-strong"
                 }`}
                 disabled={index === breadcrumbs.length - 1}
               >
@@ -140,7 +140,7 @@ const NavigationBreadcrumb = ({ activePage, onNavigate, className = "" }) => {
               <div className={`flex items-center space-x-1 px-2 py-1 ${
                 index === breadcrumbs.length - 1
                   ? "text-green-700 font-medium"
-                  : "text-gray-500"
+                  : "text-neo-muted"
               }`}>
                 {breadcrumb.icon}
                 <span>{breadcrumb.label}</span>

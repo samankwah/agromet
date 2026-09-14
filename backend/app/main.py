@@ -5,15 +5,36 @@ import json
 import logging
 import os
 import tempfile
+import time
 from pathlib import Path
 
 import httpx
-from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Query, Request, UploadFile, status
+from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, Header, HTTPException, Query, Request, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 from .auth import create_access_token, decode_access_token, hash_password, verify_password
+from .chat_context import build_context_block
+from .chat_prompt import CHAT_HISTORY_LIMIT, CHAT_SYSTEM_PROMPT, build_chat_input, chat_input_item
 from .database import decode_payload, encode_payload, get_connection, init_db, row_to_dict, set_database_path
+from .logging_config import configure_logging
+from .rate_limit import Limiter, client_ip, client_keys
+from . import hazard_runtime
+from . import precip_runtime
+from . import s2s_runtime
+from . import weather_runtime
+from .hazards import (
+    BAND_ORDER,
+    CLIMATOLOGY_LABEL,
+    DATA_SOURCES,
+    DISCHARGE_CLIMATOLOGY_LABEL,
+    DROUGHT_WEIGHTS,
+    FLOOD_WEIGHTS,
+    HAZARD_LIMITS,
+    SEVERITY_BANDS,
+    advisories_for,
+    resolve_region,
+)
 from .diagnosis import (
     SUPPORTED_IMAGE_ANALYSIS_TYPES,
     diagnose_crop_image,
@@ -34,13 +55,19 @@ from .domain import (
     serialize_cycle,
 )
 from .schemas import (
+    ChatReply,
     ChatRequest,
     CommodityResponse,
     CommodityTrendResponse,
+    ContactMessageRequest,
+    ContactMessageResponse,
     CropDiagnosisRequest,
     FAQResponse,
+    HazardOverrideRequest,
     HealthResponse,
     ImageAnalysisRequest,
+    LegalDocumentResponse,
+    LegalSection,
     MarketCenterResponse,
     ProductionCycleCreateRequest,
     ProductionCycleUpdateRequest,
@@ -59,9 +86,17 @@ from .spreadsheet_parser import (
 )
 
 
+configure_logging()
+
 logger = logging.getLogger(__name__)
 
 BACKEND_ROOT = Path(__file__).resolve().parent.parent
+
+# `CHAT_SYSTEM_PROMPT`, `CHAT_HISTORY_LIMIT`, `build_chat_input` and
+# `chat_input_item` moved to `chat_prompt` for room to grow. They are imported
+# by name above rather than reached through the module so that
+# `main.build_chat_input` keeps resolving -- moving a prompt into its own file
+# should not break everything that already knew where to find it.
 
 
 def is_serverless_runtime() -> bool:
@@ -83,11 +118,22 @@ def load_env_file(env_path: Path) -> None:
 
 
 def load_local_env() -> None:
+    """Load `.env` for local runs, and `.env.example` only when asked.
+
+    `.env.example` used to be loaded automatically whenever `APP_ENV` was not
+    the exact string "production". That is a trap on any host that is not
+    Vercel: forget to set one variable and the example file supplies
+    `SECRET_KEY=change-me-for-production` and `DEBUG=true` to a live server,
+    silently, with nothing in the logs to say so.
+
+    It stays available because it is genuinely useful for a first run on a fresh
+    clone, but now it has to be asked for by name.
+    """
     if is_serverless_runtime():
         return
 
     load_env_file(BACKEND_ROOT / ".env")
-    if os.getenv("APP_ENV", "development").lower() != "production":
+    if os.getenv("USE_EXAMPLE_ENV", "").lower() in ("1", "true", "yes"):
         load_env_file(BACKEND_ROOT / ".env.example")
 
 
@@ -114,6 +160,24 @@ LOCAL_DEV_ORIGIN_REGEX = r"https?://(localhost|127\.0\.0\.1)(:\d+)?$" if APP_ENV
 DATABASE_PATH = resolve_database_path(os.getenv("DATABASE_PATH"))
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
+# A ceiling on the answer, in tokens. Nothing bounded this before, so a single
+# question could bill for a two-thousand-word essay that a farmer on a phone was
+# never going to read. The prompt asks for about 120 words; this is roughly
+# three times that, so it caps the pathological case without truncating a normal
+# answer mid-sentence.
+OPENAI_MAX_OUTPUT_TOKENS = int(os.getenv("OPENAI_MAX_OUTPUT_TOKENS", "400"))
+# Low, not zero. These are questions with correct answers -- planting windows,
+# what a rainfall figure means -- and invention is the failure mode that matters.
+OPENAI_TEMPERATURE = float(os.getenv("OPENAI_TEMPERATURE", "0.3"))
+# Shorter than the 30s this used to allow. On a serverless host the platform
+# kills the invocation on its own schedule, and a fallback answer served at 20s
+# is worth more than a platform error page at 30.
+OPENAI_TIMEOUT_SECONDS = float(os.getenv("OPENAI_TIMEOUT_SECONDS", "20"))
+
+# The chat quota. See `rate_limit.py` for what these can and cannot promise.
+CHAT_RATE_LIMIT = int(os.getenv("CHAT_RATE_LIMIT", "20"))
+CHAT_RATE_WINDOW_SECONDS = int(os.getenv("CHAT_RATE_WINDOW_SECONDS", "900"))
+CHAT_DAILY_LIMIT = int(os.getenv("CHAT_DAILY_LIMIT", "120"))
 KINDWISE_API_KEY = os.getenv("KINDWISE_API_KEY", "")
 KINDWISE_CROP_HEALTH_API_KEY = os.getenv("KINDWISE_CROP_HEALTH_API_KEY", KINDWISE_API_KEY)
 KINDWISE_PLANT_ID_API_KEY = os.getenv("KINDWISE_PLANT_ID_API_KEY", KINDWISE_API_KEY)
@@ -144,6 +208,102 @@ FAQ_MESSAGES = {
     "maize-fertilizer": "Use a soil test where possible. A practical starting point is a balanced basal NPK application followed by a nitrogen top-dress at early vegetative growth.",
     "rainy-season-farming": "Prepare fields early, use drainage where needed, and match planting windows to local rainfall onset instead of fixed calendar dates.",
 }
+
+# The legal documents, served as structured sections. Kept here beside
+# FAQ_MESSAGES because both are static published copy rather than data.
+#
+# One source of truth on purpose: this wording previously existed only in the
+# web app's TermsOfService.jsx / PrivacyPolicy.jsx, so the mobile app had no way
+# to show it without a second copy that would drift. Both clients now render
+# these same sections in their own components.
+LEGAL_DOCUMENTS = {
+    "terms": {
+        "title": "Terms of Service",
+        "summary": "Please read these terms carefully before using AgroMet.",
+        "updated": "April 2026",
+        "sections": [
+            {
+                "title": "Acceptance of Terms",
+                "body": "By accessing or using AgroMet, you agree to be bound by these Terms of Service. If you do not agree with any part of these terms, please do not use our services.",
+            },
+            {
+                "title": "User Responsibilities",
+                "body": "As a user of AgroMet, you agree to:",
+                "items": [
+                    "Provide accurate and complete information when creating an account",
+                    "Keep your account credentials secure and confidential",
+                    "Notify us immediately of any unauthorized access to your account",
+                    "Use our services in compliance with all applicable laws and regulations",
+                ],
+            },
+            {
+                "title": "Limitation of Liability",
+                "body": "AgroMet provides advisories as guidance based on the best available data. Our liability is limited to the fullest extent permitted by law. We are not responsible for any indirect, incidental, or consequential damages resulting from reliance on the service.",
+            },
+            {
+                "title": "Changes to These Terms",
+                "body": "We reserve the right to update or modify these Terms at any time. Material changes will be communicated through the platform. Your continued use of AgroMet after changes take effect constitutes acceptance of the updated Terms.",
+            },
+        ],
+    },
+    "privacy": {
+        "title": "Privacy Policy",
+        "summary": "How AgroMet collects, uses and protects your information.",
+        "updated": "April 2026",
+        "sections": [
+            {
+                "title": "Information We Collect",
+                "body": "We may collect the following types of information:",
+                "items": [
+                    "Personal identification information (name, email, phone)",
+                    "Usage data describing how you interact with our services",
+                    "Cookies and similar tracking technologies",
+                    "Location data when you opt in to localized advisories",
+                ],
+            },
+            {
+                "title": "How We Use Your Information",
+                "body": "We use the information we collect to:",
+                "items": [
+                    "Provide, operate, and maintain the AgroMet platform",
+                    "Personalize advisories and recommendations to your location",
+                    "Communicate with you about updates, alerts, and support",
+                    "Analyze usage patterns to improve the product",
+                ],
+            },
+            {
+                "title": "Data Security",
+                "body": "We take the security of your personal information seriously and implement administrative, technical, and physical safeguards designed to protect it against unauthorized access, alteration, disclosure, or destruction.",
+            },
+            {
+                "title": "Third-Party Services",
+                "body": "We may engage vetted third-party service providers to help us operate and improve AgroMet. These providers have access to your information only to perform tasks on our behalf and are contractually obligated to protect it.",
+            },
+            # DRAFT, awaiting sign-off. Written because the policy did not say
+            # this at all while the app was already doing it: a farmer's typed
+            # question, their voice recording and their crop photo all leave
+            # Ghana to reach a provider abroad, and "vetted third-party service
+            # providers" above does not disclose that in a way anyone could act
+            # on. Replace the wording with whatever the agency approves, but do
+            # not ship the assistant with nothing here.
+            {
+                "title": "AgroMet AI and Your Questions",
+                "body": "When you ask AgroMet AI a question, record one by voice, or send a crop photo, that content is sent to an artificial intelligence provider outside Ghana to produce the answer. Alongside your question we send the region you have selected in the app and the crops you have listed, so the answer can be specific to your area. We do not send your name, your phone number or your email address.",
+                "items": [
+                    "Your questions are used to produce your answer, not to identify you",
+                    "Conversations are not stored on our servers; they stay on your phone and clear themselves",
+                    "Do not include personal details, identity numbers or payment information in a question",
+                    "Answers are guidance and can be wrong; check anything critical with your district extension officer",
+                ],
+            },
+            {
+                "title": "Changes to This Privacy Policy",
+                "body": "We may update this Privacy Policy from time to time. Material changes will be posted on this page with a new effective date. We encourage you to review this policy periodically.",
+            },
+        ],
+    },
+}
+
 
 def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
     payload = decode_access_token(token, SECRET_KEY)
@@ -554,92 +714,126 @@ async def ambee_request(path: str, *, params: dict, timeout: float = 20.0) -> di
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=detail) from exc
 
 
-CHAT_SYSTEM_PROMPT = (
-    "You are AgroMet AI, a practical agricultural assistant focused on Ghanaian "
-    "weather and farming support."
+# One limiter for the process. Module scope on purpose: a limiter rebuilt per
+# request counts nothing.
+chat_limiter = Limiter(
+    limit=CHAT_RATE_LIMIT,
+    window_seconds=CHAT_RATE_WINDOW_SECONDS,
+    daily_limit=CHAT_DAILY_LIMIT,
 )
 
-# How many prior turns to replay to the model. Four exchanges is enough to
-# resolve a follow-up like "and for maize?" against the question before it, and
-# it bounds what a client can push into the prompt — `conversationHistory`
-# arrives as a free-form list off the wire with no per-entry schema.
-CHAT_HISTORY_LIMIT = 8
 
+class ChatOutcome:
+    """What one attempt at an answer produced.
 
-def chat_input_item(role: str, text: str) -> dict:
-    """One entry of the Responses API's `input` array.
-
-    Factored out because the system prompt, every replayed turn and the latest
-    question all need the same nested shape, and three hand-written copies is
-    how one of them quietly drifts.
+    A tuple did for two values. It stopped doing when there were four, and the
+    third and fourth are the point of this: `reason` is what turns "the
+    assistant is degraded" into something an operator can act on, and `usage` is
+    the only number that makes the bill visible.
     """
-    return {"role": role, "content": [{"type": "input_text", "text": text}]}
+
+    __slots__ = ("text", "degraded", "reason", "usage")
+
+    def __init__(self, text: str, degraded: bool, reason: str | None = None, usage: dict | None = None) -> None:
+        self.text = text
+        self.degraded = degraded
+        self.reason = reason
+        self.usage = usage
 
 
-def build_chat_input(message: str, conversation_history: list[dict] | None) -> list[dict]:
-    """The `input` array for a chat turn: system prompt, prior turns, then the
-    question just asked.
+def fallback_reply(message: str, region: str | None) -> str:
+    """The answer served when the model cannot be reached.
 
-    History is *filtered*, not trusted. `ChatRequest.conversationHistory` is a
-    bare `list[dict]`, so entries come from the client unvalidated: anything
-    that is not a `user` or `assistant` string turn is dropped. That is what
-    stops a caller from smuggling in a second `system` turn to displace the
-    prompt above, and stops a malformed entry from becoming an empty message or
-    a 500.
+    Kept because a chat box that answers something beats a 502, and worded so it
+    never pretends to have read the question: the client labels it, and this
+    text has to survive being read without that label.
     """
-    items = [chat_input_item("system", CHAT_SYSTEM_PROMPT)]
-
-    for entry in (conversation_history or [])[-CHAT_HISTORY_LIMIT:]:
-        if not isinstance(entry, dict):
-            continue
-        role = entry.get("role")
-        content = entry.get("content")
-        if role not in ("user", "assistant"):
-            continue
-        if not isinstance(content, str) or not content.strip():
-            continue
-        items.append(chat_input_item(role, content))
-
-    items.append(chat_input_item("user", message))
-    return items
-
-
-async def build_chat_reply(message: str, conversation_history: list[dict], user_context: dict) -> str:
-    if OPENAI_API_KEY:
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.post(
-                    "https://api.openai.com/v1/responses",
-                    headers={
-                        "Authorization": f"Bearer {OPENAI_API_KEY}",
-                        "Content-Type": "application/json",
-                    },
-                    json={
-                        "model": OPENAI_MODEL,
-                        "input": build_chat_input(message, conversation_history),
-                    },
-                )
-                response.raise_for_status()
-                payload = response.json()
-                output = payload.get("output", [])
-                for item in output:
-                    for content in item.get("content", []):
-                        text = content.get("text")
-                        if text:
-                            return text
-        except Exception:
-            # Falling through to the canned reply below is deliberate: a chat
-            # box that answers something beats a 502. Swallowing the *reason*
-            # was not — it made every upstream failure look identical to "no
-            # API key configured", which is the one cause it usually isn't.
-            logger.exception("Chat completion failed; serving the offline fallback reply.")
-
-    context_region = user_context.get("region") or "your area"
+    where = region or "your area"
     return (
-        f"I do not have a live AI provider configured yet, so here is a practical fallback. "
-        f"For {context_region}, focus on rainfall timing, field drainage, seed quality, and pest monitoring. "
-        f"You asked: {message}"
+        f"I cannot reach the AgroMet assistant right now, so this is general guidance rather than "
+        f"an answer to your question. For {where}, watch the rainfall timing, keep field drainage "
+        f"clear, use good seed, and check your crop for pests weekly. Please ask me again shortly."
     )
+
+
+def extract_reply_text(payload: dict) -> str | None:
+    """The assistant's words out of a Responses API payload."""
+    for item in payload.get("output", []) or []:
+        for content in item.get("content", []) or []:
+            text = content.get("text")
+            if text and text.strip():
+                return text
+    return None
+
+
+async def build_chat_reply(
+    message: str,
+    conversation_history: list[dict],
+    user_context: dict | None = None,
+    context_block: str | None = None,
+) -> ChatOutcome:
+    """The reply, and whether it is the real thing.
+
+    Every failure here ends in the same fallback and an HTTP 200, which is
+    deliberate -- see `fallback_reply`. What changed is that the *reason* now
+    survives: `no_key`, `timeout`, `upstream_error` and `empty_output` used to be
+    one indistinguishable degraded answer, and the first of those is the one it
+    usually was not.
+    """
+    context = user_context if isinstance(user_context, dict) else {}
+    region = context.get("region")
+
+    if not OPENAI_API_KEY:
+        logger.warning("Chat asked for an answer with no OPENAI_API_KEY configured.")
+        return ChatOutcome(fallback_reply(message, region), True, "no_key")
+
+    started = time.perf_counter()
+    try:
+        async with httpx.AsyncClient(timeout=OPENAI_TIMEOUT_SECONDS) as client:
+            response = await client.post(
+                "https://api.openai.com/v1/responses",
+                headers={
+                    "Authorization": f"Bearer {OPENAI_API_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": OPENAI_MODEL,
+                    "input": build_chat_input(message, conversation_history, context_block),
+                    "max_output_tokens": OPENAI_MAX_OUTPUT_TOKENS,
+                    "temperature": OPENAI_TEMPERATURE,
+                },
+            )
+            response.raise_for_status()
+            payload = response.json()
+    except httpx.TimeoutException:
+        logger.warning(
+            "Chat completion timed out after %.1fs; serving the fallback reply.",
+            time.perf_counter() - started,
+        )
+        return ChatOutcome(fallback_reply(message, region), True, "timeout")
+    except Exception:
+        # Falling through to the canned reply is deliberate: a chat box that
+        # answers something beats a 502. Swallowing the reason was not.
+        logger.exception("Chat completion failed; serving the fallback reply.")
+        return ChatOutcome(fallback_reply(message, region), True, "upstream_error")
+
+    usage = payload.get("usage") if isinstance(payload.get("usage"), dict) else None
+    text = extract_reply_text(payload)
+
+    if not text:
+        # A 200 with nothing in it. Rare, and it used to be silent: the fallback
+        # went out looking exactly like a missing key.
+        logger.warning("Chat completion returned no text; serving the fallback reply.")
+        return ChatOutcome(fallback_reply(message, region), True, "empty_output", usage)
+
+    logger.info(
+        "Chat answered in %.2fs (model=%s, input_tokens=%s, output_tokens=%s)",
+        time.perf_counter() - started,
+        OPENAI_MODEL,
+        (usage or {}).get("input_tokens"),
+        (usage or {}).get("output_tokens"),
+    )
+    return ChatOutcome(text, False, None, usage)
 
 
 @app.get("/api/health", response_model=HealthResponse)
@@ -668,6 +862,14 @@ def integrations_status():
             "ambee": {
                 "configured": bool(AMBEE_API_KEY),
                 "baseUrl": AMBEE_BASE_URL,
+            },
+            # The assistant's own provider, and the one that was missing here.
+            # Without it, "why is every chat answer generic?" could not be
+            # answered from the outside, which is exactly when you need to ask.
+            "openai": {
+                "configured": bool(OPENAI_API_KEY),
+                "model": OPENAI_MODEL,
+                "transcribeModel": TRANSCRIPTION_MODEL,
             },
         },
     }
@@ -718,10 +920,122 @@ def me(current_user: dict = Depends(get_current_user)):
     return serialize_user(current_user)
 
 
-@app.post("/api/chat")
-async def chat(payload: ChatRequest):
-    reply = await build_chat_reply(payload.message, payload.conversationHistory, payload.userContext)
-    return {"success": True, "message": reply}
+@app.post("/api/chat", response_model=ChatReply)
+async def chat(
+    payload: ChatRequest,
+    request: Request,
+    x_device_id: str | None = Header(default=None, alias="X-Device-Id"),
+):
+    """Answer one question from a farmer.
+
+    Three things happen before the model is called, in this order because each
+    is cheaper than the next: the quota is checked, the live figures for this
+    farmer's area are gathered, and only then is anything billed.
+
+    The 429 is the one path here that is not a 200. It has to be: an answer that
+    said "you have asked too many questions" in the assistant's own voice would
+    be indistinguishable from the assistant refusing to help, and the client
+    needs to tell those apart to know whether retrying is worth anything.
+    """
+    keys = client_keys(x_device_id, client_ip(request.headers, request.client.host if request.client else None))
+    decision = chat_limiter.check(keys)
+    if not decision.allowed:
+        logger.info("Chat request refused by the quota (%s).", decision.reason)
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=decision.message,
+            headers={"Retry-After": str(decision.retry_after)},
+        )
+    chat_limiter.record(keys)
+
+    context = payload.userContext
+    context_block = await build_context_block(
+        payload.message,
+        region=context.region,
+        district=context.district,
+        town=context.town,
+        crops=context.crops,
+    )
+
+    outcome = await build_chat_reply(
+        payload.message,
+        payload.conversationHistory,
+        context.model_dump(),
+        context_block,
+    )
+
+    # `degraded` says the answer is the built-in fallback rather than the
+    # model's. Still a 200 with `success: True`, because the farmer did get
+    # usable words back, but the client can now say where they came from
+    # instead of presenting canned advice as an answer to their question.
+    return ChatReply(
+        success=True,
+        message=outcome.text,
+        degraded=outcome.degraded,
+        degradedReason=outcome.reason,
+        usage=outcome.usage,
+    )
+
+
+# A minute of speech is a long question. The cap exists because the upload
+# happens on a rural connection and the transcription is billed by duration,
+# not because a longer clip would break anything.
+MAX_TRANSCRIPT_AUDIO_BYTES = 10 * 1024 * 1024
+
+TRANSCRIPTION_MODEL = os.getenv("OPENAI_TRANSCRIBE_MODEL", "whisper-1")
+
+
+@app.post("/api/transcribe")
+async def transcribe_audio(audio: UploadFile = File(...)):
+    """Speech to text, so a farmer can ask by speaking instead of typing.
+
+    Deliberately returns the text rather than an answer: the transcript goes
+    into the composer's draft for the farmer to correct before sending.
+    Transcription of accented English over a poor connection is not reliable
+    enough to send unread, and a wrong question answered confidently is worse
+    than no question at all.
+    """
+    if not OPENAI_API_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Voice questions need a transcription provider, which is not configured.",
+        )
+
+    payload = await audio.read()
+    if not payload:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The recording was empty.")
+    if len(payload) > MAX_TRANSCRIPT_AUDIO_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="That recording is too long. Ask a shorter question.",
+        )
+
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(
+                "https://api.openai.com/v1/audio/transcriptions",
+                headers={"Authorization": f"Bearer {OPENAI_API_KEY}"},
+                files={"file": (audio.filename or "question.m4a", payload, audio.content_type or "audio/m4a")},
+                data={"model": TRANSCRIPTION_MODEL},
+            )
+            response.raise_for_status()
+            text = str(response.json().get("text") or "").strip()
+    except Exception:
+        # Unlike the chat fallback there is nothing sensible to invent here: a
+        # made-up transcript would put words in the farmer's mouth.
+        logger.exception("Transcription failed.")
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Could not turn that recording into text. Try again, or type your question.",
+        )
+
+    if not text:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="No speech was found in that recording.",
+        )
+
+    return {"success": True, "text": text}
 
 
 @app.post("/api/v1/translate")
@@ -842,6 +1156,50 @@ async def get_ambee_forecast_weather(
     return payload
 
 
+@app.get("/api/weather/bundle")
+async def get_weather_bundle(
+    background: BackgroundTasks,
+    lat: float = Query(...),
+    lng: float = Query(...),
+):
+    """Current conditions, seven days and the hourly series for one point.
+
+    One route rather than three because Open-Meteo returns all of it in a single
+    request, and the app needs all of it: Home reads `current`, the 7-Day
+    segment reads `daily`, and day detail reads `hourly`.
+
+    The payload is Open-Meteo's own, wrapped in the house envelope rather than
+    normalised here. The mobile app falls back to calling Open-Meteo directly
+    when this backend is unreachable, so the mapping has to live somewhere both
+    paths share — which means the client, in TypeScript, written once.
+
+    Never raises on upstream failure: a stale bundle beats an error page, and an
+    empty one is reported as `unavailable` so the client can fall back.
+    """
+    key = weather_runtime.cache_key(lat, lng)
+    await weather_runtime.ensure_fresh(lat, lng)
+    bundle = weather_runtime.cached_bundle(key)
+
+    if not bundle:
+        return {
+            "success": True,
+            "data": None,
+            "unavailable": True,
+            "meta": weather_runtime.metadata(key),
+        }
+
+    # Serve what we have and revalidate behind the response.
+    if weather_runtime.is_stale(key):
+        background.add_task(weather_runtime.refresh, lat, lng, False)
+
+    return {
+        "success": True,
+        "data": bundle,
+        "unavailable": False,
+        "meta": weather_runtime.metadata(key),
+    }
+
+
 @app.post("/api/crop-diagnosis")
 async def crop_diagnosis(payload: CropDiagnosisRequest, authorization: str | None = Header(default=None)):
     context = dict(payload.context)
@@ -960,6 +1318,56 @@ def faq(topic: str):
     if not message:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="FAQ topic not found.")
     return FAQResponse(success=True, message=message)
+
+
+@app.post("/api/contact", response_model=ContactMessageResponse, status_code=status.HTTP_201_CREATED)
+def submit_contact_message(payload: ContactMessageRequest):
+    """Takes a message from the apps' Contact screen and stores it.
+
+    Deliberately unauthenticated: someone who cannot sign in is exactly the
+    person most likely to need to get in touch. Validation lives in the schema.
+
+    The reference returned is the row id, so a follow-up call ("I wrote in on
+    Tuesday") can be matched to a record rather than searched for by memory.
+    """
+    with get_connection() as connection:
+        cursor = connection.execute(
+            """
+            INSERT INTO contact_messages (name, email, phone, subject, message, source)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                payload.name.strip(),
+                payload.email,
+                (payload.phone or "").strip() or None,
+                payload.subject.strip(),
+                payload.message.strip(),
+                payload.source.strip() or "mobile",
+            ),
+        )
+        reference = cursor.lastrowid
+
+    return ContactMessageResponse(
+        success=True,
+        message="Thank you. Your message has reached the AgroMet team.",
+        reference=reference,
+    )
+
+
+@app.get("/api/legal/{slug}", response_model=LegalDocumentResponse)
+def legal_document(slug: str):
+    document = LEGAL_DOCUMENTS.get(slug)
+    if not document:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Legal document not found.")
+
+    return LegalDocumentResponse(
+        success=True,
+        slug=slug,
+        title=document["title"],
+        summary=document["summary"],
+        updated=document["updated"],
+        sections=[LegalSection(**section) for section in document["sections"]],
+    )
 
 
 @app.post("/api/agricultural-data/upload")
@@ -1802,14 +2210,25 @@ SEED_COMMODITIES = [
     ("sorghum", "Sorghum", "Sorghum", 189.99, "per bag", "stable", "low"),
     ("groundnuts", "Groundnuts", "Groundnuts", 249.99, "per bag", "rising", "moderate"),
     ("cocoa", "Cocoa", "Cocoa", 850.00, "per bag", "volatile", "export"),
+    ("poultry", "Poultry", "Poultry", 45.00, "per kg", "rising", "very-high"),
 ]
 
+# Every commodity above carries a trend entry. The market UI draws a sparkline
+# on each card and a full price chart on the commodity page, so a commodity
+# without a trend is a commodity with a visibly broken page. The last point of
+# each series is the commodity's current price, by construction.
 SEED_TRENDS = {
     "yellow-maize": {
         "6months": [280, 285, 290, 295, 298, 299.99],
         "seasonal_pattern": "Low during harvest (July-August), High during planting (March-April)",
         "peak_months": [3, 4, 5],
         "low_months": [7, 8, 9],
+    },
+    "white-maize": {
+        "6months": [265, 270, 276, 282, 287, 289.99],
+        "seasonal_pattern": "Tracks yellow maize, but firmer when household demand for banku and kenkey is strong",
+        "peak_months": [3, 4, 5],
+        "low_months": [8, 9, 10],
     },
     "rice": {
         "6months": [150, 152, 155, 157, 158, 159.99],
@@ -1829,6 +2248,66 @@ SEED_TRENDS = {
         "peak_months": [6, 7, 8],
         "low_months": [9, 10, 11],
     },
+    "cassava": {
+        "6months": [126, 127, 128, 128.5, 129, 129.99],
+        "seasonal_pattern": "Flat year-round; roots can be left in the ground until they are needed",
+        "peak_months": [2, 3],
+        "low_months": [8, 9],
+    },
+    "pepper": {
+        "6months": [48, 51, 54, 57, 59, 59.99],
+        "seasonal_pattern": "Climbs through the dry season as irrigated volumes thin out",
+        "peak_months": [12, 1, 2],
+        "low_months": [6, 7, 8],
+    },
+    "onion": {
+        "6months": [110, 102, 95, 90, 88, 89.99],
+        "seasonal_pattern": "Strongly seasonal; falls once northern and Sahel stock arrives",
+        "peak_months": [4, 5, 6],
+        "low_months": [10, 11, 12],
+    },
+    "plantain": {
+        "6months": [72, 75, 82, 85, 81, 79.99],
+        "seasonal_pattern": "Cannot be stored, so the price follows that week's arrivals",
+        "peak_months": [1, 2, 3],
+        "low_months": [7, 8, 9],
+    },
+    "beans": {
+        "6months": [178, 183, 189, 194, 197, 199.99],
+        "seasonal_pattern": "Stores well, so the price rises steadily through the lean season",
+        "peak_months": [4, 5, 6],
+        "low_months": [11, 12],
+    },
+    "soybeans": {
+        "6months": [372, 380, 388, 393, 397, 399.99],
+        "seasonal_pattern": "Crusher demand outruns local supply, so harvest dips stay shallow",
+        "peak_months": [2, 3, 4],
+        "low_months": [11, 12],
+    },
+    "sorghum": {
+        "6months": [180, 182, 185, 187, 188, 189.99],
+        "seasonal_pattern": "Steady brewer and feed-mill demand; thin volumes move slowly",
+        "peak_months": [3, 4],
+        "low_months": [10, 11],
+    },
+    "groundnuts": {
+        "6months": [225, 231, 238, 243, 247, 249.99],
+        "seasonal_pattern": "Rises through the lean season once the northern harvest is sold down",
+        "peak_months": [4, 5, 6],
+        "low_months": [10, 11, 12],
+    },
+    "cocoa": {
+        "6months": [790, 815, 870, 905, 862, 850.00],
+        "seasonal_pattern": "Volatile; set by the world price and the announced farmgate rate",
+        "peak_months": [10, 11, 12],
+        "low_months": [5, 6, 7],
+    },
+    "poultry": {
+        "6months": [41, 42, 43, 44, 44.5, 45.00],
+        "seasonal_pattern": "Spikes in December and around Easter; feed-grain cost sets the floor",
+        "peak_months": [12, 4],
+        "low_months": [6, 7, 8],
+    },
 }
 
 SEED_MARKET_CENTERS = [
@@ -1840,27 +2319,59 @@ SEED_MARKET_CENTERS = [
 
 
 def seed_market_data() -> None:
-    """Insert default market data if tables are empty."""
-    with get_connection() as conn:
-        count = conn.execute("SELECT COUNT(*) FROM commodities").fetchone()[0]
-        if count > 0:
-            return
+    """Bring the market tables up to date with the seed data above.
 
+    This upserts rather than bailing out on a non-empty table. The earlier
+    "insert only if empty" guard meant that any commodity or trend added to
+    the seeds after first run never reached an existing agromet.db, which is
+    how the database ended up serving four trends for fourteen commodities.
+    There is no write API for market data, so there is no operator-entered
+    state here to protect.
+    """
+    with get_connection() as conn:
         for slug, name, category, price, unit, trend, demand in SEED_COMMODITIES:
             conn.execute(
-                "INSERT INTO commodities (slug, name, category, price, unit, trend, demand) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                """
+                INSERT INTO commodities (slug, name, category, price, unit, trend, demand)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(slug) DO UPDATE SET
+                    name = excluded.name,
+                    category = excluded.category,
+                    price = excluded.price,
+                    unit = excluded.unit,
+                    trend = excluded.trend,
+                    demand = excluded.demand,
+                    updated_at = CURRENT_TIMESTAMP
+                """,
                 (slug, name, category, price, unit, trend, demand),
             )
 
         for slug, data in SEED_TRENDS.items():
             conn.execute(
-                "INSERT INTO commodity_trends (commodity_slug, month_prices_json, seasonal_pattern, peak_months_json, low_months_json) VALUES (?, ?, ?, ?, ?)",
+                """
+                INSERT INTO commodity_trends (commodity_slug, month_prices_json, seasonal_pattern, peak_months_json, low_months_json)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(commodity_slug) DO UPDATE SET
+                    month_prices_json = excluded.month_prices_json,
+                    seasonal_pattern = excluded.seasonal_pattern,
+                    peak_months_json = excluded.peak_months_json,
+                    low_months_json = excluded.low_months_json,
+                    updated_at = CURRENT_TIMESTAMP
+                """,
                 (slug, json.dumps(data["6months"]), data["seasonal_pattern"], json.dumps(data["peak_months"]), json.dumps(data["low_months"])),
             )
 
         for region, markets, transport, premium in SEED_MARKET_CENTERS:
             conn.execute(
-                "INSERT INTO market_centers (region, major_markets_json, transport_access, price_premium) VALUES (?, ?, ?, ?)",
+                """
+                INSERT INTO market_centers (region, major_markets_json, transport_access, price_premium)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(region) DO UPDATE SET
+                    major_markets_json = excluded.major_markets_json,
+                    transport_access = excluded.transport_access,
+                    price_premium = excluded.price_premium,
+                    updated_at = CURRENT_TIMESTAMP
+                """,
                 (region, json.dumps(markets), transport, premium),
             )
 
@@ -1868,82 +2379,540 @@ def seed_market_data() -> None:
 seed_market_data()
 
 
+# The market collections are serialized as maps keyed by slug/region, which is
+# the shape both clients already read, so the schemas below cannot be used as
+# FastAPI `response_model=`. They are applied to each entry instead: the row
+# still has to satisfy the declared contract before it goes out, and every
+# entry now carries its own slug/region rather than relying on the map key.
+
+
+def _commodity_payload(row) -> dict:
+    return CommodityResponse(**dict(row)).model_dump()
+
+
+def _trend_payload(row) -> dict:
+    return CommodityTrendResponse(
+        commodity_slug=row["commodity_slug"],
+        seasonal_pattern=row["seasonal_pattern"],
+        peak_months=json.loads(row["peak_months_json"]),
+        low_months=json.loads(row["low_months_json"]),
+        **{"6months": json.loads(row["month_prices_json"])},
+    ).model_dump(by_alias=True)
+
+
+def _market_center_payload(row) -> dict:
+    return MarketCenterResponse(
+        region=row["region"],
+        major_markets=json.loads(row["major_markets_json"]),
+        transport_access=row["transport_access"],
+        price_premium=row["price_premium"],
+    ).model_dump()
+
+
+COMMODITY_COLUMNS = "slug, name, category, price, unit, trend, demand"
+TREND_COLUMNS = "commodity_slug, month_prices_json, seasonal_pattern, peak_months_json, low_months_json"
+MARKET_CENTER_COLUMNS = "region, major_markets_json, transport_access, price_premium"
+
+
 @app.get("/api/market/commodities")
 def get_commodities():
     with get_connection() as conn:
-        rows = conn.execute("SELECT slug, name, category, price, unit, trend, demand FROM commodities ORDER BY name").fetchall()
-    return {
-        "success": True,
-        "data": {row["slug"]: {"price": row["price"], "unit": row["unit"], "trend": row["trend"], "demand": row["demand"], "name": row["name"], "category": row["category"]} for row in rows},
-    }
+        rows = conn.execute(f"SELECT {COMMODITY_COLUMNS} FROM commodities ORDER BY name").fetchall()
+    return {"success": True, "data": {row["slug"]: _commodity_payload(row) for row in rows}}
 
 
 @app.get("/api/market/commodities/{slug}")
 def get_commodity(slug: str):
     with get_connection() as conn:
-        row = conn.execute("SELECT slug, name, category, price, unit, trend, demand FROM commodities WHERE slug = ?", (slug,)).fetchone()
+        row = conn.execute(f"SELECT {COMMODITY_COLUMNS} FROM commodities WHERE slug = ?", (slug,)).fetchone()
     if not row:
         raise HTTPException(status_code=404, detail="Commodity not found")
-    return {"success": True, "data": {"price": row["price"], "unit": row["unit"], "trend": row["trend"], "demand": row["demand"], "name": row["name"], "category": row["category"]}}
+    return {"success": True, "data": _commodity_payload(row)}
 
 
 @app.get("/api/market/trends")
 def get_trends():
     with get_connection() as conn:
-        rows = conn.execute("SELECT commodity_slug, month_prices_json, seasonal_pattern, peak_months_json, low_months_json FROM commodity_trends").fetchall()
-    data = {}
-    for row in rows:
-        data[row["commodity_slug"]] = {
-            "6months": json.loads(row["month_prices_json"]),
-            "seasonal_pattern": row["seasonal_pattern"],
-            "peak_months": json.loads(row["peak_months_json"]),
-            "low_months": json.loads(row["low_months_json"]),
-        }
-    return {"success": True, "data": data}
+        rows = conn.execute(f"SELECT {TREND_COLUMNS} FROM commodity_trends").fetchall()
+    return {"success": True, "data": {row["commodity_slug"]: _trend_payload(row) for row in rows}}
 
 
 @app.get("/api/market/trends/{slug}")
 def get_trend(slug: str):
     with get_connection() as conn:
-        row = conn.execute("SELECT commodity_slug, month_prices_json, seasonal_pattern, peak_months_json, low_months_json FROM commodity_trends WHERE commodity_slug = ?", (slug,)).fetchone()
+        row = conn.execute(f"SELECT {TREND_COLUMNS} FROM commodity_trends WHERE commodity_slug = ?", (slug,)).fetchone()
     if not row:
         raise HTTPException(status_code=404, detail="Trend data not found")
-    return {
-        "success": True,
-        "data": {
-            "6months": json.loads(row["month_prices_json"]),
-            "seasonal_pattern": row["seasonal_pattern"],
-            "peak_months": json.loads(row["peak_months_json"]),
-            "low_months": json.loads(row["low_months_json"]),
-        },
-    }
+    return {"success": True, "data": _trend_payload(row)}
 
 
 @app.get("/api/market/regions")
 def get_regions():
     with get_connection() as conn:
-        rows = conn.execute("SELECT region, major_markets_json, transport_access, price_premium FROM market_centers ORDER BY region").fetchall()
-    data = {}
-    for row in rows:
-        data[row["region"]] = {
-            "major_markets": json.loads(row["major_markets_json"]),
-            "transport_access": row["transport_access"],
-            "price_premium": row["price_premium"],
-        }
-    return {"success": True, "data": data}
+        rows = conn.execute(f"SELECT {MARKET_CENTER_COLUMNS} FROM market_centers ORDER BY region").fetchall()
+    return {"success": True, "data": {row["region"]: _market_center_payload(row) for row in rows}}
 
 
 @app.get("/api/market/regions/{region}")
 def get_region(region: str):
     with get_connection() as conn:
-        row = conn.execute("SELECT region, major_markets_json, transport_access, price_premium FROM market_centers WHERE region = ?", (region,)).fetchone()
+        row = conn.execute(f"SELECT {MARKET_CENTER_COLUMNS} FROM market_centers WHERE region = ?", (region,)).fetchone()
     if not row:
         raise HTTPException(status_code=404, detail="Region not found")
+    return {"success": True, "data": _market_center_payload(row)}
+
+
+# ---------------------------------------------------------------------------
+# Flood and drought monitoring
+# ---------------------------------------------------------------------------
+#
+# Read endpoints never raise on upstream failure. Unlike ambee_request above --
+# which is a proxy, where a 502 is the honest answer -- this is a monitoring
+# page, and a clearly-labelled stale reading beats an error screen. Failures
+# surface as `stale`, `degraded` and `error` fields on a 200 response.
+
+
+def _active_overrides(connection) -> dict[tuple[str, str], dict]:
+    """Newest in-force override per (region, hazard).
+
+    Expiry is evaluated in SQL rather than by a cleanup job, so a bulletin
+    reverts to the computed value on its own the moment it lapses.
+    """
+    rows = connection.execute(
+        """
+        SELECT id, region, hazard, band, headline, advisory_json, issued_by,
+               effective_from, effective_to, created_at
+        FROM hazard_overrides
+        WHERE effective_from <= CURRENT_TIMESTAMP
+          AND (effective_to IS NULL OR effective_to >= CURRENT_TIMESTAMP)
+        ORDER BY effective_from DESC, id DESC
+        """
+    ).fetchall()
+
+    active: dict[tuple[str, str], dict] = {}
+    for row in rows:
+        key = (row["region"], row["hazard"])
+        if key in active:
+            continue  # the ORDER BY already put the newest first
+        active[key] = {
+            "id": row["id"],
+            "band": row["band"],
+            "headline": row["headline"],
+            "advisories": parse_json_list(row["advisory_json"]),
+            "issuedBy": row["issued_by"],
+            "issuedAt": row["effective_from"],
+            "effectiveTo": row["effective_to"],
+        }
+    return active
+
+
+def _apply_overrides(region_payload: dict, overrides: dict[tuple[str, str], dict]) -> dict:
+    """Overlay any in-force bulletin, keeping the computed reading visible.
+
+    Copies the nested hazard blocks rather than mutating them. The snapshot this
+    reads from is the long-lived process cache, so writing an override straight
+    into it would contaminate every later request -- and the override would
+    outlive its own expiry, which is the one thing the effective window exists
+    to prevent.
+    """
+    region_payload = dict(region_payload)
+    name = region_payload["region"]
+    zone = region_payload["agroZone"]
+
+    for hazard in ("flood", "drought"):
+        block = dict(region_payload[hazard])
+        region_payload[hazard] = block
+        override = overrides.get((name, hazard))
+        if override:
+            block["computed"] = {"score": block["score"], "band": block["band"]}
+            block["band"] = override["band"]
+            block["overridden"] = True
+            block["source"] = "gmet-bulletin"
+            block["headline"] = override["headline"]
+            block["issuedBy"] = override["issuedBy"]
+            block["issuedAt"] = override["issuedAt"]
+            block["effectiveTo"] = override["effectiveTo"]
+            block["advisories"] = override["advisories"] or advisories_for(hazard, override["band"], zone)
+        else:
+            block["overridden"] = False
+            block["source"] = "open-meteo"
+            block["advisories"] = advisories_for(hazard, block["band"], zone)
+
+    return region_payload
+
+
+def _summarise(regions: list[dict]) -> dict:
+    """National roll-up. Counts, not averages -- an average across sixteen
+    regions hides the one region that is actually in trouble."""
+    def counts(hazard: str) -> dict:
+        tally = {name: 0 for name, _ in SEVERITY_BANDS}
+        tally["unavailable"] = 0
+        for region in regions:
+            tally[region[hazard]["band"]] = tally.get(region[hazard]["band"], 0) + 1
+        return tally
+
+    def worst(hazard: str) -> dict | None:
+        ranked = [r for r in regions if r[hazard].get("score") is not None]
+        if not ranked:
+            return None
+        top = max(ranked, key=lambda r: (BAND_ORDER.get(r[hazard]["band"], 0), r[hazard]["score"]))
+        return {
+            "region": top["region"],
+            "score": top[hazard]["score"],
+            "band": top[hazard]["band"],
+            "overridden": top[hazard].get("overridden", False),
+        }
+
+    def elevated(hazard: str) -> int:
+        return sum(1 for r in regions if BAND_ORDER.get(r[hazard]["band"], 0) >= BAND_ORDER["moderate"])
+
+    return {
+        "regionCount": len(regions),
+        "floodBands": counts("flood"),
+        "droughtBands": counts("drought"),
+        "floodElevated": elevated("flood"),
+        "droughtElevated": elevated("drought"),
+        "highestFlood": worst("flood"),
+        "highestDrought": worst("drought"),
+        "overriddenCount": sum(
+            1 for r in regions for h in ("flood", "drought") if r[h].get("overridden")
+        ),
+    }
+
+
+def _strip_series(region_payload: dict) -> dict:
+    """Summary rows do not need 97 days of series data per region."""
+    trimmed = dict(region_payload)
+    trimmed.pop("series", None)
+    discharge = dict(trimmed.get("discharge") or {})
+    discharge.pop("dates", None)
+    discharge.pop("values", None)
+    trimmed["discharge"] = discharge
+    return trimmed
+
+
+@app.get("/api/hazards/summary")
+async def hazard_summary(background: BackgroundTasks):
+    await hazard_runtime.ensure_fresh()
+    snapshot, _ = hazard_runtime.cached_snapshot()
+
+    if not snapshot:
+        return {
+            "success": True,
+            "data": {
+                "regions": [],
+                "national": None,
+                "unavailable": True,
+                **hazard_runtime.metadata(),
+            },
+        }
+
+    # Serve what we have immediately and revalidate behind the response, so a
+    # page load is never held open by a slow upstream.
+    if hazard_runtime.is_stale():
+        background.add_task(hazard_runtime.refresh, False)
+
+    with get_connection() as connection:
+        overrides = _active_overrides(connection)
+
+    regions = [
+        _strip_series(_apply_overrides(payload, overrides))
+        for payload in snapshot.values()
+    ]
+
     return {
         "success": True,
         "data": {
-            "major_markets": json.loads(row["major_markets_json"]),
-            "transport_access": row["transport_access"],
-            "price_premium": row["price_premium"],
+            "regions": regions,
+            "national": _summarise(regions),
+            "unavailable": False,
+            **hazard_runtime.metadata(),
         },
+    }
+
+
+def _strip_series(cell: dict) -> dict:
+    """The map's copy of a cell, without its 15-day chart series.
+
+    The series is 90 numbers per cell per variable; across 165 cells that is
+    roughly 100 KB the map never draws. It is served instead by
+    `/api/outlook/subseasonal/series`, one cell at a time, when a district is
+    actually selected.
+    """
+    trimmed = dict(cell)
+    for variable in ("rainfall", "temperature"):
+        reading = trimmed.get(variable)
+        if reading:
+            trimmed[variable] = {key: value for key, value in reading.items() if key != "series"}
+    return trimmed
+
+
+@app.get("/api/outlook/subseasonal")
+async def subseasonal_outlook(background: BackgroundTasks):
+    """The weeks 2-to-4 outlook over the model's own grid.
+
+    Serves the 165-point GEFS field, each cell carrying both the tercile
+    probabilities and the deterministic ensemble mean. Admin boundaries are the
+    client's business: it already ships Ghana's regions and districts, and
+    overlaying them here would put the same geometry in two places.
+
+    Same serve-then-revalidate shape as `hazard_summary`: a stale snapshot is
+    returned immediately and refreshed behind the response, so a page load never
+    waits on the ensemble fetch.
+
+    `unavailable` means nothing could be computed at all. A *missing baseline*
+    no longer empties the response, because the deterministic field needs none --
+    those cells simply carry no probabilities, and the client shows the
+    deterministic view for them.
+    """
+    await s2s_runtime.ensure_fresh()
+    snapshot, _ = s2s_runtime.cached_snapshot()
+
+    if not snapshot:
+        return {
+            "success": True,
+            "data": {
+                "cells": [],
+                "unavailable": True,
+                **s2s_runtime.metadata(),
+            },
+        }
+
+    if s2s_runtime.is_stale():
+        background.add_task(s2s_runtime.refresh, False)
+
+    return {
+        "success": True,
+        "data": {
+            "cells": [_strip_series(cell) for cell in snapshot.values()],
+            "unavailable": False,
+            **s2s_runtime.metadata(),
+        },
+    }
+
+
+@app.get("/api/precipitation/field")
+async def precipitation_field(background: BackgroundTasks):
+    """Hourly rainfall over Ghana's land grid, for the rain map's forecast half.
+
+    Proxied rather than fetched by the app, which is the exception the rain map
+    forces. `fetchCurrentBatch` in the client goes direct and is right to: it is
+    32 points for a display strip. This is several hundred, and Open-Meteo
+    weights a request by its location count, so direct it would consume the free
+    tier in proportion to how many people open the screen. Cached here it is one
+    upstream call an hour for everyone. See `precip_runtime` for the arithmetic
+    that fixes the interval.
+
+    Same serve-then-revalidate shape as `subseasonal_outlook`: a stale snapshot
+    is returned immediately and refreshed behind the response, so opening the map
+    never waits on the fetch.
+
+    The grid travels with the values because the two are positional -- every row
+    of `values` is parallel to `grid` -- and a client that inferred the lattice
+    itself would silently mis-draw the whole field the day either side changed
+    its rounding.
+    """
+    await precip_runtime.ensure_fresh()
+    snapshot, _ = precip_runtime.cached_snapshot()
+
+    if not snapshot:
+        return {
+            "success": True,
+            "data": {
+                "grid": [],
+                "times": [],
+                "values": [],
+                "unavailable": True,
+                **precip_runtime.metadata(),
+            },
+        }
+
+    if precip_runtime.is_stale():
+        background.add_task(precip_runtime.refresh, False)
+
+    return {
+        "success": True,
+        "data": {
+            "grid": [[lat, lng] for lat, lng in precip_runtime.GRID],
+            "times": snapshot["times"],
+            "values": snapshot["values"],
+            "unavailable": False,
+            **precip_runtime.metadata(),
+        },
+    }
+
+
+@app.get("/api/outlook/subseasonal/series")
+async def subseasonal_series(lat: float, lng: float):
+    """One grid cell's day-by-day ensemble spread, for the detail chart.
+
+    Read straight from the cached snapshot -- the members were reduced when the
+    field was fetched, so selecting a district costs no upstream call. Returns
+    404 rather than an empty series when the place falls outside the grid, so a
+    bad coordinate is a visible error rather than a flat chart.
+    """
+    await s2s_runtime.ensure_fresh()
+    cell = s2s_runtime.cell_at(lat, lng)
+    if not cell:
+        raise HTTPException(status_code=404, detail="No subseasonal outlook covers that location.")
+
+    return {
+        "success": True,
+        "data": {
+            "id": cell["id"],
+            "lat": cell["lat"],
+            "lng": cell["lng"],
+            "rainfall": (cell.get("rainfall") or {}).get("series"),
+            "temperature": (cell.get("temperature") or {}).get("series"),
+            **s2s_runtime.metadata(),
+        },
+    }
+
+
+@app.get("/api/hazards/regions/{region}")
+async def hazard_region(region: str, background: BackgroundTasks):
+    resolved = resolve_region(region)
+    if not resolved:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Unknown region '{region}'.")
+
+    await hazard_runtime.ensure_fresh()
+    snapshot, _ = hazard_runtime.cached_snapshot()
+    payload = snapshot.get(resolved)
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Hazard data is not available yet. Try again shortly.",
+        )
+
+    if hazard_runtime.is_stale():
+        background.add_task(hazard_runtime.refresh, False)
+
+    with get_connection() as connection:
+        overrides = _active_overrides(connection)
+
+    return {
+        "success": True,
+        "data": {
+            **_apply_overrides(payload, overrides),
+            **hazard_runtime.metadata(),
+        },
+    }
+
+
+@app.get("/api/hazards/methodology")
+def hazard_methodology():
+    """Everything needed to audit a score, served to the UI disclosure panel."""
+    return {
+        "success": True,
+        "data": {
+            "baseline": hazard_runtime.CLIMATOLOGY.get("baseline") or CLIMATOLOGY_LABEL,
+            "dischargeBaseline": (
+                hazard_runtime.CLIMATOLOGY.get("dischargeBaseline") or DISCHARGE_CLIMATOLOGY_LABEL
+            ),
+            "bands": [{"band": name, "minScore": minimum} for name, minimum in SEVERITY_BANDS],
+            "floodWeights": FLOOD_WEIGHTS,
+            "droughtWeights": DROUGHT_WEIGHTS,
+            "sources": DATA_SOURCES,
+            "limits": HAZARD_LIMITS,
+        },
+    }
+
+
+@app.get("/api/hazards/overrides")
+def list_hazard_overrides(includeExpired: bool = False):
+    clause = "" if includeExpired else (
+        "WHERE effective_from <= CURRENT_TIMESTAMP "
+        "AND (effective_to IS NULL OR effective_to >= CURRENT_TIMESTAMP)"
+    )
+    with get_connection() as connection:
+        rows = connection.execute(
+            f"""
+            SELECT id, region, hazard, band, headline, advisory_json, issued_by,
+                   effective_from, effective_to, created_at
+            FROM hazard_overrides {clause}
+            ORDER BY effective_from DESC, id DESC
+            """
+        ).fetchall()
+
+    return {
+        "success": True,
+        "data": [
+            {
+                "id": row["id"],
+                "region": row["region"],
+                "hazard": row["hazard"],
+                "band": row["band"],
+                "headline": row["headline"],
+                "advisories": parse_json_list(row["advisory_json"]),
+                "issuedBy": row["issued_by"],
+                "effectiveFrom": row["effective_from"],
+                "effectiveTo": row["effective_to"],
+            }
+            for row in rows
+        ],
+    }
+
+
+@app.post("/api/hazards/overrides")
+def create_hazard_override(
+    payload: HazardOverrideRequest,
+    current_user: dict = Depends(get_current_user),
+):
+    resolved = resolve_region(payload.region)
+    if not resolved:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unknown region '{payload.region}'.",
+        )
+    if payload.band not in BAND_ORDER:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Band must be one of: {', '.join(BAND_ORDER)}.",
+        )
+
+    with get_connection() as connection:
+        cursor = connection.execute(
+            """
+            INSERT INTO hazard_overrides
+                (region, hazard, band, headline, advisory_json, issued_by,
+                 effective_from, effective_to, created_by)
+            VALUES (?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, ?)
+            """,
+            (
+                resolved,
+                payload.hazard,
+                payload.band,
+                payload.headline,
+                json_dumps(payload.advisories or []),
+                payload.issuedBy,
+                payload.effectiveFrom,
+                payload.effectiveTo,
+                current_user["id"],
+            ),
+        )
+        override_id = cursor.lastrowid
+
+    return {"success": True, "data": {"id": override_id, "region": resolved}}
+
+
+@app.delete("/api/hazards/overrides/{override_id}")
+def delete_hazard_override(override_id: int, current_user: dict = Depends(get_current_user)):
+    with get_connection() as connection:
+        row = connection.execute(
+            "SELECT id FROM hazard_overrides WHERE id = ?", (override_id,)
+        ).fetchone()
+        if not row:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Override not found.")
+        connection.execute("DELETE FROM hazard_overrides WHERE id = ?", (override_id,))
+
+    return {"success": True, "data": {"id": override_id}}
+
+
+@app.post("/api/hazards/refresh")
+async def refresh_hazards(current_user: dict = Depends(get_current_user)):
+    updated = await hazard_runtime.refresh(force=True)
+    return {
+        "success": updated,
+        "data": hazard_runtime.metadata(),
+        "message": "Hazard indices refreshed." if updated else "Refresh failed; cached data retained.",
     }

@@ -2,7 +2,7 @@ import PropTypes from "prop-types";
 import T from "./common/T";
 
 const ForecastCard = ({ date, highTemp, lowTemp, condition, rainChance }) => (
-  <div className="m-2 rounded-lg bg-white p-4 shadow-md">
+  <div className="m-2 rounded-lg bg-neo-surface p-4 shadow-md">
     <h3 className="text-lg font-semibold">{date}</h3>
     <p>
       <T>High</T>: {Math.round(highTemp)}&deg;C

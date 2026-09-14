@@ -326,25 +326,25 @@ const WeatherCard = ({
   windSpeed,
   feelsLike,
 }) => (
-  <div className="neo-surface-soft mx-2 flex min-h-44 min-w-0 flex-col justify-between px-4 py-4 text-left">
+  <div className="neo-surface-soft mx-2 flex min-h-[220px] min-w-0 flex-col justify-between px-4 py-4 text-left">
     <div>
       <div className="mb-2 flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-sm font-semibold text-neo-text sm:text-base">
+          <h3 className="break-words text-base font-semibold leading-snug text-neo-text">
             {city}
           </h3>
-          <p className="truncate text-xs text-neo-muted">
+          <p className="mt-1 break-words text-sm leading-snug text-neo-muted">
             <T>{type}</T>
           </p>
         </div>
         <WeatherIcon condition={condition} />
       </div>
-      <p className="mb-3 truncate text-xs font-medium text-neo-muted sm:text-sm">
+      <p className="mb-3 break-words text-sm font-medium leading-snug text-neo-muted">
         <T>{condition}</T>
       </p>
     </div>
 
-    <div className="space-y-2 text-xs text-neo-muted">
+    <div className="space-y-2 text-sm text-neo-muted">
       <div className="flex items-center gap-2 text-neo-text">
         <img
           className="flex-shrink-0"
@@ -392,16 +392,16 @@ WeatherCard.propTypes = {
 
 const ActionCard = ({ to, label, description, Icon, tone }) => {
   const toneClasses = {
-    accent: "bg-neo-accent text-white",
-    teal: "bg-neo-teal text-white",
-    warning: "bg-neo-warning text-white",
-    surface: "bg-neo-bg text-neo-accent-strong shadow-neo-pressed",
+    accent: "bg-neo-accent text-neo-on-accent",
+    teal: "bg-neo-teal text-neo-on-teal",
+    warning: "bg-neo-warning text-neo-on-warning",
+    surface: "bg-neo-bg text-neo-accent-strong shadow-neo-active",
   };
 
   return (
     <Link
       to={to}
-      className="neo-surface-soft group flex min-h-[118px] min-w-0 flex-col justify-between p-3 transition duration-200 hover:-translate-y-0.5 focus:outline-none focus-visible:ring-4 focus-visible:ring-neo-focus/25 sm:min-h-[132px] sm:p-4"
+      className="neo-surface-soft group flex min-h-[156px] min-w-0 flex-col justify-between p-4 transition duration-200 hover:-translate-y-0.5 focus:outline-none focus-visible:ring-4 focus-visible:ring-neo-focus/25 sm:min-h-[172px]"
     >
       <div className="flex items-start justify-between gap-2 sm:gap-3">
         <span
@@ -437,18 +437,18 @@ const ResourceGroup = ({ category, expanded, onToggle }) => (
   <div className="neo-surface-soft p-1">
     <button
       onClick={onToggle}
-      className="flex w-full items-center justify-between rounded-full p-3 text-left transition-colors hover:bg-white/55 focus:outline-none focus-visible:ring-4 focus-visible:ring-neo-focus/25"
+      className="flex w-full items-center justify-between rounded-full p-3 text-left transition-colors hover:bg-neo-surface-strong/70 focus:outline-none focus-visible:ring-4 focus-visible:ring-neo-focus/25"
       aria-expanded={expanded}
     >
       <div className="flex min-w-0 items-center">
         <div className="neo-icon-button mr-3 h-10 w-10 flex-shrink-0">
           {category.icon}
         </div>
-        <div className="min-w-0">
-          <h3 className="truncate font-medium text-neo-text">
+        <div className="min-w-0 flex-1">
+          <h3 className="break-words font-medium leading-snug text-neo-text">
             <T>{category.title}</T>
           </h3>
-          <p className="truncate text-xs text-neo-muted">
+          <p className="mt-1 break-words text-sm leading-snug text-neo-muted">
             <T>{category.summary}</T>
           </p>
         </div>
@@ -467,7 +467,7 @@ const ResourceGroup = ({ category, expanded, onToggle }) => (
             <li key={item.path}>
               <Link
                 to={item.path}
-                className="block rounded-full px-3 py-2 text-sm text-neo-muted transition-colors hover:bg-white/60 hover:text-neo-accent-strong focus:outline-none focus-visible:ring-4 focus-visible:ring-neo-focus/25"
+                className="block rounded-full px-3 py-2 text-sm text-neo-muted transition-colors hover:bg-neo-surface-strong/75 hover:text-neo-accent-strong focus:outline-none focus-visible:ring-4 focus-visible:ring-neo-focus/25"
               >
                 <T>{item.name}</T>
               </Link>
@@ -1018,18 +1018,18 @@ const Home = () => {
         includeAppName={false}
       />
       <div className="neo-page relative">
-        <main className="container relative mx-auto space-y-8 px-4 pb-10 pt-28 sm:px-6 md:space-y-10 md:pt-32 lg:px-8 lg:pt-36">
-          <section className="grid min-w-0 grid-cols-1 gap-5 lg:grid-cols-12 lg:gap-6">
-            <div className="neo-surface min-w-0 p-5 md:p-7 lg:col-span-8">
+        <main className="container relative mx-auto space-y-7 px-3 pb-10 pt-28 sm:px-5 md:space-y-10 md:px-6 md:pt-32 xl:px-8 xl:pt-36">
+          <section className="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-12 xl:gap-6">
+            <div className="neo-surface min-w-0 p-4 sm:p-5 md:p-7 xl:col-span-8">
               <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0 max-w-2xl">
-                  <div className="mb-5 inline-flex max-w-full items-center gap-3 rounded-full bg-neo-bg px-4 py-2 shadow-neo-pressed">
+                  <div className="mb-5 inline-flex max-w-full items-center gap-3 rounded-neo bg-neo-bg px-4 py-2">
                     <img
                       src={logo}
                       alt="AgroMet"
                       className="h-8 w-auto flex-shrink-0 object-contain"
                     />
-                    <span className="min-w-0 truncate text-xs font-semibold uppercase tracking-wide text-neo-accent-strong">
+                    <span className="min-w-0 break-words text-sm font-semibold uppercase leading-snug tracking-wide text-neo-accent-strong">
                       <T>Ghana AgroMet Operations</T>
                     </span>
                   </div>
@@ -1045,7 +1045,7 @@ const Home = () => {
                 </div>
 
                 <div className="neo-inset min-w-0 p-4 lg:min-w-[220px]">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-neo-muted">
+                  <p className="break-words text-sm font-semibold uppercase tracking-wide text-neo-muted">
                     <T>Dashboard Time</T>
                   </p>
                   <p className="mt-2 text-2xl font-semibold text-neo-text">
@@ -1064,7 +1064,7 @@ const Home = () => {
                   }`}
                 >
                   <div className="mb-4 flex items-start gap-3">
-                    <span className="inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-neo-bg shadow-neo-pressed">
+                    <span className="inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-neo-bg">
                       <img src={cap} alt="" className="h-6 w-6" />
                     </span>
                     <div className="min-w-0">
@@ -1217,7 +1217,7 @@ const Home = () => {
                       </p>
                     </div>
                   ) : (
-                    <div className="mt-4 rounded-neo bg-white/45 p-4 text-sm leading-relaxed text-neo-muted">
+                    <div className="mt-4 rounded-neo bg-neo-surface/45 p-4 text-sm leading-relaxed text-neo-muted">
                       <T>
                         Quick town check before forecasts or the map.
                       </T>
@@ -1227,13 +1227,13 @@ const Home = () => {
               </div>
             </div>
 
-            <aside className="neo-surface min-w-0 p-5 md:p-6 lg:col-span-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
+            <aside className="neo-surface min-w-0 p-4 sm:p-5 md:p-6 xl:col-span-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
                   <p className="text-xs font-semibold uppercase tracking-wide text-neo-muted">
                     <T>Immediate Actions</T>
                   </p>
-                  <h2 className="mt-1 text-2xl font-semibold text-neo-text">
+                  <h2 className="mt-1 break-words text-2xl font-semibold leading-tight text-neo-text">
                     <T>Quick tools</T>
                   </h2>
                 </div>
@@ -1248,13 +1248,13 @@ const Home = () => {
 
               {featuredWeather && (
                 <div className="neo-inset mt-5 p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
                       <p className="text-xs text-neo-muted">
                         <T>Featured forecast</T>
                       </p>
-                      <h3 className="text-xl font-semibold text-neo-text">
-                        {featuredWeather.city}
+                      <h3 className="break-words text-xl font-semibold leading-snug text-neo-text">
+                        <T>{featuredWeather.city}</T>
                       </h3>
                       {featuredLocationStatus ===
                         GEOLOCATION_STATUS.REQUESTING && (
@@ -1265,8 +1265,8 @@ const Home = () => {
                     </div>
                     <WeatherIcon condition={featuredWeather.condition} />
                   </div>
-                  <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
-                    <div className="rounded-neo bg-white/50 p-2">
+                  <div className="mt-3 grid grid-cols-1 gap-2 text-center text-sm sm:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
+                    <div className="rounded-neo bg-neo-surface/50 p-2">
                       <p className="text-neo-muted">
                         <T>Min</T>
                       </p>
@@ -1274,7 +1274,7 @@ const Home = () => {
                         {formatCardTemp(featuredWeather.minTemp)}
                       </p>
                     </div>
-                    <div className="rounded-neo bg-white/50 p-2">
+                    <div className="rounded-neo bg-neo-surface/50 p-2">
                       <p className="text-neo-muted">
                         <T>Max</T>
                       </p>
@@ -1282,7 +1282,7 @@ const Home = () => {
                         {formatCardTemp(featuredWeather.maxTemp)}
                       </p>
                     </div>
-                    <div className="rounded-neo bg-white/50 p-2">
+                    <div className="rounded-neo bg-neo-surface/50 p-2">
                       <p className="text-neo-muted">
                         <T>Feels</T>
                       </p>
@@ -1291,13 +1291,13 @@ const Home = () => {
                       </p>
                     </div>
                   </div>
-                  <p className="mt-3 text-sm leading-relaxed text-neo-muted">
+                  <p className="mt-3 break-words text-sm leading-relaxed text-neo-muted">
                     <T>{featuredWeather.summary}</T>
                   </p>
                 </div>
               )}
 
-              <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-1 xl:grid-cols-2">
+              <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
                 {primaryActions.map((action) => (
                   <ActionCard key={action.to} {...action} />
                 ))}

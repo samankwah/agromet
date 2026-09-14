@@ -5,7 +5,7 @@ const BlogNationalAssemblyVisit = () => {
   return (
     <>
       <PageTitle title="National Assembly Visit Blog" />
-      <div className="pt-24 pb-16 px-4 md:px-0 max-w-5xl mx-auto bg-white shadow-lg rounded-lg">
+      <div className="pt-24 pb-16 px-4 md:px-0 max-w-5xl mx-auto bg-neo-surface shadow-lg rounded-lg">
       {/* Blog Header */}
       <header className="mb-12">
         {/* Featured Image */}
@@ -25,15 +25,15 @@ const BlogNationalAssemblyVisit = () => {
           <h1 className="text-5xl font-bold text-blue-800 mb-4">
             National Assembly Visit to the Meteorological Agency
           </h1>
-          <p className="text-gray-500 text-sm mb-4">
+          <p className="text-neo-muted text-sm mb-4">
             Published on October 12, 2024 by{" "}
-            <span className="font-semibold text-gray-700">Admin</span>
+            <span className="font-semibold text-neo-text">Admin</span>
           </p>
         </div>
       </header>
 
       {/* Blog Content */}
-      <article className="leading-relaxed text-lg text-gray-700 mb-8">
+      <article className="leading-relaxed text-lg text-neo-text mb-8">
         <p className="mb-6">
           The National Assembly committee on Environment, Forestry, and Mining
           recently paid a visit to the Ghana Meteorological Agency (GMet) as
@@ -80,7 +80,7 @@ const BlogNationalAssemblyVisit = () => {
         <h2 className="text-2xl font-semibold text-blue-800 mb-2">
           Support GMet Mission
         </h2>
-        <p className="text-gray-700">
+        <p className="text-neo-text">
           Learn more about how GMet is working to improve weather forecasting in
           Ghana and how you can support its mission to protect communities from
           extreme weather.
@@ -88,17 +88,17 @@ const BlogNationalAssemblyVisit = () => {
       </div>
 
       {/* Related Articles Section */}
-      <section className="border-t border-gray-200 pt-6">
+      <section className="border-t border-neo-border pt-6">
         <h3 className="text-3xl font-semibold text-blue-800 mb-6">
           Related Articles
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Related Article Item */}
-          <div className="bg-gray-100 p-4 rounded-lg shadow hover:shadow-md transition-shadow duration-200">
-            <h4 className="text-xl font-bold text-gray-800 mb-2">
+          <div className="bg-neo-bg p-4 rounded-lg shadow hover:shadow-md transition-shadow duration-200">
+            <h4 className="text-xl font-bold text-neo-text mb-2">
               Climate Committee Calls for More Support to GMet
             </h4>
-            <p className="text-gray-600 mb-4">
+            <p className="text-neo-muted mb-4">
               The National Assembly has pledged more support for the Ghana
               Meteorological Agency after a recent visit.
             </p>
@@ -107,11 +107,11 @@ const BlogNationalAssemblyVisit = () => {
             </a>
           </div>
 
-          <div className="bg-gray-100 p-4 rounded-lg shadow hover:shadow-md transition-shadow duration-200">
-            <h4 className="text-xl font-bold text-gray-800 mb-2">
+          <div className="bg-neo-bg p-4 rounded-lg shadow hover:shadow-md transition-shadow duration-200">
+            <h4 className="text-xl font-bold text-neo-text mb-2">
               GMet’s Role in Disaster Preparedness
             </h4>
-            <p className="text-gray-600 mb-4">
+            <p className="text-neo-muted mb-4">
               Learn how GMet’s accurate weather data is helping Ghana prepare
               for natural disasters.
             </p>
@@ -120,11 +120,11 @@ const BlogNationalAssemblyVisit = () => {
             </a>
           </div>
 
-          <div className="bg-gray-100 p-4 rounded-lg shadow hover:shadow-md transition-shadow duration-200">
-            <h4 className="text-xl font-bold text-gray-800 mb-2">
+          <div className="bg-neo-bg p-4 rounded-lg shadow hover:shadow-md transition-shadow duration-200">
+            <h4 className="text-xl font-bold text-neo-text mb-2">
               GMet Launches New Satellite Weather Monitoring System
             </h4>
-            <p className="text-gray-600 mb-4">
+            <p className="text-neo-muted mb-4">
               The Ghana Meteorological Agency has unveiled a new satellite
               system to improve real-time weather monitoring.
             </p>

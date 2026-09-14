@@ -24,7 +24,7 @@ const CalendarPreviewTable = ({
   // Handle loading state
   if (loading) {
     return (
-      <div className={`border border-gray-200 rounded-lg p-8 ${className}`}>
+      <div className={`border border-neo-border rounded-lg p-8 ${className}`}>
         <TableSkeleton rows={4} columns={5} />
       </div>
     );
@@ -77,7 +77,7 @@ const CalendarPreviewTable = ({
                 ))}
               </ul>
               {calendarData.data.activities.length > 10 && (
-                <p className="text-sm text-gray-600 mt-2">
+                <p className="text-sm text-neo-muted mt-2">
                   ... and {calendarData.data.activities.length - 10} more
                 </p>
               )}
@@ -88,8 +88,8 @@ const CalendarPreviewTable = ({
     }
     
     return (
-      <div className={`border border-gray-200 rounded-lg p-6 ${className}`}>
-        <div className="text-center text-gray-500">
+      <div className={`border border-neo-border rounded-lg p-6 ${className}`}>
+        <div className="text-center text-neo-muted">
           <FaCalendarAlt className="mx-auto text-3xl mb-2" />
           <p>No calendar data to display</p>
         </div>
@@ -138,18 +138,18 @@ const CalendarPreviewTable = ({
     setIsFullscreen(!isFullscreen);
   };
 
-  const fullscreenClass = isFullscreen ? 'fixed inset-0 z-50 bg-white p-4 overflow-auto' : '';
+  const fullscreenClass = isFullscreen ? 'fixed inset-0 z-50 bg-neo-surface p-4 overflow-auto' : '';
 
   return (
     <div className={`${fullscreenClass} ${className}`}>
       {/* Calendar Header */}
-      <div className="flex justify-between items-start mb-4 p-4 bg-gray-50 rounded-lg">
+      <div className="flex justify-between items-start mb-4 p-4 bg-neo-bg-soft rounded-lg">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center mb-2">
+          <h3 className="text-lg font-semibold text-neo-text flex items-center mb-2">
             <FaCalendarAlt className="mr-2 text-green-600" />
             {calendarData.title || 'Calendar Preview'}
           </h3>
-          <div className="text-sm text-gray-600 space-y-1">
+          <div className="text-sm text-neo-muted space-y-1">
             <div className="flex items-center space-x-4">
               <span><strong>Type:</strong> {data.type === 'seasonal' ? 'Seasonal Calendar' : 'Production Cycle'}</span>
               <span><strong>Commodity:</strong> {data.commodity}</span>
@@ -163,7 +163,7 @@ const CalendarPreviewTable = ({
         {allowFullscreen && (
           <button
             onClick={toggleFullscreen}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-white rounded-lg transition-colors"
+            className="p-2 text-neo-muted hover:text-neo-text hover:bg-neo-surface-strong rounded-lg transition-colors"
             title={isFullscreen ? 'Exit Fullscreen' : 'View Fullscreen'}
           >
             {isFullscreen ? <FaCompress /> : <FaExpand />}
@@ -196,19 +196,19 @@ const CalendarPreviewTable = ({
       )}
 
       {/* Calendar Table */}
-      <div className="border border-gray-200 rounded-lg overflow-hidden">
+      <div className="border border-neo-border rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             {/* Table Header */}
-            <thead className="bg-gray-100">
+            <thead className="bg-neo-bg">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 sticky left-0 bg-gray-100 z-10 min-w-[200px]">
+                <th className="px-4 py-3 text-left text-xs font-medium text-neo-muted uppercase tracking-wider border-r border-neo-border sticky left-0 bg-neo-bg z-10 min-w-[200px]">
                   Activity / Stage
                 </th>
                 {safeTimeline.columns.map((timeCol, index) => (
                   <th
                     key={index}
-                    className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 min-w-[80px]"
+                    className="px-2 py-3 text-center text-xs font-medium text-neo-muted uppercase tracking-wider border-r border-neo-border min-w-[80px]"
                     title={timeCol.label}
                   >
                     <div className="truncate">
@@ -226,11 +226,11 @@ const CalendarPreviewTable = ({
             </thead>
 
             {/* Table Body */}
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-neo-surface divide-y divide-neo-border">
               {safeCalendarGrid.rows.map((row, rowIndex) => (
-                <tr key={rowIndex} className="hover:bg-gray-50">
+                <tr key={rowIndex} className="hover:bg-neo-surface-strong">
                   {/* Activity Name Column */}
-                  <td className="px-4 py-3 text-sm font-medium text-gray-900 border-r border-gray-200 sticky left-0 bg-white z-10">
+                  <td className="px-4 py-3 text-sm font-medium text-neo-text border-r border-neo-border sticky left-0 bg-neo-surface z-10">
                     <div className="flex items-center">
                       <span className="truncate" title={row.activity}>
                         {row.activity}
@@ -242,7 +242,7 @@ const CalendarPreviewTable = ({
                   {row.cells.map((cell, cellIndex) => (
                     <td
                       key={cellIndex}
-                      className="px-2 py-3 text-sm text-center border-r border-gray-200 cursor-pointer hover:opacity-80 transition-opacity"
+                      className="px-2 py-3 text-sm text-center border-r border-neo-border cursor-pointer hover:opacity-80 transition-opacity"
                       style={{
                         backgroundColor: getCellBackgroundColor(cell),
                         color: getCellTextColor(cell)
@@ -267,8 +267,8 @@ const CalendarPreviewTable = ({
       </div>
 
       {/* Legend */}
-      <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-        <div className="text-sm text-gray-600 mb-2">
+      <div className="mt-4 p-3 bg-neo-bg-soft rounded-lg">
+        <div className="text-sm text-neo-muted mb-2">
           <strong>Legend:</strong>
         </div>
         <div className="flex flex-wrap items-center space-x-6 text-sm">
@@ -277,10 +277,10 @@ const CalendarPreviewTable = ({
             <span>Active Period</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-white border border-gray-300 rounded"></div>
+            <div className="w-4 h-4 bg-neo-surface border border-neo-border rounded"></div>
             <span>Inactive Period</span>
           </div>
-          <div className="text-gray-500">
+          <div className="text-neo-muted">
             Click on cells for details
           </div>
         </div>
@@ -289,7 +289,7 @@ const CalendarPreviewTable = ({
       {/* Cell Detail Modal */}
       {selectedCell && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={() => setSelectedCell(null)}>
-          <div className="bg-white rounded-lg p-6 max-w-md mx-4" onClick={e => e.stopPropagation()}>
+          <div className="bg-neo-surface rounded-lg p-6 max-w-md mx-4" onClick={e => e.stopPropagation()}>
             <h4 className="text-lg font-semibold mb-3">Activity Detail</h4>
             <div className="space-y-2 text-sm">
               <div><strong>Activity:</strong> {selectedCell.activity}</div>
@@ -301,7 +301,7 @@ const CalendarPreviewTable = ({
             </div>
             <button
               onClick={() => setSelectedCell(null)}
-              className="mt-4 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+              className="mt-4 px-4 py-2 bg-neo-muted text-neo-bg rounded hover:bg-neo-accent-strong transition-colors"
             >
               Close
             </button>
@@ -313,7 +313,7 @@ const CalendarPreviewTable = ({
         <div className="fixed bottom-4 right-4">
           <button
             onClick={toggleFullscreen}
-            className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg shadow-lg transition-colors"
+            className="bg-neo-text hover:bg-neo-accent-strong text-neo-bg px-4 py-2 rounded-lg shadow-lg transition-colors"
           >
             Exit Fullscreen
           </button>

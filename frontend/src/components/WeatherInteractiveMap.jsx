@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -21,10 +21,119 @@ import {
   MapPin,
   RefreshCw,
 } from "lucide-react";
-import { getCurrentWeatherByCoordinates } from "../services/openMeteoService";
+import {
+  getCurrentWeatherByCoordinates,
+  getWeatherBundlesByCoordinates,
+} from "../services/openMeteoService";
 import T from "./common/T";
 import useT from "../hooks/useT";
+import { useTheme } from "../contexts/ThemeContext";
 import { SkeletonBlock } from "./common/SkeletonLoading";
+import {
+  getGeometryCenter,
+  normalizeDistrictName,
+  toLeafletPositions,
+} from "../utils/ghanaGeo";
+
+const MAP_TILE_LAYERS = {
+  light: {
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+    attribution:
+      "Tiles &copy; Esri, DeLorme, NAVTEQ",
+  },
+  dark: {
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+    attribution:
+      "Tiles &copy; Esri, DeLorme, NAVTEQ",
+  },
+};
+
+const WEATHER_PANEL_MARGIN = 12;
+const WEATHER_PANEL_OFFSET = 16;
+const WEATHER_PANEL_NARROW_BREAKPOINT = 640;
+const WEATHER_PANEL_DEFAULT_SIZE = {
+  width: 384,
+  height: 260,
+};
+
+const clamp = (value, min, max) => {
+  const normalizedMax = Math.max(min, max);
+  return Math.min(Math.max(value, min), normalizedMax);
+};
+
+const getWeatherPanelAnchor = (selectedDistrict, selectedRegion) => {
+  if (selectedDistrict?.labelCoordinates?.length >= 2) {
+    const [lng, lat] = selectedDistrict.labelCoordinates;
+    return {
+      key: `district-${selectedDistrict.id || selectedDistrict.name}`,
+      latLng: [lat, lng],
+    };
+  }
+
+  const regionCenter = selectedRegion
+    ? GHANA_REGIONS[selectedRegion]?.center
+    : null;
+
+  if (!regionCenter) return null;
+
+  return {
+    key: `region-${selectedRegion}`,
+    latLng: regionCenter,
+  };
+};
+
+const getWeatherPanelPosition = ({
+  anchorPoint,
+  mapSize,
+  panelSize,
+  isMobile,
+}) => {
+  const mapWidth = mapSize.x;
+  const mapHeight = mapSize.y;
+  const availableWidth = Math.max(0, mapWidth - WEATHER_PANEL_MARGIN * 2);
+  const availableHeight = Math.max(160, mapHeight - WEATHER_PANEL_MARGIN * 2);
+  const panelWidth = Math.min(panelSize.width, availableWidth);
+  const panelHeight = Math.min(panelSize.height, availableHeight);
+  const isNarrow = isMobile || mapWidth < WEATHER_PANEL_NARROW_BREAKPOINT;
+
+  if (isNarrow) {
+    const width = Math.min(380, availableWidth);
+
+    return {
+      left: Math.round((mapWidth - width) / 2),
+      top: Math.round(
+        clamp(
+          mapHeight - panelHeight - WEATHER_PANEL_MARGIN,
+          WEATHER_PANEL_MARGIN,
+          mapHeight - panelHeight - WEATHER_PANEL_MARGIN
+        )
+      ),
+      width: Math.round(width),
+      maxHeight: Math.round(availableHeight),
+      maxWidth: Math.round(availableWidth),
+    };
+  }
+
+  let left = anchorPoint.x + WEATHER_PANEL_OFFSET;
+  if (left + panelWidth + WEATHER_PANEL_MARGIN > mapWidth) {
+    left = anchorPoint.x - panelWidth - WEATHER_PANEL_OFFSET;
+  }
+
+  return {
+    left: Math.round(
+      clamp(left, WEATHER_PANEL_MARGIN, mapWidth - panelWidth - WEATHER_PANEL_MARGIN)
+    ),
+    top: Math.round(
+      clamp(
+        anchorPoint.y - panelHeight / 2,
+        WEATHER_PANEL_MARGIN,
+        mapHeight - panelHeight - WEATHER_PANEL_MARGIN
+      )
+    ),
+    maxHeight: Math.round(availableHeight),
+    maxWidth: Math.round(availableWidth),
+  };
+};
 
 const getWeatherIcon = (iconKey) => {
   if (iconKey === "rain" || iconKey === "drizzle" || iconKey === "thunderstorm") {
@@ -65,6 +174,21 @@ const openMeteoWeatherService = {
     };
   },
 
+  async getWeatherByLocations(locations) {
+    const weatherBundles = await getWeatherBundlesByCoordinates(locations, {
+      forecastDays: 1,
+      timeoutMs: 8000,
+    });
+
+    return weatherBundles.map((bundle, index) => ({
+      name: locations[index].name,
+      weather: {
+        ...bundle.current,
+        icon: getWeatherIcon(bundle.current.iconKey),
+      },
+      source: "live",
+    }));
+  },
 };
 
 // Ghana regions with weather-style data
@@ -416,75 +540,6 @@ const GHANA_REGIONS = {
   },
 };
 
-const normalizeDistrictName = (name) =>
-  String(name || "")
-    .toLowerCase()
-    .replace(/\bkassena\b/g, "kasena")
-    .replace(
-      /\b(municipal|municipality|metropolitan|metropolis|district|assembly)\b/g,
-      ""
-    )
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
-
-const toLeafletPositions = (geometry) => {
-  if (!geometry?.coordinates) return [];
-
-  const convertRing = (ring) => ring.map(([lng, lat]) => [lat, lng]);
-
-  if (geometry.type === "Polygon") {
-    return geometry.coordinates.map(convertRing);
-  }
-
-  if (geometry.type === "MultiPolygon") {
-    return geometry.coordinates.map((polygon) => polygon.map(convertRing));
-  }
-
-  return [];
-};
-
-const flattenCoordinates = (coordinates, result = []) => {
-  if (!Array.isArray(coordinates)) return result;
-
-  if (
-    coordinates.length >= 2 &&
-    typeof coordinates[0] === "number" &&
-    typeof coordinates[1] === "number"
-  ) {
-    result.push(coordinates);
-    return result;
-  }
-
-  coordinates.forEach((item) => flattenCoordinates(item, result));
-  return result;
-};
-
-const getGeometryCenter = (geometry) => {
-  const points = flattenCoordinates(geometry?.coordinates);
-
-  if (points.length === 0) return null;
-
-  const bounds = points.reduce(
-    (acc, [lng, lat]) => ({
-      minLng: Math.min(acc.minLng, lng),
-      maxLng: Math.max(acc.maxLng, lng),
-      minLat: Math.min(acc.minLat, lat),
-      maxLat: Math.max(acc.maxLat, lat),
-    }),
-    {
-      minLng: Number.POSITIVE_INFINITY,
-      maxLng: Number.NEGATIVE_INFINITY,
-      minLat: Number.POSITIVE_INFINITY,
-      maxLat: Number.NEGATIVE_INFINITY,
-    }
-  );
-
-  return [
-    (bounds.minLng + bounds.maxLng) / 2,
-    (bounds.minLat + bounds.maxLat) / 2,
-  ];
-};
-
 const getNearestDistrictMetadata = (center, districtMetadata) => {
   if (!center) return null;
 
@@ -602,8 +657,7 @@ MapController.propTypes = {
 };
 
 // Custom Unified Zoom Control Component (includes zoom in, zoom out, and reset)
-const UnifiedZoomControl = ({ initialCenter, isMobile }) => {
-  const map = useMap();
+const UnifiedZoomControl = ({ map, initialCenter, isMobile }) => {
   const { t } = useT();
 
   const handleZoomIn = () => {
@@ -623,11 +677,14 @@ const UnifiedZoomControl = ({ initialCenter, isMobile }) => {
   };
 
   return (
-    <div className="absolute top-[10px] left-[10px] z-[1000] flex flex-col shadow-md">
+    <div
+      className="absolute top-[10px] left-[10px] z-[40] flex flex-col shadow-md"
+      onClick={(event) => event.stopPropagation()}
+    >
       {/* Zoom In Button */}
       <button
         onClick={handleZoomIn}
-        className="w-[30px] h-[30px] flex items-center justify-center bg-white hover:bg-gray-50 text-gray-700 hover:text-gray-900 border border-gray-300 rounded-t transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-lg font-bold leading-none"
+        className="w-[30px] h-[30px] flex items-center justify-center bg-neo-surface hover:bg-neo-surface-strong text-neo-text hover:text-neo-text border border-neo-border rounded-t transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-lg font-bold leading-none"
         title={t("Zoom in")}
         aria-label={t("Zoom in")}
       >
@@ -637,7 +694,7 @@ const UnifiedZoomControl = ({ initialCenter, isMobile }) => {
       {/* Zoom Out Button */}
       <button
         onClick={handleZoomOut}
-        className="w-[30px] h-[30px] flex items-center justify-center bg-white hover:bg-gray-50 text-gray-700 hover:text-gray-900 border-l border-r border-gray-300 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-lg font-bold leading-none"
+        className="w-[30px] h-[30px] flex items-center justify-center bg-neo-surface hover:bg-neo-surface-strong text-neo-text hover:text-neo-text border-l border-r border-neo-border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-lg font-bold leading-none"
         title={t("Zoom out")}
         aria-label={t("Zoom out")}
         style={{ borderTop: 'none' }}
@@ -648,7 +705,7 @@ const UnifiedZoomControl = ({ initialCenter, isMobile }) => {
       {/* Reset Button */}
       <button
         onClick={handleReset}
-        className="w-[30px] h-[30px] flex items-center justify-center bg-white hover:bg-gray-50 text-gray-700 hover:text-gray-900 border border-gray-300 rounded-b transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+        className="w-[30px] h-[30px] flex items-center justify-center bg-neo-surface hover:bg-neo-surface-strong text-neo-text hover:text-neo-text border border-neo-border rounded-b transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
         title={t("Reset map view")}
         aria-label={t("Reset map to default zoom and position")}
         style={{ borderTop: 'none' }}
@@ -660,8 +717,81 @@ const UnifiedZoomControl = ({ initialCenter, isMobile }) => {
 };
 
 UnifiedZoomControl.propTypes = {
+  map: PropTypes.object.isRequired,
   initialCenter: PropTypes.array.isRequired,
   isMobile: PropTypes.bool.isRequired,
+};
+
+const WeatherPanelPositioner = ({
+  selectedRegion,
+  selectedDistrict,
+  onPanelAnchorChange,
+  onMapReady,
+}) => {
+  const map = useMap();
+  const panelAnchor = useMemo(
+    () => getWeatherPanelAnchor(selectedDistrict, selectedRegion),
+    [selectedDistrict, selectedRegion]
+  );
+
+  useEffect(() => {
+    onMapReady(map);
+
+    return () => {
+      onMapReady(null);
+    };
+  }, [map, onMapReady]);
+
+  useEffect(() => {
+    if (!panelAnchor) {
+      onPanelAnchorChange(null);
+      return undefined;
+    }
+
+    let frameId = null;
+
+    const updateAnchor = () => {
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId);
+      }
+
+      frameId = window.requestAnimationFrame(() => {
+        const mapSize = map.getSize();
+        const anchorPoint = map.latLngToContainerPoint(panelAnchor.latLng);
+
+        onPanelAnchorChange({
+          key: panelAnchor.key,
+          anchorPoint: {
+            x: anchorPoint.x,
+            y: anchorPoint.y,
+          },
+          mapSize: {
+            x: mapSize.x,
+            y: mapSize.y,
+          },
+        });
+      });
+    };
+
+    updateAnchor();
+    map.on("move zoom resize", updateAnchor);
+
+    return () => {
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId);
+      }
+      map.off("move zoom resize", updateAnchor);
+    };
+  }, [map, onPanelAnchorChange, panelAnchor]);
+
+  return null;
+};
+
+WeatherPanelPositioner.propTypes = {
+  selectedRegion: PropTypes.string,
+  selectedDistrict: PropTypes.object,
+  onPanelAnchorChange: PropTypes.func.isRequired,
+  onMapReady: PropTypes.func.isRequired,
 };
 
 // Weather info panel component - IMD Style with minimal design
@@ -671,35 +801,116 @@ const WeatherInfoPanel = ({
   onClose,
   realTimeWeather,
   updatedAt,
+  isMobile,
+  panelAnchorPosition,
 }) => {
   const { t } = useT();
-
-  if (!selectedRegion && !selectedDistrict) return null;
+  const panelRef = useRef(null);
+  const [panelSize, setPanelSize] = useState(WEATHER_PANEL_DEFAULT_SIZE);
+  const [panelPosition, setPanelPosition] = useState(null);
 
   const regionData = selectedRegion ? GHANA_REGIONS[selectedRegion] : null;
   const weatherKey = selectedDistrict ? selectedDistrict.name : selectedRegion;
   const weather = realTimeWeather[weatherKey] || regionData?.weather;
   const IconComponent = weather?.icon;
-  const displayUpdatedAt = updatedAt || weather?.updatedAt || new Date();
+  const displayUpdatedAt = weather?.updatedAt || updatedAt || new Date();
+
+  useEffect(() => {
+    const panelElement = panelRef.current;
+    if (!panelElement) {
+      return undefined;
+    }
+
+    const updateSize = () => {
+      const nextSize = {
+        width: panelElement.offsetWidth || WEATHER_PANEL_DEFAULT_SIZE.width,
+        height: panelElement.offsetHeight || WEATHER_PANEL_DEFAULT_SIZE.height,
+      };
+
+      setPanelSize((currentSize) => {
+        if (
+          currentSize.width === nextSize.width &&
+          currentSize.height === nextSize.height
+        ) {
+          return currentSize;
+        }
+
+        return nextSize;
+      });
+    };
+
+    updateSize();
+
+    if (typeof window.ResizeObserver === "undefined") {
+      return undefined;
+    }
+
+    const observer = new window.ResizeObserver(updateSize);
+    observer.observe(panelElement);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [weather, weatherKey]);
+
+  useEffect(() => {
+    if (!panelAnchorPosition) {
+      setPanelPosition(null);
+      return;
+    }
+
+    setPanelPosition(
+      getWeatherPanelPosition({
+        anchorPoint: panelAnchorPosition.anchorPoint,
+        mapSize: panelAnchorPosition.mapSize,
+        panelSize,
+        isMobile,
+      })
+    );
+  }, [isMobile, panelAnchorPosition, panelSize]);
+
+  if (!selectedRegion && !selectedDistrict) return null;
+
+  const panelStyle = panelPosition
+    ? {
+        left: panelPosition.left,
+        top: panelPosition.top,
+        maxHeight: panelPosition.maxHeight,
+        maxWidth: panelPosition.maxWidth,
+        opacity: 1,
+        ...(panelPosition.width ? { width: panelPosition.width } : {}),
+      }
+    : {
+        left: WEATHER_PANEL_MARGIN,
+        top: WEATHER_PANEL_MARGIN,
+        opacity: 0,
+      };
 
   return (
-    <div className="weather-info-panel absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white border border-gray-200 rounded-lg shadow-xl p-2 sm:p-4 z-[1000] w-[280px] max-w-[calc(100vw-1rem)] sm:max-w-[380px] md:w-96 text-gray-800 backdrop-blur-sm bg-white/95 max-h-[70vh] overflow-y-auto">
+    <div
+      ref={panelRef}
+      className="weather-info-panel absolute bg-neo-surface border border-neo-border rounded-lg shadow-xl p-2 sm:p-4 z-[40] w-[280px] sm:max-w-[380px] md:w-96 text-neo-text backdrop-blur-sm bg-neo-surface/95 overflow-y-auto transition-opacity duration-150"
+      style={panelStyle}
+      onClick={(event) => event.stopPropagation()}
+      onDoubleClick={(event) => event.stopPropagation()}
+      onMouseDown={(event) => event.stopPropagation()}
+    >
       {/* Header - Mobile Optimized */}
       <div className="flex justify-between items-start mb-2">
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm sm:text-base font-semibold text-gray-900 flex items-center gap-1 truncate">
-            <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600 flex-shrink-0" />
+          <h3 className="text-sm sm:text-base font-semibold text-neo-text flex items-center gap-1 truncate">
+            <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-neo-muted flex-shrink-0" />
             <span className="truncate text-xs sm:text-sm">
               {selectedDistrict ? selectedDistrict.name : selectedRegion}
             </span>
           </h3>
-          <p className="text-gray-500 text-xs">
+          <p className="text-neo-muted text-xs">
             <T>Updated</T> {formatUpdatedStamp(displayUpdatedAt)}
           </p>
         </div>
         <button
           onClick={onClose}
-          className="text-gray-400 hover:text-gray-600 text-lg sm:text-xl p-1 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0 ml-1"
+          className="text-neo-muted hover:text-neo-text text-lg sm:text-xl p-1 hover:bg-neo-surface-strong rounded-full transition-colors flex-shrink-0 ml-1"
           aria-label={t("Close weather panel")}
         >
           ×
@@ -710,20 +921,20 @@ const WeatherInfoPanel = ({
       {weather && (
         <div className="space-y-1 sm:space-y-3">
           {/* Main Temperature Display - Mobile Optimized */}
-          <div className="text-center py-1 sm:py-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg mb-1 sm:mb-2">
+          <div className="text-center py-1 sm:py-2 bg-neo-bg-soft border border-neo-border rounded-lg mb-1 sm:mb-2">
             <div className="flex items-center justify-center gap-1 sm:gap-2 mb-1">
               {IconComponent && (
                 <IconComponent className="w-4 h-4 sm:w-6 sm:h-6 text-blue-600" />
               )}
-              <span className="text-lg sm:text-2xl font-bold text-gray-900">
+              <span className="text-lg sm:text-2xl font-bold text-neo-text">
                 {weather.temperature}
               </span>
             </div>
-            <p className="text-xs font-medium text-gray-700 truncate px-1">
+            <p className="text-xs font-medium text-neo-text truncate px-1">
               <T>{weather.condition}</T>
             </p>
             {weather.apparentTemperature && (
-              <p className="text-[11px] text-gray-500">
+              <p className="text-[11px] text-neo-muted">
                 <T>Feels like</T> {weather.apparentTemperature}
               </p>
             )}
@@ -731,9 +942,9 @@ const WeatherInfoPanel = ({
 
           {/* Weather Summary - More Compact on Mobile */}
           {(weather.conversationalSummary || weather.summary) && (
-            <div className="mt-1 sm:mt-2 p-1.5 sm:p-2 bg-blue-50 rounded-md border border-blue-100">
-              <p className="text-xs text-gray-700 leading-tight sm:leading-relaxed text-center">
-                <span className="font-medium text-blue-800">
+            <div className="mt-1 sm:mt-2 p-1.5 sm:p-2 bg-neo-bg-soft rounded-md border border-neo-border">
+              <p className="text-xs text-neo-text leading-tight sm:leading-relaxed text-center">
+                <span className="font-medium text-neo-text">
                   <T>Forecast</T>:
                 </span>{" "}
                 <T>{weather.conversationalSummary || weather.summary}</T>
@@ -743,47 +954,47 @@ const WeatherInfoPanel = ({
 
           {/* Weather Data Grid - Ultra Compact for Mobile */}
           <div className="grid grid-cols-2 gap-1 sm:gap-2 text-xs">
-            <div className="bg-blue-50 rounded-md p-1 sm:p-1.5 text-center">
+            <div className="bg-neo-surface-strong/70 border border-neo-border rounded-md p-1 sm:p-1.5 text-center">
               <div className="flex items-center justify-center mb-0.5">
                 <Droplets className="w-3 h-3 text-blue-600" />
               </div>
-              <p className="text-gray-600 text-xs leading-tight">
+              <p className="text-neo-muted text-xs leading-tight">
                 <T>Humidity</T>
               </p>
-              <p className="font-semibold text-gray-900 text-xs">
+              <p className="font-semibold text-neo-text text-xs">
                 {weather.humidity}
               </p>
             </div>
-            <div className="bg-green-50 rounded-md p-1 sm:p-1.5 text-center">
+            <div className="bg-neo-surface-strong/70 border border-neo-border rounded-md p-1 sm:p-1.5 text-center">
               <div className="flex items-center justify-center mb-0.5">
                 <Wind className="w-3 h-3 text-green-600" />
               </div>
-              <p className="text-gray-600 text-xs leading-tight">
+              <p className="text-neo-muted text-xs leading-tight">
                 <T>Wind</T>
               </p>
-              <p className="font-semibold text-gray-900 text-xs">
+              <p className="font-semibold text-neo-text text-xs">
                 {weather.windSpeed}
               </p>
             </div>
-            <div className="bg-cyan-50 rounded-md p-1 sm:p-1.5 text-center">
+            <div className="bg-neo-surface-strong/70 border border-neo-border rounded-md p-1 sm:p-1.5 text-center">
               <div className="flex items-center justify-center mb-0.5">
                 <CloudRain className="w-3 h-3 text-cyan-600" />
               </div>
-              <p className="text-gray-600 text-xs leading-tight">
+              <p className="text-neo-muted text-xs leading-tight">
                 <T>Rain</T>
               </p>
-              <p className="font-semibold text-gray-900 text-xs">
+              <p className="font-semibold text-neo-text text-xs">
                 {weather.rainfall}
               </p>
             </div>
-            <div className="bg-purple-50 rounded-md p-1 sm:p-1.5 text-center">
+            <div className="bg-neo-surface-strong/70 border border-neo-border rounded-md p-1 sm:p-1.5 text-center">
               <div className="flex items-center justify-center mb-0.5">
                 <Eye className="w-3 h-3 text-purple-600" />
               </div>
-              <p className="text-gray-600 text-xs leading-tight">
+              <p className="text-neo-muted text-xs leading-tight">
                 <T>Visibility</T>
               </p>
-              <p className="font-semibold text-gray-900 text-xs">
+              <p className="font-semibold text-neo-text text-xs">
                 {weather.visibility}
               </p>
             </div>
@@ -793,10 +1004,10 @@ const WeatherInfoPanel = ({
 
       {/* Location Info - Ultra Compact */}
       {regionData && (
-        <div className="mt-1 pt-1 border-t border-gray-200">
-          <div className="bg-gray-50 rounded-md p-1">
-            <p className="text-xs text-gray-600 text-center truncate leading-tight">
-              <span className="font-medium text-gray-800">
+        <div className="mt-1 pt-1 border-t border-neo-border">
+          <div className="bg-neo-bg-soft rounded-md p-1">
+            <p className="text-xs text-neo-muted text-center truncate leading-tight">
+              <span className="font-medium text-neo-text">
                 <T>Zone</T>:
               </span>{" "}
               <T>{regionData.agroZone}</T>
@@ -813,6 +1024,18 @@ WeatherInfoPanel.propTypes = {
   selectedDistrict: PropTypes.object,
   onClose: PropTypes.func.isRequired,
   realTimeWeather: PropTypes.object.isRequired,
+  isMobile: PropTypes.bool.isRequired,
+  panelAnchorPosition: PropTypes.shape({
+    key: PropTypes.string,
+    anchorPoint: PropTypes.shape({
+      x: PropTypes.number.isRequired,
+      y: PropTypes.number.isRequired,
+    }).isRequired,
+    mapSize: PropTypes.shape({
+      x: PropTypes.number.isRequired,
+      y: PropTypes.number.isRequired,
+    }).isRequired,
+  }),
   updatedAt: PropTypes.oneOfType([
     PropTypes.string,
     PropTypes.number,
@@ -827,6 +1050,7 @@ const WeatherInteractiveMap = ({
   initialRegion = null,
   updatedAt = getSixHourlyUpdatedDate(),
 }) => {
+  const { isDark } = useTheme();
   const [selectedRegion, setSelectedRegion] = useState(initialRegion);
   const [selectedDistrict, setSelectedDistrict] = useState(null);
   const [hoveredDistrict, setHoveredDistrict] = useState(null);
@@ -850,6 +1074,8 @@ const WeatherInteractiveMap = ({
     }
     return false;
   });
+  const [mapInstance, setMapInstance] = useState(null);
+  const [panelAnchorPosition, setPanelAnchorPosition] = useState(null);
   const [realTimeWeather, setRealTimeWeather] = useState(() =>
     Object.fromEntries(
       Object.entries(GHANA_REGIONS).map(([regionName, regionData]) => [
@@ -912,7 +1138,58 @@ const WeatherInteractiveMap = ({
     };
   }, []);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadRegionWeather = async () => {
+      const regionLocations = Object.entries(GHANA_REGIONS).map(
+        ([name, region]) => ({
+          name,
+          lat: region.center[0],
+          lng: region.center[1],
+        })
+      );
+
+      try {
+        const regionWeather = await openMeteoWeatherService.getWeatherByLocations(
+          regionLocations
+        );
+
+        if (!isMounted) return;
+
+        setRealTimeWeather((prev) => ({
+          ...prev,
+          ...Object.fromEntries(
+            regionWeather.map(({ name, weather }) => [name, weather])
+          ),
+        }));
+      } catch (error) {
+        console.warn("Open-Meteo region weather unavailable:", error);
+      }
+    };
+
+    loadRegionWeather();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // Note: districtsByRegion removed as it was unused
+
+  const closeInfoPanel = useCallback(() => {
+    setSelectedRegion(null);
+    setSelectedDistrict(null);
+    setHoveredDistrict(null);
+  }, []);
+
+  const handleMapReady = useCallback((map) => {
+    setMapInstance(map);
+  }, []);
+
+  const handlePanelAnchorChange = useCallback((position) => {
+    setPanelAnchorPosition(position);
+  }, []);
 
   const handleDistrictClick = async (district) => {
     setSelectedDistrict(district);
@@ -973,17 +1250,11 @@ const WeatherInteractiveMap = ({
     return () => {
       document.removeEventListener("click", handleClickOutside);
     };
-  }, [selectedRegion, selectedDistrict]);
-
-  const closeInfoPanel = () => {
-    setSelectedRegion(null);
-    setSelectedDistrict(null);
-    setHoveredDistrict(null);
-  };
+  }, [closeInfoPanel, selectedRegion, selectedDistrict]);
 
   if (loading) {
     return (
-      <div className="w-full h-[50vh] min-h-[300px] sm:h-[60vh] md:h-[500px] lg:h-[600px] max-h-[80vh] flex items-center justify-center bg-white border border-gray-200 rounded-lg">
+      <div className="w-full h-[50vh] min-h-[300px] sm:h-[60vh] md:h-[500px] lg:h-[600px] max-h-[80vh] flex items-center justify-center bg-neo-surface border border-neo-border rounded-lg">
         <div className="w-full max-w-md space-y-4 px-6">
           <SkeletonBlock className="mx-auto h-32 w-24" rounded="rounded-full" tone="blue" />
           <SkeletonBlock className="mx-auto h-4 w-48" />
@@ -997,13 +1268,19 @@ const WeatherInteractiveMap = ({
     );
   }
 
-  const tooltipDistrict = hoveredDistrict || selectedDistrict;
+  const tooltipDistrict = selectedDistrict ? null : hoveredDistrict;
   const tooltipCoordinates = tooltipDistrict?.labelCoordinates;
+  const activeTileLayer = isDark ? MAP_TILE_LAYERS.dark : MAP_TILE_LAYERS.light;
+  const districtStrokeColor = isDark ? "#CFE8DD" : "#4B5563";
+  const selectedStrokeColor = isDark ? "#F4FFF9" : "#111827";
+  const baseFillOpacity = isDark ? 0.22 : 0.12;
+  const regionFillOpacity = isDark ? 0.34 : 0.24;
+  const selectedFillOpacity = isDark ? 0.5 : 0.42;
 
   return (
     <div
       data-no-auto-translate="true"
-      className="relative w-full rounded-lg overflow-hidden shadow-lg bg-white border border-gray-200"
+      className="agromet-weather-map relative w-full rounded-lg overflow-hidden shadow-lg bg-neo-surface border border-neo-border"
     >
       <MapContainer
         center={mapCenter}
@@ -1019,10 +1296,10 @@ const WeatherInteractiveMap = ({
         boxZoom={false}
         keyboard={false}
       >
-        {/* Clean light tile layer for IMD style */}
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+          key={isDark ? "weather-map-dark" : "weather-map-light"}
+          attribution={activeTileLayer.attribution}
+          url={activeTileLayer.url}
         />
 
         <MapController
@@ -1031,13 +1308,12 @@ const WeatherInteractiveMap = ({
           shouldZoomToRegion={!selectedDistrict}
         />
 
-        {/* Unified Zoom Control (Zoom In/Out + Reset) - Only show on non-mobile */}
-        {!isMobile && (
-          <UnifiedZoomControl
-            initialCenter={mapCenter}
-            isMobile={isMobile}
-          />
-        )}
+        <WeatherPanelPositioner
+          selectedRegion={selectedRegion}
+          selectedDistrict={selectedDistrict}
+          onPanelAnchorChange={handlePanelAnchorChange}
+          onMapReady={handleMapReady}
+        />
 
         {/* Weather overlays */}
         {/* {showWeatherOverlays &&
@@ -1068,10 +1344,14 @@ const WeatherInteractiveMap = ({
               positions={district.polygon}
               pathOptions={{
                 fillColor: districtColor,
-                color: isSelected ? "#111827" : "#4B5563",
+                color: isSelected ? selectedStrokeColor : districtStrokeColor,
                 weight: isSelected ? 2 : isRegionSelected ? 1.25 : 0.8,
-                opacity: isSelected ? 0.95 : 0.55,
-                fillOpacity: isSelected ? 0.42 : isRegionSelected ? 0.24 : 0.12,
+                opacity: isSelected ? 0.95 : isDark ? 0.72 : 0.55,
+                fillOpacity: isSelected
+                  ? selectedFillOpacity
+                  : isRegionSelected
+                    ? regionFillOpacity
+                    : baseFillOpacity,
               }}
               eventHandlers={{
                 click: (e) => {
@@ -1081,7 +1361,7 @@ const WeatherInteractiveMap = ({
                 mouseover: (e) => {
                   setHoveredDistrict(district);
                   e.target.setStyle({
-                    fillOpacity: 0.42,
+                    fillOpacity: selectedFillOpacity,
                     weight: 2,
                     opacity: 0.95,
                   });
@@ -1092,12 +1372,12 @@ const WeatherInteractiveMap = ({
                   );
                   e.target.setStyle({
                     fillOpacity: isSelected
-                      ? 0.42
+                      ? selectedFillOpacity
                       : isRegionSelected
-                        ? 0.24
-                        : 0.12,
+                        ? regionFillOpacity
+                        : baseFillOpacity,
                     weight: isSelected ? 2 : isRegionSelected ? 1.25 : 0.8,
-                    opacity: isSelected ? 0.95 : 0.55,
+                    opacity: isSelected ? 0.95 : isDark ? 0.72 : 0.55,
                   });
                 },
               }}
@@ -1122,10 +1402,10 @@ const WeatherInteractiveMap = ({
               offset={[0, -6]}
               opacity={0.95}
             >
-              <div className="text-xs font-semibold text-gray-900">
+              <div className="text-xs font-semibold text-neo-text">
                 {tooltipDistrict.name}
               </div>
-              <div className="text-[11px] text-gray-600">
+              <div className="text-[11px] text-neo-muted">
                 {tooltipDistrict.region}
               </div>
             </Tooltip>
@@ -1133,12 +1413,22 @@ const WeatherInteractiveMap = ({
         )}
 
       </MapContainer>
+      {/* Unified Zoom Control (Zoom In/Out + Reset) - Only show on non-mobile */}
+      {!isMobile && mapInstance && (
+        <UnifiedZoomControl
+          map={mapInstance}
+          initialCenter={mapCenter}
+          isMobile={isMobile}
+        />
+      )}
       <WeatherInfoPanel
         selectedRegion={selectedRegion}
         selectedDistrict={selectedDistrict}
         onClose={closeInfoPanel}
         realTimeWeather={realTimeWeather}
         updatedAt={updatedAt}
+        isMobile={isMobile}
+        panelAnchorPosition={panelAnchorPosition}
       />
     </div>
   );

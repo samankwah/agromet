@@ -144,9 +144,9 @@ const SmartCalendarRenderer = ({
       'clear': 'bg-yellow-600',
 
       // Planting activities
-      'plant': 'bg-gray-800',
-      'sow': 'bg-gray-800',
-      'seed': 'bg-gray-800',
+      'plant': 'bg-neo-text',
+      'sow': 'bg-neo-text',
+      'seed': 'bg-neo-text',
 
       // Fertilizer activities
       'fertil': 'bg-yellow-400',
@@ -181,7 +181,7 @@ const SmartCalendarRenderer = ({
       // Other activities
       'thin': 'bg-indigo-400',
       'prun': 'bg-indigo-500',
-      'support': 'bg-gray-600'
+      'support': 'bg-neo-text'
     };
 
     const name = (activityName || '').toLowerCase();
@@ -197,7 +197,7 @@ const SmartCalendarRenderer = ({
       if (name.includes(key)) return color;
     }
 
-    return 'bg-gray-500';
+    return 'bg-neo-muted';
   };
 
   // Generate month headers from weeks data
@@ -450,7 +450,7 @@ const SmartCalendarRenderer = ({
   // Loading state
   if (loading) {
     return (
-      <div className={`border border-gray-200 rounded-lg p-8 ${className}`}>
+      <div className={`border border-neo-border rounded-lg p-8 ${className}`}>
         <TableSkeleton rows={5} columns={5} />
       </div>
     );
@@ -481,15 +481,15 @@ const SmartCalendarRenderer = ({
   // Enhanced no data state with empty result information
   if (!processedActivities.length) {
     return (
-      <div className={`border border-gray-200 rounded-lg p-8 ${className}`}>
+      <div className={`border border-neo-border rounded-lg p-8 ${className}`}>
         <div className="text-center">
-          <FaCalendarAlt className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <FaCalendarAlt className="mx-auto h-12 w-12 text-neo-muted mb-4" />
+          <h3 className="text-lg font-medium text-neo-text mb-2">
             {emptyResult?.message?.includes('No') ? emptyResult.message.split('.')[0] : 'No Calendar Data Available'}
           </h3>
 
           {/* Enhanced message with specific commodity information */}
-          <div className="text-gray-600 mb-4 space-y-2">
+          <div className="text-neo-muted mb-4 space-y-2">
             <p>
               {emptyResult?.message || 'No calendar activities found for the selected criteria.'}
               {metadata.dataSourceUsed === 'no-data' &&
@@ -515,9 +515,9 @@ const SmartCalendarRenderer = ({
 
             {/* Show filter information */}
             {emptyResult?.appliedFilters && Object.values(emptyResult.appliedFilters).some(v => v) && (
-              <div className="mt-3 p-3 bg-gray-50 rounded-lg text-left">
-                <p className="text-sm font-medium text-gray-900 mb-2">Applied filters:</p>
-                <div className="text-xs text-gray-600 space-y-1">
+              <div className="mt-3 p-3 bg-neo-bg-soft rounded-lg text-left">
+                <p className="text-sm font-medium text-neo-text mb-2">Applied filters:</p>
+                <div className="text-xs text-neo-muted space-y-1">
                   {Object.entries(emptyResult.appliedFilters).map(([key, value]) =>
                     value && (
                       <div key={key} className="flex justify-between">
@@ -533,10 +533,10 @@ const SmartCalendarRenderer = ({
 
           {/* Data source indicator */}
           {showDataSourceIndicator && metadata.dataSourceUsed && (
-            <div className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-gray-100 text-gray-700">
+            <div className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-neo-bg text-neo-text">
               <span>Data source: {metadata.dataSourceUsed}</span>
               {emptyResult?.totalAvailableCalendars > 0 && (
-                <span className="ml-2 text-gray-500">
+                <span className="ml-2 text-neo-muted">
                   • {emptyResult.totalAvailableCalendars} calendars available
                 </span>
               )}
@@ -554,8 +554,8 @@ const SmartCalendarRenderer = ({
     const sourceConfig = {
       uploaded: { color: 'bg-green-100 text-green-800', label: 'Uploaded Data', priority: 'High Priority' },
       computed: { color: 'bg-blue-100 text-blue-800', label: 'Computed Data', priority: 'Medium Priority' },
-      'no-data': { color: 'bg-gray-100 text-gray-800', label: 'No Data Available', priority: 'Excel Upload Required' },
-      offline: { color: 'bg-gray-100 text-gray-800', label: 'Offline Mode', priority: 'Fallback' }
+      'no-data': { color: 'bg-neo-bg text-neo-text', label: 'No Data Available', priority: 'Excel Upload Required' },
+      offline: { color: 'bg-neo-bg text-neo-text', label: 'Offline Mode', priority: 'Fallback' }
     };
 
     const config = sourceConfig[metadata.dataSourceUsed] || sourceConfig.offline;
@@ -584,7 +584,7 @@ const SmartCalendarRenderer = ({
             className={`px-3 py-1 rounded text-sm capitalize ${
               currentViewMode === mode
                 ? 'bg-green-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                : 'bg-neo-bg text-neo-text hover:bg-neo-border/40'
             }`}
           >
             {mode}
@@ -597,17 +597,17 @@ const SmartCalendarRenderer = ({
   // Timeline view (table format)
   const TimelineView = () => (
     <div className="overflow-x-auto">
-      <table className="min-w-full border-collapse border border-gray-300">
+      <table className="min-w-full border-collapse border border-neo-border">
         <thead>
-          <tr className="bg-gray-50">
-            <th className="border border-gray-300 p-3 text-left font-semibold">
+          <tr className="bg-neo-bg-soft">
+            <th className="border border-neo-border p-3 text-left font-semibold">
               Activity
             </th>
             {weeksData.map((week, index) => (
-              <th key={index} className="border border-gray-300 p-2 text-xs text-center min-w-[80px]">
-                <div className="font-medium text-gray-700">{week.month || 'Month'}</div>
-                <div className="text-gray-600">{week.week || `Week ${index + 1}`}</div>
-                <div className="text-gray-500">{week.dateRange || ''}</div>
+              <th key={index} className="border border-neo-border p-2 text-xs text-center min-w-[80px]">
+                <div className="font-medium text-neo-text">{week.month || 'Month'}</div>
+                <div className="text-neo-muted">{week.week || `Week ${index + 1}`}</div>
+                <div className="text-neo-muted">{week.dateRange || ''}</div>
               </th>
             ))}
           </tr>
@@ -615,7 +615,7 @@ const SmartCalendarRenderer = ({
         <tbody>
           {processedActivities.map((activity, index) => (
             <tr key={activity.id || index}>
-              <td className="border border-gray-300 p-3 font-medium">
+              <td className="border border-neo-border p-3 font-medium">
                 {activity.activity}
               </td>
               {weeksData.map((week, weekIndex) => {
@@ -623,7 +623,7 @@ const SmartCalendarRenderer = ({
 
                 // Check for exact color from timeline data (for exact color support)
                 let cellStyle = {};
-                let cellClassName = `border border-gray-300 p-2 cursor-pointer min-w-[80px] w-[80px]`;
+                let cellClassName = `border border-neo-border p-2 cursor-pointer min-w-[80px] w-[80px]`;
 
                 if (isActive) {
                   // PRIORITY 1: Check if activity has timeline data with exact colors
@@ -680,7 +680,7 @@ const SmartCalendarRenderer = ({
       {processedActivities.map((activity, index) => (
         <div
           key={activity.id || index}
-          className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
+          className="border border-neo-border rounded-lg p-4 hover:bg-neo-surface-strong cursor-pointer"
           onMouseEnter={(e) => handleMouseEnter(activity, e)}
           onMouseLeave={handleMouseLeave}
         >
@@ -689,12 +689,12 @@ const SmartCalendarRenderer = ({
               <div className={`w-4 h-4 rounded ${activity.color}`}></div>
               <h4 className="font-semibold">{activity.activity}</h4>
             </div>
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-neo-muted">
               {activity.start} - {activity.end}
             </div>
           </div>
           {activity.advisory && (
-            <p className="text-sm text-gray-700 mt-2 line-clamp-2">
+            <p className="text-sm text-neo-text mt-2 line-clamp-2">
               {activity.advisory}
             </p>
           )}
@@ -709,7 +709,7 @@ const SmartCalendarRenderer = ({
       {processedActivities.map((activity, index) => (
         <div
           key={activity.id || index}
-          className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+          className="border border-neo-border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
           onMouseEnter={(e) => handleMouseEnter(activity, e)}
           onMouseLeave={handleMouseLeave}
         >
@@ -717,11 +717,11 @@ const SmartCalendarRenderer = ({
             <div className={`w-4 h-4 rounded ${activity.color}`}></div>
             <h4 className="font-semibold text-sm">{activity.activity}</h4>
           </div>
-          <div className="text-xs text-gray-600 mb-2">
+          <div className="text-xs text-neo-muted mb-2">
             {activity.start} - {activity.end}
           </div>
           {activity.advisory && (
-            <p className="text-xs text-gray-700 line-clamp-3">
+            <p className="text-xs text-neo-text line-clamp-3">
               {activity.advisory}
             </p>
           )}
@@ -741,7 +741,7 @@ const SmartCalendarRenderer = ({
       <>
         {/* Calendar Title */}
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 uppercase">
+          <h1 className="text-2xl font-bold text-neo-text uppercase">
             {title}
           </h1>
         </div>
@@ -749,17 +749,17 @@ const SmartCalendarRenderer = ({
         {/* Calendar Table with enhanced horizontal scroll */}
         <div className="overflow-x-auto shadow-lg" style={{ maxHeight: '90vh' }}>
           <div className="min-w-max">
-            <table className="border-collapse border border-gray-400" style={{ minWidth: 'max-content' }}>
+            <table className="border-collapse border border-neo-border" style={{ minWidth: 'max-content' }}>
               {/* Month Headers */}
               <thead>
                 <tr>
-                  <th className="border border-gray-400 bg-gray-100 px-4 py-2 text-left font-semibold text-sm sticky left-0 z-10 min-w-[300px] max-w-[350px]">
+                  <th className="border border-neo-border bg-neo-bg px-4 py-2 text-left font-semibold text-sm sticky left-0 z-10 min-w-[300px] max-w-[350px]">
                     S/N STAGE OF ACTIVITY
                   </th>
                   {monthHeaders.map((month, index) => (
                     <th
                       key={index}
-                      className="border border-gray-400 bg-blue-100 px-2 py-2 text-center font-bold text-sm min-w-[240px]"
+                      className="border border-neo-border bg-blue-100 px-2 py-2 text-center font-bold text-sm min-w-[240px]"
                       colSpan={month.colspan}
                     >
                       {month.name}
@@ -769,13 +769,13 @@ const SmartCalendarRenderer = ({
 
                 {/* Date Headers */}
                 <tr>
-                  <th className="border border-gray-400 bg-gray-100 px-4 py-1 text-xs font-medium sticky left-0 z-10 min-w-[300px] max-w-[350px]">
+                  <th className="border border-neo-border bg-neo-bg px-4 py-1 text-xs font-medium sticky left-0 z-10 min-w-[300px] max-w-[350px]">
                     Calendar Date
                   </th>
                   {dateRanges.map((dateRange, index) => (
                     <th
                       key={index}
-                      className="border border-gray-400 bg-white px-1 py-1 text-center text-xs"
+                      className="border border-neo-border bg-neo-surface px-1 py-1 text-center text-xs"
                     >
                       {dateRange}
                     </th>
@@ -807,9 +807,9 @@ const SmartCalendarRenderer = ({
                   return (
                     <tr key={rowIndex}>
                       {/* Activity Name Column */}
-                      <td className="border border-gray-400 bg-gray-50 px-4 py-2 text-sm font-medium sticky left-0 z-10 min-w-[300px] max-w-[350px]">
+                      <td className="border border-neo-border bg-neo-bg-soft px-4 py-2 text-sm font-medium sticky left-0 z-10 min-w-[300px] max-w-[350px]">
                         <div className="flex items-start">
-                          <span className="mr-2 text-gray-600 flex-shrink-0">{rowIndex + 1}</span>
+                          <span className="mr-2 text-neo-muted flex-shrink-0">{rowIndex + 1}</span>
                           <span className="break-words leading-tight" title={activity.activity}>
                             {activity.activity}
                           </span>
@@ -820,7 +820,7 @@ const SmartCalendarRenderer = ({
                       {cells.map((cell, cellIndex) => (
                         <td
                           key={cellIndex}
-                          className="border border-gray-400 text-center text-xs h-8 min-w-[60px]"
+                          className="border border-neo-border text-center text-xs h-8 min-w-[60px]"
                           style={{
                             backgroundColor: getCellBackgroundColor(cell, activity.activity),
                             color: getCellTextColor(cell)
@@ -841,7 +841,7 @@ const SmartCalendarRenderer = ({
         </div>
 
         {/* File Info Footer */}
-        <div className="mt-8 text-center text-sm text-gray-500">
+        <div className="mt-8 text-center text-sm text-neo-muted">
           <p className="mt-1">
             Generated from calendar data • {processedActivities.length} activities • {weeksData.length} time periods
           </p>
@@ -873,7 +873,7 @@ const SmartCalendarRenderer = ({
         <div>
           <DataSourceIndicator />
           {showMetadata && metadata && (
-            <div className="text-xs text-gray-600">
+            <div className="text-xs text-neo-muted">
               {metadata.activitiesCount && (
                 <span>Activities: {metadata.activitiesCount} • </span>
               )}
@@ -898,17 +898,17 @@ const SmartCalendarRenderer = ({
               </button>
 
               {showExportMenu && (
-                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                <div className="absolute right-0 top-full mt-2 w-48 bg-neo-surface rounded-lg shadow-lg border border-neo-border z-50">
                   <div className="p-2">
-                    <div className="text-xs text-gray-600 font-semibold mb-2 px-2">Export Format</div>
+                    <div className="text-xs text-neo-muted font-semibold mb-2 px-2">Export Format</div>
                     {calendarExportService.getSupportedFormatsSync().map((format) => (
                       <button
                         key={format.value}
                         onClick={() => handleExport(format.value)}
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded flex items-center justify-between"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-neo-surface-strong rounded flex items-center justify-between"
                       >
                         <span className="font-medium">{format.label}</span>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-neo-muted">
                           {format.value === 'csv' && '📊'}
                           {format.value === 'pdf' && '📄'}
                           {format.value === 'excel' && '📈'}
@@ -917,8 +917,8 @@ const SmartCalendarRenderer = ({
                       </button>
                     ))}
                   </div>
-                  <div className="border-t border-gray-100 p-2">
-                    <div className="text-xs text-gray-500 px-2">
+                  <div className="border-t border-neo-border/50 p-2">
+                    <div className="text-xs text-neo-muted px-2">
                       Includes weather data and agricultural advisories
                     </div>
                   </div>
@@ -977,21 +977,21 @@ const SmartCalendarRenderer = ({
       {/* Tooltip */}
       {hoveredActivity && (
         <div
-          className="absolute bg-gray-800 w-[280px] text-white text-sm p-3 rounded shadow-lg z-50"
+          className="absolute bg-neo-text w-[280px] text-neo-bg text-sm p-3 rounded shadow-lg z-50"
           style={{
             top: tooltipPosition.y + 10,
             left: tooltipPosition.x + 10,
           }}
         >
           <p className="font-semibold mb-2">{hoveredActivity.activity}</p>
-          <div className="text-xs text-gray-300 mb-2">
+          <div className="text-xs text-neo-muted mb-2">
             <span>Period: {hoveredActivity.start} - {hoveredActivity.end}</span>
             {hoveredActivity.calendarType && (
               <span className="ml-2">• Type: {hoveredActivity.calendarType}</span>
             )}
           </div>
           {hoveredActivity.advisory && (
-            <p className="text-xs text-gray-100 leading-relaxed">
+            <p className="text-xs text-neo-bg leading-relaxed">
               {hoveredActivity.advisory}
             </p>
           )}

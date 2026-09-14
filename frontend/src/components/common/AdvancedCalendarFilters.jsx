@@ -125,15 +125,15 @@ const AdvancedCalendarFilters = ({
   // Filter input component
   const FilterSelect = ({ label, value, options, onChange, icon: Icon, disabled = false }) => (
     <div className="flex flex-col space-y-1">
-      <label className="text-xs font-medium text-gray-700 flex items-center">
-        {Icon && <Icon className="mr-1 text-gray-500" size={12} />}
+      <label className="text-xs font-medium text-neo-text flex items-center">
+        {Icon && <Icon className="mr-1 text-neo-muted" size={12} />}
         {label}
       </label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled || isLoading}
-        className="p-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-400"
+        className="p-2 border border-neo-border rounded text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-neo-bg disabled:text-neo-muted"
       >
         {options.map(option => (
           <option key={option} value={option}>{option}</option>
@@ -145,15 +145,15 @@ const AdvancedCalendarFilters = ({
   // Month range component
   const MonthRangeFilter = () => (
     <div className="flex flex-col space-y-1">
-      <label className="text-xs font-medium text-gray-700 flex items-center">
-        <FaCalendarAlt className="mr-1 text-gray-500" size={12} />
+      <label className="text-xs font-medium text-neo-text flex items-center">
+        <FaCalendarAlt className="mr-1 text-neo-muted" size={12} />
         Month Range
       </label>
       <div className="flex space-x-2">
         <select
           value={filters.monthRange.start}
           onChange={(e) => handleFilterChange('monthRange', { ...filters.monthRange, start: e.target.value })}
-          className="p-2 border border-gray-300 rounded text-xs focus:ring-2 focus:ring-green-500 focus:border-transparent flex-1"
+          className="p-2 border border-neo-border rounded text-xs focus:ring-2 focus:ring-green-500 focus:border-transparent flex-1"
         >
           <option value="">Start</option>
           {monthOptions.slice(1).map(month => (
@@ -163,7 +163,7 @@ const AdvancedCalendarFilters = ({
         <select
           value={filters.monthRange.end}
           onChange={(e) => handleFilterChange('monthRange', { ...filters.monthRange, end: e.target.value })}
-          className="p-2 border border-gray-300 rounded text-xs focus:ring-2 focus:ring-green-500 focus:border-transparent flex-1"
+          className="p-2 border border-neo-border rounded text-xs focus:ring-2 focus:ring-green-500 focus:border-transparent flex-1"
         >
           <option value="">End</option>
           {monthOptions.slice(1).map(month => (
@@ -175,12 +175,12 @@ const AdvancedCalendarFilters = ({
   );
 
   return (
-    <div className={`bg-white border border-gray-200 rounded-lg p-4 shadow-sm ${className}`}>
+    <div className={`bg-neo-surface border border-neo-border rounded-lg p-4 shadow-sm ${className}`}>
       {/* Filter Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-2">
           <FaFilter className="text-green-600" />
-          <h3 className="font-semibold text-gray-800">Advanced Filters</h3>
+          <h3 className="font-semibold text-neo-text">Advanced Filters</h3>
           {hasActiveFilters && (
             <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
               Active
@@ -189,7 +189,7 @@ const AdvancedCalendarFilters = ({
         </div>
         <button
           onClick={handleReset}
-          className="flex items-center space-x-1 text-sm text-gray-600 hover:text-red-600 transition-colors"
+          className="flex items-center space-x-1 text-sm text-neo-muted hover:text-red-600 transition-colors"
           disabled={!hasActiveFilters}
         >
           <FaUndo size={12} />
@@ -278,8 +278,8 @@ const AdvancedCalendarFilters = ({
 
       {/* Active Filters Summary */}
       {hasActiveFilters && (
-        <div className="mt-4 pt-3 border-t border-gray-100">
-          <div className="text-xs text-gray-600">
+        <div className="mt-4 pt-3 border-t border-neo-border/50">
+          <div className="text-xs text-neo-muted">
             <span className="font-medium">Active Filters: </span>
             {Object.entries(filters)
               .filter(([key, value]) => {

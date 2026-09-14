@@ -184,8 +184,8 @@ const FarmProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
                 key={stepNum}
                 className={`flex items-center justify-center w-8 h-8 rounded-full ${
                   stepNum <= step 
-                    ? 'bg-neo-accent text-white shadow-neo-soft' 
-                    : 'bg-neo-bg text-neo-muted shadow-neo-pressed'
+                    ? 'bg-neo-accent text-neo-on-accent'
+                    : 'bg-neo-bg text-neo-muted'
                 }`}
               >
                 {stepNum}
@@ -212,14 +212,14 @@ const FarmProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-neo-text mb-1">
                   <T>Full Name</T> *
                 </label>
                 <input
                   type="text"
                   value={formData.personal.name}
                   onChange={(e) => handleInputChange('personal', 'name', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full border border-neo-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                   placeholder={t('Enter your full name')}
                 />
                 {errors['personal.name'] && (
@@ -228,13 +228,13 @@ const FarmProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-neo-text mb-1">
                   <T>Region</T> *
                 </label>
                 <select
                   value={formData.personal.region}
                   onChange={(e) => handleInputChange('personal', 'region', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full border border-neo-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
                   <option value="">{t('Select your region')}</option>
                   {ghanaRegions.map((region) => (
@@ -247,13 +247,13 @@ const FarmProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-neo-text mb-1">
                   <T>Farming Experience</T>
                 </label>
                 <select
                   value={formData.personal.experience}
                   onChange={(e) => handleInputChange('personal', 'experience', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full border border-neo-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
                   <option value="beginner">{t('Beginner (0-2 years)')}</option>
                   <option value="intermediate">{t('Intermediate (2-5 years)')}</option>
@@ -275,14 +275,14 @@ const FarmProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-neo-text mb-1">
                     <T>Farm Size</T> *
                   </label>
                   <input
                     type="number"
                     value={formData.farm.size.value}
                     onChange={(e) => handleInputChange('farm', 'size', { ...formData.farm.size, value: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full border border-neo-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                     placeholder="0"
                     min="0"
                     step="0.1"
@@ -293,13 +293,13 @@ const FarmProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-neo-text mb-1">
                     <T>Unit</T>
                   </label>
                   <select
                     value={formData.farm.size.unit}
                     onChange={(e) => handleInputChange('farm', 'size', { ...formData.farm.size, unit: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full border border-neo-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                   >
                     <option value="acres">{t('Acres')}</option>
                     <option value="hectares">{t('Hectares')}</option>
@@ -308,13 +308,13 @@ const FarmProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-neo-text mb-1">
                   <T>Soil Type</T> *
                 </label>
                 <select
                   value={formData.farm.soilType}
                   onChange={(e) => handleInputChange('farm', 'soilType', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full border border-neo-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
                   <option value="">{t('Select soil type')}</option>
                   <option value="sandy">{t('Sandy')}</option>
@@ -329,13 +329,13 @@ const FarmProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-neo-text mb-1">
                   <T>Primary Water Source</T> *
                 </label>
                 <select
                   value={formData.farm.waterSource}
                   onChange={(e) => handleInputChange('farm', 'waterSource', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full border border-neo-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
                   <option value="">{t('Select water source')}</option>
                   <option value="rain-fed">{t('Rain-fed')}</option>
@@ -362,17 +362,17 @@ const FarmProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-neo-text mb-2">
                   <T>Current Crops</T> * (<T>Select all that apply</T>)
                 </label>
-                <div className="grid grid-cols-3 gap-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-3">
+                <div className="grid grid-cols-3 gap-2 max-h-40 overflow-y-auto border border-neo-border rounded-lg p-3">
                   {commonCrops.map((crop) => (
                     <label key={crop} className="flex items-center space-x-2 text-sm">
                       <input
                         type="checkbox"
                         checked={formData.crops.current.includes(crop)}
                         onChange={(e) => handleArrayChange('crops', 'current', crop, e.target.checked)}
-                        className="rounded border-gray-300 text-green-500 focus:ring-green-500"
+                        className="rounded border-neo-border text-green-500 focus:ring-green-500"
                       />
                       <span className="capitalize"><T>{crop}</T></span>
                     </label>
@@ -384,13 +384,13 @@ const FarmProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-neo-text mb-1">
                   <T>Primary Farming Goal</T>
                 </label>
                 <select
                   value={formData.goals.primary}
                   onChange={(e) => handleInputChange('goals', 'primary', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full border border-neo-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
                   <option value="">{t('Select your main goal')}</option>
                   <option value="income">{t('Generate income')}</option>
@@ -413,13 +413,13 @@ const FarmProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-neo-text mb-1">
                   <T>Budget Range</T>
                 </label>
                 <select
                   value={formData.resources.budget.range}
                   onChange={(e) => handleInputChange('resources', 'budget', { ...formData.resources.budget, range: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full border border-neo-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
                   <option value="">{t('Select budget range')}</option>
                   <option value="limited">{t('Limited (Under GHS 1,000)')}</option>
@@ -430,13 +430,13 @@ const FarmProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-neo-text mb-1">
                   <T>Labor Source</T>
                 </label>
                 <select
                   value={formData.resources.labor}
                   onChange={(e) => handleInputChange('resources', 'labor', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full border border-neo-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
                   <option value="">{t('Select labor source')}</option>
                   <option value="family">{t('Family labor')}</option>
@@ -447,13 +447,13 @@ const FarmProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-neo-text mb-1">
                   <T>Storage Facilities</T>
                 </label>
                 <select
                   value={formData.resources.storage}
                   onChange={(e) => handleInputChange('resources', 'storage', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full border border-neo-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
                   <option value="">{t('Select storage type')}</option>
                   <option value="none">{t('No storage facility')}</option>
@@ -473,17 +473,17 @@ const FarmProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
           )}
 
           {/* Navigation Buttons */}
-          <div className="flex justify-between items-center pt-6 border-t border-gray-200 mt-6">
+          <div className="flex justify-between items-center pt-6 border-t border-neo-border mt-6">
             <button
               type="button"
               onClick={prevStep}
               disabled={step === 1}
-              className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 text-neo-muted bg-neo-bg rounded-lg hover:bg-neo-border/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <T>Previous</T>
             </button>
 
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-neo-muted">
               <T>Step</T> {step} <T>of</T> 4
             </span>
 

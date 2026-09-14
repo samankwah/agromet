@@ -84,13 +84,13 @@ const About = () => {
             <span className="inline-block px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold uppercase tracking-wider mb-4">
               <T>About AgroMet</T>
             </span>
-            <h1 className="text-4xl lg:text-6xl font-bold text-slate-900 tracking-tight mb-6">
+            <h1 className="text-4xl lg:text-6xl font-bold text-neo-text tracking-tight mb-6">
               <T>Climate intelligence for</T>{" "}
               <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
                 <T>every farmer</T>
               </span>
             </h1>
-            <p className="text-lg text-slate-600 leading-relaxed mb-8">
+            <p className="text-lg text-neo-muted leading-relaxed mb-8">
               <T>
                 AgroMet delivers real-time agrometeorological advisories,
                 AI-powered crop diagnostics, and market insights to farmers and
@@ -108,7 +108,7 @@ const About = () => {
               </Link>
               <Link
                 to="/contact"
-                className="inline-flex items-center justify-center gap-2 border border-slate-300 hover:border-emerald-600 hover:text-emerald-700 text-slate-700 font-semibold px-6 py-3 rounded-lg transition-colors"
+                className="inline-flex items-center justify-center gap-2 border border-neo-border hover:border-emerald-600 hover:text-emerald-700 text-neo-text font-semibold px-6 py-3 rounded-lg transition-colors"
               >
                 <T>Get in Touch</T>
               </Link>
@@ -121,17 +121,17 @@ const About = () => {
             whileInView="visible"
             viewport={{ once: true, amount: 0.3 }}
             variants={fadeUp}
-            className="max-w-4xl mx-auto mb-24 bg-white/80 backdrop-blur-sm rounded-3xl border border-slate-200 shadow-sm p-10 lg:p-14"
+            className="neo-surface max-w-4xl mx-auto mb-24 p-10 lg:p-14"
           >
             <div className="flex items-center gap-3 mb-4">
               <span className="inline-flex w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 items-center justify-center">
                 <Target className="w-5 h-5" />
               </span>
-              <h2 className="text-2xl font-semibold text-slate-900">
+              <h2 className="text-2xl font-semibold text-neo-text">
                 <T>Our Mission</T>
               </h2>
             </div>
-            <p className="text-lg text-slate-600 leading-relaxed">
+            <p className="text-lg text-neo-muted leading-relaxed">
               <T>
                 To democratize access to climate-smart agricultural insights and
                 equip every farmer, extension officer, and agribusiness in
@@ -143,10 +143,10 @@ const About = () => {
           {/* What We Do */}
           <section className="mb-24">
             <div className="text-center mb-12">
-              <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight mb-3">
+              <h2 className="text-3xl lg:text-4xl font-bold text-neo-text tracking-tight mb-3">
                 <T>What We Do</T>
               </h2>
-              <p className="text-slate-600 max-w-2xl mx-auto">
+              <p className="text-neo-muted max-w-2xl mx-auto">
                 <T>
                   Three core capabilities working together to support every
                   decision on the farm.
@@ -162,15 +162,15 @@ const About = () => {
                   viewport={{ once: true, amount: 0.3 }}
                   variants={fadeUp}
                   transition={{ delay: idx * 0.1 }}
-                  className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-emerald-300 transition-all duration-300 p-8"
+                  className="neo-surface neo-hover-accent p-8"
                 >
                   <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center mb-5 shadow-md shadow-emerald-500/20">
                     <Icon className="w-6 h-6" />
                   </div>
-                  <h3 className="text-xl font-semibold text-slate-900 mb-2">
+                  <h3 className="text-xl font-semibold text-neo-text mb-2">
                     <T>{title}</T>
                   </h3>
-                  <p className="text-sm text-slate-600 leading-relaxed">
+                  <p className="text-sm text-neo-muted leading-relaxed">
                     <T>{description}</T>
                   </p>
                 </motion.div>
@@ -188,15 +188,15 @@ const About = () => {
                   whileInView="visible"
                   viewport={{ once: true, amount: 0.3 }}
                   variants={fadeUp}
-                  className="bg-gradient-to-br from-emerald-50 to-white rounded-2xl border border-emerald-100 p-8"
+                  className="bg-gradient-to-br from-neo-surface to-neo-bg-soft rounded-2xl border border-emerald-100 p-8"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-white text-emerald-600 flex items-center justify-center mb-5 shadow-sm">
+                  <div className="w-12 h-12 rounded-xl bg-neo-surface text-emerald-600 flex items-center justify-center mb-5 shadow-sm">
                     <Icon className="w-6 h-6" />
                   </div>
-                  <h3 className="text-xl font-semibold text-slate-900 mb-2">
+                  <h3 className="text-xl font-semibold text-neo-text mb-2">
                     <T>{title}</T>
                   </h3>
-                  <p className="text-sm text-slate-600 leading-relaxed">
+                  <p className="text-sm text-neo-muted leading-relaxed">
                     <T>{description}</T>
                   </p>
                 </motion.div>
@@ -206,14 +206,14 @@ const About = () => {
 
           {/* Stats */}
           <section className="mb-24">
-            <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-3xl p-10 lg:p-14">
+            <div className="bg-gradient-to-r from-emerald-900 to-teal-900 rounded-3xl p-10 lg:p-14">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                 {stats.map(({ value, label }) => (
                   <div key={label} className="text-center">
                     <div className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent mb-2">
                       {value}
                     </div>
-                    <div className="text-sm text-slate-400 font-medium">
+                    <div className="text-sm text-neo-muted font-medium">
                       <T>{label}</T>
                     </div>
                   </div>
@@ -224,18 +224,18 @@ const About = () => {
 
           {/* Partners */}
           <section className="mb-24 text-center">
-            <h2 className="text-2xl font-semibold text-slate-900 mb-3">
+            <h2 className="text-2xl font-semibold text-neo-text mb-3">
               <T>In Partnership With</T>
             </h2>
-            <p className="text-slate-600 max-w-2xl mx-auto mb-8">
+            <p className="text-neo-muted max-w-2xl mx-auto mb-8">
               <T>
                 Built in collaboration with trusted institutions dedicated to
                 Ghana's agricultural future.
               </T>
             </p>
-            <div className="inline-flex items-center gap-3 bg-white border border-slate-200 rounded-2xl px-8 py-5 shadow-sm">
+            <div className="inline-flex items-center gap-3 bg-neo-surface border border-neo-border rounded-2xl px-8 py-5 shadow-sm">
               <MapPin className="w-5 h-5 text-emerald-600" />
-              <span className="font-semibold text-slate-900">
+              <span className="font-semibold text-neo-text">
                 <T>Ghana Meteorological Agency</T>
               </span>
             </div>
@@ -261,7 +261,7 @@ const About = () => {
             </p>
             <Link
               to="/contact"
-              className="inline-flex items-center justify-center gap-2 bg-white text-emerald-700 hover:bg-emerald-50 font-semibold px-8 py-3 rounded-lg transition-colors"
+              className="inline-flex items-center justify-center gap-2 bg-neo-surface text-emerald-700 hover:bg-emerald-50 font-semibold px-8 py-3 rounded-lg transition-colors"
             >
               <T>Contact Our Team</T>
               <ArrowRight className="w-4 h-4" />

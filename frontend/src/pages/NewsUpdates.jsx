@@ -28,7 +28,7 @@ const NewsUpdates = () => {
     <>
       <PageTitle title="News & Updates" />
       <div className="bg-gradient-to-br from-green-50 to-green-100 min-h-screen px-8 pb-8 pt-32 md:pt-36">
-      <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6">
+      <div className="max-w-4xl mx-auto bg-neo-surface rounded-lg shadow-lg p-6">
         <Breadcrumb />
         <h1 className="text-green-800 text-3xl font-bold mb-4 text-center">
           Latest News Updates
@@ -40,8 +40,8 @@ const NewsUpdates = () => {
               <h2 className="text-xl font-semibold text-green-600">
                 {article.title}
               </h2>
-              <p className="text-gray-500 text-sm mb-1">{article.date}</p>
-              <p className="text-gray-700">{article.summary}</p>
+              <p className="text-neo-muted text-sm mb-1">{article.date}</p>
+              <p className="text-neo-text">{article.summary}</p>
             </div>
           ))}
         </div>

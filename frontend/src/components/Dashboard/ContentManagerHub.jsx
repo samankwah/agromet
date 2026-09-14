@@ -127,7 +127,7 @@ const ContentManagerHub = ({ dataType, onClose }) => {
               'Low': 'bg-green-100 text-green-800'
             };
             return (
-              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${colorMap[value] || 'bg-gray-100 text-gray-800'}`}>
+              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${colorMap[value] || 'bg-neo-bg text-neo-text'}`}>
                 {value}
               </span>
             );
@@ -406,9 +406,9 @@ const ContentManagerHub = ({ dataType, onClose }) => {
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
         {statItems.map((stat, index) => (
           <div key={index} className="neo-table-shell p-4 text-center">
-            <div className="text-2xl text-gray-400 mb-2">{stat.icon}</div>
-            <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-            <div className="text-xs text-gray-500">{stat.label}</div>
+            <div className="text-2xl text-neo-muted mb-2">{stat.icon}</div>
+            <div className="text-2xl font-bold text-neo-text">{stat.value}</div>
+            <div className="text-xs text-neo-muted">{stat.label}</div>
           </div>
         ))}
       </div>
@@ -423,8 +423,8 @@ const ContentManagerHub = ({ dataType, onClose }) => {
           <div className="flex items-center space-x-4">
             <div className="text-3xl">{config.icon}</div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">{config.title} Management</h2>
-              <p className="text-gray-600">{config.description}</p>
+              <h2 className="text-2xl font-bold text-neo-text">{config.title} Management</h2>
+              <p className="text-neo-muted">{config.description}</p>
             </div>
           </div>
           
@@ -434,7 +434,7 @@ const ContentManagerHub = ({ dataType, onClose }) => {
               className={`px-4 py-2 rounded-md flex items-center ${
                 activeView === "stats" 
                   ? "bg-purple-100 text-purple-700 border border-purple-300"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  : "bg-neo-bg text-neo-text hover:bg-neo-border/40"
               }`}
             >
               <FaChartBar className="mr-2" />
@@ -446,7 +446,7 @@ const ContentManagerHub = ({ dataType, onClose }) => {
               className={`px-4 py-2 rounded-md flex items-center ${
                 activeView === "upload" 
                   ? "bg-blue-100 text-blue-700 border border-blue-300"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  : "bg-neo-bg text-neo-text hover:bg-neo-border/40"
               }`}
             >
               <FaUpload className="mr-2" />
@@ -458,7 +458,7 @@ const ContentManagerHub = ({ dataType, onClose }) => {
               className={`px-4 py-2 rounded-md flex items-center ${
                 activeView === "table" 
                   ? "bg-green-100 text-green-700 border border-green-300"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  : "bg-neo-bg text-neo-text hover:bg-neo-border/40"
               }`}
             >
               <FaDatabase className="mr-2" />
@@ -474,15 +474,15 @@ const ContentManagerHub = ({ dataType, onClose }) => {
           {renderStats()}
           
           <div className="neo-table-shell p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Data Overview</h3>
+            <h3 className="text-lg font-semibold text-neo-text mb-4">Data Overview</h3>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
-                <h4 className="font-medium text-gray-700 mb-2">Recent Activity</h4>
+                <h4 className="font-medium text-neo-text mb-2">Recent Activity</h4>
                 <div className="space-y-2">
                   {data.slice(0, 5).map((item, index) => (
                     <div key={index} className="flex justify-between text-sm">
                       <span>{item.region || item.district || 'Unknown'}</span>
-                      <span className="text-gray-500">
+                      <span className="text-neo-muted">
                         {item.lastUpdated 
                           ? new Date(item.lastUpdated).toLocaleDateString()
                           : 'No date'
@@ -494,7 +494,7 @@ const ContentManagerHub = ({ dataType, onClose }) => {
               </div>
               
               <div>
-                <h4 className="font-medium text-gray-700 mb-2">Data Quality</h4>
+                <h4 className="font-medium text-neo-text mb-2">Data Quality</h4>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Complete Records</span>
@@ -565,16 +565,16 @@ const ContentManagerHub = ({ dataType, onClose }) => {
 
       {/* View Modal */}
       {viewModal.isOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" onClick={() => setViewModal({ isOpen: false, data: null })}>
-          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-neo-text bg-opacity-50 overflow-y-auto h-full w-full z-50" onClick={() => setViewModal({ isOpen: false, data: null })}>
+          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-neo-surface" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-neo-text">
                 <FaEye className="inline mr-2" />
                 View {config.title}
               </h3>
               <button
                 onClick={() => setViewModal({ isOpen: false, data: null })}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-neo-muted hover:text-neo-text"
               >
                 <FaTimes className="h-6 w-6" />
               </button>
@@ -586,11 +586,11 @@ const ContentManagerHub = ({ dataType, onClose }) => {
                   if (key === 'id' || value === null || value === undefined) return null;
 
                   return (
-                    <div key={key} className="border-b border-gray-200 pb-2">
-                      <dt className="text-sm font-medium text-gray-500 capitalize">
+                    <div key={key} className="border-b border-neo-border pb-2">
+                      <dt className="text-sm font-medium text-neo-muted capitalize">
                         {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                       </dt>
-                      <dd className="text-sm text-gray-900 mt-1">
+                      <dd className="text-sm text-neo-text mt-1">
                         {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
                       </dd>
                     </div>
@@ -602,7 +602,7 @@ const ContentManagerHub = ({ dataType, onClose }) => {
             <div className="mt-6 flex justify-end space-x-3">
               <button
                 onClick={() => setViewModal({ isOpen: false, data: null })}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                className="px-4 py-2 bg-neo-muted/35 text-neo-text rounded hover:bg-neo-muted/45"
               >
                 Close
               </button>
@@ -623,16 +623,16 @@ const ContentManagerHub = ({ dataType, onClose }) => {
 
       {/* Edit Modal */}
       {editModal.isOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" onClick={() => setEditModal({ isOpen: false, data: null })}>
-          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-neo-text bg-opacity-50 overflow-y-auto h-full w-full z-50" onClick={() => setEditModal({ isOpen: false, data: null })}>
+          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-neo-surface" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-neo-text">
                 <FaEdit className="inline mr-2" />
                 Edit {config.title}
               </h3>
               <button
                 onClick={() => setEditModal({ isOpen: false, data: null })}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-neo-muted hover:text-neo-text"
               >
                 <FaTimes className="h-6 w-6" />
               </button>
@@ -645,7 +645,7 @@ const ContentManagerHub = ({ dataType, onClose }) => {
 
                   return (
                     <div key={key}>
-                      <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">
+                      <label className="block text-sm font-medium text-neo-text mb-1 capitalize">
                         {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                       </label>
                       {typeof value === 'object' ? (
@@ -660,7 +660,7 @@ const ContentManagerHub = ({ dataType, onClose }) => {
                               setEditFormData(prev => ({ ...prev, [key]: e.target.value }));
                             }
                           }}
-                          className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full p-2 border border-neo-border rounded focus:ring-blue-500 focus:border-blue-500"
                           rows={3}
                         />
                       ) : (
@@ -668,7 +668,7 @@ const ContentManagerHub = ({ dataType, onClose }) => {
                           type="text"
                           value={editFormData[key] || value || ''}
                           onChange={(e) => setEditFormData(prev => ({ ...prev, [key]: e.target.value }))}
-                          className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full p-2 border border-neo-border rounded focus:ring-blue-500 focus:border-blue-500"
                         />
                       )}
                     </div>
@@ -680,7 +680,7 @@ const ContentManagerHub = ({ dataType, onClose }) => {
             <div className="mt-6 flex justify-end space-x-3">
               <button
                 onClick={() => setEditModal({ isOpen: false, data: null })}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                className="px-4 py-2 bg-neo-muted/35 text-neo-text rounded hover:bg-neo-muted/45"
               >
                 Cancel
               </button>

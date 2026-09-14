@@ -255,7 +255,7 @@ const AnimatedWeatherIcon = ({
       {Array.from({ length: 3 }, (_, i) => (
         <motion.div
           key={i}
-          className="absolute h-2 bg-gray-300 opacity-40 rounded-full"
+          className="absolute h-2 bg-neo-muted/35 opacity-40 rounded-full"
           style={{
             width: `${60 + Math.random() * 40}%`,
             left: `${Math.random() * 20}%`,
@@ -410,7 +410,7 @@ const AnimatedWeatherIcon = ({
 
       {/* Temperature indicator overlay */}
       {temperature && (
-        <div className="absolute -bottom-2 -right-2 bg-white bg-opacity-90 rounded-full px-2 py-1 text-xs font-semibold text-gray-800 shadow-lg">
+        <div className="absolute -bottom-2 -right-2 bg-neo-surface bg-opacity-90 rounded-full px-2 py-1 text-xs font-semibold text-neo-text shadow-lg">
           {temperature}°
         </div>
       )}

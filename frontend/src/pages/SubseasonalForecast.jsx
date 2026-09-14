@@ -67,10 +67,10 @@ const ConfidenceDonut = ({ value, label, color = "#10b981" }) => {
           </PieChart>
         </ResponsiveContainer>
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <span className="text-xl font-bold text-slate-900">{Math.round(value)}%</span>
+          <span className="text-xl font-bold text-neo-text">{Math.round(value)}%</span>
         </div>
       </div>
-      <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-1">
+      <span className="text-xs font-semibold text-neo-muted uppercase tracking-wider mt-1">
         {label}
       </span>
     </div>
@@ -83,8 +83,8 @@ const AnomalyBar = ({ value, max, unit, positiveColor, negativeColor }) => {
   const isPositive = clamped >= 0;
   return (
     <div className="w-full">
-      <div className="relative h-3 rounded-full bg-slate-100">
-        <div className="absolute top-0 bottom-0 left-1/2 w-px bg-slate-300" />
+      <div className="relative h-3 rounded-full bg-neo-bg">
+        <div className="absolute top-0 bottom-0 left-1/2 w-px bg-neo-muted/35" />
         <div
           className="absolute top-0 h-3 rounded-full"
           style={{
@@ -94,7 +94,7 @@ const AnomalyBar = ({ value, max, unit, positiveColor, negativeColor }) => {
           }}
         />
       </div>
-      <div className="mt-1 flex justify-between text-[10px] text-slate-400">
+      <div className="mt-1 flex justify-between text-[10px] text-neo-muted">
         <span>-{max}{unit}</span>
         <span>0</span>
         <span>+{max}{unit}</span>
@@ -342,13 +342,13 @@ const SubseasonalForecast = () => {
       return <TrendingUp className="h-5 w-5 text-red-500" />;
     if (trend === "below")
       return <TrendingDown className="h-5 w-5 text-blue-500" />;
-    return <Minus className="h-5 w-5 text-gray-500" />;
+    return <Minus className="h-5 w-5 text-neo-muted" />;
   };
 
   const getTrendColor = (trend) => {
     if (trend === "above") return "text-red-600";
     if (trend === "below") return "text-blue-600";
-    return "text-gray-600";
+    return "text-neo-muted";
   };
 
   return (
@@ -358,16 +358,16 @@ const SubseasonalForecast = () => {
       <div className="max-w-7xl mx-auto relative">
       <Breadcrumb />
       <div className="mb-8">
-        <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight">
+        <h1 className="text-3xl lg:text-4xl font-bold text-neo-text tracking-tight">
           <T>Subseasonal Agricultural</T>{" "}
           <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
             <T>Forecast</T>
           </span>
         </h1>
-        <p className="mt-2 text-sm font-medium text-slate-500">
+        <p className="mt-2 text-sm font-medium text-neo-muted">
           <T>Updated</T> {formatUpdatedTime(updatedAt)}
         </p>
-        <p className="mt-3 text-slate-600 max-w-4xl">
+        <p className="mt-3 text-neo-muted max-w-4xl">
           <T>Extended-range weather forecasts (2-8 weeks ahead) to support strategic agricultural planning. These forecasts help farmers make informed decisions about crop selection, planting schedules, and resource allocation based on longer-term climate patterns.</T>
         </p>
 
@@ -382,17 +382,17 @@ const SubseasonalForecast = () => {
       </div>
 
       {/* Forecast Period Timeline */}
-      <div className="mb-8 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-5 shadow-sm">
+      <div className="neo-surface mb-8 p-5">
         <div className="flex items-center justify-between mb-4">
-          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+          <span className="text-xs font-semibold text-neo-muted uppercase tracking-wider">
             <T>Forecast Horizon</T>
           </span>
-          <span className="text-xs text-slate-400">
+          <span className="text-xs text-neo-muted">
             <T>Click to change period</T>
           </span>
         </div>
         <div className="relative">
-          <div className="absolute top-4 left-4 right-4 h-0.5 bg-slate-200" />
+          <div className="absolute top-4 left-4 right-4 h-0.5 bg-neo-border/30" />
           <div className="relative grid grid-cols-4 gap-2">
             {Object.entries(forecastPeriods).map(([key, period]) => {
               const active = key === selectedWeek;
@@ -406,23 +406,23 @@ const SubseasonalForecast = () => {
                     className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${
                       active
                         ? "bg-emerald-600 border-emerald-600 shadow-md scale-110"
-                        : "bg-white border-slate-300 group-hover:border-emerald-400"
+                        : "bg-neo-surface border-neo-border group-hover:border-emerald-400"
                     }`}
                   >
                     <span
                       className={`w-2 h-2 rounded-full ${
-                        active ? "bg-white" : "bg-slate-300 group-hover:bg-emerald-400"
+                        active ? "bg-neo-surface" : "bg-neo-muted/35 group-hover:bg-emerald-400"
                       }`}
                     />
                   </span>
                   <span
                     className={`mt-2 text-xs font-semibold ${
-                      active ? "text-emerald-700" : "text-slate-600"
+                      active ? "text-emerald-700" : "text-neo-muted"
                     }`}
                   >
                     {period.label}
                   </span>
-                  <span className="text-[10px] text-slate-400 hidden sm:block">
+                  <span className="text-[10px] text-neo-muted hidden sm:block">
                     {period.days}
                   </span>
                 </button>
@@ -436,14 +436,14 @@ const SubseasonalForecast = () => {
       <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Forecast Period Selector */}
         <div>
-          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+          <label className="block text-xs font-semibold text-neo-muted uppercase tracking-wider mb-2">
             <Clock className="inline mr-1 h-4 w-4" />
             <T>Forecast Period</T>
           </label>
           <select
             value={selectedWeek}
             onChange={(e) => setSelectedWeek(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-neo-border bg-neo-surface px-3 py-2 text-neo-text shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
             {Object.entries(forecastPeriods).map(([key, period]) => (
               <option key={key} value={key}>
@@ -455,14 +455,14 @@ const SubseasonalForecast = () => {
 
         {/* Region Selector */}
         <div>
-          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+          <label className="block text-xs font-semibold text-neo-muted uppercase tracking-wider mb-2">
             <Map className="inline mr-1 h-4 w-4" />
             <T>Region</T>
           </label>
           <select
             value={selectedRegion}
             onChange={(e) => setSelectedRegion(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-neo-border bg-neo-surface px-3 py-2 text-neo-text shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
             {regions.map((region) => (
               <option key={region} value={region}>
@@ -474,14 +474,14 @@ const SubseasonalForecast = () => {
 
         {/* Forecast Type */}
         <div>
-          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+          <label className="block text-xs font-semibold text-neo-muted uppercase tracking-wider mb-2">
             <Filter className="inline mr-1 h-4 w-4" />
             <T>View Type</T>
           </label>
           <select
             value={forecastType}
             onChange={(e) => setForecastType(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-neo-border bg-neo-surface px-3 py-2 text-neo-text shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
             <option value="overview">Overview</option>
             <option value="detailed">Detailed Analysis</option>
@@ -492,18 +492,18 @@ const SubseasonalForecast = () => {
       </div>
 
       {/* Forecast Summary Card */}
-      <div className="mb-8 bg-white/80 backdrop-blur-sm shadow-sm rounded-2xl overflow-hidden border border-slate-200">
-        <div className="px-6 py-4 border-b border-slate-200 flex flex-wrap justify-between items-start gap-3">
+      <div className="neo-surface mb-8 overflow-hidden">
+        <div className="px-6 py-4 border-b border-neo-border flex flex-wrap justify-between items-start gap-3">
           <div className="flex items-start gap-3">
             <span className="inline-flex w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 items-center justify-center">
               <BarChart3 className="h-5 w-5" />
             </span>
             <div>
-              <h2 className="text-xl font-semibold text-slate-900">
+              <h2 className="text-xl font-semibold text-neo-text">
                 {forecastData.period.label} <T>Forecast</T>
               </h2>
-              <p className="text-slate-600 text-sm mt-0.5">{forecastData.region} <T>Region</T></p>
-              <p className="text-slate-500 text-xs mt-0.5">
+              <p className="text-neo-muted text-sm mt-0.5">{forecastData.region} <T>Region</T></p>
+              <p className="text-neo-muted text-xs mt-0.5">
                 <T>{forecastData.startDate.toLocaleDateString("en-US", {
                   month: "long",
                   day: "numeric",
@@ -528,11 +528,11 @@ const SubseasonalForecast = () => {
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Temperature Forecast */}
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+            <div className="bg-neo-bg-soft border border-neo-border rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center">
                   <Thermometer className="h-5 w-5 text-red-500 mr-2" />
-                  <h3 className="text-lg font-medium text-slate-900">
+                  <h3 className="text-lg font-medium text-neo-text">
                     <T>Temperature</T>
                   </h3>
                 </div>
@@ -551,7 +551,7 @@ const SubseasonalForecast = () => {
 
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600"><T>Trend:</T></span>
+                  <span className="text-sm text-neo-muted"><T>Trend:</T></span>
                   <span
                     className={`text-sm font-medium ${getTrendColor(
                       forecastData.temperature.trend
@@ -565,7 +565,7 @@ const SubseasonalForecast = () => {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600"><T>Anomaly:</T></span>
+                  <span className="text-sm text-neo-muted"><T>Anomaly:</T></span>
                   <span
                     className={`text-sm font-medium ${getTrendColor(
                       forecastData.temperature.trend
@@ -576,7 +576,7 @@ const SubseasonalForecast = () => {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600"><T>Confidence:</T></span>
+                  <span className="text-sm text-neo-muted"><T>Confidence:</T></span>
                   <span
                     className={`text-sm font-medium ${getConfidenceColor(
                       forecastData.temperature.confidence
@@ -589,11 +589,11 @@ const SubseasonalForecast = () => {
             </div>
 
             {/* Rainfall Forecast */}
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+            <div className="bg-neo-bg-soft border border-neo-border rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center">
                   <CloudRain className="h-5 w-5 text-blue-500 mr-2" />
-                  <h3 className="text-lg font-medium text-slate-900">
+                  <h3 className="text-lg font-medium text-neo-text">
                     <T>Rainfall</T>
                   </h3>
                 </div>
@@ -612,7 +612,7 @@ const SubseasonalForecast = () => {
 
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600"><T>Trend:</T></span>
+                  <span className="text-sm text-neo-muted"><T>Trend:</T></span>
                   <span
                     className={`text-sm font-medium ${getTrendColor(
                       forecastData.rainfall.trend
@@ -626,7 +626,7 @@ const SubseasonalForecast = () => {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600"><T>Anomaly:</T></span>
+                  <span className="text-sm text-neo-muted"><T>Anomaly:</T></span>
                   <span
                     className={`text-sm font-medium ${getTrendColor(
                       forecastData.rainfall.trend
@@ -637,7 +637,7 @@ const SubseasonalForecast = () => {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600"><T>Confidence:</T></span>
+                  <span className="text-sm text-neo-muted"><T>Confidence:</T></span>
                   <span
                     className={`text-sm font-medium ${getConfidenceColor(
                       forecastData.rainfall.confidence
@@ -653,16 +653,16 @@ const SubseasonalForecast = () => {
       </div>
 
       {/* Climate Phenomena */}
-      <div className="mb-8 bg-white/80 backdrop-blur-sm shadow-sm rounded-2xl overflow-hidden border border-slate-200">
-        <div className="px-6 py-4 border-b border-slate-200 flex items-center gap-3">
+      <div className="neo-surface mb-8 overflow-hidden">
+        <div className="px-6 py-4 border-b border-neo-border flex items-center gap-3">
           <span className="inline-flex w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 items-center justify-center">
             <Wind className="h-5 w-5" />
           </span>
           <div>
-            <h3 className="text-xl font-semibold text-slate-900">
+            <h3 className="text-xl font-semibold text-neo-text">
               <T>Influencing Climate Patterns</T>
             </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-neo-muted mt-0.5">
               <T>Large-scale climate phenomena affecting the forecast</T>
             </p>
           </div>
@@ -673,10 +673,10 @@ const SubseasonalForecast = () => {
             {forecastData.climatePhenomena.map((phenomenon, index) => (
               <div
                 key={index}
-                className="border border-slate-200 rounded-xl p-4 bg-white hover:border-emerald-300 hover:shadow-sm transition-all"
+                className="border border-neo-border rounded-xl p-4 bg-neo-surface hover:border-emerald-300 hover:shadow-sm transition-all"
               >
                 <div className="flex justify-between items-start mb-2">
-                  <h4 className="font-semibold text-slate-900">
+                  <h4 className="font-semibold text-neo-text">
                     {phenomenon.name}
                   </h4>
                   <span
@@ -691,11 +691,11 @@ const SubseasonalForecast = () => {
                     {phenomenon.impact}
                   </span>
                 </div>
-                <p className="text-sm text-slate-600 mb-2">
+                <p className="text-sm text-neo-muted mb-2">
                   {phenomenon.description}
                 </p>
                 <div className="flex items-center">
-                  <span className="text-xs text-slate-500"><T>Status:</T></span>
+                  <span className="text-xs text-neo-muted"><T>Status:</T></span>
                   <span
                     className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full border ${
                       phenomenon.status === "strengthening" ||
@@ -706,7 +706,7 @@ const SubseasonalForecast = () => {
                           phenomenon.status === "cooling" ||
                           phenomenon.status === "weak"
                         ? "bg-sky-50 text-sky-700 border-sky-200"
-                        : "bg-slate-50 text-slate-700 border-slate-200"
+                        : "bg-neo-bg-soft text-neo-text border-neo-border"
                     }`}
                   >
                     {phenomenon.status}
@@ -719,16 +719,16 @@ const SubseasonalForecast = () => {
       </div>
 
       {/* Agricultural Impacts */}
-      <div className="mb-8 bg-white/80 backdrop-blur-sm shadow-sm rounded-2xl overflow-hidden border border-slate-200">
-        <div className="px-6 py-4 border-b border-slate-200 flex items-center gap-3">
+      <div className="neo-surface mb-8 overflow-hidden">
+        <div className="px-6 py-4 border-b border-neo-border flex items-center gap-3">
           <span className="inline-flex w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 items-center justify-center">
             <Leaf className="h-5 w-5" />
           </span>
           <div>
-            <h3 className="text-xl font-semibold text-slate-900">
+            <h3 className="text-xl font-semibold text-neo-text">
               <T>Agricultural Impacts & Recommendations</T>
             </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-neo-muted mt-0.5">
               <T>Crop-specific implications of the</T>{" "}
               {forecastData.period.label.toLowerCase()} <T>forecast</T>
             </p>
@@ -740,13 +740,13 @@ const SubseasonalForecast = () => {
             {forecastData.agriculturalImpacts.map((impact, index) => (
               <details
                 key={index}
-                className="group border border-slate-200 rounded-xl bg-white open:shadow-sm open:border-emerald-300 transition-all"
+                className="group border border-neo-border rounded-xl bg-neo-surface open:shadow-sm open:border-emerald-300 transition-all"
               >
                 <summary className="p-4 cursor-pointer list-none">
                   <div className="flex justify-between items-start gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between flex-wrap gap-2">
-                        <h4 className="font-semibold text-slate-900">
+                        <h4 className="font-semibold text-neo-text">
                           {impact.crop}
                         </h4>
                         <div className="flex items-center gap-2">
@@ -765,7 +765,7 @@ const SubseasonalForecast = () => {
                           >
                             {impact.impact} Impact
                           </span>
-                          <ChevronDown className="h-4 w-4 text-slate-400 group-open:rotate-180 transition-transform" />
+                          <ChevronDown className="h-4 w-4 text-neo-muted group-open:rotate-180 transition-transform" />
                         </div>
                       </div>
                       <div className="mt-2">
@@ -784,7 +784,7 @@ const SubseasonalForecast = () => {
                           const color =
                             pct >= 80 ? "bg-red-500" : pct >= 50 ? "bg-amber-500" : "bg-emerald-500";
                           return (
-                            <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                            <div className="h-1.5 rounded-full bg-neo-bg overflow-hidden">
                               <div
                                 className={`h-full ${color} rounded-full`}
                                 style={{ width: `${pct}%` }}
@@ -793,20 +793,20 @@ const SubseasonalForecast = () => {
                           );
                         })()}
                       </div>
-                      <p className="text-sm text-slate-600 mt-2">
+                      <p className="text-sm text-neo-muted mt-2">
                         {impact.description}
                       </p>
                     </div>
                   </div>
                 </summary>
-                <div className="px-4 pb-4 pt-2 border-t border-slate-100">
+                <div className="px-4 pb-4 pt-2 border-t border-neo-border/50">
                   <div className="flex items-start">
                     <AlertTriangle className="h-4 w-4 text-amber-600 mr-2 mt-0.5 flex-shrink-0" />
                     <div>
-                      <h5 className="text-sm font-semibold text-slate-900 mb-1">
+                      <h5 className="text-sm font-semibold text-neo-text mb-1">
                         <T>Recommended Actions:</T>
                       </h5>
-                      <p className="text-sm text-slate-600">
+                      <p className="text-sm text-neo-muted">
                         {impact.recommendation}
                       </p>
                     </div>
@@ -819,8 +819,8 @@ const SubseasonalForecast = () => {
       </div>
 
       {/* Confidence & Uncertainty Information */}
-      <div className="mb-8 bg-white/80 backdrop-blur-sm shadow-sm rounded-2xl overflow-hidden border border-slate-200">
-        <div className="px-6 py-4 border-b border-slate-200">
+      <div className="neo-surface mb-8 overflow-hidden">
+        <div className="px-6 py-4 border-b border-neo-border">
           <button
             onClick={() => setShowConfidenceLevel(!showConfidenceLevel)}
             className="flex items-center justify-between w-full text-left"
@@ -829,20 +829,20 @@ const SubseasonalForecast = () => {
               <span className="inline-flex w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 items-center justify-center">
                 <Target className="h-5 w-5" />
               </span>
-              <h3 className="text-xl font-semibold text-slate-900">
+              <h3 className="text-xl font-semibold text-neo-text">
                 <T>Forecast Confidence & Limitations</T>
               </h3>
             </div>
             {showConfidenceLevel ? (
-              <ChevronUp className="h-5 w-5 text-slate-400" />
+              <ChevronUp className="h-5 w-5 text-neo-muted" />
             ) : (
-              <ChevronDown className="h-5 w-5 text-slate-400" />
+              <ChevronDown className="h-5 w-5 text-neo-muted" />
             )}
           </button>
         </div>
 
         {/* Confidence Donut Trio (always visible) */}
-        <div className="px-6 py-6 border-b border-slate-200">
+        <div className="px-6 py-6 border-b border-neo-border">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <ConfidenceDonut value={forecastData.confidence} label="Overall" color="#10b981" />
             <ConfidenceDonut
@@ -862,12 +862,12 @@ const SubseasonalForecast = () => {
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h4 className="font-medium text-gray-900 mb-3">
+                <h4 className="font-medium text-neo-text mb-3">
                   Confidence Levels
                 </h4>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-neo-muted">
                       Overall Forecast:
                     </span>
                     <div className="flex items-center">
@@ -882,7 +882,7 @@ const SubseasonalForecast = () => {
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Temperature:</span>
+                    <span className="text-sm text-neo-muted">Temperature:</span>
                     <div className="flex items-center">
                       {getConfidenceIcon(forecastData.temperature.confidence)}
                       <span
@@ -895,7 +895,7 @@ const SubseasonalForecast = () => {
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Rainfall:</span>
+                    <span className="text-sm text-neo-muted">Rainfall:</span>
                     <div className="flex items-center">
                       {getConfidenceIcon(forecastData.rainfall.confidence)}
                       <span
@@ -911,10 +911,10 @@ const SubseasonalForecast = () => {
               </div>
 
               <div>
-                <h4 className="font-medium text-gray-900 mb-3">
+                <h4 className="font-medium text-neo-text mb-3">
                   Important Notes
                 </h4>
-                <ul className="text-sm text-gray-600 space-y-2">
+                <ul className="text-sm text-neo-muted space-y-2">
                   <li className="flex items-start">
                     <span className="mr-2">•</span>
                     <span>
@@ -950,11 +950,11 @@ const SubseasonalForecast = () => {
 
       {/* Action Buttons */}
       <div className="mb-8 flex flex-col sm:flex-row flex-wrap gap-4 justify-center">
-        <button className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-slate-300 text-sm font-semibold rounded-lg text-slate-700 bg-white hover:border-emerald-600 hover:text-emerald-700 transition-colors">
+        <button className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-neo-border text-sm font-semibold rounded-lg text-neo-text bg-neo-surface hover:border-emerald-600 hover:text-emerald-700 transition-colors">
           <Download className="h-4 w-4" />
           <T>Download Forecast</T>
         </button>
-        <button className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-slate-300 text-sm font-semibold rounded-lg text-slate-700 bg-white hover:border-emerald-600 hover:text-emerald-700 transition-colors">
+        <button className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-neo-border text-sm font-semibold rounded-lg text-neo-text bg-neo-surface hover:border-emerald-600 hover:text-emerald-700 transition-colors">
           <Share2 className="h-4 w-4" />
           <T>Share Forecast</T>
         </button>
@@ -965,7 +965,7 @@ const SubseasonalForecast = () => {
       </div>
 
       {/* Footer */}
-      <div className="text-center text-xs text-slate-500">
+      <div className="text-center text-xs text-neo-muted">
         <p className="mb-1">
           <T>Subseasonal forecasts are generated using ensemble climate models and historical climate patterns</T>
         </p>

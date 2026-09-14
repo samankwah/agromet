@@ -106,7 +106,7 @@ const EnhancedCalendarUpload = () => {
                  <div className="h-2 w-2 rounded-full bg-blue-600"></div>
                </div>;
       default:
-        return <FileSpreadsheet className="h-5 w-5 text-gray-600" />;
+        return <FileSpreadsheet className="h-5 w-5 text-neo-muted" />;
     }
   };
 
@@ -122,17 +122,17 @@ const EnhancedCalendarUpload = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
+    <div className="bg-neo-surface rounded-lg shadow-lg p-6">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Enhanced Calendar Upload</h2>
-        <p className="text-gray-600">
+        <h2 className="text-2xl font-bold text-neo-text mb-2">Enhanced Calendar Upload</h2>
+        <p className="text-neo-muted">
           Upload Excel-based agricultural calendars. The system automatically detects whether it's a seasonal calendar (crops) or production cycle template (poultry).
         </p>
       </div>
 
       {/* File Upload Section */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-neo-text mb-2">
           Calendar File (Excel format)
         </label>
         <div className="relative">
@@ -144,26 +144,26 @@ const EnhancedCalendarUpload = () => {
             className="hidden"
           />
           <div 
-            className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-green-400 transition-colors"
+            className="border-2 border-dashed border-neo-border rounded-lg p-6 text-center cursor-pointer hover:border-green-400 transition-colors"
             onClick={() => fileInputRef.current?.click()}
           >
             {file ? (
               <div className="flex items-center justify-center space-x-2">
                 <FileSpreadsheet className="h-8 w-8 text-green-600" />
                 <div className="text-left">
-                  <p className="font-medium text-gray-900">{file.name}</p>
-                  <p className="text-sm text-gray-500">
+                  <p className="font-medium text-neo-text">{file.name}</p>
+                  <p className="text-sm text-neo-muted">
                     {(file.size / 1024 / 1024).toFixed(2)} MB
                   </p>
                 </div>
               </div>
             ) : (
               <div>
-                <Upload className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                <p className="text-lg font-medium text-gray-900 mb-1">
+                <Upload className="h-12 w-12 text-neo-muted mx-auto mb-2" />
+                <p className="text-lg font-medium text-neo-text mb-1">
                   Click to upload calendar file
                 </p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-neo-muted">
                   Excel files (.xlsx, .xls) up to 10MB
                 </p>
               </div>
@@ -176,13 +176,13 @@ const EnhancedCalendarUpload = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         {/* Region Selection */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-neo-text mb-2">
             Region
           </label>
           <select
             value={selectedRegion}
             onChange={(e) => handleRegionChange(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full px-3 py-2 border border-neo-border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
             required
           >
             <option value="">Select a region</option>
@@ -196,13 +196,13 @@ const EnhancedCalendarUpload = () => {
 
         {/* District Selection */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-neo-text mb-2">
             District
           </label>
           <select
             value={selectedDistrict}
             onChange={(e) => setSelectedDistrict(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full px-3 py-2 border border-neo-border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
             disabled={!selectedRegion}
             required
           >
@@ -217,28 +217,28 @@ const EnhancedCalendarUpload = () => {
 
         {/* Title */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-neo-text mb-2">
             Calendar Title
           </label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full px-3 py-2 border border-neo-border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
             placeholder="Enter calendar title"
           />
         </div>
 
         {/* Year */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-neo-text mb-2">
             Year
           </label>
           <input
             type="number"
             value={year}
             onChange={(e) => setYear(parseInt(e.target.value) || new Date().getFullYear())}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full px-3 py-2 border border-neo-border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
             min="2020"
             max="2030"
           />
@@ -247,13 +247,13 @@ const EnhancedCalendarUpload = () => {
 
       {/* Description */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-neo-text mb-2">
           Description (Optional)
         </label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+          className="w-full px-3 py-2 border border-neo-border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
           rows="3"
           placeholder="Add notes or description for this calendar"
         />
@@ -264,7 +264,7 @@ const EnhancedCalendarUpload = () => {
         <button
           onClick={handleUpload}
           disabled={!file || uploading || !selectedRegion || !selectedDistrict}
-          className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+          className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700 disabled:bg-neo-muted/50 disabled:text-neo-bg disabled:cursor-not-allowed transition-colors flex items-center justify-center"
         >
           {uploading ? (
             <InlineBusySkeleton label="Processing Calendar..." />
@@ -301,14 +301,14 @@ const EnhancedCalendarUpload = () => {
                     <span className="font-medium">
                       {uploadResult.calendarType === 'seasonal' ? 'Seasonal Calendar' : 'Production Cycle Template'}
                     </span>
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-neo-muted">
                       ({typeof uploadResult.commodity === 'object' ? uploadResult.commodity.name : uploadResult.commodity})
                     </span>
                   </div>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-neo-muted">
                     {getCalendarTypeDescription(uploadResult.calendarType)}
                   </p>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-neo-muted">
                     <strong>Activities detected:</strong> {uploadResult.activities || 0}
                   </div>
                 </div>

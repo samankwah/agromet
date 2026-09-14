@@ -53,7 +53,7 @@ const FileUploadForm = ({ reportType, onUploadSuccess }) => {
     if (["csv"].includes(extension))
       return <FaFileCsv className="text-green-500" />;
     if (["txt"].includes(extension))
-      return <FaFileAlt className="text-gray-500" />;
+      return <FaFileAlt className="text-neo-muted" />;
     if (["xlsx", "xls"].includes(extension))
       return <FaFileExcel className="text-green-700" />;
 
@@ -218,15 +218,15 @@ const FileUploadForm = ({ reportType, onUploadSuccess }) => {
   };
 
   return (
-    <div className="bg-white shadow-md rounded-lg p-6">
-      <h2 className="text-xl font-semibold text-gray-800 mb-6">
+    <div className="bg-neo-surface shadow-md rounded-lg p-6">
+      <h2 className="text-xl font-semibold text-neo-text mb-6">
         Upload {getReportTitle()}
       </h2>
 
       <form onSubmit={handleSubmit}>
         {/* File Upload */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-neo-text mb-2">
             Select File (PDF, Image, CSV, TXT, Excel)
             {isAgriculturalUpload() && (
               <span className="text-green-600 text-sm block mt-1">
@@ -237,7 +237,7 @@ const FileUploadForm = ({ reportType, onUploadSuccess }) => {
           </label>
 
           <div className="flex items-center justify-center w-full">
-            <label className="w-full flex flex-col items-center px-4 py-6 bg-white text-green-700 rounded-lg shadow-lg tracking-wide border border-green-700 border-dashed cursor-pointer hover:bg-green-50">
+            <label className="w-full flex flex-col items-center px-4 py-6 bg-neo-surface text-green-700 rounded-lg shadow-lg tracking-wide border border-green-700 border-dashed cursor-pointer hover:bg-green-50">
               {file ? (
                 <div className="flex items-center">
                   {getFileIcon(file.name)}
@@ -262,7 +262,7 @@ const FileUploadForm = ({ reportType, onUploadSuccess }) => {
           </div>
 
           {file && (
-            <div className="mt-2 text-xs text-gray-500">
+            <div className="mt-2 text-xs text-neo-muted">
               <p>{formatFileSize(file.size)}</p>
               <p className="text-green-600">✓ File validated successfully</p>
             </div>
@@ -271,12 +271,12 @@ const FileUploadForm = ({ reportType, onUploadSuccess }) => {
 
         {/* Title */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-neo-text mb-2">
             Title
           </label>
           <input
             type="text"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full px-3 py-2 border border-neo-border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Enter file title"
@@ -287,11 +287,11 @@ const FileUploadForm = ({ reportType, onUploadSuccess }) => {
 
         {/* Description */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-neo-text mb-2">
             Description
           </label>
           <textarea
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full px-3 py-2 border border-neo-border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Enter description (optional)"
@@ -302,18 +302,18 @@ const FileUploadForm = ({ reportType, onUploadSuccess }) => {
 
         {/* Tags */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-neo-text mb-2">
             Tags
           </label>
           <input
             type="text"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full px-3 py-2 border border-neo-border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
             value={tags}
             onChange={(e) => setTags(e.target.value)}
             placeholder="Enter tags separated by commas (optional)"
             disabled={isUploading}
           />
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-neo-muted">
             e.g., weather, forecast, agriculture
           </p>
         </div>
@@ -321,11 +321,11 @@ const FileUploadForm = ({ reportType, onUploadSuccess }) => {
         {/* Upload Progress */}
         {isUploading && uploadProgress > 0 && (
           <div className="mb-4">
-            <div className="flex justify-between text-sm text-gray-600 mb-1">
+            <div className="flex justify-between text-sm text-neo-muted mb-1">
               <span>Uploading...</span>
               <span>{uploadProgress}%</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-neo-border/30 rounded-full h-2">
               <div
                 className="bg-green-600 h-2 rounded-full transition-all duration-300 ease-in-out"
                 style={{ width: `${uploadProgress}%` }}

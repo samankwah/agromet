@@ -277,7 +277,7 @@ const UniversalDataTable = ({
       </div>
 
       {/* Filters and Controls */}
-      <div className="px-6 py-4 bg-white/25 border-b neo-divider">
+      <div className="px-6 py-4 bg-neo-surface/25 border-b neo-divider">
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Search */}
           {showSearch && (
@@ -333,7 +333,7 @@ const UniversalDataTable = ({
                   onClick={() => setViewMode("table")}
                   className={`p-2 rounded ${
                     viewMode === "table" 
-                      ? "bg-white/70 text-neo-accent-strong shadow-neo-pressed" 
+                      ? "bg-neo-surface/70 text-neo-accent-strong shadow-neo-active" 
                       : "text-neo-muted hover:text-neo-accent-strong"
                   }`}
                 >
@@ -343,7 +343,7 @@ const UniversalDataTable = ({
                   onClick={() => setViewMode("card")}
                   className={`p-2 rounded ${
                     viewMode === "card" 
-                      ? "bg-white/70 text-neo-accent-strong shadow-neo-pressed" 
+                      ? "bg-neo-surface/70 text-neo-accent-strong shadow-neo-active" 
                       : "text-neo-muted hover:text-neo-accent-strong"
                   }`}
                 >
@@ -405,7 +405,7 @@ const UniversalDataTable = ({
           {viewMode === "table" ? (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-neo-border">
-                <thead className="bg-white/35">
+                <thead className="bg-neo-surface/35">
                   <tr>
                     {selectedRows.size > 0 && (
                       <th className="px-6 py-3 text-left">
@@ -446,13 +446,13 @@ const UniversalDataTable = ({
                     )}
                   </tr>
                 </thead>
-                <tbody className="bg-white/20 divide-y divide-neo-border">
+                <tbody className="bg-neo-surface/20 divide-y divide-neo-border">
                   {paginatedData.map((row, index) => {
                     const rowId = row.id || row.uniqueId || index;
                     return (
                       <tr 
                         key={rowId} 
-                        className={`hover:bg-white/45 ${
+                        className={`hover:bg-neo-surface-strong/65 ${
                           selectedRows.has(rowId) ? 'bg-emerald-50/70' : ''
                         }`}
                       >
@@ -604,7 +604,7 @@ const UniversalDataTable = ({
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="px-6 py-4 bg-white/25 border-t neo-divider">
+            <div className="px-6 py-4 bg-neo-surface/25 border-t neo-divider">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-neo-muted">
                   Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
@@ -634,8 +634,8 @@ const UniversalDataTable = ({
                         onClick={() => setCurrentPage(page)}
                         className={`px-3 py-1 border rounded-md ${
                           currentPage === page
-                            ? "bg-neo-accent text-white border-neo-accent"
-                            : "border-neo-border hover:bg-white/55"
+                            ? "border-neo-accent bg-neo-accent text-neo-on-accent"
+                            : "border-neo-border hover:bg-neo-surface-strong/70"
                         }`}
                       >
                         {page}

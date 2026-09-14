@@ -422,7 +422,7 @@ const SevenDaysForecast = () => {
         type="search"
         value={townSearch}
         onChange={(event) => setTownSearch(event.target.value)}
-        className="min-h-10 min-w-0 flex-1 rounded-lg border border-slate-300 px-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+        className="min-h-10 min-w-0 flex-1 rounded-lg border border-neo-border bg-neo-bg px-3 text-sm text-neo-text outline-none transition placeholder:text-neo-muted focus:border-neo-focus focus:ring-4 focus:ring-neo-focus/20"
         placeholder="Search town"
       />
       <button
@@ -456,14 +456,14 @@ const SevenDaysForecast = () => {
           <Breadcrumb />
           <div className="mb-4 flex justify-end">{townSearchForm}</div>
           {!loading && !detectingLocation && locationAttempted && !location && (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm font-medium text-amber-900">
+            <div className="rounded-xl border border-neo-warning/40 bg-neo-warning/10 px-4 py-4 text-sm font-medium text-neo-text">
               <T>
                 {forecastError || "Allow location access to load a live Open-Meteo forecast."}
               </T>
             </div>
           )}
           {!loading && !detectingLocation && location && forecastError && (
-            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-4 text-sm font-medium text-red-800">
+            <div className="rounded-xl border border-neo-danger/40 bg-neo-danger/10 px-4 py-4 text-sm font-medium text-neo-text">
               <T>{forecastError}</T>
             </div>
           )}
@@ -482,10 +482,10 @@ const SevenDaysForecast = () => {
         <div className="flex items-start mb-2 sm:mb-0">
           <MapPin className="mt-1 h-5 w-5 flex-shrink-0 text-blue-600 mr-1" />
           <div>
-            <h1 className="text-xl font-semibold text-gray-800" data-no-auto-translate>
+            <h1 className="text-xl font-semibold text-neo-text" data-no-auto-translate>
               {locationTitle}
             </h1>
-            <p className="mt-1 text-sm font-medium text-slate-500">
+            <p className="mt-1 text-sm font-medium text-neo-muted">
               <T>Updated</T> {formatUpdatedTime(updatedAt)}
             </p>
           </div>
@@ -520,7 +520,7 @@ const SevenDaysForecast = () => {
                 onClick={() => setTempUnit("celsius")}
                 className={`px-3 py-1 rounded-l-lg ${
                   tempUnit === "celsius"
-                    ? "bg-white text-blue-600"
+                    ? "bg-neo-surface text-blue-600"
                     : "bg-blue-700 text-white"
                 }`}
               >
@@ -530,7 +530,7 @@ const SevenDaysForecast = () => {
                 onClick={() => setTempUnit("fahrenheit")}
                 className={`px-3 py-1 rounded-r-lg ${
                   tempUnit === "fahrenheit"
-                    ? "bg-white text-blue-600"
+                    ? "bg-neo-surface text-blue-600"
                     : "bg-blue-700 text-white"
                 }`}
               >
@@ -591,7 +591,7 @@ const SevenDaysForecast = () => {
               {forecastData[selectedDay].hourly.map((hour, idx) => (
                 <div
                   key={idx}
-                  className="flex flex-col items-center bg-white/10 backdrop-blur-sm rounded-lg p-3 min-w-[70px]"
+                  className="flex flex-col items-center bg-neo-surface/10 backdrop-blur-sm rounded-lg p-3 min-w-[70px]"
                 >
                   <span className="text-sm font-medium mb-1">{hour.time}</span>
                   <AnimatedWeatherIcon
@@ -614,14 +614,14 @@ const SevenDaysForecast = () => {
         </div>
 
         {/* 7-day forecast row */}
-        <div className="bg-gray-800/40 backdrop-blur-sm p-4">
+        <div className="bg-neo-text/40 backdrop-blur-sm p-4">
           <h3 className="text-lg font-semibold mb-3"><T>7-Day Forecast</T></h3>
           <div className="grid grid-cols-7 gap-2">
             {forecastData.map((day, idx) => (
               <div
                 key={idx}
                 className={`flex flex-col items-center p-2 rounded-lg cursor-pointer transition-colors duration-200 ${
-                  selectedDay === idx ? "bg-white/20" : "hover:bg-white/10"
+                  selectedDay === idx ? "bg-neo-surface/20" : "hover:bg-neo-surface/10"
                 }`}
                 onClick={() => setSelectedDay(idx)}
               >
@@ -648,9 +648,9 @@ const SevenDaysForecast = () => {
       </div>
 
       {/* Forecast matrix (similar to iPhone weather app) */}
-      <div className="mt-6 bg-white rounded-xl shadow-md overflow-hidden">
-        <div className="p-4 bg-gray-50 border-b">
-          <h3 className="text-lg font-semibold text-gray-800">
+      <div className="mt-6 overflow-hidden rounded-xl border border-neo-border bg-neo-surface shadow-md">
+        <div className="border-b border-neo-border bg-neo-bg-soft p-4">
+          <h3 className="text-lg font-semibold text-neo-text">
             <T>Weather Matrix</T>
           </h3>
         </div>
@@ -658,39 +658,39 @@ const SevenDaysForecast = () => {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-gray-50">
-                <th className="py-3 px-4 text-left text-sm font-medium text-gray-500">
+              <tr className="bg-neo-bg-soft">
+                <th className="py-3 px-4 text-left text-sm font-medium text-neo-muted">
                   <T>DAY</T>
                 </th>
-                <th className="py-3 px-4 text-left text-sm font-medium text-gray-500">
+                <th className="py-3 px-4 text-left text-sm font-medium text-neo-muted">
                   <T>CONDITION</T>
                 </th>
-                <th className="py-3 px-4 text-left text-sm font-medium text-gray-500">
+                <th className="py-3 px-4 text-left text-sm font-medium text-neo-muted">
                   <T>HIGH / LOW</T>
                 </th>
-                <th className="py-3 px-4 text-left text-sm font-medium text-gray-500">
+                <th className="py-3 px-4 text-left text-sm font-medium text-neo-muted">
                   <T>RAIN %</T>
                 </th>
-                <th className="py-3 px-4 text-left text-sm font-medium text-gray-500">
+                <th className="py-3 px-4 text-left text-sm font-medium text-neo-muted">
                   <T>HUMIDITY</T>
                 </th>
-                <th className="py-3 px-4 text-left text-sm font-medium text-gray-500">
+                <th className="py-3 px-4 text-left text-sm font-medium text-neo-muted">
                   <T>WIND</T>
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-neo-border">
               {forecastData.map((day, idx) => (
                 <tr
                   key={idx}
-                  className={`hover:bg-blue-50 cursor-pointer ${
-                    selectedDay === idx ? "bg-blue-50" : ""
+                  className={`cursor-pointer text-neo-text transition-colors hover:bg-neo-surface-strong/70 ${
+                    selectedDay === idx ? "bg-neo-surface-strong" : ""
                   }`}
                   onClick={() => setSelectedDay(idx)}
                 >
                   <td className="py-3 px-4">
                     <div className="font-medium"><T>{day.day}</T></div>
-                    <div className="text-xs text-gray-500"><T>{day.date}</T></div>
+                    <div className="text-xs text-neo-muted"><T>{day.date}</T></div>
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center">
@@ -710,7 +710,7 @@ const SevenDaysForecast = () => {
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center">
-                      <div className="w-16 bg-gray-200 rounded-full h-1.5 mr-2">
+                      <div className="w-16 bg-neo-border/30 rounded-full h-1.5 mr-2">
                         <div
                           className="h-1.5 rounded-full bg-blue-600"
                           style={{ width: `${day.rainChance}%` }}
@@ -721,7 +721,7 @@ const SevenDaysForecast = () => {
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center">
-                      <div className="w-16 bg-gray-200 rounded-full h-1.5 mr-2">
+                      <div className="w-16 bg-neo-border/30 rounded-full h-1.5 mr-2">
                         <div
                           className="h-1.5 rounded-full bg-purple-600"
                           style={{ width: `${day.humidity}%` }}
@@ -732,7 +732,7 @@ const SevenDaysForecast = () => {
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center">
-                      <Wind size={16} className="mr-2 text-gray-500" />
+                      <Wind size={16} className="mr-2 text-neo-muted" />
                       <span>{day.windSpeed} km/h</span>
                     </div>
                   </td>

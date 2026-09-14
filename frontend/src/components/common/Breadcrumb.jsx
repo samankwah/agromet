@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import { Link, useLocation } from 'react-router-dom';
 import { HiHome, HiChevronRight } from 'react-icons/hi2';
 
@@ -37,12 +38,17 @@ const routeMap = {
   '/terms': { label: 'Terms of Service' },
 };
 
-const Breadcrumb = ({ variant = 'light' }) => {
+/**
+ * `label` / `parent` / `parentPath` let a dynamic route describe itself, since
+ * routeMap can only key on a fixed pathname. A commodity page passes its own
+ * commodity name as the label and links back to the market grid as the parent.
+ */
+const Breadcrumb = ({ variant = 'light', label, parent, parentPath }) => {
   const { pathname } = useLocation();
 
   if (pathname === '/') return null;
 
-  const route = routeMap[pathname];
+  const route = label ? { label, parent } : routeMap[pathname];
   if (!route) return null;
 
   const dark = variant === 'dark';
@@ -51,7 +57,7 @@ const Breadcrumb = ({ variant = 'light' }) => {
     <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm mb-5 flex-wrap">
       <Link
         to="/"
-        className={`inline-flex items-center gap-1 transition-colors ${dark ? 'text-slate-400 hover:text-emerald-400' : 'text-slate-400 hover:text-emerald-600'}`}
+        className={`inline-flex items-center gap-1 transition-colors ${dark ? 'text-neo-muted hover:text-emerald-400' : 'text-neo-muted hover:text-emerald-600'}`}
       >
         <HiHome className="w-4 h-4" />
         <span>Home</span>
@@ -59,15 +65,31 @@ const Breadcrumb = ({ variant = 'light' }) => {
 
       {route.parent && (
         <>
-          <HiChevronRight className={`w-3.5 h-3.5 flex-shrink-0 ${dark ? 'text-slate-600' : 'text-slate-300'}`} />
-          <span className={dark ? 'text-slate-400' : 'text-slate-400'}>{route.parent}</span>
+          <HiChevronRight className={`w-3.5 h-3.5 flex-shrink-0 ${dark ? 'text-neo-muted' : 'text-neo-muted'}`} />
+          {parentPath ? (
+            <Link
+              to={parentPath}
+              className={`transition-colors ${dark ? 'text-neo-muted hover:text-emerald-400' : 'text-neo-muted hover:text-emerald-600'}`}
+            >
+              {route.parent}
+            </Link>
+          ) : (
+            <span className="text-neo-muted">{route.parent}</span>
+          )}
         </>
       )}
 
-      <HiChevronRight className={`w-3.5 h-3.5 flex-shrink-0 ${dark ? 'text-slate-600' : 'text-slate-300'}`} />
-      <span className={`font-medium ${dark ? 'text-slate-200' : 'text-slate-700'}`}>{route.label}</span>
+      <HiChevronRight className={`w-3.5 h-3.5 flex-shrink-0 ${dark ? 'text-neo-muted' : 'text-neo-muted'}`} />
+      <span className={`font-medium ${dark ? 'text-emerald-50' : 'text-neo-text'}`}>{route.label}</span>
     </nav>
   );
+};
+
+Breadcrumb.propTypes = {
+  variant: PropTypes.oneOf(['light', 'dark']),
+  label: PropTypes.string,
+  parent: PropTypes.string,
+  parentPath: PropTypes.string,
 };
 
 export default Breadcrumb;
