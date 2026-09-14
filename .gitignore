@@ -47,7 +47,9 @@ firebase-debug.log
 # development, but its history belongs to that repo, not this one.
 mobile/
 
-# Raw multi-decade download cache for the hazard climatology bake.
-# Regenerable via `python -m backend.scripts.build_hazard_climatology`;
-# only the fitted hazard_climatology.json is committed.
-backend/app/data/.climatology_cache.json
+# Raw multi-decade download caches the climatology bakes write to
+# backend/app/data/, one per `build_*_climatology.py` script (dot-prefixed
+# by convention, e.g. .climatology_cache.json, .s2s_grid_cache.json).
+# Regenerable by re-running the relevant script; only the fitted, non-dot
+# output (hazard_climatology.json, s2s_climatology.json, ...) is committed.
+backend/app/data/.*.json
