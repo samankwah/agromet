@@ -130,6 +130,84 @@ class TestPlaceholderTranslation:
         assert row["name"] == "Got rain?"
 
 
+class TestTimestampComparisons:
+    """The bug this class exists for took out `/api/hazards/summary` in
+    production with a 500 while every SQLite test passed.
+
+    Timestamp columns in this schema are TEXT. Postgres will write its own
+    `CURRENT_TIMESTAMP` into one, but comparing the column against it is
+    `text <= timestamptz`, which has no operator. SQLite compares the two as
+    text and never noticed. `database.utc_stamp()` is the fix: the comparison
+    value comes from Python, as a string, so both engines compare like with
+    like.
+    """
+
+    def test_an_in_force_override_is_found_by_a_timestamp_comparison(self, pg_connection):
+        from backend.app.database import utc_stamp
+
+        with pg_connection.get_connection() as connection:
+            connection.execute(
+                """
+                INSERT INTO hazard_overrides
+                    (region, hazard, band, advisory_json, issued_by, effective_from, effective_to)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                ("Northern", "flood", "extreme", "[]", "GMet", "2020-01-01 00:00:00", None),
+            )
+            now = utc_stamp()
+            rows = connection.execute(
+                """
+                SELECT region FROM hazard_overrides
+                WHERE effective_from <= ?
+                  AND (effective_to IS NULL OR effective_to >= ?)
+                """,
+                (now, now),
+            ).fetchall()
+
+        assert [row["region"] for row in rows] == ["Northern"]
+
+    def test_an_expired_override_is_left_out(self, pg_connection):
+        from backend.app.database import utc_stamp
+
+        with pg_connection.get_connection() as connection:
+            connection.execute(
+                """
+                INSERT INTO hazard_overrides
+                    (region, hazard, band, advisory_json, issued_by, effective_from, effective_to)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                ("Volta", "drought", "extreme", "[]", "GMet", "2020-01-01 00:00:00", "2020-01-02 00:00:00"),
+            )
+            now = utc_stamp()
+            rows = connection.execute(
+                "SELECT region FROM hazard_overrides WHERE effective_to IS NULL OR effective_to >= ?",
+                (now,),
+            ).fetchall()
+
+        assert rows == []
+
+    def test_the_default_effective_from_is_written_without_current_timestamp(self, pg_connection):
+        """The insert path had the same fault in a different shape: Postgres
+        cannot `COALESCE` a text parameter with its own `CURRENT_TIMESTAMP`.
+        """
+        from backend.app.database import utc_stamp
+
+        with pg_connection.get_connection() as connection:
+            connection.execute(
+                """
+                INSERT INTO hazard_overrides
+                    (region, hazard, band, advisory_json, issued_by, effective_from)
+                VALUES (?, ?, ?, ?, ?, COALESCE(?, ?))
+                """,
+                ("Ashanti", "flood", "high", "[]", "GMet", None, utc_stamp()),
+            )
+            row = connection.execute(
+                "SELECT effective_from FROM hazard_overrides WHERE region = ?", ("Ashanti",)
+            ).fetchone()
+
+        assert row["effective_from"].startswith("20")
+
+
 class TestLastrowid:
     def test_insert_populates_lastrowid_via_returning(self, pg_connection):
         with pg_connection.get_connection() as connection:

@@ -17,7 +17,7 @@ from __future__ import annotations
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 
 from .. import hazard_runtime
-from ..database import get_connection
+from ..database import get_connection, utc_stamp
 from ..deps import get_current_user
 from ..domain import json_dumps, parse_json_list
 from ..hazards import (
@@ -43,15 +43,17 @@ def _active_overrides(connection) -> dict[tuple[str, str], dict]:
     Expiry is evaluated in SQL rather than by a cleanup job, so a bulletin
     reverts to the computed value on its own the moment it lapses.
     """
+    now = utc_stamp()
     rows = connection.execute(
         """
         SELECT id, region, hazard, band, headline, advisory_json, issued_by,
                effective_from, effective_to, created_at
         FROM hazard_overrides
-        WHERE effective_from <= CURRENT_TIMESTAMP
-          AND (effective_to IS NULL OR effective_to >= CURRENT_TIMESTAMP)
+        WHERE effective_from <= ?
+          AND (effective_to IS NULL OR effective_to >= ?)
         ORDER BY effective_from DESC, id DESC
-        """
+        """,
+        (now, now),
     ).fetchall()
 
     active: dict[tuple[str, str], dict] = {}
@@ -248,9 +250,11 @@ def hazard_methodology():
 @router.get("/api/hazards/overrides")
 def list_hazard_overrides(includeExpired: bool = False):
     clause = "" if includeExpired else (
-        "WHERE effective_from <= CURRENT_TIMESTAMP "
-        "AND (effective_to IS NULL OR effective_to >= CURRENT_TIMESTAMP)"
+        "WHERE effective_from <= ? "
+        "AND (effective_to IS NULL OR effective_to >= ?)"
     )
+    now = utc_stamp()
+    params = () if includeExpired else (now, now)
     with get_connection() as connection:
         rows = connection.execute(
             f"""
@@ -258,7 +262,8 @@ def list_hazard_overrides(includeExpired: bool = False):
                    effective_from, effective_to, created_at
             FROM hazard_overrides {clause}
             ORDER BY effective_from DESC, id DESC
-            """
+            """,
+            params,
         ).fetchall()
 
     return {
@@ -303,7 +308,7 @@ def create_hazard_override(
             INSERT INTO hazard_overrides
                 (region, hazard, band, headline, advisory_json, issued_by,
                  effective_from, effective_to, created_by)
-            VALUES (?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, COALESCE(?, ?), ?, ?)
             """,
             (
                 resolved,
@@ -313,6 +318,9 @@ def create_hazard_override(
                 json_dumps(payload.advisories or []),
                 payload.issuedBy,
                 payload.effectiveFrom,
+                # Postgres refuses to COALESCE a text column with its own
+                # CURRENT_TIMESTAMP, so the default comes from Python.
+                utc_stamp(),
                 payload.effectiveTo,
                 current_user["id"],
             ),

@@ -36,6 +36,7 @@ import json
 import os
 import sqlite3
 from contextlib import contextmanager
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable, Iterator
 
@@ -53,6 +54,26 @@ DATABASE_PATH = BASE_DIR / "agromet.db"
 DATABASE_URL: str = ""
 
 _pool: ConnectionPool | None = None
+
+
+TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+
+def utc_stamp() -> str:
+    """Now, written the way this schema writes timestamps.
+
+    Every timestamp column here is TEXT, which SQLite fills from
+    `CURRENT_TIMESTAMP` as "YYYY-MM-DD HH:MM:SS". Postgres will happily write
+    its own timestamp into a text column too, but it will not *compare* one:
+    `WHERE effective_from <= CURRENT_TIMESTAMP` is `text <= timestamptz`, which
+    has no operator, so the query raises. That took out the whole flood and
+    drought screen in production while every SQLite test stayed green.
+
+    So comparisons pass this string as a parameter instead, and both engines
+    then compare text with text. The format sorts the same way it reads, which
+    is what makes a plain string comparison correct here.
+    """
+    return datetime.now(timezone.utc).strftime(TIMESTAMP_FORMAT)
 
 
 def set_database_path(path: str | Path) -> None:
