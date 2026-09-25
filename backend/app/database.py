@@ -537,8 +537,9 @@ ON contact_messages(handled_at, created_at);
 -- is no process to keep it in: an instance is frozen the moment its
 -- response is sent and every new one starts empty, so a field computed
 -- in memory was never there for the next reader. The daily cron writes
--- a row; every instance reads the same one. Only the newest row is
--- kept -- see `s2s_runtime.store_snapshot`.
+-- a row, and every instance reads the same one. Only the newest row is
+-- kept -- see `s2s_runtime.store_snapshot`. (No semicolons in these
+-- comments: `_split_statements` splits on every one, comment or not.)
 CREATE TABLE IF NOT EXISTS s2s_snapshots (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     computed_at TEXT NOT NULL,
