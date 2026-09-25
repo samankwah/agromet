@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+import asyncio
+import time
 import unittest
 from datetime import date, timedelta
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
+import httpx
 from fastapi.testclient import TestClient
 
-from backend.app import s2s_runtime
+from backend.app import config, database, s2s_runtime
 from backend.app.main import app
 from backend.app.s2s import (
     GHANA_BOUNDS,
@@ -248,16 +251,207 @@ class GridTests(unittest.TestCase):
 
 class RouteTests(unittest.TestCase):
     def setUp(self):
+        # The field is stored in the database now, and an earlier suite may have
+        # left `DATABASE_PATH` on a file it has since deleted. Idempotent, and the
+        # same thing test_hazards and test_diagnosis do in their own setup.
+        database.init_db()
         s2s_runtime.reset_cache()
 
     def tearDown(self):
         s2s_runtime.reset_cache()
 
+    def warm(self, client):
+        """The first reader on an empty table, who computes and stores the field."""
+        return client.get("/api/outlook/subseasonal").json()
+
+    def warm_then(self, client, path):
+        """`warm`, for the endpoints that read the cache without filling it."""
+        self.warm(client)
+        return client.get(path)
+
+    def forget_in_memory(self):
+        """What a brand-new serverless instance looks like: nothing in memory,
+        whatever is already in the database."""
+        s2s_runtime._CACHE = {}
+        s2s_runtime._CACHE_STAMP = 0.0
+        s2s_runtime._LAST_LOAD = 0.0
+
+    def test_an_empty_table_is_computed_once_and_stored(self):
+        with patch.object(s2s_runtime, "CLIMATOLOGY", fake_climatology()), \
+             patch.object(s2s_runtime, "_fetch_ensemble", return_value=ensemble_payload()):
+            with TestClient(app) as client:
+                data = self.warm(client)["data"]
+
+        self.assertFalse(data["unavailable"])
+        self.assertFalse(data["computing"])
+        self.assertEqual(len(data["cells"]), len(ghana_grid_points()))
+        self.assertIsNotNone(s2s_runtime._read_latest(), "the field was never stored")
+
+    def test_a_new_instance_serves_the_stored_field_without_fetching(self):
+        """The production bug: every new instance started empty and refetched.
+
+        On serverless an instance is frozen once it answers, so a field kept only
+        in memory was never there for the next reader. It is now read back from
+        the database, and the upstream is not touched.
+        """
+        with patch.object(s2s_runtime, "CLIMATOLOGY", fake_climatology()), \
+             patch.object(s2s_runtime, "_fetch_ensemble", return_value=ensemble_payload()):
+            with TestClient(app) as client:
+                self.warm(client)
+
+        self.forget_in_memory()
+        fetch = AsyncMock(side_effect=RuntimeError("must not fetch"))
+        with patch.object(s2s_runtime, "_fetch_ensemble", fetch):
+            with TestClient(app) as client:
+                data = client.get("/api/outlook/subseasonal").json()["data"]
+
+        self.assertEqual(fetch.await_count, 0)
+        self.assertFalse(data["unavailable"])
+        self.assertEqual(len(data["cells"]), len(ghana_grid_points()))
+
+    def test_an_old_field_is_served_as_stale_rather_than_withheld(self):
+        """A missed cron run must not empty the screen."""
+        with patch.object(s2s_runtime, "CLIMATOLOGY", fake_climatology()), \
+             patch.object(s2s_runtime, "_fetch_ensemble", return_value=ensemble_payload()):
+            with TestClient(app) as client:
+                self.warm(client)
+
+        two_days_ago = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(time.time() - 2 * 86400))
+        with database.get_connection() as connection:
+            connection.execute("UPDATE s2s_snapshots SET computed_at = ?", (two_days_ago,))
+        self.forget_in_memory()
+
+        request = httpx.Request("GET", s2s_runtime.ENSEMBLE_URL)
+        refused = httpx.HTTPStatusError("429", request=request, response=httpx.Response(429, request=request))
+        with patch.object(s2s_runtime, "_fetch_ensemble", AsyncMock(side_effect=refused)):
+            with TestClient(app) as client:
+                data = client.get("/api/outlook/subseasonal").json()["data"]
+
+        self.assertFalse(data["unavailable"])
+        self.assertTrue(data["stale"])
+        self.assertEqual(len(data["cells"]), len(ghana_grid_points()))
+
+    def test_a_hung_upstream_is_cut_off_rather_than_left_computing(self):
+        """The flag that stuck: `computing` stayed true for good once the
+        platform froze the task. Now the fetch is awaited inside a hard limit,
+        so it always ends, and the reader is told it failed."""
+        async def hung_fetch():
+            await asyncio.sleep(30)
+            return ensemble_payload()
+
+        with patch.object(s2s_runtime, "CLIMATOLOGY", fake_climatology()), \
+             patch.object(s2s_runtime, "_fetch_ensemble", hung_fetch), \
+             patch.object(s2s_runtime, "REFRESH_BUDGET_SECONDS", 0.2):
+            with TestClient(app) as client:
+                elapsed = time.monotonic()
+                data = client.get("/api/outlook/subseasonal").json()["data"]
+                elapsed = time.monotonic() - elapsed
+
+        self.assertLess(elapsed, 5.0)
+        self.assertTrue(data["unavailable"])
+        self.assertFalse(data["computing"])
+        self.assertTrue(data["fetchFailed"])
+        self.assertEqual(data["error"], "upstream took too long")
+
+    def test_the_cron_endpoint_refuses_without_the_secret(self):
+        with patch.object(config, "CRON_SECRET", ""):
+            with TestClient(app) as client:
+                self.assertEqual(client.get("/api/outlook/subseasonal/refresh").status_code, 503)
+
+        with patch.object(config, "CRON_SECRET", "s3cret"):
+            with TestClient(app) as client:
+                self.assertEqual(client.get("/api/outlook/subseasonal/refresh").status_code, 401)
+                wrong = client.get("/api/outlook/subseasonal/refresh", headers={"Authorization": "Bearer nope"})
+                self.assertEqual(wrong.status_code, 401)
+
+        self.assertIsNone(s2s_runtime._read_latest())
+
+    def test_the_cron_endpoint_computes_and_stores(self):
+        with patch.object(config, "CRON_SECRET", "s3cret"), \
+             patch.object(s2s_runtime, "CLIMATOLOGY", fake_climatology()), \
+             patch.object(s2s_runtime, "_fetch_ensemble", return_value=ensemble_payload()):
+            with TestClient(app) as client:
+                response = client.get(
+                    "/api/outlook/subseasonal/refresh", headers={"Authorization": "Bearer s3cret"}
+                )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["data"]["cells"], len(ghana_grid_points()))
+        self.assertIsNotNone(s2s_runtime._read_latest())
+
+    def test_the_cron_endpoint_reports_a_failed_fetch(self):
+        with patch.object(config, "CRON_SECRET", "s3cret"), \
+             patch.object(s2s_runtime, "CLIMATOLOGY", fake_climatology()), \
+             patch.object(s2s_runtime, "_fetch_ensemble", return_value=[]):
+            with TestClient(app) as client:
+                response = client.get(
+                    "/api/outlook/subseasonal/refresh", headers={"Authorization": "Bearer s3cret"}
+                )
+
+        # Non-2xx, so Vercel's cron log shows the run as failed.
+        self.assertEqual(response.status_code, 502)
+        self.assertIn("no usable cells", response.json()["detail"])
+
+    def test_the_error_carries_no_query_string(self):
+        """httpx puts the whole URL in the exception. Ours is about 4 KB.
+
+        That string went into every response and every log line, which is the
+        exact leak `logging_config` silences httpx's own INFO lines to avoid.
+        """
+        request = httpx.Request("GET", s2s_runtime.ENSEMBLE_URL + "?latitude=4.5,5.0&secret=x")
+        response = httpx.Response(429, request=request)
+        refused = httpx.HTTPStatusError("429", request=request, response=response)
+
+        with patch.object(s2s_runtime, "CLIMATOLOGY", fake_climatology()),              patch.object(s2s_runtime, "_fetch_ensemble", side_effect=refused):
+            with TestClient(app) as client:
+                data = self.warm(client)["data"]
+
+        self.assertEqual(data["error"], "upstream returned HTTP 429")
+        self.assertNotIn("latitude", data["error"])
+        self.assertLess(len(data["error"]), 80)
+
+    def test_a_failed_fetch_is_not_retried_on_every_request(self):
+        """The quota protection, and the reason the failure stays visible.
+
+        An empty cache used to mean "start a fetch", so a failure put every
+        subsequent request back into "preparing" and fired another upstream call
+        for each one -- against the endpoint that had just rate-limited us.
+        """
+        request = httpx.Request("GET", s2s_runtime.ENSEMBLE_URL)
+        refused = httpx.HTTPStatusError(
+            "429", request=request, response=httpx.Response(429, request=request)
+        )
+        fetch = AsyncMock(side_effect=refused)
+
+        with patch.object(s2s_runtime, "CLIMATOLOGY", fake_climatology()),              patch.object(s2s_runtime, "_fetch_ensemble", fetch):
+            with TestClient(app) as client:
+                self.warm(client)
+                for _ in range(5):
+                    data = client.get("/api/outlook/subseasonal").json()["data"]
+
+        self.assertEqual(fetch.await_count, 1, "a failed fetch was retried per request")
+        self.assertTrue(data["fetchFailed"])
+        self.assertFalse(data["computing"])
+
+    def test_the_cooldown_expires_so_a_retry_can_work(self):
+        request = httpx.Request("GET", s2s_runtime.ENSEMBLE_URL)
+        refused = httpx.HTTPStatusError(
+            "429", request=request, response=httpx.Response(429, request=request)
+        )
+        fetch = AsyncMock(side_effect=refused)
+
+        with patch.object(s2s_runtime, "CLIMATOLOGY", fake_climatology()),              patch.object(s2s_runtime, "_fetch_ensemble", fetch),              patch.object(s2s_runtime, "RETRY_COOLDOWN_SECONDS", 0.0):
+            with TestClient(app) as client:
+                self.warm(client)
+                self.warm(client)
+
+        self.assertGreater(fetch.await_count, 1, "the cooldown never expired")
+
     def test_serves_the_whole_field_with_a_complete_split(self):
         with patch.object(s2s_runtime, "CLIMATOLOGY", fake_climatology()), \
              patch.object(s2s_runtime, "_fetch_ensemble", return_value=ensemble_payload()):
             with TestClient(app) as client:
-                body = client.get("/api/outlook/subseasonal").json()
+                body = self.warm(client)
 
         data = body["data"]
         self.assertTrue(body["success"])
@@ -279,7 +473,7 @@ class RouteTests(unittest.TestCase):
         with patch.object(s2s_runtime, "CLIMATOLOGY", fake_climatology()), \
              patch.object(s2s_runtime, "_fetch_ensemble", return_value=ensemble_payload()):
             with TestClient(app) as client:
-                data = client.get("/api/outlook/subseasonal").json()["data"]
+                data = self.warm(client)["data"]
 
         self.assertNotIn("series", data["cells"][0]["rainfall"])
 
@@ -293,7 +487,7 @@ class RouteTests(unittest.TestCase):
              patch.object(s2s_runtime, "_fetch_ensemble", return_value=ensemble_payload()):
             self.assertFalse(s2s_runtime.has_climatology())
             with TestClient(app) as client:
-                data = client.get("/api/outlook/subseasonal").json()["data"]
+                data = self.warm(client)["data"]
 
         self.assertFalse(data["unavailable"])
         rainfall = data["cells"][0]["rainfall"]
@@ -316,7 +510,7 @@ class RouteTests(unittest.TestCase):
         with patch.object(s2s_runtime, "CLIMATOLOGY", fake_climatology()), \
              patch.object(s2s_runtime, "_fetch_ensemble", return_value=ensemble_payload()):
             with TestClient(app) as client:
-                body = client.get("/api/outlook/subseasonal/series?lat=5.6037&lng=-0.187").json()
+                body = self.warm_then(client, "/api/outlook/subseasonal/series?lat=5.6037&lng=-0.187").json()
 
         data = body["data"]
         self.assertEqual(data["id"], cell_id(5.5, 0.0))
@@ -328,12 +522,77 @@ class RouteTests(unittest.TestCase):
             self.assertLessEqual(low, mean)
             self.assertLessEqual(mean, high)
 
+    def test_an_empty_field_counts_as_a_fetch_failure(self):
+        """An upstream that answers with nothing usable has failed.
+
+        `compute_snapshot` raises rather than caching an empty field, so this
+        lands in `refresh`'s handler and sets the error. That is the honest
+        reading: the reader should be told to try again, not that the outlook
+        does not exist.
+        """
+        with patch.object(s2s_runtime, "CLIMATOLOGY", {"cells": {}, "baseline": None}),              patch.object(s2s_runtime, "_fetch_ensemble", return_value=[]):
+            with TestClient(app) as client:
+                data = self.warm(client)["data"]
+
+        self.assertTrue(data["unavailable"])
+        self.assertTrue(data["fetchFailed"])
+        self.assertIn("no usable cells", data["error"])
+
+    def test_a_cold_cache_reports_no_failure_before_anything_is_tried(self):
+        """The flag tracks a real error, not merely an empty cache.
+
+        Read straight off the module so the assertion is about the flag itself:
+        going through the endpoint would trigger `ensure_fresh` first, which is
+        exactly what makes every *served* empty response a failed one.
+        """
+        s2s_runtime.reset_cache()
+
+        self.assertEqual(s2s_runtime.cached_snapshot()[0], {})
+        self.assertFalse(s2s_runtime.metadata()["fetchFailed"])
+        self.assertIsNone(s2s_runtime.metadata()["error"])
+
+    def test_a_refused_upstream_is_reported_as_a_fetch_failure(self):
+        """The cause reaches the client, so the copy can say "try again"."""
+        request = httpx.Request("GET", s2s_runtime.ENSEMBLE_URL)
+        response = httpx.Response(429, request=request)
+        refused = httpx.HTTPStatusError("429", request=request, response=response)
+
+        with patch.object(s2s_runtime, "CLIMATOLOGY", fake_climatology()),              patch.object(s2s_runtime, "_fetch_ensemble", side_effect=refused):
+            with TestClient(app) as client:
+                body = self.warm(client)
+
+        data = body["data"]
+        # Still a 200: the client renders an empty state, not an error screen.
+        self.assertTrue(body["success"])
+        self.assertTrue(data["unavailable"])
+        self.assertTrue(data["fetchFailed"])
+        # The attempt is over, so this is a failure the reader can act on rather
+        # than work still in flight.
+        self.assertFalse(data["computing"])
+        self.assertIn("429", data["error"])
+
+    def test_an_empty_cache_does_not_claim_the_place_is_uncovered(self):
+        """The 404 means "outside the grid", and must keep meaning only that.
+
+        `cell_at` returns None for an empty snapshot too, so the old code told a
+        reader in Accra that no outlook covered their town whenever the fetch had
+        failed.
+        """
+        with patch.object(s2s_runtime, "CLIMATOLOGY", fake_climatology()),              patch.object(s2s_runtime, "_fetch_ensemble", return_value=[]):
+            with TestClient(app) as client:
+                response = client.get("/api/outlook/subseasonal/series?lat=5.6037&lng=-0.187")
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()["data"]
+        self.assertTrue(data["unavailable"])
+        self.assertIsNone(data["rainfall"])
+
     def test_a_place_off_the_grid_is_an_error_not_a_flat_chart(self):
         with patch.object(s2s_runtime, "CLIMATOLOGY", fake_climatology()), \
              patch.object(s2s_runtime, "_fetch_ensemble", return_value=ensemble_payload()):
             with TestClient(app) as client:
                 # Somewhere in the Indian Ocean.
-                response = client.get("/api/outlook/subseasonal/series?lat=-20&lng=80")
+                response = self.warm_then(client, "/api/outlook/subseasonal/series?lat=-20&lng=80")
 
         self.assertEqual(response.status_code, 404)
 
@@ -341,7 +600,7 @@ class RouteTests(unittest.TestCase):
         with patch.object(s2s_runtime, "CLIMATOLOGY", fake_climatology()), \
              patch.object(s2s_runtime, "_fetch_ensemble", return_value=ensemble_payload()):
             with TestClient(app) as client:
-                data = client.get("/api/outlook/subseasonal").json()["data"]
+                data = self.warm(client)["data"]
 
         # The reader is told which model and which baseline produced this, the
         # same obligation the hazard summary carries.

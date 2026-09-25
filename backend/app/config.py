@@ -71,6 +71,10 @@ APP_NAME = os.getenv("APP_NAME", "AgroMet Backend")
 APP_ENV = os.getenv("APP_ENV", "production" if is_serverless_runtime() else "development")
 DEBUG = os.getenv("DEBUG", "false" if APP_ENV == "production" else "true").lower() == "true"
 SECRET_KEY = os.getenv("SECRET_KEY", "change-me")
+# Vercel sends this as `Authorization: Bearer ...` on every cron invocation, and
+# the scheduled refresh endpoints refuse any request without it. Unset, they
+# refuse everything, rather than letting anyone trigger an upstream fetch.
+CRON_SECRET = os.getenv("CRON_SECRET", "")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "480"))
 FRONTEND_ORIGINS = [origin.strip() for origin in os.getenv("FRONTEND_ORIGINS", "http://localhost:3000,http://localhost:5173").split(",") if origin.strip()]
 LOCAL_DEV_ORIGIN_REGEX = r"https?://(localhost|127\.0\.0\.1)(:\d+)?$" if APP_ENV != "production" else None

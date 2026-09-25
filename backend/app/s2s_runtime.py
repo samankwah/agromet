@@ -1,9 +1,18 @@
 """The weeks 2-to-4 outlook, fetched, binned and cached.
 
-Mirrors ``hazard_runtime``: a module-level dict with a TTL and an ``asyncio``
-lock, refreshed off the read path, serving whatever it already has. See that
-module's header for why the cache lives in the process rather than in SQLite --
-the same serverless cold-start reasoning applies.
+**Where the field lives.** In the database, not in the process. This used to be
+a module-level dict filled by a task started off the read path, like
+``hazard_runtime``. On Vercel that never worked: an instance is frozen the moment
+its response is sent, so the task never finished, and every new instance began
+with an empty dict and started the same doomed fetch. The screen said "being
+prepared" for good.
+
+So the fetch now runs somewhere that is allowed to finish -- a daily Vercel cron
+calling ``/api/outlook/subseasonal/refresh``, which awaits it -- and writes the
+result to ``s2s_snapshots``. Readers only load that row. The dict below is just a
+per-instance copy of it, so a warm instance does not reread the database on every
+request. An empty table (a fresh deploy) is the one case a reader computes, and
+then inside a hard time limit, never in the background.
 
 **Why GEFS and not ECMWF.** The product this is modelled on is ECMWF's
 subseasonal ensemble, but that data is licensed and its free archive lags about
@@ -33,8 +42,7 @@ import time
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
-import httpx
-
+from . import database, open_meteo
 from .s2s import (
     LEAD_DAYS,
     WINDOW_DAYS,
@@ -60,10 +68,22 @@ ENSEMBLE_DAILY = ("precipitation_sum", "temperature_2m_max")
 # rather than silently truncating the sum.
 FORECAST_DAYS = LEAD_DAYS + WINDOW_DAYS + 1
 
-# GEFS's extended run publishes once a day. Six hours matches `hazard_runtime`
-# and keeps a cold container from re-fetching on every request.
-CACHE_TTL_SECONDS = 6 * 3600
+# GEFS's extended run publishes once a day, and so does the cron that fetches it.
+# Stale therefore means "a run was missed", not "a day has passed": a day plus
+# six hours of slack for the cron's own scheduling jitter.
+CACHE_TTL_SECONDS = 30 * 3600
 UPSTREAM_TIMEOUT = 30.0
+
+# The hard cap on one fetch-and-reduce. `vercel.json` gives the function 60s, and
+# this leaves room for a cold start and the database write. Without it the
+# retries in `open_meteo.get_json` can reach about 96s (three 30s reads), and the
+# platform kills the function before anything is stored.
+REFRESH_BUDGET_SECONDS = 45.0
+
+# How often a warm instance looks for a newer row than the one it holds. The
+# cron writes once a day, so a few minutes' lag is invisible; reading on every
+# request would cost a database round trip for nothing.
+RELOAD_INTERVAL_SECONDS = 300.0
 GHANA_TZ = timezone(timedelta(0))  # Africa/Accra is UTC year-round, no DST
 
 DATA_SOURCES = [
@@ -91,6 +111,19 @@ _CACHE: dict[str, dict] = {}
 _CACHE_STAMP: float = 0.0
 _REFRESH_LOCK = asyncio.Lock()
 _LAST_ERROR: str | None = None
+_LAST_ATTEMPT: float = 0.0
+# When this instance last looked in the database. Monotonic, unlike the stamps.
+_LAST_LOAD: float = 0.0
+
+# How long to leave a failed fetch alone before trying again.
+#
+# Without this, an empty cache means every single request starts another fetch:
+# one reader on the Forecasts screen becomes a request per poll per device, all
+# hammering the endpoint that just rate-limited us, which is how the quota gets
+# exhausted in the first place. It also made the failure invisible -- a refresh
+# was always in flight, so the response always said "computing" and never
+# "this failed", which is the one thing the reader needed to know.
+RETRY_COOLDOWN_SECONDS = 30.0
 
 
 # ---------------------------------------------------------------------------
@@ -147,11 +180,7 @@ async def _fetch_ensemble() -> list[dict]:
         "timezone": "Africa/Accra",
     }
 
-    async with httpx.AsyncClient(timeout=UPSTREAM_TIMEOUT) as client:
-        response = await client.get(ENSEMBLE_URL, params=params)
-    response.raise_for_status()
-
-    payload = response.json()
+    payload = await open_meteo.get_json(ENSEMBLE_URL, params, timeout=UPSTREAM_TIMEOUT)
     # A single-coordinate request returns an object, a multi-coordinate one an
     # array. We always send 165; normalise defensively.
     return [payload] if isinstance(payload, dict) else payload
@@ -340,41 +369,134 @@ def last_error() -> str | None:
     return _LAST_ERROR
 
 
-async def refresh(force: bool = False) -> bool:
-    """Refresh the cache. Returns True when new data was stored.
+def _stamp_to_epoch(stamp: str) -> float:
+    return datetime.strptime(stamp, database.TIMESTAMP_FORMAT).replace(tzinfo=timezone.utc).timestamp()
 
-    The lock stops a burst of concurrent page loads on a cold container from each
-    firing their own upstream request.
+
+def store_snapshot(snapshot: dict[str, dict]) -> float:
+    """Write the field for every instance to read. Returns its stamp as epoch.
+
+    Deletes only *older* rows, never "every row but mine": two writers racing
+    could then each delete the other's, and the table would end up empty.
     """
-    global _CACHE, _CACHE_STAMP, _LAST_ERROR
+    stamp = database.utc_stamp()
+    with database.get_connection() as connection:
+        cursor = connection.execute(
+            "INSERT INTO s2s_snapshots (computed_at, payload) VALUES (?, ?)",
+            (stamp, json.dumps(snapshot, separators=(",", ":"))),
+        )
+        connection.execute("DELETE FROM s2s_snapshots WHERE id < ?", (cursor.lastrowid,))
+    return _stamp_to_epoch(stamp)
+
+
+def _read_latest() -> tuple[dict[str, dict], float] | None:
+    with database.get_connection() as connection:
+        row = connection.execute(
+            "SELECT computed_at, payload FROM s2s_snapshots ORDER BY id DESC LIMIT 1"
+        ).fetchone()
+    if row is None:
+        return None
+    row = dict(row)
+    return json.loads(row["payload"]), _stamp_to_epoch(row["computed_at"])
+
+
+async def load_snapshot(force: bool = False) -> None:
+    """Pick up the stored field if it is newer than the one this instance holds.
+
+    An empty instance reads on every request, which is how it notices the moment
+    the cron (or another instance) has written a row. A database failure keeps
+    whatever is already in memory rather than emptying the screen.
+    """
+    global _CACHE, _CACHE_STAMP, _LAST_LOAD
+
+    now = time.monotonic()
+    if not force and _CACHE and now - _LAST_LOAD < RELOAD_INTERVAL_SECONDS:
+        return
+    _LAST_LOAD = now
+
+    try:
+        stored = await asyncio.to_thread(_read_latest)
+    except Exception:
+        logger.exception("could not read the stored s2s snapshot")
+        return
+
+    if stored and stored[1] > _CACHE_STAMP:
+        _CACHE, _CACHE_STAMP = stored
+
+
+async def refresh(force: bool = False) -> bool:
+    """Fetch, reduce and store the field. Returns True when new data was stored.
+
+    Always awaited to completion inside `REFRESH_BUDGET_SECONDS`, never left
+    running behind a response, which is the whole difference from the version
+    that never finished on serverless. The lock stops a burst of concurrent page
+    loads on one instance from each firing their own upstream request.
+    """
+    global _CACHE, _CACHE_STAMP, _LAST_ERROR, _LAST_ATTEMPT
 
     if not force and not is_stale():
+        return False
+    # A failure is left standing for the cooldown, so a stale field is not
+    # refetched on every request against an upstream that just refused us.
+    if not force and _LAST_ERROR and time.time() - _LAST_ATTEMPT < RETRY_COOLDOWN_SECONDS:
         return False
 
     async with _REFRESH_LOCK:
         if not force and not is_stale():
             return False
+        _LAST_ATTEMPT = time.time()
         try:
-            snapshot = await compute_snapshot()
+            snapshot = await asyncio.wait_for(compute_snapshot(), REFRESH_BUDGET_SECONDS)
+        except asyncio.TimeoutError:
+            _LAST_ERROR = "upstream took too long"
+            logger.warning("s2s refresh failed: %s", _LAST_ERROR)
+            return False
         except Exception as exc:
-            _LAST_ERROR = f"{type(exc).__name__}: {exc}"
+            _LAST_ERROR = open_meteo.describe(exc)
             logger.warning("s2s refresh failed: %s", _LAST_ERROR)
             return False
 
+        try:
+            stamp = await asyncio.to_thread(store_snapshot, snapshot)
+        except Exception:
+            # The field is good; only sharing it failed. Serve it from this
+            # instance rather than throw eight seconds of work away.
+            logger.exception("could not store the s2s snapshot")
+            stamp = time.time()
+
         _CACHE = snapshot
-        _CACHE_STAMP = time.time()
+        _CACHE_STAMP = stamp
         _LAST_ERROR = None
         return True
 
 
-async def ensure_fresh() -> None:
-    """Refresh only when there is nothing to serve at all.
+def is_refreshing() -> bool:
+    """True while a refresh is running on this instance.
 
-    An expired cache is still served, and revalidated behind the response, so a
-    page load never waits on a 30-second upstream timeout.
+    Tied to the lock rather than to a task handle, so it cannot stick: the lock
+    is released when the awaited refresh ends, and that is bounded by
+    `REFRESH_BUDGET_SECONDS`. The old task-based flag stayed true forever once
+    the platform froze the task.
     """
-    if not _CACHE:
-        await refresh(force=True)
+    return _REFRESH_LOCK.locked()
+
+
+async def ensure_fresh() -> None:
+    """Make sure there is something to serve.
+
+    Normally that is only a database read. An empty table means nothing has ever
+    been stored (a fresh deploy, before the first cron run), and then this one
+    reader computes the field, inside the time limit, so that every reader after
+    it finds it stored.
+    """
+    await load_snapshot()
+    if _CACHE or is_refreshing():
+        return
+
+    if _LAST_ERROR and time.time() - _LAST_ATTEMPT < RETRY_COOLDOWN_SECONDS:
+        return
+
+    await refresh(force=True)
 
 
 def window_dates(issued: date | None = None) -> tuple[str, str]:
@@ -399,12 +521,25 @@ def metadata() -> dict:
         "hasClimatology": has_climatology(),
         "sources": DATA_SOURCES,
         "error": _LAST_ERROR,
+        # True while a refresh is actually running. Distinguishes "nothing yet,
+        # but it is on its way" from "it failed and will not arrive".
+        "computing": is_refreshing(),
+        # An empty response has two unrelated causes and the client has to tell
+        # them apart: nothing has been computed yet, or the fetch failed and is
+        # worth retrying. Without this the second reads as the first, and the
+        # farmer is told the outlook does not exist when the server simply could
+        # not reach the model.
+        "fetchFailed": _LAST_ERROR is not None,
     }
 
 
 def reset_cache() -> None:
-    """Drop everything. For tests only."""
-    global _CACHE, _CACHE_STAMP, _LAST_ERROR
+    """Drop everything, stored rows included. For tests only."""
+    global _CACHE, _CACHE_STAMP, _LAST_ERROR, _LAST_ATTEMPT, _LAST_LOAD
     _CACHE = {}
     _CACHE_STAMP = 0.0
     _LAST_ERROR = None
+    _LAST_ATTEMPT = 0.0
+    _LAST_LOAD = 0.0
+    with database.get_connection() as connection:
+        connection.execute("DELETE FROM s2s_snapshots")

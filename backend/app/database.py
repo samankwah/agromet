@@ -530,6 +530,20 @@ CREATE TABLE IF NOT EXISTS contact_messages (
 
 CREATE INDEX IF NOT EXISTS idx_contact_messages_unhandled
 ON contact_messages(handled_at, created_at);
+
+-- The latest weeks 2-to-4 outlook, as one JSON document.
+--
+-- Kept here rather than in process memory because on serverless there
+-- is no process to keep it in: an instance is frozen the moment its
+-- response is sent and every new one starts empty, so a field computed
+-- in memory was never there for the next reader. The daily cron writes
+-- a row; every instance reads the same one. Only the newest row is
+-- kept -- see `s2s_runtime.store_snapshot`.
+CREATE TABLE IF NOT EXISTS s2s_snapshots (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    computed_at TEXT NOT NULL,
+    payload TEXT NOT NULL
+);
 """
 
 

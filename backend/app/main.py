@@ -55,6 +55,10 @@ from .routers import (  # noqa: E402 -- see the comment above; this ordering is 
 
 @asynccontextmanager
 async def _lifespan(_: FastAPI):
+    # No cache warm-up here. The weeks 2-to-4 field used to be fetched in the
+    # background from this hook, and on serverless that task was frozen with the
+    # instance before it finished. The daily cron fills it instead; see
+    # `s2s_runtime`.
     yield
     # No-op on SQLite. On Postgres, releases the pool's connections instead
     # of leaking them across every `uvicorn --reload` and test run.

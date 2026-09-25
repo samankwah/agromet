@@ -32,7 +32,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-import httpx
+from . import open_meteo
 
 logger = logging.getLogger(__name__)
 
@@ -98,11 +98,7 @@ async def _fetch_field() -> dict:
         "cell_selection": "land",
     }
 
-    async with httpx.AsyncClient(timeout=UPSTREAM_TIMEOUT) as client:
-        response = await client.get(FORECAST_URL, params=params)
-    response.raise_for_status()
-
-    payload = response.json()
+    payload = await open_meteo.get_json(FORECAST_URL, params, timeout=UPSTREAM_TIMEOUT)
     # A single-coordinate request returns an object, a multi-coordinate one an
     # array. We always send hundreds; normalise defensively anyway.
     entries = [payload] if isinstance(payload, dict) else payload
@@ -167,7 +163,7 @@ async def refresh(force: bool = False) -> bool:
         try:
             snapshot = await _fetch_field()
         except Exception as exc:
-            _LAST_ERROR = f"{type(exc).__name__}: {exc}"
+            _LAST_ERROR = open_meteo.describe(exc)
             logger.warning("precipitation refresh failed: %s", _LAST_ERROR)
             return False
 

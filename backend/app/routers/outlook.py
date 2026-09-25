@@ -5,9 +5,11 @@ shape `hazards.py`'s endpoints also use."""
 
 from __future__ import annotations
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+import hmac
 
-from .. import precip_runtime, s2s_runtime
+from fastapi import APIRouter, BackgroundTasks, Header, HTTPException
+
+from .. import config, precip_runtime, s2s_runtime
 
 router = APIRouter(tags=["outlook"])
 
@@ -72,6 +74,30 @@ async def subseasonal_outlook(background: BackgroundTasks):
     }
 
 
+@router.get("/api/outlook/subseasonal/refresh")
+async def refresh_subseasonal(authorization: str | None = Header(default=None)):
+    """Compute and store the field. Called by the daily Vercel cron.
+
+    This is the one place the fetch is allowed to take its full eight seconds or
+    so, because nobody is waiting on it. It awaits the work rather than starting
+    it, since on serverless a function that has answered is frozen, and a fetch
+    left running behind the answer never finishes.
+
+    GET because that is what Vercel's cron sends.
+    """
+    secret = config.CRON_SECRET
+    if not secret:
+        raise HTTPException(status_code=503, detail="CRON_SECRET is not configured.")
+    if not hmac.compare_digest(authorization or "", f"Bearer {secret}"):
+        raise HTTPException(status_code=401, detail="Not authorised.")
+
+    if not await s2s_runtime.refresh(force=True):
+        raise HTTPException(status_code=502, detail=f"Refresh failed: {s2s_runtime.last_error()}")
+
+    snapshot, _ = s2s_runtime.cached_snapshot()
+    return {"success": True, "data": {"cells": len(snapshot), **s2s_runtime.metadata()}}
+
+
 @router.get("/api/precipitation/field")
 async def precipitation_field(background: BackgroundTasks):
     """Hourly rainfall over Ghana's land grid, for the rain map's forecast half.
@@ -131,8 +157,25 @@ async def subseasonal_series(lat: float, lng: float):
     field was fetched, so selecting a district costs no upstream call. Returns
     404 rather than an empty series when the place falls outside the grid, so a
     bad coordinate is a visible error rather than a flat chart.
+
+    An empty cache is *not* that error. ``cell_at`` returns None both for a point
+    off the grid and for a snapshot with nothing in it, and only the first is a
+    coverage problem -- reporting the second as one tells the farmer their town
+    is not covered when the truth is that the fetch failed.
     """
     await s2s_runtime.ensure_fresh()
+    snapshot, _ = s2s_runtime.cached_snapshot()
+    if not snapshot:
+        return {
+            "success": True,
+            "data": {
+                "rainfall": None,
+                "temperature": None,
+                "unavailable": True,
+                **s2s_runtime.metadata(),
+            },
+        }
+
     cell = s2s_runtime.cell_at(lat, lng)
     if not cell:
         raise HTTPException(status_code=404, detail="No subseasonal outlook covers that location.")
@@ -145,6 +188,7 @@ async def subseasonal_series(lat: float, lng: float):
             "lng": cell["lng"],
             "rainfall": (cell.get("rainfall") or {}).get("series"),
             "temperature": (cell.get("temperature") or {}).get("series"),
+            "unavailable": False,
             **s2s_runtime.metadata(),
         },
     }

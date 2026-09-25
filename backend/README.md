@@ -133,10 +133,20 @@ cp .env.example .env
 ### Running
 
 ```bash
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 API docs available at `http://localhost:8000/docs` (Swagger UI).
+
+`--host 0.0.0.0` is not optional if you are running the mobile app. Uvicorn binds
+`127.0.0.1` by default, and the Expo client does not use `localhost`: it builds
+its base URL from the host that served the bundle (see `getApiBaseUrl` in
+`mobile/src/shared/api/apiConfig.ts`), because `localhost` means the device
+itself on an emulator or a phone. So the app asks `http://<your-LAN-IP>:8000`,
+nothing is listening there, and every screen reports that the server could not be
+reached, including the weeks 2-to-4 outlook, which then looks like a data
+problem. Set `EXPO_PUBLIC_API_URL` in `mobile/.env` to point at a deployed
+backend instead.
 
 ### Testing
 

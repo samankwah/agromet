@@ -3,5 +3,11 @@
     "api/index.py": {
       "maxDuration": 60
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/outlook/subseasonal/refresh",
+      "schedule": "0 5 * * *"
+    }
+  ]
 }
