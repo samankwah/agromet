@@ -9,15 +9,25 @@ request time.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 
-from .. import config
+from .. import config, diagnosis_explain
 from ..database import decode_payload, encode_payload, get_connection, row_to_dict
 from ..deps import get_current_user, get_optional_user
 from ..diagnosis import SUPPORTED_IMAGE_ANALYSIS_TYPES, diagnose_crop_image, format_image_analysis_response
-from ..schemas import CropDiagnosisRequest, ImageAnalysisRequest
+from ..rate_limit import Limiter, client_ip, client_keys
+from ..schemas import CropDiagnosisRequest, DiagnosisExplanationRequest, ImageAnalysisRequest
 
 router = APIRouter(tags=["diagnosis"])
+
+# Its own counter, with chat's ceilings. An explanation is one paid model call
+# per photo, so a farmer diagnosing a field row by row should not use up their
+# chat quota, and neither should draw from the other's budget.
+explanation_limiter = Limiter(
+    limit=config.CHAT_RATE_LIMIT,
+    window_seconds=config.CHAT_RATE_WINDOW_SECONDS,
+    daily_limit=config.CHAT_DAILY_LIMIT,
+)
 
 
 def save_diagnosis_record(owner_id: int, diagnosis: dict, crop: str | None, region: str | None) -> int:
@@ -118,6 +128,31 @@ async def image_analysis(payload: ImageAnalysisRequest, authorization: str | Non
             "message": diagnosis["remedy"],
         }
     return format_image_analysis_response(diagnosis)
+
+
+@router.post("/api/diagnosis-explanation")
+async def diagnosis_explanation(
+    payload: DiagnosisExplanationRequest,
+    request: Request,
+    x_device_id: str | None = Header(default=None, alias="X-Device-Id"),
+):
+    """Plain-words advice for a diagnosis the phone's model already made.
+
+    No image travels here: the phone classified it. See `diagnosis_explain` for
+    why the model only rephrases the phone's reference advice. Every failure is
+    a 200 with `degraded: true` except the quota, which is a 429 for the same
+    reason chat's is.
+    """
+    keys = client_keys(x_device_id, client_ip(request.headers, request.client.host if request.client else None))
+    decision = explanation_limiter.check(keys)
+    if not decision.allowed:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=decision.message,
+            headers={"Retry-After": str(decision.retry_after)},
+        )
+    explanation_limiter.record(keys)
+    return await diagnosis_explain.explain_diagnosis(payload.model_dump())
 
 
 @router.get("/api/diagnosis-history")

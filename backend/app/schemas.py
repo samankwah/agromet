@@ -238,6 +238,27 @@ class ImageAnalysisRequest(BaseModel):
     context: dict = Field(default_factory=dict)
 
 
+class DiagnosisReference(BaseModel):
+    """The phone's bundled advice for the class its model picked. The length
+    caps bound what one unauthenticated request can put in front of a paid
+    model, the same job `MAX_CHAT_MESSAGE_CHARS` does for chat."""
+
+    summary: str = Field(default="", max_length=1500)
+    immediateActions: list[str] = Field(default_factory=list, max_length=8)
+    preventionGuidance: list[str] = Field(default_factory=list, max_length=8)
+
+
+class DiagnosisExplanationRequest(BaseModel):
+    crop: str = Field(default="cassava", max_length=60)
+    classId: str = Field(max_length=40)
+    likelyIssue: str = Field(max_length=120)
+    confidenceBand: Literal["low", "moderate", "high"]
+    symptoms: str | None = Field(default=None, max_length=600)
+    growthStage: str | None = Field(default=None, max_length=60)
+    region: str | None = Field(default=None, max_length=80)
+    reference: DiagnosisReference
+
+
 # ── Market schemas ──────────────────────────────────────────────────────────
 
 class CommodityResponse(BaseModel):
