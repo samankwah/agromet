@@ -522,8 +522,12 @@ async def diagnose_crop_image(
     identification_product: str | None = None
 
     if not crop_health_api_key:
+        # The farmer reads this sentence, so it says what they can do, not
+        # what is missing. `source="configuration"` and the log line are what
+        # tell an operator the key is unset.
+        logger.warning("Crop diagnosis asked for with no Kindwise crop.health API key configured.")
         return build_unavailable_diagnosis(
-            "Disease analysis is unavailable because the crop.health API key is not configured.",
+            "The online crop check is not available right now. Please try again later, or show the plant to an extension officer.",
             source="configuration",
         )
 
