@@ -476,7 +476,10 @@ async def _request_plant_id_identification(
     timeout: float = 45.0,
 ) -> dict[str, Any]:
     payload_image = image.split(",", 1)[1] if image.startswith("data:") and "," in image else image
-    body = {"images": [payload_image], "similar_images": False}
+    # No `similar_images` key. plant.id v3 only accepts it as `true`, and
+    # `false` is a 400 ("Unknown modifier"). Because this call is best effort,
+    # that 400 was swallowed on every request and crop identification never ran.
+    body = {"images": [payload_image]}
     params = {
         "details": PLANT_ID_DETAILS,
         "language": (language or "en").split(",")[0],
