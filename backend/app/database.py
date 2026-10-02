@@ -531,6 +531,26 @@ CREATE TABLE IF NOT EXISTS contact_messages (
 CREATE INDEX IF NOT EXISTS idx_contact_messages_unhandled
 ON contact_messages(handled_at, created_at);
 
+-- AI answers a farmer reported from the app, for someone to review.
+--
+-- Same workflow as contact_messages: `handled_at` unset means nobody
+-- has looked yet. `device_id` is the app's random guest id, kept so a
+-- run of reports from one phone can be read together. It is not tied
+-- to a name.
+CREATE TABLE IF NOT EXISTS ai_reports (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    kind TEXT NOT NULL,
+    reason TEXT NOT NULL,
+    text TEXT NOT NULL,
+    note TEXT,
+    device_id TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    handled_at TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_ai_reports_unhandled
+ON ai_reports(handled_at, created_at);
+
 -- The latest weeks 2-to-4 outlook, as one JSON document.
 --
 -- Kept here rather than in process memory because on serverless there

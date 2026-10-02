@@ -75,6 +75,10 @@ SECRET_KEY = os.getenv("SECRET_KEY", "change-me")
 # the scheduled refresh endpoints refuse any request without it. Unset, they
 # refuse everything, rather than letting anyone trigger an upstream fetch.
 CRON_SECRET = os.getenv("CRON_SECRET", "")
+# The address the privacy policy and terms give for questions and deletion
+# requests. Unset, the published text points people at the Contact screen
+# instead of printing an empty address.
+CONTACT_EMAIL = os.getenv("CONTACT_EMAIL", "").strip()
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "480"))
 FRONTEND_ORIGINS = [origin.strip() for origin in os.getenv("FRONTEND_ORIGINS", "http://localhost:3000,http://localhost:5173").split(",") if origin.strip()]
 LOCAL_DEV_ORIGIN_REGEX = r"https?://(localhost|127\.0\.0\.1)(:\d+)?$" if APP_ENV != "production" else None

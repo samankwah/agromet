@@ -179,6 +179,34 @@ class ContactMessageResponse(BaseModel):
     reference: int
 
 
+class AiReportRequest(BaseModel):
+    """A farmer flagging an answer from AgroMet AI or a diagnosis explanation.
+
+    The stores require apps that show generated text to let people report it
+    in place. The text is the answer as the farmer saw it, capped like a
+    contact message so a script cannot fill the table.
+    """
+
+    kind: Literal["chat", "diagnosis"]
+    text: str = Field(min_length=1, max_length=4000)
+    reason: Literal["wrong", "harmful", "offensive", "other"]
+    note: str | None = Field(default=None, max_length=500)
+
+    @field_validator("text")
+    @classmethod
+    def require_some_text(cls, value: str) -> str:
+        # Whitespace passes `min_length` and would be stored as an empty report.
+        if not value.strip():
+            raise ValueError("The reported answer is empty.")
+        return value
+
+
+class AiReportResponse(BaseModel):
+    success: bool
+    message: str
+    reference: int
+
+
 class LegalSection(BaseModel):
     title: str
     body: str

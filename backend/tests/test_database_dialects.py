@@ -49,6 +49,7 @@ def pg_connection():
             "diagnosis_records",
             "hazard_overrides",
             "contact_messages",
+            "ai_reports",
             "commodity_trends",
             "commodities",
             "market_centers",
