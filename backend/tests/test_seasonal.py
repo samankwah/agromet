@@ -53,7 +53,7 @@ def fake_climatology(monthly_rain: list[float] | None = None) -> dict:
     for name in GHANA_REGIONS:
         regions[name] = {
             "seasons": {"southern-major": season, "southern-minor": season, "northern": northern},
-            "windows": {key: dict(window) for key in ("MAM", "MJJ", "JAS")},
+            "windows": {key: dict(window) for key in ("MAM", "MJJ", "JAS", "SON")},
             "monthlyRain": monthly_rain or [],
         }
     return {"regions": regions}
@@ -95,7 +95,7 @@ class RuntimeTests(unittest.TestCase):
     def test_each_season_holds_only_its_own_sector_and_every_window_all_regions(self):
         snapshot = self.compute()
         self.assertEqual(set(snapshot["seasons"]), {"northern", "southern-major", "southern-minor"})
-        self.assertEqual(set(snapshot["windows"]), {"MAM", "MJJ", "JAS"})
+        self.assertEqual(set(snapshot["windows"]), {"MAM", "MJJ", "JAS", "SON"})
         northern = {cell["region"] for cell in snapshot["seasons"]["northern"]["cells"]}
         southern = {cell["region"] for cell in snapshot["seasons"]["southern-major"]["cells"]}
         self.assertEqual(northern, set(NORTHERN_REGIONS))
@@ -151,7 +151,7 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(current["source"], "gmet")
         self.assertEqual(current["issuedBy"], "Ghana Meteorological Agency")
         self.assertEqual(set(current["modelSeasons"]), {"northern", "southern-major", "southern-minor"})
-        self.assertEqual(set(current["modelWindows"]), {"MAM", "MJJ", "JAS"})
+        self.assertEqual(set(current["modelWindows"]), {"MAM", "MJJ", "JAS", "SON"})
 
     def test_an_expired_gmet_snapshot_falls_back_to_the_model(self):
         seasonal_runtime.store_snapshot(self.compute())
@@ -199,7 +199,7 @@ class RouteTests(unittest.TestCase):
         self.assertEqual(data["source"], "seas5")
         self.assertEqual(data["geography"], "region")
         self.assertEqual(len(data["seasons"]), 3)
-        self.assertEqual(len(data["windows"]), 3)
+        self.assertEqual(len(data["windows"]), 4)
         self.assertIn("ECMWF SEAS5", data["model"])
 
     def test_an_upstream_failure_is_reported_not_hidden(self):

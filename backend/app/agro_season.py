@@ -72,11 +72,12 @@ SEASONS: dict[str, Season] = {
     "northern": Season("northern", "Northern Single Season", "north", (4, 15), (7, 15), (9, 1), (11, 30)),
 }
 
-# The fixed three-month windows rainfall totals, rainy days and temperature use.
+# The fixed three-month windows (MAM, MJJ, JAS, SON) rainfall totals, rainy days and temperature use.
 WINDOWS: dict[str, tuple[int, str]] = {
     "MAM": (3, "March to May"),
     "MJJ": (5, "May to July"),
     "JAS": (7, "July to September"),
+    "SON": (9, "September to November"),
 }
 
 SEASON_VARIABLES = ("onset", "cessation", "earlyDrySpell", "lateDrySpell")

@@ -280,7 +280,7 @@ regions, worked out from each ensemble member's daily rain:
   Season**. Each season covers only the regions of its sector (five northern
   regions, eleven southern).
 - `windows`: rainfall total, number of rainy days and mean maximum temperature
-  for **MAM**, **MJJ** and **JAS**.
+  for **MAM**, **MJJ**, **JAS** and **SON**.
 
 Every variable carries the ensemble median (`value`, `display`), the ERA5 normal
 (`normal`, `normalDisplay`) and tercile probabilities. A season or window that

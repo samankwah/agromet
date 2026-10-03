@@ -681,7 +681,7 @@ needs no second code path:
     "MAM": {"key": "MAM", "label": "March to May", "year": 2027,
       "cells": [{"id": "Ashanti", ..., "rainfallTotal": {..., "dryWindow": false},
                  "rainyDays": {...}, "temperature": {...}}]},
-    "MJJ": {...}, "JAS": {...}
+    "MJJ": {...}, "JAS": {...}, "SON": {...}
   }
 }
 

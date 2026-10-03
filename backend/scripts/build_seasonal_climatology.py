@@ -16,7 +16,7 @@ the 33rd, 50th and 67th percentiles of:
   the region has (the south's major and minor seasons, or the north's single
   season), using the rules in ``app/agro_season.py``;
 * rainfall total, number of rainy days and mean daily maximum temperature over
-  the fixed MAM, MJJ and JAS windows.
+  the fixed MAM, MJJ, JAS and SON windows.
 
 **Why regions, not the grid.** The seasonal forecast is sampled at the sixteen
 region centres (see ``seasonal_runtime``), so the baseline must be too. Each
