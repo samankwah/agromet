@@ -162,6 +162,15 @@ class RuntimeTests(unittest.TestCase):
         asyncio.run(seasonal_runtime.load_snapshot(force=True))
         self.assertEqual(seasonal_runtime.current()["source"], "seas5")
 
+    def test_a_snapshot_stored_in_the_old_shape_counts_as_none(self):
+        old = {"source": "seas5", "runDate": "2026-10-03", "windows": [{"key": "2026-11", "cells": []}]}
+        seasonal_runtime.store_snapshot(old)
+
+        import asyncio
+        asyncio.run(seasonal_runtime.load_snapshot(force=True))
+        self.assertTrue(seasonal_runtime.needs_new_run(date(2026, 10, 4)))
+        self.assertEqual(seasonal_runtime.current()["seasons"], {})
+
     def test_a_new_run_is_needed_only_after_the_monthly_release(self):
         seasonal_runtime._SEAS5 = {"runDate": "2026-10-06"}
         self.assertFalse(seasonal_runtime.needs_new_run(date(2026, 10, 20)))

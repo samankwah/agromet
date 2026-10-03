@@ -454,6 +454,16 @@ def store_snapshot(snapshot: dict, *, source: str = "seas5", valid_from: str | N
     return _stamp_to_epoch(stamp)
 
 
+def _current_shape(payload: dict | None) -> bool:
+    """True for a snapshot in today's shape (``seasons`` and ``windows`` keyed).
+
+    Rows stored before the agro-climatic rework hold a list of rolling windows.
+    Serving one would blank the app's Seasonal tab until the next monthly run,
+    so an old row counts as no row and the first reader computes a new one.
+    """
+    return isinstance(payload, dict) and isinstance(payload.get("seasons"), dict) and isinstance(payload.get("windows"), dict)
+
+
 def _read_latest() -> tuple[dict | None, float, dict | None]:
     """The newest SEAS5 row, and the newest GMet row in force today."""
     now = database.utc_stamp()
@@ -470,8 +480,12 @@ def _read_latest() -> tuple[dict | None, float, dict | None]:
     seas5_payload, seas5_stamp = None, 0.0
     if seas5 is not None:
         row = dict(seas5)
-        seas5_payload, seas5_stamp = json.loads(row["payload"]), _stamp_to_epoch(row["computed_at"])
+        payload = json.loads(row["payload"])
+        if _current_shape(payload):
+            seas5_payload, seas5_stamp = payload, _stamp_to_epoch(row["computed_at"])
     gmet_payload = json.loads(dict(gmet)["payload"]) if gmet is not None else None
+    if not _current_shape(gmet_payload):
+        gmet_payload = None
     return seas5_payload, seas5_stamp, gmet_payload
 
 
