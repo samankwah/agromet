@@ -79,6 +79,14 @@ CRON_SECRET = os.getenv("CRON_SECRET", "")
 # requests. Unset, the published text points people at the Contact screen
 # instead of printing an empty address.
 CONTACT_EMAIL = os.getenv("CONTACT_EMAIL", "").strip()
+# Who may publish: hazard bulletins, advisory and calendar uploads, and the
+# seasonal ingest. Comma-separated, compared case-insensitively. Empty means
+# nobody, on purpose: registration is open, so "any signed-in account" would
+# mean anyone who signed up.
+ADMIN_EMAILS = {email.strip().lower() for email in os.getenv("ADMIN_EMAILS", "").split(",") if email.strip()}
+# A SAS URL for GMet's downscaled seasonal forecast in Azure Storage. Unset
+# until GMet publishes the feed (see `seasonal_runtime.ingest_gmet`).
+AZURE_SEASONAL_URL = os.getenv("AZURE_SEASONAL_URL", "").strip()
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "480"))
 FRONTEND_ORIGINS = [origin.strip() for origin in os.getenv("FRONTEND_ORIGINS", "http://localhost:3000,http://localhost:5173").split(",") if origin.strip()]
 LOCAL_DEV_ORIGIN_REGEX = r"https?://(localhost|127\.0\.0\.1)(:\d+)?$" if APP_ENV != "production" else None

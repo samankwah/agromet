@@ -129,6 +129,10 @@ cp .env.example .env
 | `OPENAI_API_KEY` | OpenAI API key (chatbot) |
 | `KINDWISE_API_KEY` | Kindwise crop health API key |
 | `AMBEE_API_KEY` | Ambee weather data API key |
+| `CRON_SECRET` | Bearer secret the Vercel crons send to the outlook refresh routes |
+| `ADMIN_EMAILS` | Comma-separated emails allowed to publish (hazard bulletins, advisory and calendar uploads, seasonal ingest). **Empty means nobody**: registration is open, so a signed-in account alone proves nothing. List every web dashboard staff account here before deploying. |
+| `CONTACT_EMAIL` | Shown in the privacy policy and terms as the contact address |
+| `AZURE_SEASONAL_URL` | SAS URL for GMet's downscaled seasonal forecast. Unset until GMet publishes the feed |
 
 ### Running
 
@@ -201,7 +205,7 @@ app/
     dashboard.py                    # Aggregate counts for the admin dashboard
     market.py                        # Commodity prices, trends, market centers
     hazards.py                        # Flood/drought summary, regions, overrides
-    outlook.py                        # Subseasonal outlook + precipitation field
+    outlook.py                        # Subseasonal and seasonal outlooks + precipitation field
     health.py                          # Liveness and integration-status
 tests/
   conftest.py               # Isolates the suite from a developer's real database
@@ -265,6 +269,31 @@ answer.
 With no `OPENAI_API_KEY` the route still answers, with a plainly worded fallback
 and `degraded: true`; `degradedReason` says which failure it was (`no_key`,
 `timeout`, `upstream_error`, `empty_output`).
+
+### The seasonal outlook
+
+`GET /api/outlook/seasonal` serves the next three three-month seasons (for
+example Nov to Jan, Dec to Feb, Jan to Mar) for Ghana's sixteen regions: tercile
+probabilities and the ensemble average for rainfall and temperature.
+
+- **Source:** ECMWF SEAS5 (51 members) through Open-Meteo's seasonal API,
+  fetched by a daily cron (`/api/outlook/seasonal/refresh`, `CRON_SECRET`) that
+  only recomputes after ECMWF's monthly release on the 5th. Stored in
+  `seasonal_snapshots`.
+- **Baseline:** ERA5 1995-2024 per region and window, baked into
+  `app/data/seasonal_climatology.json` by
+  `python -m backend.scripts.build_seasonal_climatology` from the cache the
+  subseasonal bake already downloaded. A few archive cells change abruptly in
+  2017 (a data source change, not climate); the bake skips them.
+- **Method:** the model's bias is removed by linear scaling against its own
+  monthly anomalies, then probabilities are blended 60/40 with climatology
+  because raw seasonal ensembles are overconfident. Windows with under 30 mm a
+  month of normal rain are flagged `dryWindow`. See `app/seasonal.py`.
+- **GMet's forecast:** when a `gmet` snapshot is in force it is served first,
+  with the SEAS5 reading alongside as `modelWindows`. The Azure ingest is a stub
+  (`seasonal_runtime.ingest_gmet`, admin-only `POST /api/outlook/seasonal/ingest`)
+  until the feed format is known; the payload it must produce is written out in
+  `seasonal_runtime.GMET_PAYLOAD_CONTRACT`.
 
 ## Related
 

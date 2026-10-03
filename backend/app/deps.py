@@ -38,6 +38,18 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
     return user
 
 
+def require_admin(user: dict = Depends(get_current_user)) -> dict:
+    """A signed-in user who is also on the ``ADMIN_EMAILS`` allowlist.
+
+    Registration is open, so being signed in proves only that someone made an
+    account. Publishing (hazard bulletins, advisory and calendar uploads, the
+    seasonal ingest) needs this instead. An empty allowlist admits nobody.
+    """
+    if (user.get("email") or "").strip().lower() not in config.ADMIN_EMAILS:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only AgroMet administrators can do this.")
+    return user
+
+
 def serialize_user(user: dict) -> UserResponse:
     return UserResponse(
         id=user["id"],

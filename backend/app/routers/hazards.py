@@ -18,7 +18,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 
 from .. import hazard_runtime
 from ..database import get_connection, utc_stamp
-from ..deps import get_current_user
+from ..deps import require_admin
 from ..domain import json_dumps, parse_json_list
 from ..hazards import (
     BAND_ORDER,
@@ -288,7 +288,7 @@ def list_hazard_overrides(includeExpired: bool = False):
 @router.post("/api/hazards/overrides")
 def create_hazard_override(
     payload: HazardOverrideRequest,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_admin),
 ):
     resolved = resolve_region(payload.region)
     if not resolved:
@@ -331,7 +331,7 @@ def create_hazard_override(
 
 
 @router.delete("/api/hazards/overrides/{override_id}")
-def delete_hazard_override(override_id: int, current_user: dict = Depends(get_current_user)):
+def delete_hazard_override(override_id: int, current_user: dict = Depends(require_admin)):
     with get_connection() as connection:
         row = connection.execute(
             "SELECT id FROM hazard_overrides WHERE id = ?", (override_id,)
@@ -344,7 +344,7 @@ def delete_hazard_override(override_id: int, current_user: dict = Depends(get_cu
 
 
 @router.post("/api/hazards/refresh")
-async def refresh_hazards(current_user: dict = Depends(get_current_user)):
+async def refresh_hazards(current_user: dict = Depends(require_admin)):
     updated = await hazard_runtime.refresh(force=True)
     return {
         "success": updated,

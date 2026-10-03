@@ -6,8 +6,9 @@ an older name)."""
 
 from __future__ import annotations
 
-from fastapi import APIRouter, File, Form, HTTPException, Query, Request, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile, status
 
+from ..deps import require_admin
 from ..database import encode_payload, get_connection, row_to_dict
 from ..domain import serialize_calendar
 from ..records import fetch_calendar_activities, insert_calendar_from_parsed_payload, insert_calendar_from_record
@@ -53,7 +54,7 @@ async def _preview_calendar_upload(
     return {"success": True, "data": preview}
 
 
-@router.post("/api/crop-calendars/preview")
+@router.post("/api/crop-calendars/preview", dependencies=[Depends(require_admin)])
 async def preview_crop_calendar(
     file: UploadFile = File(...),
     minorFile: UploadFile | None = File(default=None),
@@ -80,7 +81,7 @@ async def preview_crop_calendar(
     )
 
 
-@router.post("/api/poultry-calendars/preview")
+@router.post("/api/poultry-calendars/preview", dependencies=[Depends(require_admin)])
 async def preview_poultry_calendar(
     file: UploadFile = File(...),
     region: str = Form(...),
@@ -104,7 +105,7 @@ async def preview_poultry_calendar(
     )
 
 
-@router.post("/api/crop-calendars/commit")
+@router.post("/api/crop-calendars/commit", dependencies=[Depends(require_admin)])
 async def commit_crop_calendar(parseToken: str = Form(...)):
     preview_payload = get_preview_payload(parseToken)
     if not preview_payload or preview_payload.get("entityType") != "crop-calendar":
@@ -124,7 +125,7 @@ async def commit_crop_calendar(parseToken: str = Form(...)):
     return {"success": True, "data": calendar, "message": "Crop calendar committed successfully."}
 
 
-@router.post("/api/poultry-calendars/commit")
+@router.post("/api/poultry-calendars/commit", dependencies=[Depends(require_admin)])
 async def commit_poultry_calendar(parseToken: str = Form(...)):
     preview_payload = get_preview_payload(parseToken)
     if not preview_payload or preview_payload.get("entityType") != "poultry-calendar":
@@ -247,7 +248,7 @@ def get_enhanced_calendar(calendar_id: int):
     return {"success": True, "data": calendar}
 
 
-@router.delete("/api/enhanced-calendars/{calendar_id}")
+@router.delete("/api/enhanced-calendars/{calendar_id}", dependencies=[Depends(require_admin)])
 def delete_enhanced_calendar(calendar_id: int):
     with get_connection() as connection:
         row = connection.execute("SELECT source_record_id FROM calendars WHERE id = ?", (calendar_id,)).fetchone()
@@ -260,7 +261,7 @@ def delete_enhanced_calendar(calendar_id: int):
     return {"success": True, "message": "Calendar deleted successfully."}
 
 
-@router.post("/api/crop-calendars/create")
+@router.post("/api/crop-calendars/create", dependencies=[Depends(require_admin)])
 async def create_crop_calendar(request: Request):
     payload = dict(await request.json())
     payload.setdefault("title", payload.get("crop") or "Crop Calendar")

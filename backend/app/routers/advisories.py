@@ -3,8 +3,9 @@ spreadsheet flow, and the read/delete endpoints the dashboards use."""
 
 from __future__ import annotations
 
-from fastapi import APIRouter, File, Form, HTTPException, Query, Request, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile, status
 
+from ..deps import require_admin
 from ..database import encode_payload, get_connection, row_to_dict
 from ..domain import json_dumps, parse_json_list, serialize_advisory
 from ..records import advisory_list_item, insert_weekly_advisory
@@ -13,7 +14,7 @@ from ..spreadsheet_parser import build_advisory_preview_payload, build_committed
 router = APIRouter(prefix="/api/weekly-advisories", tags=["advisories"])
 
 
-@router.post("/upload")
+@router.post("/upload", dependencies=[Depends(require_admin)])
 async def upload_weekly_advisory(request: Request, file: UploadFile | None = File(default=None)):
     payload = {}
     if file:
@@ -61,7 +62,7 @@ async def _preview_advisory_upload(file: UploadFile, metadata: dict, advisory_ty
     return {"success": True, "data": preview}
 
 
-@router.post("/preview")
+@router.post("/preview", dependencies=[Depends(require_admin)])
 async def preview_weekly_advisory(
     file: UploadFile = File(...),
     regionCode: str = Form(...),
@@ -89,7 +90,7 @@ async def preview_weekly_advisory(
 poultry_router = APIRouter(tags=["advisories"])
 
 
-@poultry_router.post("/api/poultry-advisories/preview")
+@poultry_router.post("/api/poultry-advisories/preview", dependencies=[Depends(require_admin)])
 async def preview_poultry_advisory(
     file: UploadFile = File(...),
     regionCode: str = Form(...),
@@ -113,7 +114,7 @@ async def preview_poultry_advisory(
     )
 
 
-@router.post("/commit")
+@router.post("/commit", dependencies=[Depends(require_admin)])
 async def commit_weekly_advisory(
     parseToken: str = Form(...),
     selectedSheets: str = Form(default="[]"),
@@ -146,7 +147,7 @@ async def commit_weekly_advisory(
     return {"success": True, "data": advisory, "message": "Agromet advisory committed successfully."}
 
 
-@poultry_router.post("/api/poultry-advisories/commit")
+@poultry_router.post("/api/poultry-advisories/commit", dependencies=[Depends(require_admin)])
 async def commit_poultry_advisory(
     parseToken: str = Form(...),
     selectedSheets: str = Form(default="[]"),
@@ -212,7 +213,7 @@ def list_weekly_advisories(
     return {"success": True, "data": data, "total": len(data)}
 
 
-@router.delete("/{advisory_id}")
+@router.delete("/{advisory_id}", dependencies=[Depends(require_admin)])
 def delete_weekly_advisory(advisory_id: int):
     with get_connection() as connection:
         row = connection.execute("SELECT source_record_id FROM weekly_advisories WHERE id = ?", (advisory_id,)).fetchone()

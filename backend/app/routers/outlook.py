@@ -7,9 +7,10 @@ from __future__ import annotations
 
 import hmac
 
-from fastapi import APIRouter, BackgroundTasks, Header, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException
 
-from .. import config, precip_runtime, s2s_runtime
+from .. import config, precip_runtime, s2s_runtime, seasonal_runtime
+from ..deps import require_admin
 
 router = APIRouter(tags=["outlook"])
 
@@ -192,3 +193,60 @@ async def subseasonal_series(lat: float, lng: float):
             **s2s_runtime.metadata(),
         },
     }
+
+
+@router.get("/api/outlook/seasonal")
+async def seasonal_outlook(background: BackgroundTasks):
+    """The seasonal outlook for the next three three-month windows, by region.
+
+    GMet's own forecast when one is in force, otherwise ECMWF SEAS5 adjusted to
+    local climate (see `seasonal_runtime`). Same serve-then-revalidate shape as
+    the subseasonal endpoint: a stored snapshot is returned at once, and a
+    missed monthly run is refreshed behind the response.
+    """
+    await seasonal_runtime.ensure_fresh()
+    outlook = seasonal_runtime.current()
+    if not outlook["windows"]:
+        return {"success": True, "data": {**outlook, "unavailable": True, **seasonal_runtime.metadata()}}
+
+    if seasonal_runtime.needs_new_run():
+        background.add_task(seasonal_runtime.refresh, False)
+    return {"success": True, "data": {**outlook, "unavailable": False, **seasonal_runtime.metadata()}}
+
+
+@router.get("/api/outlook/seasonal/refresh")
+async def refresh_seasonal(authorization: str | None = Header(default=None)):
+    """Recompute SEAS5 when ECMWF has published a new run. Daily Vercel cron.
+
+    Cheap on most days: it returns without calling upstream unless the stored
+    run is from before this month's release.
+    """
+    secret = config.CRON_SECRET
+    if not secret:
+        raise HTTPException(status_code=503, detail="CRON_SECRET is not configured.")
+    if not hmac.compare_digest(authorization or "", f"Bearer {secret}"):
+        raise HTTPException(status_code=401, detail="Not authorised.")
+
+    await seasonal_runtime.load_snapshot(force=True)
+    if not seasonal_runtime.needs_new_run():
+        return {"success": True, "data": {"refreshed": False, **seasonal_runtime.metadata()}}
+    if not await seasonal_runtime.refresh(force=True):
+        raise HTTPException(status_code=502, detail=f"Refresh failed: {seasonal_runtime.last_error()}")
+    return {"success": True, "data": {"refreshed": True, **seasonal_runtime.metadata()}}
+
+
+@router.post("/api/outlook/seasonal/ingest")
+async def ingest_gmet_seasonal(_admin: dict = Depends(require_admin)):
+    """Pull GMet's downscaled seasonal forecast from Azure Storage. Admin only.
+
+    The feed does not exist yet, so this reports that plainly instead of
+    pretending: 503 until ``AZURE_SEASONAL_URL`` is set, 501 until the format is
+    known and ``seasonal_runtime.ingest_gmet`` is written.
+    """
+    try:
+        result = await seasonal_runtime.ingest_gmet()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except NotImplementedError as exc:
+        raise HTTPException(status_code=501, detail=str(exc)) from exc
+    return {"success": True, "data": result}

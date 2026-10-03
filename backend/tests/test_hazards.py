@@ -275,8 +275,15 @@ class EndpointTests(unittest.TestCase):
         from backend.app.main import app
 
         self.client = TestClient(app)
+        # Publishing is limited to the ADMIN_EMAILS allowlist; the account these
+        # tests sign in with is on it, and one test checks an outsider is not.
+        from backend.app import config
+
+        self._admins = patch.object(config, "ADMIN_EMAILS", {"gmet@example.com"})
+        self._admins.start()
 
     def tearDown(self):
+        self._admins.stop()
         try:
             os.remove(self.db_path)
         except OSError:
@@ -384,6 +391,16 @@ class EndpointTests(unittest.TestCase):
         )
         self.assertIn(response.status_code, (401, 403))
 
+    def test_override_is_refused_for_an_account_not_on_the_allowlist(self):
+        # Registration is open, so being signed in must not be enough to publish.
+        token = self._register_and_login(email="farmer@example.com")
+        response = self.client.post(
+            "/api/hazards/overrides",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"region": "Northern", "hazard": "flood", "band": "extreme"},
+        )
+        self.assertEqual(response.status_code, 403)
+
     def test_override_rejects_an_unknown_region(self):
         token = self._register_and_login()
         response = self.client.post(
@@ -398,14 +415,14 @@ class EndpointTests(unittest.TestCase):
             response = self.client.get("/api/hazards/regions/Atlantis")
         self.assertEqual(response.status_code, 404)
 
-    def _register_and_login(self) -> str:
+    def _register_and_login(self, email: str = "gmet@example.com") -> str:
         self.client.post(
             "/api/v1/auth/register",
-            json={"email": "gmet@example.com", "password": "secret123", "name": "GMet"},
+            json={"email": email, "password": "secret123", "name": "GMet"},
         )
         response = self.client.post(
             "/api/v1/auth/login",
-            data={"username": "gmet@example.com", "password": "secret123"},
+            data={"username": email, "password": "secret123"},
         )
         self.assertEqual(response.status_code, 200, response.text)
         return response.json()["access_token"]

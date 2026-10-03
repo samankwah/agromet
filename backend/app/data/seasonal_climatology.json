@@ -1,0 +1,1863 @@
+{
+ "baseline": "ERA5 1995-2024",
+ "windowMonths": 3,
+ "builtAt": "2026-10-03",
+ "regions": {
+  "Greater Accra": {
+   "lat": 5.6483,
+   "lng": -0.1106,
+   "rainCell": "5.50,0.00",
+   "tempCell": "6.00,0.00",
+   "windows": {
+    "01": {
+     "n": 30,
+     "rainP33": 54.8,
+     "rainP67": 72.5,
+     "rainNormal": 67.8,
+     "tempP33": 33.98,
+     "tempP67": 34.44,
+     "tempNormal": 34.25
+    },
+    "02": {
+     "n": 30,
+     "rainP33": 88.8,
+     "rainP67": 116.7,
+     "rainNormal": 105.0,
+     "tempP33": 33.71,
+     "tempP67": 34.2,
+     "tempNormal": 34.02
+    },
+    "03": {
+     "n": 30,
+     "rainP33": 167.0,
+     "rainP67": 206.8,
+     "rainNormal": 186.7,
+     "tempP33": 32.86,
+     "tempP67": 33.28,
+     "tempNormal": 33.06
+    },
+    "04": {
+     "n": 30,
+     "rainP33": 264.9,
+     "rainP67": 326.0,
+     "rainNormal": 298.4,
+     "tempP33": 31.21,
+     "tempP67": 31.63,
+     "tempNormal": 31.45
+    },
+    "05": {
+     "n": 30,
+     "rainP33": 256.9,
+     "rainP67": 345.2,
+     "rainNormal": 298.5,
+     "tempP33": 29.62,
+     "tempP67": 29.87,
+     "tempNormal": 29.81
+    },
+    "06": {
+     "n": 30,
+     "rainP33": 183.0,
+     "rainP67": 283.8,
+     "rainNormal": 234.0,
+     "tempP33": 28.45,
+     "tempP67": 28.86,
+     "tempNormal": 28.76
+    },
+    "07": {
+     "n": 30,
+     "rainP33": 118.5,
+     "rainP67": 164.4,
+     "rainNormal": 139.6,
+     "tempP33": 28.62,
+     "tempP67": 28.89,
+     "tempNormal": 28.77
+    },
+    "08": {
+     "n": 30,
+     "rainP33": 115.2,
+     "rainP67": 161.2,
+     "rainNormal": 148.6,
+     "tempP33": 29.23,
+     "tempP67": 29.44,
+     "tempNormal": 29.35
+    },
+    "09": {
+     "n": 30,
+     "rainP33": 120.1,
+     "rainP67": 154.6,
+     "rainNormal": 146.8,
+     "tempP33": 30.22,
+     "tempP67": 30.43,
+     "tempNormal": 30.33
+    },
+    "10": {
+     "n": 30,
+     "rainP33": 105.6,
+     "rainP67": 131.1,
+     "rainNormal": 115.5,
+     "tempP33": 31.35,
+     "tempP67": 31.64,
+     "tempNormal": 31.58
+    },
+    "11": {
+     "n": 29,
+     "rainP33": 60.5,
+     "rainP67": 75.6,
+     "rainNormal": 70.2,
+     "tempP33": 32.55,
+     "tempP67": 33.03,
+     "tempNormal": 32.85
+    },
+    "12": {
+     "n": 29,
+     "rainP33": 44.7,
+     "rainP67": 57.0,
+     "rainNormal": 54.1,
+     "tempP33": 33.54,
+     "tempP67": 34.07,
+     "tempNormal": 33.87
+    }
+   }
+  },
+  "Central": {
+   "lat": 5.5194,
+   "lng": -1.1164,
+   "rainCell": "5.50,-1.00",
+   "tempCell": "5.50,-1.00",
+   "windows": {
+    "01": {
+     "n": 30,
+     "rainP33": 160.3,
+     "rainP67": 205.8,
+     "rainNormal": 190.8,
+     "tempP33": 31.58,
+     "tempP67": 32.41,
+     "tempNormal": 32.08
+    },
+    "02": {
+     "n": 30,
+     "rainP33": 234.6,
+     "rainP67": 298.8,
+     "rainNormal": 265.5,
+     "tempP33": 31.46,
+     "tempP67": 32.18,
+     "tempNormal": 31.94
+    },
+    "03": {
+     "n": 30,
+     "rainP33": 373.4,
+     "rainP67": 442.0,
+     "rainNormal": 407.9,
+     "tempP33": 30.67,
+     "tempP67": 31.25,
+     "tempNormal": 31.13
+    },
+    "04": {
+     "n": 30,
+     "rainP33": 510.7,
+     "rainP67": 594.1,
+     "rainNormal": 563.4,
+     "tempP33": 29.41,
+     "tempP67": 29.78,
+     "tempNormal": 29.8
+    },
+    "05": {
+     "n": 30,
+     "rainP33": 504.1,
+     "rainP67": 590.8,
+     "rainNormal": 580.2,
+     "tempP33": 28.08,
+     "tempP67": 28.45,
+     "tempNormal": 28.44
+    },
+    "06": {
+     "n": 30,
+     "rainP33": 410.2,
+     "rainP67": 523.3,
+     "rainNormal": 473.9,
+     "tempP33": 27.19,
+     "tempP67": 27.69,
+     "tempNormal": 27.57
+    },
+    "07": {
+     "n": 30,
+     "rainP33": 331.0,
+     "rainP67": 432.3,
+     "rainNormal": 386.6,
+     "tempP33": 27.35,
+     "tempP67": 27.71,
+     "tempNormal": 27.62
+    },
+    "08": {
+     "n": 30,
+     "rainP33": 379.1,
+     "rainP67": 488.7,
+     "rainNormal": 435.3,
+     "tempP33": 27.9,
+     "tempP67": 28.26,
+     "tempNormal": 28.17
+    },
+    "09": {
+     "n": 30,
+     "rainP33": 409.3,
+     "rainP67": 473.1,
+     "rainNormal": 450.6,
+     "tempP33": 28.74,
+     "tempP67": 29.05,
+     "tempNormal": 28.99
+    },
+    "10": {
+     "n": 30,
+     "rainP33": 316.5,
+     "rainP67": 364.4,
+     "rainNormal": 346.3,
+     "tempP33": 29.42,
+     "tempP67": 29.84,
+     "tempNormal": 29.83
+    },
+    "11": {
+     "n": 29,
+     "rainP33": 183.6,
+     "rainP67": 221.3,
+     "rainNormal": 209.6,
+     "tempP33": 30.31,
+     "tempP67": 30.69,
+     "tempNormal": 30.72
+    },
+    "12": {
+     "n": 29,
+     "rainP33": 131.3,
+     "rainP67": 172.4,
+     "rainNormal": 156.5,
+     "tempP33": 30.94,
+     "tempP67": 31.83,
+     "tempNormal": 31.58
+    }
+   }
+  },
+  "Western": {
+   "lat": 5.23,
+   "lng": -2.0424,
+   "rainCell": "5.00,-2.00",
+   "tempCell": "5.00,-2.00",
+   "windows": {
+    "01": {
+     "n": 30,
+     "rainP33": 229.1,
+     "rainP67": 289.0,
+     "rainNormal": 264.6,
+     "tempP33": 30.25,
+     "tempP67": 30.81,
+     "tempNormal": 30.69
+    },
+    "02": {
+     "n": 30,
+     "rainP33": 294.4,
+     "rainP67": 350.9,
+     "rainNormal": 330.9,
+     "tempP33": 30.39,
+     "tempP67": 30.79,
+     "tempNormal": 30.69
+    },
+    "03": {
+     "n": 30,
+     "rainP33": 447.5,
+     "rainP67": 510.4,
+     "rainNormal": 484.6,
+     "tempP33": 29.93,
+     "tempP67": 30.24,
+     "tempNormal": 30.14
+    },
+    "04": {
+     "n": 30,
+     "rainP33": 624.9,
+     "rainP67": 705.6,
+     "rainNormal": 676.4,
+     "tempP33": 28.91,
+     "tempP67": 29.2,
+     "tempNormal": 29.1
+    },
+    "05": {
+     "n": 30,
+     "rainP33": 621.8,
+     "rainP67": 720.0,
+     "rainNormal": 677.1,
+     "tempP33": 27.83,
+     "tempP67": 27.99,
+     "tempNormal": 27.98
+    },
+    "06": {
+     "n": 30,
+     "rainP33": 449.1,
+     "rainP67": 572.5,
+     "rainNormal": 539.3,
+     "tempP33": 27.01,
+     "tempP67": 27.43,
+     "tempNormal": 27.21
+    },
+    "07": {
+     "n": 30,
+     "rainP33": 313.4,
+     "rainP67": 450.9,
+     "rainNormal": 390.4,
+     "tempP33": 27.07,
+     "tempP67": 27.34,
+     "tempNormal": 27.21
+    },
+    "08": {
+     "n": 30,
+     "rainP33": 389.3,
+     "rainP67": 472.2,
+     "rainNormal": 435.7,
+     "tempP33": 27.56,
+     "tempP67": 27.8,
+     "tempNormal": 27.7
+    },
+    "09": {
+     "n": 30,
+     "rainP33": 428.1,
+     "rainP67": 525.7,
+     "rainNormal": 483.6,
+     "tempP33": 28.39,
+     "tempP67": 28.63,
+     "tempNormal": 28.53
+    },
+    "10": {
+     "n": 30,
+     "rainP33": 388.9,
+     "rainP67": 445.9,
+     "rainNormal": 422.2,
+     "tempP33": 29.04,
+     "tempP67": 29.37,
+     "tempNormal": 29.29
+    },
+    "11": {
+     "n": 29,
+     "rainP33": 293.0,
+     "rainP67": 327.9,
+     "rainNormal": 313.4,
+     "tempP33": 29.57,
+     "tempP67": 30.01,
+     "tempNormal": 29.92
+    },
+    "12": {
+     "n": 29,
+     "rainP33": 221.3,
+     "rainP67": 281.6,
+     "rainNormal": 248.8,
+     "tempP33": 29.9,
+     "tempP67": 30.42,
+     "tempNormal": 30.38
+    }
+   }
+  },
+  "Western North": {
+   "lat": 6.2767,
+   "lng": -2.7854,
+   "rainCell": "6.00,-3.00",
+   "tempCell": "6.50,-3.00",
+   "windows": {
+    "01": {
+     "n": 30,
+     "rainP33": 206.3,
+     "rainP67": 233.6,
+     "rainNormal": 221.9,
+     "tempP33": 33.11,
+     "tempP67": 33.69,
+     "tempNormal": 33.4
+    },
+    "02": {
+     "n": 30,
+     "rainP33": 312.2,
+     "rainP67": 346.3,
+     "rainNormal": 327.8,
+     "tempP33": 32.64,
+     "tempP67": 33.41,
+     "tempNormal": 33.04
+    },
+    "03": {
+     "n": 30,
+     "rainP33": 415.2,
+     "rainP67": 456.7,
+     "rainNormal": 432.9,
+     "tempP33": 31.74,
+     "tempP67": 32.37,
+     "tempNormal": 32.08
+    },
+    "04": {
+     "n": 30,
+     "rainP33": 472.5,
+     "rainP67": 508.8,
+     "rainNormal": 502.3,
+     "tempP33": 30.63,
+     "tempP67": 30.98,
+     "tempNormal": 30.81
+    },
+    "05": {
+     "n": 30,
+     "rainP33": 449.3,
+     "rainP67": 518.0,
+     "rainNormal": 498.8,
+     "tempP33": 29.28,
+     "tempP67": 29.7,
+     "tempNormal": 29.53
+    },
+    "06": {
+     "n": 30,
+     "rainP33": 381.3,
+     "rainP67": 488.4,
+     "rainNormal": 433.9,
+     "tempP33": 28.35,
+     "tempP67": 28.8,
+     "tempNormal": 28.58
+    },
+    "07": {
+     "n": 30,
+     "rainP33": 323.0,
+     "rainP67": 430.6,
+     "rainNormal": 385.4,
+     "tempP33": 28.26,
+     "tempP67": 28.59,
+     "tempNormal": 28.48
+    },
+    "08": {
+     "n": 30,
+     "rainP33": 368.3,
+     "rainP67": 469.4,
+     "rainNormal": 427.1,
+     "tempP33": 28.65,
+     "tempP67": 28.93,
+     "tempNormal": 28.83
+    },
+    "09": {
+     "n": 30,
+     "rainP33": 376.4,
+     "rainP67": 425.3,
+     "rainNormal": 414.6,
+     "tempP33": 29.26,
+     "tempP67": 29.53,
+     "tempNormal": 29.47
+    },
+    "10": {
+     "n": 30,
+     "rainP33": 290.2,
+     "rainP67": 326.9,
+     "rainNormal": 308.8,
+     "tempP33": 30.14,
+     "tempP67": 30.47,
+     "tempNormal": 30.39
+    },
+    "11": {
+     "n": 29,
+     "rainP33": 148.5,
+     "rainP67": 177.8,
+     "rainNormal": 167.9,
+     "tempP33": 31.44,
+     "tempP67": 31.9,
+     "tempNormal": 31.62
+    },
+    "12": {
+     "n": 29,
+     "rainP33": 115.5,
+     "rainP67": 158.7,
+     "rainNormal": 139.9,
+     "tempP33": 32.47,
+     "tempP67": 33.37,
+     "tempNormal": 32.88
+    }
+   }
+  },
+  "Ashanti": {
+   "lat": 6.6924,
+   "lng": -1.5829,
+   "rainCell": "6.50,-1.50",
+   "tempCell": "6.50,-1.50",
+   "windows": {
+    "01": {
+     "n": 30,
+     "rainP33": 153.2,
+     "rainP67": 189.4,
+     "rainNormal": 171.3,
+     "tempP33": 32.62,
+     "tempP67": 33.38,
+     "tempNormal": 33.01
+    },
+    "02": {
+     "n": 30,
+     "rainP33": 239.9,
+     "rainP67": 294.5,
+     "rainNormal": 265.6,
+     "tempP33": 32.32,
+     "tempP67": 32.99,
+     "tempNormal": 32.69
+    },
+    "03": {
+     "n": 30,
+     "rainP33": 307.2,
+     "rainP67": 393.8,
+     "rainNormal": 356.2,
+     "tempP33": 31.35,
+     "tempP67": 31.99,
+     "tempNormal": 31.72
+    },
+    "04": {
+     "n": 30,
+     "rainP33": 380.8,
+     "rainP67": 415.6,
+     "rainNormal": 408.2,
+     "tempP33": 30.21,
+     "tempP67": 30.47,
+     "tempNormal": 30.4
+    },
+    "05": {
+     "n": 30,
+     "rainP33": 384.4,
+     "rainP67": 424.1,
+     "rainNormal": 410.1,
+     "tempP33": 28.82,
+     "tempP67": 29.12,
+     "tempNormal": 29.08
+    },
+    "06": {
+     "n": 30,
+     "rainP33": 330.4,
+     "rainP67": 407.3,
+     "rainNormal": 386.6,
+     "tempP33": 27.83,
+     "tempP67": 28.27,
+     "tempNormal": 28.15
+    },
+    "07": {
+     "n": 30,
+     "rainP33": 286.1,
+     "rainP67": 415.2,
+     "rainNormal": 373.1,
+     "tempP33": 27.73,
+     "tempP67": 28.14,
+     "tempNormal": 28.06
+    },
+    "08": {
+     "n": 30,
+     "rainP33": 340.9,
+     "rainP67": 407.6,
+     "rainNormal": 389.2,
+     "tempP33": 28.26,
+     "tempP67": 28.53,
+     "tempNormal": 28.46
+    },
+    "09": {
+     "n": 30,
+     "rainP33": 309.2,
+     "rainP67": 351.5,
+     "rainNormal": 337.0,
+     "tempP33": 28.91,
+     "tempP67": 29.27,
+     "tempNormal": 29.16
+    },
+    "10": {
+     "n": 30,
+     "rainP33": 191.7,
+     "rainP67": 243.0,
+     "rainNormal": 215.9,
+     "tempP33": 29.69,
+     "tempP67": 30.37,
+     "tempNormal": 30.14
+    },
+    "11": {
+     "n": 29,
+     "rainP33": 94.4,
+     "rainP67": 111.9,
+     "rainNormal": 106.5,
+     "tempP33": 30.83,
+     "tempP67": 31.64,
+     "tempNormal": 31.33
+    },
+    "12": {
+     "n": 29,
+     "rainP33": 73.0,
+     "rainP67": 100.2,
+     "rainNormal": 91.2,
+     "tempP33": 31.87,
+     "tempP67": 32.84,
+     "tempNormal": 32.5
+    }
+   }
+  },
+  "Eastern": {
+   "lat": 6.1993,
+   "lng": -0.4811,
+   "rainCell": "6.00,-0.50",
+   "tempCell": "6.00,-0.50",
+   "windows": {
+    "01": {
+     "n": 30,
+     "rainP33": 174.8,
+     "rainP67": 231.7,
+     "rainNormal": 210.6,
+     "tempP33": 31.78,
+     "tempP67": 32.44,
+     "tempNormal": 32.16
+    },
+    "02": {
+     "n": 30,
+     "rainP33": 274.8,
+     "rainP67": 324.6,
+     "rainNormal": 298.9,
+     "tempP33": 31.59,
+     "tempP67": 32.16,
+     "tempNormal": 31.92
+    },
+    "03": {
+     "n": 30,
+     "rainP33": 402.8,
+     "rainP67": 442.7,
+     "rainNormal": 425.2,
+     "tempP33": 30.78,
+     "tempP67": 31.15,
+     "tempNormal": 31.06
+    },
+    "04": {
+     "n": 30,
+     "rainP33": 525.8,
+     "rainP67": 575.1,
+     "rainNormal": 550.8,
+     "tempP33": 29.51,
+     "tempP67": 29.76,
+     "tempNormal": 29.77
+    },
+    "05": {
+     "n": 30,
+     "rainP33": 556.2,
+     "rainP67": 624.4,
+     "rainNormal": 580.5,
+     "tempP33": 28.32,
+     "tempP67": 28.49,
+     "tempNormal": 28.5
+    },
+    "06": {
+     "n": 30,
+     "rainP33": 490.3,
+     "rainP67": 553.6,
+     "rainNormal": 524.2,
+     "tempP33": 27.39,
+     "tempP67": 27.79,
+     "tempNormal": 27.66
+    },
+    "07": {
+     "n": 30,
+     "rainP33": 426.2,
+     "rainP67": 515.0,
+     "rainNormal": 493.6,
+     "tempP33": 27.52,
+     "tempP67": 27.81,
+     "tempNormal": 27.68
+    },
+    "08": {
+     "n": 30,
+     "rainP33": 489.3,
+     "rainP67": 563.2,
+     "rainNormal": 530.2,
+     "tempP33": 27.99,
+     "tempP67": 28.24,
+     "tempNormal": 28.13
+    },
+    "09": {
+     "n": 30,
+     "rainP33": 452.0,
+     "rainP67": 528.3,
+     "rainNormal": 495.6,
+     "tempP33": 28.77,
+     "tempP67": 29.01,
+     "tempNormal": 28.9
+    },
+    "10": {
+     "n": 30,
+     "rainP33": 319.3,
+     "rainP67": 353.4,
+     "rainNormal": 337.5,
+     "tempP33": 29.45,
+     "tempP67": 29.86,
+     "tempNormal": 29.79
+    },
+    "11": {
+     "n": 29,
+     "rainP33": 165.2,
+     "rainP67": 201.2,
+     "rainNormal": 187.6,
+     "tempP33": 30.37,
+     "tempP67": 31.02,
+     "tempNormal": 30.78
+    },
+    "12": {
+     "n": 29,
+     "rainP33": 120.5,
+     "rainP67": 169.4,
+     "rainNormal": 150.8,
+     "tempP33": 31.25,
+     "tempP67": 31.95,
+     "tempNormal": 31.69
+    }
+   }
+  },
+  "Volta": {
+   "lat": 6.3635,
+   "lng": 0.64,
+   "rainCell": "6.50,0.50",
+   "tempCell": "6.50,0.50",
+   "windows": {
+    "01": {
+     "n": 30,
+     "rainP33": 124.5,
+     "rainP67": 156.3,
+     "rainNormal": 143.9,
+     "tempP33": 32.32,
+     "tempP67": 33.29,
+     "tempNormal": 32.83
+    },
+    "02": {
+     "n": 30,
+     "rainP33": 193.9,
+     "rainP67": 239.6,
+     "rainNormal": 219.7,
+     "tempP33": 31.98,
+     "tempP67": 32.84,
+     "tempNormal": 32.49
+    },
+    "03": {
+     "n": 30,
+     "rainP33": 314.6,
+     "rainP67": 373.5,
+     "rainNormal": 342.3,
+     "tempP33": 31.08,
+     "tempP67": 31.55,
+     "tempNormal": 31.47
+    },
+    "04": {
+     "n": 30,
+     "rainP33": 411.4,
+     "rainP67": 499.1,
+     "rainNormal": 464.1,
+     "tempP33": 29.58,
+     "tempP67": 29.88,
+     "tempNormal": 29.95
+    },
+    "05": {
+     "n": 30,
+     "rainP33": 469.2,
+     "rainP67": 555.8,
+     "rainNormal": 517.3,
+     "tempP33": 28.11,
+     "tempP67": 28.29,
+     "tempNormal": 28.42
+    },
+    "06": {
+     "n": 30,
+     "rainP33": 426.7,
+     "rainP67": 525.6,
+     "rainNormal": 488.9,
+     "tempP33": 27.0,
+     "tempP67": 27.41,
+     "tempNormal": 27.38
+    },
+    "07": {
+     "n": 30,
+     "rainP33": 448.9,
+     "rainP67": 544.9,
+     "rainNormal": 506.1,
+     "tempP33": 27.06,
+     "tempP67": 27.31,
+     "tempNormal": 27.31
+    },
+    "08": {
+     "n": 30,
+     "rainP33": 479.0,
+     "rainP67": 565.4,
+     "rainNormal": 530.8,
+     "tempP33": 27.62,
+     "tempP67": 28.0,
+     "tempNormal": 27.91
+    },
+    "09": {
+     "n": 30,
+     "rainP33": 419.6,
+     "rainP67": 505.5,
+     "rainNormal": 472.1,
+     "tempP33": 28.64,
+     "tempP67": 28.9,
+     "tempNormal": 28.91
+    },
+    "10": {
+     "n": 30,
+     "rainP33": 264.6,
+     "rainP67": 302.0,
+     "rainNormal": 282.2,
+     "tempP33": 29.66,
+     "tempP67": 30.32,
+     "tempNormal": 30.14
+    },
+    "11": {
+     "n": 29,
+     "rainP33": 102.9,
+     "rainP67": 154.6,
+     "rainNormal": 131.9,
+     "tempP33": 30.8,
+     "tempP67": 31.66,
+     "tempNormal": 31.36
+    },
+    "12": {
+     "n": 29,
+     "rainP33": 66.3,
+     "rainP67": 123.4,
+     "rainNormal": 94.1,
+     "tempP33": 31.69,
+     "tempP67": 32.76,
+     "tempNormal": 32.41
+    }
+   }
+  },
+  "Oti": {
+   "lat": 7.7982,
+   "lng": 0.2426,
+   "rainCell": "8.00,0.00",
+   "tempCell": "8.00,0.00",
+   "windows": {
+    "01": {
+     "n": 30,
+     "rainP33": 52.4,
+     "rainP67": 82.5,
+     "rainNormal": 69.0,
+     "tempP33": 34.62,
+     "tempP67": 35.04,
+     "tempNormal": 34.92
+    },
+    "02": {
+     "n": 30,
+     "rainP33": 86.7,
+     "rainP67": 147.2,
+     "rainNormal": 117.4,
+     "tempP33": 34.35,
+     "tempP67": 34.88,
+     "tempNormal": 34.63
+    },
+    "03": {
+     "n": 30,
+     "rainP33": 129.0,
+     "rainP67": 199.3,
+     "rainNormal": 180.5,
+     "tempP33": 33.29,
+     "tempP67": 34.0,
+     "tempNormal": 33.65
+    },
+    "04": {
+     "n": 30,
+     "rainP33": 223.8,
+     "rainP67": 295.7,
+     "rainNormal": 263.0,
+     "tempP33": 31.76,
+     "tempP67": 32.22,
+     "tempNormal": 31.99
+    },
+    "05": {
+     "n": 30,
+     "rainP33": 354.6,
+     "rainP67": 410.9,
+     "rainNormal": 392.1,
+     "tempP33": 30.0,
+     "tempP67": 30.34,
+     "tempNormal": 30.17
+    },
+    "06": {
+     "n": 30,
+     "rainP33": 479.8,
+     "rainP67": 592.0,
+     "rainNormal": 546.4,
+     "tempP33": 28.45,
+     "tempP67": 28.71,
+     "tempNormal": 28.66
+    },
+    "07": {
+     "n": 30,
+     "rainP33": 577.7,
+     "rainP67": 699.9,
+     "rainNormal": 657.7,
+     "tempP33": 28.0,
+     "tempP67": 28.2,
+     "tempNormal": 28.2
+    },
+    "08": {
+     "n": 30,
+     "rainP33": 534.5,
+     "rainP67": 629.7,
+     "rainNormal": 596.0,
+     "tempP33": 28.49,
+     "tempP67": 28.79,
+     "tempNormal": 28.71
+    },
+    "09": {
+     "n": 30,
+     "rainP33": 305.4,
+     "rainP67": 390.3,
+     "rainNormal": 379.5,
+     "tempP33": 29.99,
+     "tempP67": 30.5,
+     "tempNormal": 30.24
+    },
+    "10": {
+     "n": 30,
+     "rainP33": 102.6,
+     "rainP67": 151.7,
+     "rainNormal": 149.2,
+     "tempP33": 31.78,
+     "tempP67": 32.27,
+     "tempNormal": 32.11
+    },
+    "11": {
+     "n": 29,
+     "rainP33": 19.9,
+     "rainP67": 32.9,
+     "rainNormal": 34.4,
+     "tempP33": 33.39,
+     "tempP67": 33.85,
+     "tempNormal": 33.68
+    },
+    "12": {
+     "n": 29,
+     "rainP33": 12.5,
+     "rainP67": 38.3,
+     "rainNormal": 33.5,
+     "tempP33": 34.07,
+     "tempP67": 34.85,
+     "tempNormal": 34.61
+    }
+   }
+  },
+  "Bono": {
+   "lat": 7.556,
+   "lng": -2.587,
+   "rainCell": "7.50,-2.50",
+   "tempCell": "7.50,-2.50",
+   "windows": {
+    "01": {
+     "n": 30,
+     "rainP33": 112.6,
+     "rainP67": 145.1,
+     "rainNormal": 132.7,
+     "tempP33": 33.81,
+     "tempP67": 34.56,
+     "tempNormal": 34.2
+    },
+    "02": {
+     "n": 30,
+     "rainP33": 189.0,
+     "rainP67": 239.5,
+     "rainNormal": 223.8,
+     "tempP33": 33.45,
+     "tempP67": 33.98,
+     "tempNormal": 33.73
+    },
+    "03": {
+     "n": 30,
+     "rainP33": 242.0,
+     "rainP67": 300.3,
+     "rainNormal": 298.6,
+     "tempP33": 32.33,
+     "tempP67": 32.82,
+     "tempNormal": 32.63
+    },
+    "04": {
+     "n": 30,
+     "rainP33": 281.3,
+     "rainP67": 319.1,
+     "rainNormal": 326.2,
+     "tempP33": 31.05,
+     "tempP67": 31.41,
+     "tempNormal": 31.24
+    },
+    "05": {
+     "n": 30,
+     "rainP33": 262.4,
+     "rainP67": 349.4,
+     "rainNormal": 325.3,
+     "tempP33": 29.66,
+     "tempP67": 29.93,
+     "tempNormal": 29.81
+    },
+    "06": {
+     "n": 30,
+     "rainP33": 276.2,
+     "rainP67": 356.4,
+     "rainNormal": 334.2,
+     "tempP33": 28.41,
+     "tempP67": 28.83,
+     "tempNormal": 28.62
+    },
+    "07": {
+     "n": 30,
+     "rainP33": 298.1,
+     "rainP67": 361.7,
+     "rainNormal": 359.8,
+     "tempP33": 28.1,
+     "tempP67": 28.36,
+     "tempNormal": 28.29
+    },
+    "08": {
+     "n": 30,
+     "rainP33": 335.7,
+     "rainP67": 369.0,
+     "rainNormal": 375.3,
+     "tempP33": 28.45,
+     "tempP67": 28.77,
+     "tempNormal": 28.64
+    },
+    "09": {
+     "n": 30,
+     "rainP33": 263.7,
+     "rainP67": 310.3,
+     "rainNormal": 307.8,
+     "tempP33": 29.34,
+     "tempP67": 29.65,
+     "tempNormal": 29.53
+    },
+    "10": {
+     "n": 30,
+     "rainP33": 141.8,
+     "rainP67": 182.4,
+     "rainNormal": 180.7,
+     "tempP33": 30.73,
+     "tempP67": 31.05,
+     "tempNormal": 30.84
+    },
+    "11": {
+     "n": 29,
+     "rainP33": 65.9,
+     "rainP67": 85.6,
+     "rainNormal": 77.5,
+     "tempP33": 32.23,
+     "tempP67": 32.72,
+     "tempNormal": 32.4
+    },
+    "12": {
+     "n": 29,
+     "rainP33": 41.2,
+     "rainP67": 71.5,
+     "rainNormal": 60.8,
+     "tempP33": 33.33,
+     "tempP67": 34.28,
+     "tempNormal": 33.75
+    }
+   }
+  },
+  "Bono East": {
+   "lat": 7.8133,
+   "lng": -1.3219,
+   "rainCell": "8.00,-1.50",
+   "tempCell": "8.00,-1.50",
+   "windows": {
+    "01": {
+     "n": 30,
+     "rainP33": 87.3,
+     "rainP67": 120.3,
+     "rainNormal": 100.8,
+     "tempP33": 34.66,
+     "tempP67": 35.15,
+     "tempNormal": 34.92
+    },
+    "02": {
+     "n": 30,
+     "rainP33": 181.5,
+     "rainP67": 216.9,
+     "rainNormal": 203.5,
+     "tempP33": 34.45,
+     "tempP67": 35.1,
+     "tempNormal": 34.79
+    },
+    "03": {
+     "n": 30,
+     "rainP33": 265.2,
+     "rainP67": 338.4,
+     "rainNormal": 308.2,
+     "tempP33": 33.44,
+     "tempP67": 34.19,
+     "tempNormal": 33.84
+    },
+    "04": {
+     "n": 30,
+     "rainP33": 352.7,
+     "rainP67": 383.6,
+     "rainNormal": 373.6,
+     "tempP33": 31.97,
+     "tempP67": 32.45,
+     "tempNormal": 32.24
+    },
+    "05": {
+     "n": 30,
+     "rainP33": 390.0,
+     "rainP67": 455.2,
+     "rainNormal": 425.6,
+     "tempP33": 30.38,
+     "tempP67": 30.66,
+     "tempNormal": 30.58
+    },
+    "06": {
+     "n": 30,
+     "rainP33": 417.0,
+     "rainP67": 490.4,
+     "rainNormal": 479.1,
+     "tempP33": 29.03,
+     "tempP67": 29.37,
+     "tempNormal": 29.27
+    },
+    "07": {
+     "n": 30,
+     "rainP33": 515.9,
+     "rainP67": 573.9,
+     "rainNormal": 565.5,
+     "tempP33": 28.71,
+     "tempP67": 28.95,
+     "tempNormal": 28.93
+    },
+    "08": {
+     "n": 30,
+     "rainP33": 483.9,
+     "rainP67": 541.4,
+     "rainNormal": 523.9,
+     "tempP33": 29.36,
+     "tempP67": 29.66,
+     "tempNormal": 29.58
+    },
+    "09": {
+     "n": 30,
+     "rainP33": 323.6,
+     "rainP67": 395.5,
+     "rainNormal": 367.0,
+     "tempP33": 30.7,
+     "tempP67": 31.17,
+     "tempNormal": 30.96
+    },
+    "10": {
+     "n": 30,
+     "rainP33": 128.7,
+     "rainP67": 163.9,
+     "rainNormal": 150.0,
+     "tempP33": 32.16,
+     "tempP67": 32.68,
+     "tempNormal": 32.4
+    },
+    "11": {
+     "n": 29,
+     "rainP33": 20.3,
+     "rainP67": 44.7,
+     "rainNormal": 38.0,
+     "tempP33": 33.35,
+     "tempP67": 33.78,
+     "tempNormal": 33.56
+    },
+    "12": {
+     "n": 29,
+     "rainP33": 14.6,
+     "rainP67": 45.5,
+     "rainNormal": 36.7,
+     "tempP33": 34.1,
+     "tempP67": 34.68,
+     "tempNormal": 34.39
+    }
+   }
+  },
+  "Ahafo": {
+   "lat": 6.9165,
+   "lng": -2.6037,
+   "rainCell": "6.50,-2.50",
+   "tempCell": "7.00,-2.50",
+   "windows": {
+    "01": {
+     "n": 30,
+     "rainP33": 145.7,
+     "rainP67": 177.6,
+     "rainNormal": 161.0,
+     "tempP33": 33.48,
+     "tempP67": 34.21,
+     "tempNormal": 33.92
+    },
+    "02": {
+     "n": 30,
+     "rainP33": 227.6,
+     "rainP67": 261.5,
+     "rainNormal": 252.8,
+     "tempP33": 33.27,
+     "tempP67": 33.71,
+     "tempNormal": 33.49
+    },
+    "03": {
+     "n": 30,
+     "rainP33": 297.4,
+     "rainP67": 358.1,
+     "rainNormal": 341.3,
+     "tempP33": 32.08,
+     "tempP67": 32.69,
+     "tempNormal": 32.43
+    },
+    "04": {
+     "n": 30,
+     "rainP33": 361.8,
+     "rainP67": 407.4,
+     "rainNormal": 404.4,
+     "tempP33": 30.87,
+     "tempP67": 31.26,
+     "tempNormal": 31.07
+    },
+    "05": {
+     "n": 30,
+     "rainP33": 353.9,
+     "rainP67": 421.4,
+     "rainNormal": 408.6,
+     "tempP33": 29.52,
+     "tempP67": 29.82,
+     "tempNormal": 29.67
+    },
+    "06": {
+     "n": 30,
+     "rainP33": 321.5,
+     "rainP67": 411.0,
+     "rainNormal": 376.1,
+     "tempP33": 28.31,
+     "tempP67": 28.75,
+     "tempNormal": 28.57
+    },
+    "07": {
+     "n": 30,
+     "rainP33": 282.6,
+     "rainP67": 384.4,
+     "rainNormal": 358.4,
+     "tempP33": 28.07,
+     "tempP67": 28.47,
+     "tempNormal": 28.32
+    },
+    "08": {
+     "n": 30,
+     "rainP33": 292.7,
+     "rainP67": 402.4,
+     "rainNormal": 374.6,
+     "tempP33": 28.37,
+     "tempP67": 28.77,
+     "tempNormal": 28.61
+    },
+    "09": {
+     "n": 30,
+     "rainP33": 262.8,
+     "rainP67": 346.3,
+     "rainNormal": 332.5,
+     "tempP33": 29.17,
+     "tempP67": 29.5,
+     "tempNormal": 29.35
+    },
+    "10": {
+     "n": 30,
+     "rainP33": 183.0,
+     "rainP67": 219.3,
+     "rainNormal": 213.8,
+     "tempP33": 30.22,
+     "tempP67": 30.6,
+     "tempNormal": 30.54
+    },
+    "11": {
+     "n": 29,
+     "rainP33": 85.8,
+     "rainP67": 123.3,
+     "rainNormal": 103.6,
+     "tempP33": 31.88,
+     "tempP67": 32.29,
+     "tempNormal": 32.02
+    },
+    "12": {
+     "n": 29,
+     "rainP33": 71.5,
+     "rainP67": 101.4,
+     "rainNormal": 90.1,
+     "tempP33": 32.98,
+     "tempP67": 34.01,
+     "tempNormal": 33.42
+    }
+   }
+  },
+  "Northern": {
+   "lat": 9.3815,
+   "lng": -0.3704,
+   "rainCell": "9.50,-0.50",
+   "tempCell": "9.50,-0.50",
+   "windows": {
+    "01": {
+     "n": 30,
+     "rainP33": 14.0,
+     "rainP67": 35.4,
+     "rainNormal": 25.7,
+     "tempP33": 36.75,
+     "tempP67": 37.35,
+     "tempNormal": 37.1
+    },
+    "02": {
+     "n": 30,
+     "rainP33": 58.8,
+     "rainP67": 87.1,
+     "rainNormal": 76.1,
+     "tempP33": 37.4,
+     "tempP67": 37.72,
+     "tempNormal": 37.55
+    },
+    "03": {
+     "n": 30,
+     "rainP33": 105.3,
+     "rainP67": 149.5,
+     "rainNormal": 136.6,
+     "tempP33": 36.5,
+     "tempP67": 37.05,
+     "tempNormal": 36.72
+    },
+    "04": {
+     "n": 30,
+     "rainP33": 172.3,
+     "rainP67": 219.0,
+     "rainNormal": 201.0,
+     "tempP33": 34.47,
+     "tempP67": 34.99,
+     "tempNormal": 34.73
+    },
+    "05": {
+     "n": 30,
+     "rainP33": 258.9,
+     "rainP67": 314.7,
+     "rainNormal": 301.1,
+     "tempP33": 32.1,
+     "tempP67": 32.64,
+     "tempNormal": 32.39
+    },
+    "06": {
+     "n": 30,
+     "rainP33": 417.5,
+     "rainP67": 493.8,
+     "rainNormal": 460.0,
+     "tempP33": 30.09,
+     "tempP67": 30.4,
+     "tempNormal": 30.29
+    },
+    "07": {
+     "n": 30,
+     "rainP33": 535.8,
+     "rainP67": 609.7,
+     "rainNormal": 565.8,
+     "tempP33": 29.24,
+     "tempP67": 29.46,
+     "tempNormal": 29.31
+    },
+    "08": {
+     "n": 30,
+     "rainP33": 447.2,
+     "rainP67": 558.5,
+     "rainNormal": 496.9,
+     "tempP33": 29.53,
+     "tempP67": 29.91,
+     "tempNormal": 29.72
+    },
+    "09": {
+     "n": 30,
+     "rainP33": 230.0,
+     "rainP67": 296.8,
+     "rainNormal": 279.7,
+     "tempP33": 31.33,
+     "tempP67": 31.75,
+     "tempNormal": 31.51
+    },
+    "10": {
+     "n": 30,
+     "rainP33": 63.5,
+     "rainP67": 94.1,
+     "rainNormal": 91.4,
+     "tempP33": 33.21,
+     "tempP67": 33.7,
+     "tempNormal": 33.44
+    },
+    "11": {
+     "n": 29,
+     "rainP33": 2.6,
+     "rainP67": 11.8,
+     "rainNormal": 10.1,
+     "tempP33": 34.66,
+     "tempP67": 35.08,
+     "tempNormal": 34.97
+    },
+    "12": {
+     "n": 29,
+     "rainP33": 0.9,
+     "rainP67": 6.7,
+     "rainNormal": 7.9,
+     "tempP33": 35.69,
+     "tempP67": 36.31,
+     "tempNormal": 36.03
+    }
+   }
+  },
+  "Savannah": {
+   "lat": 9.2357,
+   "lng": -1.6141,
+   "rainCell": "9.00,-1.50",
+   "tempCell": "9.00,-1.50",
+   "windows": {
+    "01": {
+     "n": 30,
+     "rainP33": 25.8,
+     "rainP67": 44.2,
+     "rainNormal": 37.2,
+     "tempP33": 37.26,
+     "tempP67": 37.85,
+     "tempNormal": 37.57
+    },
+    "02": {
+     "n": 30,
+     "rainP33": 74.2,
+     "rainP67": 115.3,
+     "rainNormal": 99.0,
+     "tempP33": 37.65,
+     "tempP67": 38.24,
+     "tempNormal": 37.91
+    },
+    "03": {
+     "n": 30,
+     "rainP33": 135.5,
+     "rainP67": 187.4,
+     "rainNormal": 176.4,
+     "tempP33": 36.46,
+     "tempP67": 37.5,
+     "tempNormal": 37.0
+    },
+    "04": {
+     "n": 30,
+     "rainP33": 208.2,
+     "rainP67": 297.1,
+     "rainNormal": 251.6,
+     "tempP33": 34.78,
+     "tempP67": 35.3,
+     "tempNormal": 35.01
+    },
+    "05": {
+     "n": 30,
+     "rainP33": 300.8,
+     "rainP67": 352.4,
+     "rainNormal": 337.8,
+     "tempP33": 32.55,
+     "tempP67": 32.97,
+     "tempNormal": 32.73
+    },
+    "06": {
+     "n": 30,
+     "rainP33": 411.2,
+     "rainP67": 504.3,
+     "rainNormal": 453.5,
+     "tempP33": 30.58,
+     "tempP67": 30.89,
+     "tempNormal": 30.81
+    },
+    "07": {
+     "n": 30,
+     "rainP33": 497.9,
+     "rainP67": 557.3,
+     "rainNormal": 531.7,
+     "tempP33": 29.76,
+     "tempP67": 30.08,
+     "tempNormal": 29.95
+    },
+    "08": {
+     "n": 30,
+     "rainP33": 430.8,
+     "rainP67": 490.9,
+     "rainNormal": 471.2,
+     "tempP33": 30.22,
+     "tempP67": 30.62,
+     "tempNormal": 30.44
+    },
+    "09": {
+     "n": 30,
+     "rainP33": 246.0,
+     "rainP67": 287.2,
+     "rainNormal": 279.4,
+     "tempP33": 32.1,
+     "tempP67": 32.47,
+     "tempNormal": 32.34
+    },
+    "10": {
+     "n": 30,
+     "rainP33": 75.8,
+     "rainP67": 106.5,
+     "rainNormal": 101.2,
+     "tempP33": 33.96,
+     "tempP67": 34.57,
+     "tempNormal": 34.35
+    },
+    "11": {
+     "n": 29,
+     "rainP33": 9.4,
+     "rainP67": 17.2,
+     "rainNormal": 14.2,
+     "tempP33": 35.58,
+     "tempP67": 36.06,
+     "tempNormal": 35.84
+    },
+    "12": {
+     "n": 29,
+     "rainP33": 3.0,
+     "rainP67": 17.4,
+     "rainNormal": 12.9,
+     "tempP33": 36.42,
+     "tempP67": 36.93,
+     "tempNormal": 36.69
+    }
+   }
+  },
+  "North East": {
+   "lat": 10.3599,
+   "lng": -0.395,
+   "rainCell": "10.50,-0.50",
+   "tempCell": "10.50,-0.50",
+   "windows": {
+    "01": {
+     "n": 30,
+     "rainP33": 10.0,
+     "rainP67": 18.2,
+     "rainNormal": 16.2,
+     "tempP33": 35.98,
+     "tempP67": 36.4,
+     "tempNormal": 36.19
+    },
+    "02": {
+     "n": 30,
+     "rainP33": 42.6,
+     "rainP67": 78.5,
+     "rainNormal": 65.6,
+     "tempP33": 36.89,
+     "tempP67": 37.37,
+     "tempNormal": 37.17
+    },
+    "03": {
+     "n": 30,
+     "rainP33": 95.8,
+     "rainP67": 147.9,
+     "rainNormal": 130.3,
+     "tempP33": 36.15,
+     "tempP67": 36.96,
+     "tempNormal": 36.6
+    },
+    "04": {
+     "n": 30,
+     "rainP33": 166.8,
+     "rainP67": 215.9,
+     "rainNormal": 195.8,
+     "tempP33": 34.17,
+     "tempP67": 35.01,
+     "tempNormal": 34.61
+    },
+    "05": {
+     "n": 30,
+     "rainP33": 290.8,
+     "rainP67": 322.7,
+     "rainNormal": 318.4,
+     "tempP33": 31.72,
+     "tempP67": 32.26,
+     "tempNormal": 32.03
+    },
+    "06": {
+     "n": 30,
+     "rainP33": 469.0,
+     "rainP67": 525.2,
+     "rainNormal": 497.6,
+     "tempP33": 29.51,
+     "tempP67": 29.9,
+     "tempNormal": 29.76
+    },
+    "07": {
+     "n": 30,
+     "rainP33": 573.5,
+     "rainP67": 634.9,
+     "rainNormal": 594.0,
+     "tempP33": 28.54,
+     "tempP67": 28.88,
+     "tempNormal": 28.69
+    },
+    "08": {
+     "n": 30,
+     "rainP33": 458.4,
+     "rainP67": 528.7,
+     "rainNormal": 490.5,
+     "tempP33": 29.05,
+     "tempP67": 29.41,
+     "tempNormal": 29.25
+    },
+    "09": {
+     "n": 30,
+     "rainP33": 223.1,
+     "rainP67": 281.7,
+     "rainNormal": 247.9,
+     "tempP33": 30.86,
+     "tempP67": 31.32,
+     "tempNormal": 31.15
+    },
+    "10": {
+     "n": 30,
+     "rainP33": 47.4,
+     "rainP67": 84.7,
+     "rainNormal": 72.5,
+     "tempP33": 32.63,
+     "tempP67": 33.06,
+     "tempNormal": 32.85
+    },
+    "11": {
+     "n": 29,
+     "rainP33": 0.7,
+     "rainP67": 4.2,
+     "rainNormal": 4.2,
+     "tempP33": 33.76,
+     "tempP67": 34.22,
+     "tempNormal": 33.99
+    },
+    "12": {
+     "n": 29,
+     "rainP33": 0.0,
+     "rainP67": 2.3,
+     "rainNormal": 2.8,
+     "tempP33": 34.59,
+     "tempP67": 35.08,
+     "tempNormal": 34.83
+    }
+   }
+  },
+  "Upper East": {
+   "lat": 10.8704,
+   "lng": -0.6832,
+   "rainCell": "11.00,-0.50",
+   "tempCell": "11.00,-0.50",
+   "windows": {
+    "01": {
+     "n": 30,
+     "rainP33": 1.2,
+     "rainP67": 8.9,
+     "rainNormal": 7.2,
+     "tempP33": 35.85,
+     "tempP67": 36.24,
+     "tempNormal": 36.06
+    },
+    "02": {
+     "n": 30,
+     "rainP33": 23.4,
+     "rainP67": 35.1,
+     "rainNormal": 33.3,
+     "tempP33": 37.11,
+     "tempP67": 37.5,
+     "tempNormal": 37.34
+    },
+    "03": {
+     "n": 30,
+     "rainP33": 60.4,
+     "rainP67": 93.1,
+     "rainNormal": 78.8,
+     "tempP33": 36.92,
+     "tempP67": 37.38,
+     "tempNormal": 37.11
+    },
+    "04": {
+     "n": 30,
+     "rainP33": 108.6,
+     "rainP67": 156.2,
+     "rainNormal": 137.7,
+     "tempP33": 35.11,
+     "tempP67": 35.57,
+     "tempNormal": 35.32
+    },
+    "05": {
+     "n": 30,
+     "rainP33": 214.7,
+     "rainP67": 249.1,
+     "rainNormal": 245.0,
+     "tempP33": 32.37,
+     "tempP67": 32.89,
+     "tempNormal": 32.69
+    },
+    "06": {
+     "n": 30,
+     "rainP33": 355.2,
+     "rainP67": 440.9,
+     "rainNormal": 400.0,
+     "tempP33": 29.84,
+     "tempP67": 30.38,
+     "tempNormal": 30.16
+    },
+    "07": {
+     "n": 30,
+     "rainP33": 441.9,
+     "rainP67": 503.9,
+     "rainNormal": 474.6,
+     "tempP33": 28.68,
+     "tempP67": 29.14,
+     "tempNormal": 28.91
+    },
+    "08": {
+     "n": 30,
+     "rainP33": 346.2,
+     "rainP67": 437.9,
+     "rainNormal": 386.3,
+     "tempP33": 29.34,
+     "tempP67": 29.71,
+     "tempNormal": 29.58
+    },
+    "09": {
+     "n": 30,
+     "rainP33": 148.5,
+     "rainP67": 209.7,
+     "rainNormal": 186.1,
+     "tempP33": 31.3,
+     "tempP67": 32.02,
+     "tempNormal": 31.68
+    },
+    "10": {
+     "n": 30,
+     "rainP33": 36.1,
+     "rainP67": 51.9,
+     "rainNormal": 46.7,
+     "tempP33": 33.11,
+     "tempP67": 33.68,
+     "tempNormal": 33.32
+    },
+    "11": {
+     "n": 29,
+     "rainP33": 0.1,
+     "rainP67": 1.6,
+     "rainNormal": 1.7,
+     "tempP33": 33.93,
+     "tempP67": 34.29,
+     "tempNormal": 34.1
+    },
+    "12": {
+     "n": 29,
+     "rainP33": 0.0,
+     "rainP67": 0.9,
+     "rainNormal": 1.4,
+     "tempP33": 34.42,
+     "tempP67": 34.87,
+     "tempNormal": 34.64
+    }
+   }
+  },
+  "Upper West": {
+   "lat": 10.4421,
+   "lng": -2.4896,
+   "rainCell": "10.50,-2.50",
+   "tempCell": "10.50,-2.50",
+   "windows": {
+    "01": {
+     "n": 30,
+     "rainP33": 13.1,
+     "rainP67": 27.1,
+     "rainNormal": 20.2,
+     "tempP33": 36.59,
+     "tempP67": 36.87,
+     "tempNormal": 36.71
+    },
+    "02": {
+     "n": 30,
+     "rainP33": 46.4,
+     "rainP67": 93.6,
+     "rainNormal": 68.2,
+     "tempP33": 37.19,
+     "tempP67": 37.76,
+     "tempNormal": 37.51
+    },
+    "03": {
+     "n": 30,
+     "rainP33": 107.6,
+     "rainP67": 153.5,
+     "rainNormal": 135.3,
+     "tempP33": 36.49,
+     "tempP67": 37.29,
+     "tempNormal": 36.86
+    },
+    "04": {
+     "n": 30,
+     "rainP33": 169.9,
+     "rainP67": 224.5,
+     "rainNormal": 207.0,
+     "tempP33": 34.56,
+     "tempP67": 35.23,
+     "tempNormal": 34.85
+    },
+    "05": {
+     "n": 30,
+     "rainP33": 287.2,
+     "rainP67": 320.7,
+     "rainNormal": 304.4,
+     "tempP33": 32.02,
+     "tempP67": 32.65,
+     "tempNormal": 32.36
+    },
+    "06": {
+     "n": 30,
+     "rainP33": 415.5,
+     "rainP67": 475.6,
+     "rainNormal": 455.4,
+     "tempP33": 29.97,
+     "tempP67": 30.3,
+     "tempNormal": 30.16
+    },
+    "07": {
+     "n": 30,
+     "rainP33": 478.3,
+     "rainP67": 546.9,
+     "rainNormal": 530.4,
+     "tempP33": 29.02,
+     "tempP67": 29.33,
+     "tempNormal": 29.15
+    },
+    "08": {
+     "n": 30,
+     "rainP33": 396.5,
+     "rainP67": 487.3,
+     "rainNormal": 450.6,
+     "tempP33": 29.6,
+     "tempP67": 29.89,
+     "tempNormal": 29.77
+    },
+    "09": {
+     "n": 30,
+     "rainP33": 197.3,
+     "rainP67": 262.5,
+     "rainNormal": 233.2,
+     "tempP33": 31.39,
+     "tempP67": 31.85,
+     "tempNormal": 31.75
+    },
+    "10": {
+     "n": 30,
+     "rainP33": 44.0,
+     "rainP67": 79.6,
+     "rainNormal": 69.7,
+     "tempP33": 33.2,
+     "tempP67": 33.69,
+     "tempNormal": 33.54
+    },
+    "11": {
+     "n": 29,
+     "rainP33": 1.1,
+     "rainP67": 4.2,
+     "rainNormal": 4.1,
+     "tempP33": 34.42,
+     "tempP67": 34.88,
+     "tempNormal": 34.67
+    },
+    "12": {
+     "n": 29,
+     "rainP33": 0.0,
+     "rainP67": 3.0,
+     "rainNormal": 3.4,
+     "tempP33": 35.2,
+     "tempP67": 35.74,
+     "tempNormal": 35.45
+    }
+   }
+  }
+ }
+}

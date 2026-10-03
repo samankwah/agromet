@@ -4,16 +4,16 @@ poultry calendars) that also get a calendar built from them on the way in."""
 
 from __future__ import annotations
 
-from fastapi import APIRouter, File, Form, Header, HTTPException, Request, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, Header, HTTPException, Request, UploadFile, status
 
 from ..database import encode_payload, get_connection, row_to_dict
-from ..deps import get_current_user
+from ..deps import get_current_user, require_admin
 from ..records import insert_calendar_from_record, normalize_record
 
 router = APIRouter(prefix="/api/agricultural-data", tags=["agricultural-data"])
 
 
-@router.post("/upload")
+@router.post("/upload", dependencies=[Depends(require_admin)])
 async def upload_agricultural_data(
     request: Request,
     dataType: str = Form(...),
@@ -89,7 +89,7 @@ def list_agricultural_data(data_type: str):
     return {"success": True, "data": [normalize_record(row_to_dict(row)) for row in rows]}
 
 
-@router.delete("/{data_type}/{record_id}")
+@router.delete("/{data_type}/{record_id}", dependencies=[Depends(require_admin)])
 def delete_agricultural_data(data_type: str, record_id: int):
     with get_connection() as connection:
         row = connection.execute(

@@ -565,6 +565,25 @@ CREATE TABLE IF NOT EXISTS s2s_snapshots (
     computed_at TEXT NOT NULL,
     payload TEXT NOT NULL
 );
+
+-- The seasonal outlook, one JSON document per source. 'seas5' is the
+-- monthly ECMWF run computed by the cron, 'gmet' is the Ghana
+-- Meteorological Agency's downscaled forecast once its feed exists, and is
+-- served instead while today falls inside valid_from and valid_to. Only the
+-- newest row of each source is kept -- see `seasonal_runtime.store_snapshot`.
+-- (No semicolons in these comments.)
+CREATE TABLE IF NOT EXISTS seasonal_snapshots (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    source TEXT NOT NULL,
+    run_date TEXT NOT NULL,
+    computed_at TEXT NOT NULL,
+    valid_from TEXT,
+    valid_to TEXT,
+    payload TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_seasonal_snapshots_source
+ON seasonal_snapshots(source, id);
 """
 
 

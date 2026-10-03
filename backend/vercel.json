@@ -8,6 +8,10 @@
     {
       "path": "/api/outlook/subseasonal/refresh",
       "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/outlook/seasonal/refresh",
+      "schedule": "0 6 * * *"
     }
   ]
 }

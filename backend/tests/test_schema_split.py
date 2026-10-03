@@ -31,7 +31,7 @@ class SchemaSplitTests(unittest.TestCase):
         # A ';' in a comment above a table cuts its CREATE off from the
         # comment and still parses, so check the late additions arrive whole.
         statements = database._split_statements(database._postgres_ddl(database._SCHEMA))
-        for table in ("contact_messages", "ai_reports", "s2s_snapshots"):
+        for table in ("contact_messages", "ai_reports", "s2s_snapshots", "seasonal_snapshots"):
             with self.subTest(table):
                 self.assertTrue(
                     any(f"CREATE TABLE IF NOT EXISTS {table} (" in statement for statement in statements),
