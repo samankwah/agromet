@@ -197,7 +197,8 @@ async def subseasonal_series(lat: float, lng: float):
 
 @router.get("/api/outlook/seasonal")
 async def seasonal_outlook(background: BackgroundTasks):
-    """The seasonal outlook for the next three three-month windows, by region.
+    """The seasonal outlook by region: onset, cessation and dry spells per season,
+    and rainfall total, rainy days and temperature per MAM, MJJ and JAS window.
 
     GMet's own forecast when one is in force, otherwise ECMWF SEAS5 adjusted to
     local climate (see `seasonal_runtime`). Same serve-then-revalidate shape as
@@ -206,7 +207,7 @@ async def seasonal_outlook(background: BackgroundTasks):
     """
     await seasonal_runtime.ensure_fresh()
     outlook = seasonal_runtime.current()
-    if not outlook["windows"]:
+    if not outlook["seasons"] and not outlook["windows"]:
         return {"success": True, "data": {**outlook, "unavailable": True, **seasonal_runtime.metadata()}}
 
     if seasonal_runtime.needs_new_run():

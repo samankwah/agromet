@@ -9,11 +9,14 @@ of daily ERA5 for every 0.5 degree cell over Ghana into
 ``backend/app/data/.s2s_grid_cache.json`` (gitignored); this reads that cache.
 Run that script first on a machine without it.
 
-**What it computes.** For each of Ghana's sixteen regions and each of the twelve
-three-month windows (Jan to Mar, Feb to Apr, ... Dec to Feb), the 33rd and 67th
-percentiles and the mean of the window's rainfall total and of its mean daily
-maximum temperature, across 1995 to 2024: 30 samples, 29 for the windows that
-wrap into the next year.
+**What it computes.** For each of Ghana's sixteen regions, across 1995 to 2024,
+the 33rd, 50th and 67th percentiles of:
+
+* onset date, cessation date and the early and late dry spells, for each season
+  the region has (the south's major and minor seasons, or the north's single
+  season), using the rules in ``app/agro_season.py``;
+* rainfall total, number of rainy days and mean daily maximum temperature over
+  the fixed MAM, MJJ and JAS windows.
 
 **Why regions, not the grid.** The seasonal forecast is sampled at the sixteen
 region centres (see ``seasonal_runtime``), so the baseline must be too. Each
@@ -40,7 +43,20 @@ sys.path.insert(0, str(BACKEND_ROOT.parent))
 
 from backend.app.hazards import GHANA_REGIONS  # noqa: E402
 from backend.app.s2s import cell_id, ghana_grid_points, nearest_cell, quantile  # noqa: E402
-from backend.app.seasonal import WINDOW_MONTHS, add_months  # noqa: E402
+from backend.app.agro_season import (  # noqa: E402
+    SEASON_VARIABLES,
+    SEASONS,
+    WINDOW_VARIABLES,
+    WINDOWS,
+    Season,
+    Series,
+    day_of_year,
+    on,
+    season_indices,
+    sector_of,
+    window_bounds,
+    window_indices,
+)
 
 CACHE_PATH = BACKEND_ROOT / "app" / "data" / ".s2s_grid_cache.json"
 OUTPUT_PATH = BACKEND_ROOT / "app" / "data" / "seasonal_climatology.json"
@@ -81,23 +97,72 @@ def nearest_clean_cell(lat: float, lng: float, cache: dict, points: list, variab
     raise SystemExit(f"no clean {variable} cell near {lat},{lng}")
 
 
-def _window_samples(precip: list, temp: list, start_month: int) -> tuple[list[float], list[float]]:
-    rain_totals: list[float] = []
-    temp_means: list[float] = []
+def _stats(values: list[float], *, decimals: int) -> dict:
+    ordered = sorted(values)
+    return {
+        "n": len(ordered),
+        "p33": round(quantile(ordered, 1 / 3), decimals),
+        "p67": round(quantile(ordered, 2 / 3), decimals),
+        "median": round(quantile(ordered, 0.5), decimals),
+        "mean": round(sum(ordered) / len(ordered), decimals),
+    }
+
+
+def _season_baseline(rain: Series, season: Season) -> dict:
+    """Onset, cessation and dry spells across 1995-2024 for one region.
+
+    A year with no onset counts as the latest possible start (the day after the
+    search ends) for the onset percentiles, the same way the forecast counts a
+    member with no onset, and adds nothing to the other three variables.
+    """
+    collected: dict[str, list[float]] = {name: [] for name in SEASON_VARIABLES}
+    no_onset = 0
+    years = range(START.year, END.year + 1)
+    for year in years:
+        if on(year, season.season_end) > END:
+            continue
+        found = season_indices(rain, season, year)
+        if found["onset"] is None:
+            no_onset += 1
+            collected["onset"].append(day_of_year(on(year, season.onset_end)) + 1)
+            continue
+        for name in SEASON_VARIABLES:
+            collected[name].append(found[name])
+    baseline = {name: _stats(values, decimals=1) for name, values in collected.items() if values}
+    baseline["onset"]["noOnsetShare"] = round(no_onset / len(collected["onset"]), 3)
+    return baseline
+
+
+def _window_baseline(rain: Series, temp: Series, key: str) -> dict:
+    collected: dict[str, list[float]] = {name: [] for name in WINDOW_VARIABLES}
     for year in range(START.year, END.year + 1):
-        first = date(year, start_month, 1)
-        last = add_months(first, WINDOW_MONTHS) - timedelta(days=1)
+        _, last = window_bounds(key, year)
         if last > END:
             continue
-        lo = (first - START).days
-        hi = (last - START).days + 1
-        rain = precip[lo:hi]
-        heat = temp[lo:hi]
-        if len(rain) < hi - lo or any(value is None for value in rain) or any(value is None for value in heat):
-            continue
-        rain_totals.append(sum(float(value) for value in rain))
-        temp_means.append(sum(float(value) for value in heat) / len(heat))
-    return rain_totals, temp_means
+        found = window_indices(rain, temp, key, year)
+        for name in WINDOW_VARIABLES:
+            if found[name] is not None:
+                collected[name].append(found[name])
+    return {
+        "rainfallTotal": _stats(collected["rainfallTotal"], decimals=1),
+        "rainyDays": _stats(collected["rainyDays"], decimals=1),
+        "temperature": _stats(collected["temperature"], decimals=2),
+    }
+
+
+def _monthly_rain_normals(rain: Series) -> list[float]:
+    """Mean rainfall total of each calendar month, January first.
+
+    The runtime scales each forecast's daily rain by observed normal over model
+    normal for the months a season spans, so it needs these per month.
+    """
+    totals = [[] for _ in range(12)]
+    for year in range(START.year, END.year + 1):
+        for month in range(1, 13):
+            first = date(year, month, 1)
+            last = (date(year + (month == 12), month % 12 + 1, 1)) - timedelta(days=1)
+            totals[month - 1].append(sum(rain.slice(first, last)))
+    return [round(sum(values) / len(values), 1) for values in totals]
 
 
 def build() -> dict:
@@ -109,31 +174,26 @@ def build() -> dict:
             raise SystemExit(f"{name} falls outside the grid")
         rain_key = nearest_clean_cell(region.lat, region.lon, cache, points, "precipitation")
         temp_key = nearest_clean_cell(region.lat, region.lon, cache, points, "temperature")
-        windows: dict[str, dict] = {}
-        for month in range(1, 13):
-            rain, _ = _window_samples(cache[rain_key]["precipitation"], cache[rain_key]["temperature"], month)
-            _, heat = _window_samples(cache[temp_key]["precipitation"], cache[temp_key]["temperature"], month)
-            rain.sort()
-            heat.sort()
-            windows[f"{month:02d}"] = {
-                "n": len(rain),
-                "rainP33": round(quantile(rain, 1 / 3), 1),
-                "rainP67": round(quantile(rain, 2 / 3), 1),
-                "rainNormal": round(sum(rain) / len(rain), 1),
-                "tempP33": round(quantile(heat, 1 / 3), 2),
-                "tempP67": round(quantile(heat, 2 / 3), 2),
-                "tempNormal": round(sum(heat) / len(heat), 2),
-            }
+        rain = Series(START, cache[rain_key]["precipitation"])
+        temp = Series(START, cache[temp_key]["temperature"])
+        seasons = {
+            key: _season_baseline(rain, season)
+            for key, season in SEASONS.items()
+            if season.sector == sector_of(name)
+        }
+        windows = {key: _window_baseline(rain, temp, key) for key in WINDOWS}
         regions[name] = {
             "lat": region.lat,
             "lng": region.lon,
+            "sector": sector_of(name),
             "rainCell": rain_key,
             "tempCell": temp_key,
+            "seasons": seasons,
             "windows": windows,
+            "monthlyRain": _monthly_rain_normals(rain),
         }
     return {
         "baseline": "ERA5 1995-2024",
-        "windowMonths": WINDOW_MONTHS,
         "builtAt": date.today().isoformat(),
         "regions": regions,
     }

@@ -272,28 +272,45 @@ and `degraded: true`; `degradedReason` says which failure it was (`no_key`,
 
 ### The seasonal outlook
 
-`GET /api/outlook/seasonal` serves the next three three-month seasons (for
-example Nov to Jan, Dec to Feb, Jan to Mar) for Ghana's sixteen regions: tercile
-probabilities and the ensemble average for rainfall and temperature.
+`GET /api/outlook/seasonal` serves agro-climatic indices for Ghana's sixteen
+regions, worked out from each ensemble member's daily rain:
 
+- `seasons`: onset date, cessation date, and the early and late dry spells, for
+  the **Northern Single Season**, **Southern Major Season** and **Southern Minor
+  Season**. Each season covers only the regions of its sector (five northern
+  regions, eleven southern).
+- `windows`: rainfall total, number of rainy days and mean maximum temperature
+  for **MAM**, **MJJ** and **JAS**.
+
+Every variable carries the ensemble median (`value`, `display`), the ERA5 normal
+(`normal`, `normalDisplay`) and tercile probabilities. A season or window that
+ends after SEAS5's reach (about 7 months) has `available: false`, the normal,
+and `availableFrom` (the first monthly release that will cover it).
+
+- **Definitions:** standard AGRHYMET rules, all thresholds and season calendars
+  in one block at the top of `app/agro_season.py`. Rainy day 1 mm. Onset: 20 mm
+  in 3 days with no dry spell over 7 days in the next 30. Cessation: a 70 mm soil
+  store losing 5 mm a day, first empty day after the season's reference date.
+  Early dry spell: first 50 days after onset; late: day 51 to cessation.
 - **Source:** ECMWF SEAS5 (51 members) through Open-Meteo's seasonal API,
   fetched by a daily cron (`/api/outlook/seasonal/refresh`, `CRON_SECRET`) that
   only recomputes after ECMWF's monthly release on the 5th. Stored in
   `seasonal_snapshots`.
-- **Baseline:** ERA5 1995-2024 per region and window, baked into
-  `app/data/seasonal_climatology.json` by
+- **Baseline:** ERA5 1995-2024, the same indices per region, season and window,
+  baked into `app/data/seasonal_climatology.json` by
   `python -m backend.scripts.build_seasonal_climatology` from the cache the
   subseasonal bake already downloaded. A few archive cells change abruptly in
   2017 (a data source change, not climate); the bake skips them.
-- **Method:** the model's bias is removed by linear scaling against its own
-  monthly anomalies, then probabilities are blended 60/40 with climatology
-  because raw seasonal ensembles are overconfident. Windows with under 30 mm a
-  month of normal rain are flagged `dryWindow`. See `app/seasonal.py`.
+- **Method:** member rain is scaled by observed normal over the model's own
+  normal (from its monthly anomalies) before any index is computed, and
+  temperature is shifted the same way. Probabilities are blended 60/40 with
+  climatology because raw seasonal ensembles are overconfident. Windows with
+  under 30 mm a month of normal rain are flagged `dryWindow`.
 - **GMet's forecast:** when a `gmet` snapshot is in force it is served first,
-  with the SEAS5 reading alongside as `modelWindows`. The Azure ingest is a stub
-  (`seasonal_runtime.ingest_gmet`, admin-only `POST /api/outlook/seasonal/ingest`)
-  until the feed format is known; the payload it must produce is written out in
-  `seasonal_runtime.GMET_PAYLOAD_CONTRACT`.
+  with the SEAS5 reading alongside as `modelSeasons` and `modelWindows`. The
+  Azure ingest is a stub (`seasonal_runtime.ingest_gmet`, admin-only
+  `POST /api/outlook/seasonal/ingest`) until the feed format is known; the
+  payload it must produce is written out in `seasonal_runtime.GMET_PAYLOAD_CONTRACT`.
 
 ## Related
 

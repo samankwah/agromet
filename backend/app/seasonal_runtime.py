@@ -37,13 +37,29 @@ from pathlib import Path
 
 from . import database, open_meteo
 from .hazards import GHANA_REGIONS
-from .seasonal import (
-    is_dry_window,
-    months_in_window,
-    reduce_window,
-    summarise_variable,
-    upcoming_windows,
+from .agro_season import (
+    FORECAST_REACH_DAYS,
+    SEASON_VARIABLES,
+    SEASONS,
+    WINDOW_VARIABLES,
+    WINDOWS,
+    Series,
+    available_from,
+    day_of_year,
+    from_day_of_year,
+    next_season_year,
+    next_window_year,
+    on,
+    reach_end,
+    required_end,
+    season_indices,
+    sector_of,
+    week_label,
+    window_bounds,
+    window_indices,
 )
+from .s2s import agreement_confidence, dominant_category, quantile, tercile_probabilities
+from .seasonal import is_dry_window, shrink_to_climatology
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +73,7 @@ MONTHLY_VARIABLES = ("precipitation_anomaly", "temperature_2m_anomaly")
 
 # Enough days to reach the end of the third window from any day of the month,
 # inside SEAS5's ~215-day reach.
-FORECAST_DAYS = 200
+FORECAST_DAYS = FORECAST_REACH_DAYS + 1
 
 UPSTREAM_TIMEOUT = 40.0
 REFRESH_BUDGET_SECONDS = 45.0
@@ -121,8 +137,8 @@ def _load_climatology() -> dict:
 CLIMATOLOGY = _load_climatology()
 
 
-def _window_baseline(region: str, start_month: int) -> dict:
-    return ((CLIMATOLOGY.get("regions") or {}).get(region) or {}).get("windows", {}).get(f"{start_month:02d}") or {}
+def _region_clim(region: str) -> dict:
+    return (CLIMATOLOGY.get("regions") or {}).get(region) or {}
 
 
 # ---------------------------------------------------------------------------
@@ -160,68 +176,251 @@ def _members(daily: dict, variable: str) -> list[list]:
     return [daily[key] for key in keys]
 
 
-def _monthly_anomalies(monthly: dict, variable: str, window_start: str) -> list[float | None]:
+def _anomaly_lookup(monthly: dict, variable: str) -> dict[str, float | None]:
     times = [stamp[:7] for stamp in monthly.get("time") or []]
-    values = monthly.get(variable) or []
-    lookup = dict(zip(times, values))
-    return [lookup.get(month) for month in months_in_window(window_start)]
+    return dict(zip(times, monthly.get(variable) or []))
 
 
-def _build_region(name: str, lat: float, lng: float, daily_entry: dict, monthly_entry: dict, window: dict) -> dict | None:
-    daily = daily_entry.get("daily") or {}
-    monthly = monthly_entry.get("monthly") or {}
-    times = daily.get("time") or []
-    baseline = _window_baseline(name, window["startMonth"])
+def _months_between(first: date, last: date) -> list[date]:
+    months, cursor = [], date(first.year, first.month, 1)
+    while cursor <= last:
+        months.append(cursor)
+        cursor = date(cursor.year + (cursor.month == 12), cursor.month % 12 + 1, 1)
+    return months
 
-    rain_members = [
-        reduce_window(times, series, window["start"], window["end"], mean=False)
-        for series in _members(daily, "precipitation_sum")
-    ]
-    temp_members = [
-        reduce_window(times, series, window["start"], window["end"], mean=True)
-        for series in _members(daily, "temperature_2m_max")
-    ]
 
-    rainfall = summarise_variable(
-        rain_members, baseline, "rain",
-        _monthly_anomalies(monthly, "precipitation_anomaly", window["start"]),
-        mean=False, scale=True,
-    )
-    temperature = summarise_variable(
-        temp_members, baseline, "temp",
-        _monthly_anomalies(monthly, "temperature_2m_anomaly", window["start"]),
-        mean=True, scale=False,
-    )
-    if rainfall is None and temperature is None:
+def _rain_bias_ratio(members: list[Series], anomalies: dict, monthly_normals: list[float], first: date, last: date) -> float:
+    """Observed normal over model normal, for the months ``first`` to ``last`` span.
+
+    The model normal is the ensemble's monthly mean minus Open-Meteo's anomaly
+    against the model's own climate, so a model that rains too much has its rain
+    scaled down before onset or totals are worked out. Months the forecast or
+    the anomalies do not cover are left out; with none left the ratio is 1.
+    Clamped, because a near-dry month can make the ratio explode.
+    """
+    observed = model = 0.0
+    for month in _months_between(first, last):
+        anomaly = anomalies.get(month.strftime("%Y-%m"))
+        month_end = date(month.year + (month.month == 12), month.month % 12 + 1, 1) - timedelta(days=1)
+        if anomaly is None or not members or not members[0].covers(month, month_end):
+            continue
+        mean_total = sum(sum(series.slice(month, month_end)) for series in members) / len(members)
+        model += mean_total - float(anomaly)
+        observed += monthly_normals[month.month - 1] if monthly_normals else 0.0
+    if model <= 0 or observed <= 0:
+        return 1.0
+    return min(2.0, max(0.5, observed / model))
+
+
+def _scaled(series: Series, ratio: float) -> Series:
+    if ratio == 1.0:
+        return series
+    return Series(series.first, [None if value is None else float(value) * ratio for value in series.values])
+
+
+def _probability_block(values: list[float], stats: dict) -> dict:
+    """Terciles of the members against the ERA5 boundaries, shrunk to climatology."""
+    probabilities = tercile_probabilities(values, stats["p33"], stats["p67"])
+    if probabilities is None:
+        return {}
+    probabilities = shrink_to_climatology(probabilities)
+    return {
+        "probabilities": {name: round(probabilities[name], 3) for name in ("below", "normal", "above")},
+        "category": dominant_category(probabilities),
+        "confidence": agreement_confidence(probabilities),
+        "noSignal": probabilities["degenerate"],
+    }
+
+
+def _display(variable: str, value: float | None, year: int, *, no_onset_from: float | None = None) -> str | None:
+    """How a value reads on screen: a week for dates, days or mm otherwise."""
+    if value is None:
         return None
-    if rainfall is not None:
-        rainfall["dryWindow"] = is_dry_window(baseline.get("rainNormal"))
-    return {"id": name, "region": name, "lat": lat, "lng": lng, "rainfall": rainfall, "temperature": temperature}
+    if variable in ("onset", "cessation"):
+        if no_onset_from is not None and value >= no_onset_from:
+            return "No clear start in most years" if variable == "onset" else None
+        return week_label(from_day_of_year(year, value))
+    if variable in ("earlyDrySpell", "lateDrySpell", "rainyDays"):
+        return f"{round(value)} days"
+    if variable == "rainfallTotal":
+        return f"{round(value)} mm"
+    if variable == "temperature":
+        return f"{value:.1f}°C"
+    return str(value)
+
+
+def _unavailable(variable: str, stats: dict | None, year: int, needed: date, *, sentinel: float | None = None) -> dict:
+    normal = (stats or {}).get("median")
+    return {
+        "available": False,
+        "availableFrom": available_from(needed),
+        "normal": normal,
+        "normalDisplay": _display(variable, normal, year, no_onset_from=sentinel),
+    }
+
+
+def _season_cell(name: str, lat: float, lng: float, rain_members: list[Series], anomalies: dict, key: str, run_day: date) -> dict:
+    season = SEASONS[key]
+    year = next_season_year(season, run_day)
+    clim = _region_clim(name)
+    baseline = (clim.get("seasons") or {}).get(key) or {}
+    sentinel = day_of_year(on(year, season.onset_end)) + 1
+    reach = reach_end(run_day)
+    cell: dict = {"id": name, "region": name, "lat": lat, "lng": lng}
+
+    reachable = [
+        variable for variable in SEASON_VARIABLES
+        if required_end(season, year, variable) <= reach
+        and rain_members and rain_members[0].covers(on(year, season.onset_start), required_end(season, year, variable))
+    ]
+    indices: list[dict] = []
+    if reachable:
+        ratio = _rain_bias_ratio(
+            rain_members, anomalies, clim.get("monthlyRain") or [],
+            on(year, season.onset_start), min(on(year, season.season_end), reach),
+        )
+        indices = [season_indices(_scaled(series, ratio), season, year) for series in rain_members]
+
+    for variable in SEASON_VARIABLES:
+        stats = baseline.get(variable)
+        needed = required_end(season, year, variable)
+        if variable not in reachable or stats is None:
+            cell[variable] = _unavailable(variable, stats, year, needed, sentinel=sentinel if variable == "onset" else None)
+            continue
+        if variable == "onset":
+            values = [sentinel if found["onset"] is None else found["onset"] for found in indices]
+        else:
+            values = [found[variable] for found in indices if found[variable] is not None]
+        if not values:
+            cell[variable] = _unavailable(variable, stats, year, needed)
+            continue
+        median = quantile(sorted(values), 0.5)
+        block = {
+            "available": True,
+            "value": round(median, 1),
+            "display": _display(variable, median, year, no_onset_from=sentinel if variable == "onset" else None),
+            "members": len(values),
+            "normal": stats.get("median"),
+            "normalDisplay": _display(variable, stats.get("median"), year, no_onset_from=sentinel if variable == "onset" else None),
+        }
+        block.update(_probability_block(values, stats))
+        cell[variable] = block
+    return cell
+
+
+def _window_cell(
+    name: str, lat: float, lng: float,
+    rain_members: list[Series], temp_members: list[Series],
+    rain_anomalies: dict, temp_anomalies: dict, key: str, run_day: date,
+) -> dict:
+    year = next_window_year(key, run_day)
+    first, last = window_bounds(key, year)
+    clim = _region_clim(name)
+    baseline = (clim.get("windows") or {}).get(key) or {}
+    cell: dict = {"id": name, "region": name, "lat": lat, "lng": lng}
+    reachable = last <= reach_end(run_day) and bool(rain_members) and rain_members[0].covers(first, last)
+
+    if not reachable:
+        for variable in WINDOW_VARIABLES:
+            cell[variable] = _unavailable(variable, baseline.get(variable), year, last)
+        rain_stats = baseline.get("rainfallTotal") or {}
+        cell["rainfallTotal"]["dryWindow"] = is_dry_window(rain_stats.get("mean"))
+        return cell
+
+    ratio = _rain_bias_ratio(rain_members, rain_anomalies, clim.get("monthlyRain") or [], first, last)
+    found = [window_indices(_scaled(series, ratio), None, key, year) for series in rain_members]
+    for variable in ("rainfallTotal", "rainyDays"):
+        stats = baseline.get(variable) or {}
+        values = [entry[variable] for entry in found]
+        median = quantile(sorted(values), 0.5)
+        block = {
+            "available": True,
+            "value": round(median, 1),
+            "display": _display(variable, median, year),
+            "members": len(values),
+            "normal": stats.get("median"),
+            "normalDisplay": _display(variable, stats.get("median"), year),
+        }
+        if stats:
+            block.update(_probability_block(values, stats))
+        cell[variable] = block
+    cell["rainfallTotal"]["dryWindow"] = is_dry_window((baseline.get("rainfallTotal") or {}).get("mean"))
+
+    # Temperature: the model's warm or cool habit is removed by shifting each
+    # member by (model normal minus observed normal), the model normal being the
+    # ensemble mean minus its own anomaly over the window's months.
+    stats = baseline.get("temperature") or {}
+    heats = [
+        value for value in (
+            (sum(series.slice(first, last)) / len(series.slice(first, last))) if series.covers(first, last) else None
+            for series in temp_members
+        ) if value is not None
+    ]
+    if not heats or not stats:
+        cell["temperature"] = _unavailable("temperature", stats, year, last)
+        return cell
+    mean_heat = sum(heats) / len(heats)
+    anomalies = [temp_anomalies.get(month.strftime("%Y-%m")) for month in _months_between(first, last)]
+    shift = 0.0
+    if anomalies and all(value is not None for value in anomalies):
+        model_norm = mean_heat - sum(float(value) for value in anomalies) / len(anomalies)
+        shift = model_norm - float(stats.get("mean", model_norm))
+    corrected = [value - shift for value in heats]
+    median = quantile(sorted(corrected), 0.5)
+    block = {
+        "available": True,
+        "value": round(median, 2),
+        "display": _display("temperature", median, year),
+        "members": len(corrected),
+        "normal": stats.get("median"),
+        "normalDisplay": _display("temperature", stats.get("median"), year),
+    }
+    block.update(_probability_block(corrected, stats))
+    cell["temperature"] = block
+    return cell
 
 
 async def compute_snapshot(run_day: date | None = None) -> dict:
-    """Fetch SEAS5 and reduce it to region outlooks for the next three windows."""
+    """Fetch SEAS5 and reduce it to region outlooks per season and window."""
     run_day = run_day or datetime.now(GHANA_TZ).date()
     points = _region_points()
     daily_entries, monthly_entries = await _fetch(points)
 
-    windows = []
-    for window in upcoming_windows(run_day):
-        cells = []
-        for index, (name, lat, lng) in enumerate(points):
-            if index >= len(daily_entries) or index >= len(monthly_entries):
-                break
-            try:
-                cell = _build_region(name, lat, lng, daily_entries[index], monthly_entries[index], window)
-                if cell:
-                    cells.append(cell)
-            except Exception:
-                logger.exception("failed to reduce %s for %s", name, window["key"])
-        windows.append({**window, "cells": cells})
+    seasons: dict[str, dict] = {key: {"cells": []} for key in SEASONS}
+    windows: dict[str, dict] = {key: {"cells": []} for key in WINDOWS}
+    for index, (name, lat, lng) in enumerate(points):
+        if index >= len(daily_entries) or index >= len(monthly_entries):
+            break
+        try:
+            daily = daily_entries[index].get("daily") or {}
+            monthly = monthly_entries[index].get("monthly") or {}
+            times = daily.get("time") or []
+            if not times:
+                continue
+            first_day = date.fromisoformat(times[0][:10])
+            rain_members = [Series(first_day, series) for series in _members(daily, "precipitation_sum")]
+            temp_members = [Series(first_day, series) for series in _members(daily, "temperature_2m_max")]
+            rain_anomalies = _anomaly_lookup(monthly, "precipitation_anomaly")
+            temp_anomalies = _anomaly_lookup(monthly, "temperature_2m_anomaly")
+            for key, season in SEASONS.items():
+                if season.sector == sector_of(name):
+                    seasons[key]["cells"].append(_season_cell(name, lat, lng, rain_members, rain_anomalies, key, run_day))
+            for key in WINDOWS:
+                windows[key]["cells"].append(
+                    _window_cell(name, lat, lng, rain_members, temp_members, rain_anomalies, temp_anomalies, key, run_day)
+                )
+        except Exception:
+            logger.exception("failed to reduce %s", name)
 
-    if not any(window["cells"] for window in windows):
+    for key, season in SEASONS.items():
+        seasons[key].update({"key": key, "label": season.label, "year": next_season_year(season, run_day), "sector": season.sector})
+    for key, (start_month, label) in WINDOWS.items():
+        year = next_window_year(key, run_day)
+        windows[key].update({"key": key, "label": label, "year": year, "start": window_bounds(key, year)[0].isoformat(), "end": window_bounds(key, year)[1].isoformat()})
+
+    if not any(block["cells"] for block in seasons.values()) and not any(block["cells"] for block in windows.values()):
         raise RuntimeError("upstream returned no usable regions")
-    return {"source": "seas5", "runDate": run_day.isoformat(), "windows": windows}
+    return {"source": "seas5", "runDate": run_day.isoformat(), "reachEnd": reach_end(run_day).isoformat(), "seasons": seasons, "windows": windows}
 
 
 # ---------------------------------------------------------------------------
@@ -382,10 +581,11 @@ def reset_cache() -> None:
 def current() -> dict:
     """The outlook to show: GMet's when one is in force, otherwise SEAS5.
 
-    With GMet in force the SEAS5 windows travel as ``modelWindows``, so the app
-    can show what the model alone reads, as the hazard screen does for an
-    issued bulletin.
+    With GMet in force the SEAS5 reading travels as ``modelSeasons`` and
+    ``modelWindows``, so the app can show what the model alone reads, as the
+    hazard screen does for an issued bulletin.
     """
+    seas5 = _SEAS5 or {}
     if _GMET:
         return {
             "source": "gmet",
@@ -395,15 +595,21 @@ def current() -> dict:
             "validTo": _GMET.get("validTo"),
             "pdfUrl": _GMET.get("pdfUrl"),
             "runDate": _GMET.get("runDate"),
-            "windows": _GMET.get("windows") or [],
-            "modelWindows": (_SEAS5 or {}).get("windows") or [],
+            "reachEnd": _GMET.get("reachEnd"),
+            "seasons": _GMET.get("seasons") or {},
+            "windows": _GMET.get("windows") or {},
+            "modelSeasons": seas5.get("seasons") or {},
+            "modelWindows": seas5.get("windows") or {},
         }
     return {
         "source": "seas5",
         "issuedBy": None,
-        "runDate": (_SEAS5 or {}).get("runDate"),
-        "windows": (_SEAS5 or {}).get("windows") or [],
-        "modelWindows": [],
+        "runDate": seas5.get("runDate"),
+        "reachEnd": seas5.get("reachEnd"),
+        "seasons": seas5.get("seasons") or {},
+        "windows": seas5.get("windows") or {},
+        "modelSeasons": {},
+        "modelWindows": {},
     }
 
 
@@ -439,27 +645,35 @@ needs no second code path:
 {
   "source": "gmet",
   "issuedBy": "Ghana Meteorological Agency",
-  "issuedAt": "2027-02-24",           # date GMet issued it
-  "validFrom": "2027-03-01 00:00:00", # UTC, database timestamp format
-  "validTo": "2027-07-31 23:59:59",
-  "pdfUrl": "https://...",            # optional, the published bulletin
+  "issuedAt": "2027-02-24",
+  "validFrom": "2027-03-01 00:00:00",   # UTC, database timestamp format
+  "validTo": "2027-11-30 23:59:59",
+  "pdfUrl": "https://...",               # optional, the published bulletin
   "runDate": "2027-02-24",
-  "windows": [
-    {"key": "2027-03", "startMonth": 3, "label": "Mar to May",
-     "start": "2027-03-01", "end": "2027-05-31",
-     "cells": [
-       {"id": "Greater Accra", "region": "Greater Accra", "lat": 5.69, "lng": -0.09,
-        "rainfall": {"probabilities": {"below": 0.2, "normal": 0.35, "above": 0.45},
-                     "category": "above", "confidence": "moderate",
-                     "noSignal": false, "dryWindow": false,
-                     "value": 320.0, "normal": 298.5},
-        "temperature": {...same keys...}}
-     ]}
-  ]
+  "seasons": {
+    "southern-major": {"key": "southern-major", "label": "Southern Major Season",
+      "year": 2027, "sector": "south",
+      "cells": [{"id": "Ashanti", "region": "Ashanti", "lat": 6.7, "lng": -1.6,
+        "onset":         {"available": true, "value": 80, "display": "Week 3 of March",
+                          "normal": 75, "normalDisplay": "Week 2 of March",
+                          "probabilities": {"below": 0.2, "normal": 0.35, "above": 0.45},
+                          "category": "above", "confidence": "moderate", "noSignal": false},
+        "cessation":     {...same keys...},
+        "earlyDrySpell": {...value in days...},
+        "lateDrySpell":  {...}}]},
+    "southern-minor": {...}, "northern": {...}
+  },
+  "windows": {
+    "MAM": {"key": "MAM", "label": "March to May", "year": 2027,
+      "cells": [{"id": "Ashanti", ..., "rainfallTotal": {..., "dryWindow": false},
+                 "rainyDays": {...}, "temperature": {...}}]},
+    "MJJ": {...}, "JAS": {...}
+  }
 }
 
-Region names must be the sixteen in ``hazards.GHANA_REGIONS``. Store it with
-``store_snapshot(payload, source="gmet", valid_from=..., valid_to=...)``.
+Region names are the sixteen in ``hazards.GHANA_REGIONS``. Onset and cessation
+values are day of year. "below" means earlier (dates) or less (amounts).
+Store it with ``store_snapshot(payload, source="gmet", valid_from=..., valid_to=...)``.
 """
 
 

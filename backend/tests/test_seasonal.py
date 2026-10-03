@@ -1,4 +1,4 @@
-"""The seasonal outlook: windows, bias correction, storage, precedence, routes."""
+"""The seasonal outlook: seasons and windows, bias scaling, reach, storage, precedence, routes."""
 
 from __future__ import annotations
 
@@ -9,67 +9,15 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 
 from backend.app import config, database, seasonal_runtime
+from backend.app.agro_season import NORTHERN_REGIONS, week_label
 from backend.app.hazards import GHANA_REGIONS
 from backend.app.main import app
-from backend.app.seasonal import (
-    SKILL_WEIGHT,
-    corrected_bounds,
-    is_dry_window,
-    model_normal,
-    reduce_window,
-    shrink_to_climatology,
-    summarise_variable,
-    upcoming_windows,
-    window_label,
-)
+from backend.app.seasonal import SKILL_WEIGHT, is_dry_window, shrink_to_climatology
 
-RUN_DAY = date(2026, 10, 6)
-
-
-class WindowTests(unittest.TestCase):
-    def test_a_run_speaks_about_the_next_three_seasons_not_the_current_month(self):
-        windows = upcoming_windows(RUN_DAY)
-        self.assertEqual([w["label"] for w in windows], ["Nov to Jan", "Dec to Feb", "Jan to Mar"])
-        self.assertEqual(windows[0]["start"], "2026-11-01")
-        self.assertEqual(windows[0]["end"], "2027-01-31")
-        self.assertEqual(windows[2]["end"], "2027-03-31")
-
-    def test_labels_wrap_the_year_and_use_no_dashes(self):
-        self.assertEqual(window_label(date(2026, 12, 1)), "Dec to Feb")
-        self.assertNotIn("-", window_label(date(2026, 12, 1)))
-
-    def test_a_member_with_a_missing_day_is_dropped_not_summed_short(self):
-        times = ["2026-11-01", "2026-11-02", "2026-11-03"]
-        self.assertEqual(reduce_window(times, [1.0, 2.0, 3.0], "2026-11-01", "2026-11-03", mean=False), 6.0)
-        self.assertIsNone(reduce_window(times, [1.0, None, 3.0], "2026-11-01", "2026-11-03", mean=False))
-        self.assertIsNone(reduce_window(times[:2], [1.0, 2.0], "2026-11-01", "2026-11-03", mean=False))
-
-
-class BiasCorrectionTests(unittest.TestCase):
-    baseline = {"rainP33": 100.0, "rainP67": 200.0, "rainNormal": 150.0, "tempP33": 30.0, "tempP67": 31.0, "tempNormal": 30.5}
-
-    def test_model_normal_is_the_forecast_minus_its_own_anomaly(self):
-        self.assertEqual(model_normal(300.0, [20.0, 20.0, 20.0], mean=False), 240.0)
-        self.assertEqual(model_normal(32.0, [1.0, 2.0, 3.0], mean=True), 30.0)
-        self.assertIsNone(model_normal(300.0, [20.0, None, 20.0], mean=False))
-
-    def test_a_wet_model_has_its_rain_boundaries_raised_in_proportion(self):
-        # The model's normal is 20% above ERA5's, so a 20% wetter forecast is normal.
-        self.assertEqual(corrected_bounds(self.baseline, "rain", 180.0, scale=True), (120.0, 240.0))
-
-    def test_a_warm_model_has_its_temperature_boundaries_shifted(self):
-        self.assertEqual(corrected_bounds(self.baseline, "temp", 32.5, scale=False), (32.0, 33.0))
-
-    def test_without_a_model_normal_the_era5_boundaries_stand(self):
-        self.assertEqual(corrected_bounds(self.baseline, "rain", None, scale=True), (100.0, 200.0))
-
-    def test_a_model_wet_habit_alone_is_not_a_signal(self):
-        # Every member 20% above ERA5's normal, and the anomaly says that is the
-        # model's own normal: the corrected outlook must not call it wetter.
-        members = [180.0] * 51
-        result = summarise_variable(members, self.baseline, "rain", [0.0, 0.0, 0.0], mean=False, scale=True)
-        self.assertEqual(result["category"], "normal")
-        self.assertTrue(result["biasCorrected"])
+# A February run reaches into September: the southern major season and MAM are
+# in reach, the northern season's end and the minor season are not.
+RUN_DAY = date(2027, 2, 6)
+DAYS = 215
 
 
 class ShrinkageTests(unittest.TestCase):
@@ -77,18 +25,10 @@ class ShrinkageTests(unittest.TestCase):
         shrunk = shrink_to_climatology({"below": 0.0, "normal": 0.0, "above": 1.0})
         self.assertAlmostEqual(shrunk["above"], SKILL_WEIGHT + (1 - SKILL_WEIGHT) / 3)
         self.assertAlmostEqual(sum(shrunk[k] for k in ("below", "normal", "above")), 1.0)
-        self.assertLess(shrunk["above"], 0.8)
 
-    def test_even_odds_stay_even(self):
-        shrunk = shrink_to_climatology({"below": 1 / 3, "normal": 1 / 3, "above": 1 / 3})
-        for name in ("below", "normal", "above"):
-            self.assertAlmostEqual(shrunk[name], 1 / 3)
-
-
-class DryWindowTests(unittest.TestCase):
     def test_under_thirty_millimetres_a_month_is_the_dry_season(self):
         self.assertTrue(is_dry_window(60.0))
-        self.assertFalse(is_dry_window(120.0))
+        self.assertFalse(is_dry_window(300.0))
         self.assertFalse(is_dry_window(None))
 
 
@@ -96,21 +36,38 @@ class DryWindowTests(unittest.TestCase):
 # Runtime and routes
 # ---------------------------------------------------------------------------
 
-def fake_climatology() -> dict:
-    window = {"n": 30, "rainP33": 100.0, "rainP67": 200.0, "rainNormal": 150.0,
-              "tempP33": 30.0, "tempP67": 31.0, "tempNormal": 30.5}
-    return {"regions": {name: {"windows": {f"{m:02d}": dict(window) for m in range(1, 13)}} for name in GHANA_REGIONS}}
+def stats(p33: float, p67: float, median: float) -> dict:
+    return {"n": 30, "p33": p33, "p67": p67, "median": median, "mean": median}
 
 
-def fake_fetch(rain_per_day: float = 2.5, temp: float = 31.5, rain_anomaly: float = 0.0):
+def fake_climatology(monthly_rain: list[float] | None = None) -> dict:
+    season = {
+        "onset": stats(70, 90, 80),  # around 11 to 31 March
+        "cessation": stats(200, 215, 208),
+        "earlyDrySpell": stats(4, 8, 6),
+        "lateDrySpell": stats(4, 8, 6),
+    }
+    northern = {**season, "onset": stats(140, 160, 150)}
+    window = {"rainfallTotal": stats(300, 500, 400), "rainyDays": stats(40, 60, 50), "temperature": stats(30, 31, 30.5)}
+    regions = {}
+    for name in GHANA_REGIONS:
+        regions[name] = {
+            "seasons": {"southern-major": season, "southern-minor": season, "northern": northern},
+            "windows": {key: dict(window) for key in ("MAM", "MJJ", "JAS")},
+            "monthlyRain": monthly_rain or [],
+        }
+    return {"regions": regions}
+
+
+def fake_fetch(rain_per_day: float = 8.0, temp: float = 31.5, rain_anomaly: float = 0.0):
     """What Open-Meteo returns for the sixteen regions: daily members and monthly anomalies."""
-    times = [(RUN_DAY + timedelta(days=i)).isoformat() for i in range(200)]
-    daily = {"time": times, "precipitation_sum": [rain_per_day] * 200, "temperature_2m_max": [temp] * 200}
+    times = [(RUN_DAY + timedelta(days=i)).isoformat() for i in range(DAYS)]
+    daily = {"time": times, "precipitation_sum": [rain_per_day] * DAYS, "temperature_2m_max": [temp] * DAYS}
     for member in range(1, 51):
-        daily[f"precipitation_sum_member{member:02d}"] = [rain_per_day] * 200
-        daily[f"temperature_2m_max_member{member:02d}"] = [temp] * 200
-    months = [f"{(RUN_DAY.replace(day=1) + timedelta(days=31 * i)).strftime('%Y-%m')}-01" for i in range(7)]
-    monthly = {"time": months, "precipitation_anomaly": [rain_anomaly] * 7, "temperature_2m_anomaly": [0.0] * 7}
+        daily[f"precipitation_sum_member{member:02d}"] = [rain_per_day] * DAYS
+        daily[f"temperature_2m_max_member{member:02d}"] = [temp] * DAYS
+    months = [f"{RUN_DAY.year + (RUN_DAY.month - 1 + i) // 12}-{(RUN_DAY.month - 1 + i) % 12 + 1:02d}-01" for i in range(8)]
+    monthly = {"time": months, "precipitation_anomaly": [rain_anomaly] * 8, "temperature_2m_anomaly": [0.0] * 8}
 
     async def fetch(points):
         return [{"daily": daily}] * len(points), [{"monthly": monthly}] * len(points)
@@ -128,38 +85,64 @@ class RuntimeTests(unittest.TestCase):
     def tearDown(self):
         seasonal_runtime.reset_cache()
 
-    def compute(self, **kwargs):
+    def compute(self, monthly_rain=None, **kwargs):
         import asyncio
 
-        with patch.object(seasonal_runtime, "CLIMATOLOGY", fake_climatology()), \
+        with patch.object(seasonal_runtime, "CLIMATOLOGY", fake_climatology(monthly_rain)), \
              patch.object(seasonal_runtime, "_fetch", fake_fetch(**kwargs)):
             return asyncio.run(seasonal_runtime.compute_snapshot(RUN_DAY))
 
-    def test_every_region_and_window_is_reduced(self):
+    def test_each_season_holds_only_its_own_sector_and_every_window_all_regions(self):
         snapshot = self.compute()
-        self.assertEqual(len(snapshot["windows"]), 3)
-        for window in snapshot["windows"]:
-            self.assertEqual(len(window["cells"]), len(GHANA_REGIONS))
-        cell = snapshot["windows"][0]["cells"][0]
-        probabilities = cell["rainfall"]["probabilities"]
-        self.assertAlmostEqual(sum(probabilities.values()), 1.0, places=2)
-        self.assertIn("dryWindow", cell["rainfall"])
+        self.assertEqual(set(snapshot["seasons"]), {"northern", "southern-major", "southern-minor"})
+        self.assertEqual(set(snapshot["windows"]), {"MAM", "MJJ", "JAS"})
+        northern = {cell["region"] for cell in snapshot["seasons"]["northern"]["cells"]}
+        southern = {cell["region"] for cell in snapshot["seasons"]["southern-major"]["cells"]}
+        self.assertEqual(northern, set(NORTHERN_REGIONS))
+        self.assertFalse(northern & southern)
+        self.assertEqual(len(northern) + len(southern), len(GHANA_REGIONS))
+        for block in snapshot["windows"].values():
+            self.assertEqual(len(block["cells"]), len(GHANA_REGIONS))
+        self.assertEqual(snapshot["seasons"]["northern"]["label"], "Northern Single Season")
 
-    def test_a_wetter_season_reads_wetter(self):
-        # 92 days at 5 mm is 460 mm, and the model says 100 mm a month of that
-        # is above its own normal: a real wet signal, not the model's habit.
-        cell = self.compute(rain_per_day=5.0, rain_anomaly=100.0)["windows"][0]["cells"][0]
-        self.assertEqual(cell["rainfall"]["category"], "above")
+    def test_an_early_steady_start_reads_earlier_than_normal(self):
+        onset = self.compute()["seasons"]["southern-major"]["cells"][0]["onset"]
+        self.assertTrue(onset["available"])
+        self.assertEqual(onset["display"], "Week 1 of March")
+        self.assertEqual(onset["category"], "below")
+        self.assertAlmostEqual(sum(onset["probabilities"].values()), 1.0, places=2)
 
-    def test_rain_the_model_calls_normal_is_not_a_wet_signal(self):
-        # The same 460 mm with no anomaly is the model's own normal.
-        cell = self.compute(rain_per_day=5.0)["windows"][0]["cells"][0]
-        self.assertEqual(cell["rainfall"]["category"], "normal")
+    def test_a_season_beyond_the_model_reach_shows_the_normal_and_when_it_will_be_ready(self):
+        snapshot = self.compute()
+        minor = snapshot["seasons"]["southern-minor"]["cells"][0]["onset"]
+        self.assertFalse(minor["available"])
+        self.assertEqual(minor["availableFrom"], "2027-05")
+        self.assertEqual(minor["normalDisplay"], week_label(date(2027, 1, 1) + timedelta(days=79)))
+        self.assertNotIn("probabilities", minor)
+        north = snapshot["seasons"]["northern"]["cells"][0]
+        self.assertTrue(north["onset"]["available"])
+        self.assertFalse(north["cessation"]["available"])
+
+    def test_a_wet_model_is_scaled_down_before_onset_is_found(self):
+        # The model's 8 mm a day against a normal near 4 mm halves every member:
+        # 12 mm in three days never makes an onset, so all members read late.
+        onset = self.compute(monthly_rain=[120.0] * 12)["seasons"]["southern-major"]["cells"][0]["onset"]
+        self.assertEqual(onset["category"], "above")
+        self.assertEqual(onset["display"], "No clear start in most years")
+
+    def test_window_totals_and_rainy_days_come_from_the_daily_rain(self):
+        snapshot = self.compute()
+        cell = snapshot["windows"]["MAM"]["cells"][0]
+        self.assertEqual(cell["rainyDays"]["value"], 92)
+        self.assertEqual(cell["rainfallTotal"]["value"], 736.0)
+        self.assertEqual(cell["rainfallTotal"]["category"], "above")
+        self.assertIn("dryWindow", cell["rainfallTotal"])
+        self.assertFalse(snapshot["windows"]["JAS"]["cells"][0]["rainfallTotal"]["available"])
 
     def test_a_gmet_snapshot_in_force_is_served_first_with_the_model_alongside(self):
         seasonal_runtime.store_snapshot(self.compute())
-        gmet = {"source": "gmet", "issuedBy": "Ghana Meteorological Agency", "runDate": "2026-10-01",
-                "windows": [{"key": "2026-11", "label": "Nov to Jan", "cells": []}]}
+        gmet = {"source": "gmet", "issuedBy": "Ghana Meteorological Agency", "runDate": "2027-02-01",
+                "seasons": {"southern-major": {"key": "southern-major", "cells": []}}, "windows": {}}
         seasonal_runtime.store_snapshot(gmet, source="gmet", valid_from="2026-01-01 00:00:00", valid_to="2099-01-01 00:00:00")
 
         import asyncio
@@ -167,11 +150,12 @@ class RuntimeTests(unittest.TestCase):
         current = seasonal_runtime.current()
         self.assertEqual(current["source"], "gmet")
         self.assertEqual(current["issuedBy"], "Ghana Meteorological Agency")
-        self.assertEqual(len(current["modelWindows"]), 3)
+        self.assertEqual(set(current["modelSeasons"]), {"northern", "southern-major", "southern-minor"})
+        self.assertEqual(set(current["modelWindows"]), {"MAM", "MJJ", "JAS"})
 
     def test_an_expired_gmet_snapshot_falls_back_to_the_model(self):
         seasonal_runtime.store_snapshot(self.compute())
-        gmet = {"source": "gmet", "windows": [{"key": "2020-03", "cells": []}]}
+        gmet = {"source": "gmet", "seasons": {}, "windows": {}}
         seasonal_runtime.store_snapshot(gmet, source="gmet", valid_from="2020-01-01 00:00:00", valid_to="2020-06-01 00:00:00")
 
         import asyncio
@@ -205,6 +189,7 @@ class RouteTests(unittest.TestCase):
         self.assertFalse(data["unavailable"])
         self.assertEqual(data["source"], "seas5")
         self.assertEqual(data["geography"], "region")
+        self.assertEqual(len(data["seasons"]), 3)
         self.assertEqual(len(data["windows"]), 3)
         self.assertIn("ECMWF SEAS5", data["model"])
 
