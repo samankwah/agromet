@@ -171,6 +171,15 @@ class RuntimeTests(unittest.TestCase):
         self.assertTrue(seasonal_runtime.needs_new_run(date(2026, 10, 4)))
         self.assertEqual(seasonal_runtime.current()["seasons"], {})
 
+    def test_a_snapshot_missing_a_window_this_code_defines_counts_as_none(self):
+        snapshot = self.compute()
+        del snapshot["windows"]["SON"]
+        seasonal_runtime.store_snapshot(snapshot)
+
+        import asyncio
+        asyncio.run(seasonal_runtime.load_snapshot(force=True))
+        self.assertEqual(seasonal_runtime.current()["windows"], {})
+
     def test_a_new_run_is_needed_only_after_the_monthly_release(self):
         seasonal_runtime._SEAS5 = {"runDate": "2026-10-06"}
         self.assertFalse(seasonal_runtime.needs_new_run(date(2026, 10, 20)))

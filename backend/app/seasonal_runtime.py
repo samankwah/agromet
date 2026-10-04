@@ -464,6 +464,17 @@ def _current_shape(payload: dict | None) -> bool:
     return isinstance(payload, dict) and isinstance(payload.get("seasons"), dict) and isinstance(payload.get("windows"), dict)
 
 
+def _complete(payload: dict) -> bool:
+    """True when a SEAS5 row holds every season and window this code defines.
+
+    Adding a window (SON was added after the first run) would otherwise leave
+    it missing until the next monthly release, so a row short of one is
+    recomputed by the first reader. GMet rows are not held to this: a
+    published forecast may cover fewer windows.
+    """
+    return set(SEASONS) <= set(payload["seasons"]) and set(WINDOWS) <= set(payload["windows"])
+
+
 def _read_latest() -> tuple[dict | None, float, dict | None]:
     """The newest SEAS5 row, and the newest GMet row in force today."""
     now = database.utc_stamp()
@@ -481,7 +492,7 @@ def _read_latest() -> tuple[dict | None, float, dict | None]:
     if seas5 is not None:
         row = dict(seas5)
         payload = json.loads(row["payload"])
-        if _current_shape(payload):
+        if _current_shape(payload) and _complete(payload):
             seas5_payload, seas5_stamp = payload, _stamp_to_epoch(row["computed_at"])
     gmet_payload = json.loads(dict(gmet)["payload"]) if gmet is not None else None
     if not _current_shape(gmet_payload):
