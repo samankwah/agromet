@@ -180,6 +180,7 @@ const AppDownload = () => {
   const [platform] = useState(() => detectPlatform());
 
   const hasApk = Boolean(MOBILE_APP.apk.url);
+  const playLive = Boolean(playStoreUrl());
   const hasQr = Boolean(MOBILE_APP.shortUrl);
   const showTesting = Boolean(MOBILE_APP.android.testOptInUrl) && !MOBILE_APP.android.live;
   const iosId = MOBILE_APP.ios.appId;
@@ -225,8 +226,11 @@ const AppDownload = () => {
             <Card title="Best for your phone">
               {platform === "android" && (
                 <div className="flex flex-col items-center gap-4">
+                  {/* Until the Play listing is public, the app file is the
+                      only way in, so it gets the button rather than a link. */}
+                  {hasApk && !playLive && <ApkLink />}
                   <PlayOption height={LARGE} />
-                  {hasApk && (
+                  {hasApk && playLive && (
                     <a
                       href="#apk"
                       className="text-sm font-medium text-neo-muted underline hover:text-neo-accent-strong"
@@ -271,7 +275,7 @@ const AppDownload = () => {
 
             {hasApk && (
               <div id="apk" className="scroll-mt-28">
-                <Card title="Android phone without Google Play" icon={FaAndroid}>
+                <Card title={playLive ? "Android phone without Google Play" : "Android app file"} icon={FaAndroid}>
                   <div className="mb-5">
                     <ApkLink />
                   </div>

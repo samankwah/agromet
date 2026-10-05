@@ -47,10 +47,10 @@ export const MOBILE_APP = {
     testOptInUrl: '',
   },
   apk: {
-    url: '',
-    version: '',
-    sizeMb: '',
-    sha256: '',
+    url: 'https://github.com/samankwah/agromet-mobile/releases/download/v1.0.0/agromet-ghana-1.0.0.apk',
+    version: '1.0.0',
+    sizeMb: '112',
+    sha256: '04cb18ece6e1ae253f6e19484895ff8c0aa3f7e97ecbc9f52ce144b5352e638',
   },
 };
 
