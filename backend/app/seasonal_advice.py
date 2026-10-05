@@ -321,14 +321,78 @@ def month_label(year_month: str | None) -> str | None:
         return None
 
 
+# Too far ahead to forecast: plan with what usually happens. Each entry is
+# (title, summary, actions) with {n} for the usual figure. The last action,
+# when the forecast comes, is added in ``rule_for``.
+_USUALLY: dict[str, tuple[str, str, list[str]]] = {
+    "onset": (
+        "Plan for the usual start",
+        "In most years the rains start {n}.",
+        ["Have land and seed ready before then.", "Plant when the soil is well wet, not on the first shower."],
+    ),
+    "earlyDrySpell": (
+        "Plan for the usual early dry spell",
+        "In most years the longest dry spell soon after planting is about {n}.",
+        ["Mulch and weed on time to carry young plants through it."],
+    ),
+    "lateDrySpell": (
+        "Plan for the usual late dry spell",
+        "In most years the longest dry spell late in the season is about {n}.",
+        ["Choose seed that flowers before the late dry spell."],
+    ),
+    "cessation": (
+        "Plan for the usual end",
+        "In most years the rains stop {n}.",
+        ["Choose seed that is ready before then.", "Have drying and storage ready by then."],
+    ),
+    "rainfallTotal": (
+        "Plan for the usual rain",
+        "In most years these months bring about {n} of rain.",
+        ["Plan crops that suit this much rain."],
+    ),
+    "rainyDays": (
+        "Plan for the usual rainy days",
+        "In most years rain falls on about {n} in these months.",
+        ["Plan field work around the rainy days."],
+    ),
+    "temperature": (
+        "Plan for the usual heat",
+        "In most years the days reach about {n} in these months.",
+        ["Plan shade and water for birds and animals."],
+    ),
+}
+
+
+def _usual_figure(variable: str, display: str | None) -> str | None:
+    """The normal as it reads mid sentence: 'in week 2 of May', '4 days'."""
+    if not display:
+        return None
+    if variable in ("onset", "cessation"):
+        if not display.startswith("Week"):
+            return None
+        return "in w" + display[1:]
+    return display
+
+
 def rule_for(variable: str, condition: str, reading: dict | None = None) -> Rule:
     rule = RULES.get((variable, condition)) or _GENERAL.get(condition) or _GENERAL["no_signal"]
     rule = {**rule, "actions": list(rule["actions"])}
     if condition == "normal_only":
-        ready = month_label((reading or {}).get("availableFrom"))
-        if ready:
-            rule["summary"] = f"This is too far ahead to forecast. The forecast will be ready from {ready}."
-            rule["actions"] = ["Plan as you would in a normal year.", f"Check back from {ready} for the forecast."]
+        reading = reading or {}
+        ready = month_label(reading.get("availableFrom"))
+        later = f"Check back from {ready} for the forecast." if ready else "Check back when the forecast is ready."
+        usual = _usual_figure(variable, reading.get("normalDisplay"))
+        if usual and variable in _USUALLY:
+            title, summary, actions = _USUALLY[variable]
+            rule = {
+                "title": title.format(n=usual),
+                "summary": summary.format(n=usual),
+                "actions": [*actions, later],
+            }
+        else:
+            if ready:
+                rule["summary"] = f"This is too far ahead to forecast. The forecast will be ready from {ready}."
+            rule["actions"] = [rule["actions"][0], later]
     if condition == "dry_season" and variable == "rainyDays":
         rule["summary"] = "Few rainy days are usual here in these months."
     return rule
@@ -381,7 +445,10 @@ _HEADLINE_WEIGHT = {"late": 3, "long": 3, "less": 3, "early": 2, "more": 2, "war
 def headline(conditions: list[dict]) -> str:
     """The one sentence a farmer should read if they read nothing else."""
     if conditions and all(item["condition"] == "normal_only" for item in conditions):
-        return conditions[0]["summary"]
+        ready = next((month_label(item["reading"].get("availableFrom")) for item in conditions if item["reading"].get("availableFrom")), None)
+        if ready:
+            return f"Too early to forecast this season. Plan with what usually happens until the forecast is ready in {ready}."
+        return "Too early to forecast this season. Plan with what usually happens."
     ranked = sorted(
         (item for item in conditions if item["condition"] in _HEADLINE_WEIGHT),
         key=lambda item: (-_HEADLINE_WEIGHT[item["condition"]], ORDER.index(item["variable"])),
