@@ -9,8 +9,12 @@ import hmac
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException
 
-from .. import config, precip_runtime, s2s_runtime, seasonal_runtime
+from .. import config, precip_runtime, s2s_runtime, seasonal_advice, seasonal_runtime
+from ..database import get_connection, utc_stamp
 from ..deps import require_admin
+from ..domain import json_dumps, parse_json_list
+from ..hazards import resolve_region
+from ..schemas import SeasonalAdviceRequest
 
 router = APIRouter(tags=["outlook"])
 
@@ -251,3 +255,123 @@ async def ingest_gmet_seasonal(_admin: dict = Depends(require_admin)):
     except NotImplementedError as exc:
         raise HTTPException(status_code=501, detail=str(exc)) from exc
     return {"success": True, "data": result}
+
+
+# ---------------------------------------------------------------------------
+# Seasonal advice
+# ---------------------------------------------------------------------------
+
+def _advice_region(region: str) -> str:
+    resolved = resolve_region(region)
+    if not resolved:
+        raise HTTPException(status_code=404, detail=f"Unknown region '{region}'.")
+    return resolved
+
+
+def _published_rows(region: str, season_key: str, year: int | None) -> list[dict]:
+    if year is None:
+        return []
+    with get_connection() as connection:
+        rows = connection.execute(
+            """
+            SELECT variable, title, summary, actions_json, issued_by, created_at
+            FROM seasonal_advisories
+            WHERE region = ? AND season_key = ? AND year = ?
+            ORDER BY id
+            """,
+            (region, season_key, year),
+        ).fetchall()
+    return [
+        {
+            "variable": row["variable"],
+            "title": row["title"],
+            "summary": row["summary"],
+            "actions": parse_json_list(row["actions_json"]),
+            "issued_by": row["issued_by"],
+            "created_at": row["created_at"],
+        }
+        for row in rows
+    ]
+
+
+@router.get("/api/outlook/seasonal/advice/{region}")
+async def seasonal_advice_for(region: str, season: str | None = None, window: str | None = None):
+    """What a farmer in one region can do this season, from the seasonal outlook.
+
+    Every variable's reading with its advice: the rules in `seasonal_advice`,
+    with any text an administrator published for this season laid over them.
+    ``season`` defaults to the region's main season and ``window`` to that
+    season's heart.
+    """
+    resolved = _advice_region(region)
+    await seasonal_runtime.ensure_fresh()
+    outlook = seasonal_runtime.current()
+    try:
+        advice = seasonal_advice.region_advice(outlook, resolved, season, window)
+    except KeyError as exc:
+        raise HTTPException(status_code=400, detail=f"{resolved} has no '{exc.args[0]}'.") from exc
+    rows = _published_rows(resolved, advice["season"]["key"], advice["season"]["year"])
+    advice = seasonal_advice.apply_published(advice, rows)
+    return {
+        "success": True,
+        "data": {
+            **advice,
+            "outlookSource": outlook.get("source"),
+            "outlookIssuedBy": outlook.get("issuedBy"),
+            "runDate": outlook.get("runDate"),
+            "unavailable": not outlook.get("seasons") and not outlook.get("windows"),
+        },
+    }
+
+
+@router.put("/api/outlook/seasonal/advice/{region}")
+def publish_seasonal_advice(region: str, payload: SeasonalAdviceRequest, current_user: dict = Depends(require_admin)):
+    """Publish advice for one region's season. Admin only.
+
+    Replaces anything already published for the same region, season, year and
+    variable, so publishing again is an edit.
+    """
+    resolved = _advice_region(region)
+    if payload.season not in seasonal_advice.seasons_for(resolved):
+        raise HTTPException(status_code=400, detail=f"{resolved} has no '{payload.season}'.")
+    year = payload.year or (seasonal_runtime.current().get("seasons") or {}).get(payload.season, {}).get("year")
+    year = year or seasonal_advice.season_year_today(payload.season)
+    actions = [action.strip() for action in payload.actions if action.strip()]
+    with get_connection() as connection:
+        if payload.variable is None:
+            connection.execute(
+                "DELETE FROM seasonal_advisories WHERE region = ? AND season_key = ? AND year = ? AND variable IS NULL",
+                (resolved, payload.season, year),
+            )
+        else:
+            connection.execute(
+                "DELETE FROM seasonal_advisories WHERE region = ? AND season_key = ? AND year = ? AND variable = ?",
+                (resolved, payload.season, year, payload.variable),
+            )
+        connection.execute(
+            """
+            INSERT INTO seasonal_advisories
+                (region, season_key, year, variable, title, summary, actions_json, issued_by, created_by, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                resolved, payload.season, year, payload.variable,
+                (payload.title or "").strip() or None, (payload.summary or "").strip() or None,
+                json_dumps(actions), payload.issuedBy.strip(), current_user["id"], utc_stamp(),
+            ),
+        )
+    return {"success": True, "data": {"region": resolved, "season": payload.season, "year": year, "variable": payload.variable}}
+
+
+@router.delete("/api/outlook/seasonal/advice/{region}")
+def withdraw_seasonal_advice(region: str, season: str, year: int | None = None, _admin: dict = Depends(require_admin)):
+    """Take published advice down, so the rules show again. Admin only."""
+    resolved = _advice_region(region)
+    with get_connection() as connection:
+        if year is None:
+            connection.execute("DELETE FROM seasonal_advisories WHERE region = ? AND season_key = ?", (resolved, season))
+        else:
+            connection.execute(
+                "DELETE FROM seasonal_advisories WHERE region = ? AND season_key = ? AND year = ?", (resolved, season, year)
+            )
+    return {"success": True, "data": {"region": resolved, "season": season}}

@@ -328,3 +328,19 @@ class HazardOverrideRequest(BaseModel):
     issuedBy: str = "GMet"
     effectiveFrom: str | None = None
     effectiveTo: str | None = None
+
+
+class SeasonalAdviceRequest(BaseModel):
+    """Advice an administrator publishes for one region's season.
+
+    ``variable`` set replaces that condition's text. Left out, ``summary``
+    replaces the headline. Empty fields keep the rule's text.
+    """
+
+    season: Literal["southern-major", "southern-minor", "northern"]
+    variable: Literal["onset", "earlyDrySpell", "lateDrySpell", "cessation", "rainfallTotal", "rainyDays", "temperature"] | None = None
+    year: int | None = None
+    title: str | None = Field(default=None, max_length=120)
+    summary: str | None = Field(default=None, max_length=400)
+    actions: list[str] = Field(default_factory=list, max_length=6)
+    issuedBy: str = Field(min_length=1, max_length=120)

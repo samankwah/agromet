@@ -584,6 +584,29 @@ CREATE TABLE IF NOT EXISTS seasonal_snapshots (
 
 CREATE INDEX IF NOT EXISTS idx_seasonal_snapshots_source
 ON seasonal_snapshots(source, id);
+
+-- Seasonal advice an administrator published for one region and season.
+-- It replaces the rule text from `seasonal_advice.RULES` for one variable,
+-- or the headline when `variable` is NULL. Rows are kept per season year,
+-- so last year's text never shows beside this year's outlook. Fields left
+-- empty keep the rule's text. (No semicolons in these comments.)
+CREATE TABLE IF NOT EXISTS seasonal_advisories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    region TEXT NOT NULL,
+    season_key TEXT NOT NULL,
+    year INTEGER NOT NULL,
+    variable TEXT,
+    title TEXT,
+    summary TEXT,
+    actions_json TEXT NOT NULL DEFAULT '[]',
+    issued_by TEXT NOT NULL,
+    created_by INTEGER,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(created_by) REFERENCES users(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_seasonal_advisories_lookup
+ON seasonal_advisories(region, season_key, year);
 """
 
 
