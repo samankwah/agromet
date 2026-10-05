@@ -384,10 +384,12 @@ def rule_for(variable: str, condition: str, reading: dict | None = None) -> Rule
         usual = _usual_figure(variable, reading.get("normalDisplay"))
         if usual and variable in _USUALLY:
             title, summary, actions = _USUALLY[variable]
+            # When the forecast comes is said once, in the headline, not
+            # under each figure: every figure is ready in a different month.
             rule = {
                 "title": title.format(n=usual),
                 "summary": summary.format(n=usual),
-                "actions": [*actions, later],
+                "actions": list(actions),
             }
         else:
             if ready:
