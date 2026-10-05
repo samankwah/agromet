@@ -128,7 +128,13 @@ const Footer = () => {
             &copy; {new Date().getFullYear()} AgroMet.{" "}
             <T>All rights reserved.</T>
           </p>
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+            <Link
+              to="/app"
+              className="text-xs font-medium text-neo-muted hover:text-neo-accent-strong transition-colors"
+            >
+              <T>Get the app</T>
+            </Link>
             <Link
               to="/privacy-policy"
               className="text-xs font-medium text-neo-muted hover:text-neo-accent-strong transition-colors"

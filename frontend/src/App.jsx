@@ -31,6 +31,7 @@ const MediaPage = lazy(() => import('./pages/MediaPage'));
 const Careers = lazy(() => import('./pages/Careers'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsOfService = lazy(() => import('./pages/TermsOfService'));
+const AppDownload = lazy(() => import('./pages/AppDownload'));
 const AdminLogin = lazy(() => import('./pages/AdminLogin'));
 const AdminSignUp = lazy(() => import('./pages/AdminSignUp'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
@@ -128,6 +129,8 @@ function App() {
               <Route path="/privacy" element={withSuspense(<PrivacyPolicy />)} />
               <Route path="/terms-of-service" element={withSuspense(<TermsOfService />)} />
               <Route path="/terms" element={withSuspense(<TermsOfService />)} />
+              <Route path="/app" element={withSuspense(<AppDownload />)} />
+              <Route path="/download" element={withSuspense(<AppDownload />)} />
             </Route>
 
             {/* Standalone auth routes */}
