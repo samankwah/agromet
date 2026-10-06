@@ -10,14 +10,14 @@ consumes the free tier in proportion to the user base rather than to time --
 which is to say it works in testing and fails on launch day. Cached here it is
 one upstream call per TTL for everyone.
 
-**The arithmetic that sets the TTL.** The grid is 341 land points (see
-``precip_grid.json``). At one refresh an hour that is 341 x 24 = 8,184 weighted
+**The arithmetic that sets the TTL.** The grid is 345 land points (see
+``precip_grid.json``). At one refresh an hour that is 345 x 24 = 8,280 weighted
 calls a day, inside Open-Meteo's 10,000. Halving the TTL to thirty minutes puts
-it at 16,368 and over the limit, so the interval is not a free knob. The data is
+it at 16,560 and over the limit, so the interval is not a free knob. The data is
 hourly in any case, so a shorter TTL would mostly re-fetch the same numbers.
 
 **The grid is a shipped asset, not computed here.** It is generated from the
-same ``ghanaBoundaries.json`` the app draws with, by snapping the 865 tagged
+same ``ghanaBoundaries.json`` the app draws with, by snapping the ~880 tagged
 display cells onto a quarter-degree lattice and deduplicating. That gives a land
 mask for free and, more to the point, means the server and the client cannot
 disagree about which cells exist.
