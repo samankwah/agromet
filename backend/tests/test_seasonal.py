@@ -59,14 +59,23 @@ def fake_climatology(monthly_rain: list[float] | None = None) -> dict:
     return {"regions": regions}
 
 
-def fake_fetch(rain_per_day: float = 8.0, temp: float = 31.5, rain_anomaly: float = 0.0):
-    """What Open-Meteo returns for the sixteen regions: daily members and monthly anomalies."""
-    times = [(RUN_DAY + timedelta(days=i)).isoformat() for i in range(DAYS)]
-    daily = {"time": times, "precipitation_sum": [rain_per_day] * DAYS, "temperature_2m_max": [temp] * DAYS}
+def fake_fetch(
+    rain_per_day: float = 8.0, temp: float = 31.5, rain_anomaly: float = 0.0, run_day: date = RUN_DAY,
+    rain_days: int = DAYS, temp_days: int = DAYS,
+):
+    """What Open-Meteo returns for the sixteen regions: daily members and monthly anomalies.
+
+    ``rain_days`` and ``temp_days`` cut a variable short with nulls, as the
+    real feed does: its daily rain stops about a month before its daily high.
+    """
+    times = [(run_day + timedelta(days=i)).isoformat() for i in range(DAYS)]
+    rain = [rain_per_day] * rain_days + [None] * (DAYS - rain_days)
+    heat = [temp] * temp_days + [None] * (DAYS - temp_days)
+    daily = {"time": times, "precipitation_sum": rain, "temperature_2m_max": heat}
     for member in range(1, 51):
-        daily[f"precipitation_sum_member{member:02d}"] = [rain_per_day] * DAYS
-        daily[f"temperature_2m_max_member{member:02d}"] = [temp] * DAYS
-    months = [f"{RUN_DAY.year + (RUN_DAY.month - 1 + i) // 12}-{(RUN_DAY.month - 1 + i) % 12 + 1:02d}-01" for i in range(8)]
+        daily[f"precipitation_sum_member{member:02d}"] = list(rain)
+        daily[f"temperature_2m_max_member{member:02d}"] = list(heat)
+    months = [f"{run_day.year + (run_day.month - 1 + i) // 12}-{(run_day.month - 1 + i) % 12 + 1:02d}-01" for i in range(8)]
     monthly = {"time": months, "precipitation_anomaly": [rain_anomaly] * 8, "temperature_2m_anomaly": [0.0] * 8}
 
     async def fetch(points):
@@ -85,12 +94,12 @@ class RuntimeTests(unittest.TestCase):
     def tearDown(self):
         seasonal_runtime.reset_cache()
 
-    def compute(self, monthly_rain=None, **kwargs):
+    def compute(self, monthly_rain=None, run_day: date = RUN_DAY, **kwargs):
         import asyncio
 
         with patch.object(seasonal_runtime, "CLIMATOLOGY", fake_climatology(monthly_rain)), \
-             patch.object(seasonal_runtime, "_fetch", fake_fetch(**kwargs)):
-            return asyncio.run(seasonal_runtime.compute_snapshot(RUN_DAY))
+             patch.object(seasonal_runtime, "_fetch", fake_fetch(run_day=run_day, **kwargs)):
+            return asyncio.run(seasonal_runtime.compute_snapshot(run_day))
 
     def test_each_season_holds_only_its_own_sector_and_every_window_all_regions(self):
         snapshot = self.compute()
@@ -116,7 +125,7 @@ class RuntimeTests(unittest.TestCase):
         snapshot = self.compute()
         minor = snapshot["seasons"]["southern-minor"]["cells"][0]["onset"]
         self.assertFalse(minor["available"])
-        self.assertEqual(minor["availableFrom"], "2027-05")
+        self.assertEqual(minor["availableFrom"], "2027-06")
         self.assertEqual(minor["normalDisplay"], week_label(date(2027, 1, 1) + timedelta(days=79)))
         self.assertNotIn("probabilities", minor)
         north = snapshot["seasons"]["northern"]["cells"][0]
@@ -137,7 +146,42 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(cell["rainfallTotal"]["value"], 736.0)
         self.assertEqual(cell["rainfallTotal"]["category"], "above")
         self.assertIn("dryWindow", cell["rainfallTotal"])
-        self.assertFalse(snapshot["windows"]["JAS"]["cells"][0]["rainfallTotal"]["available"])
+        # The run reaches 8 September: two thirds of July to September, not of
+        # September to November.
+        self.assertTrue(snapshot["windows"]["JAS"]["cells"][0]["rainfallTotal"]["available"])
+        self.assertFalse(snapshot["windows"]["SON"]["cells"][0]["rainfallTotal"]["available"])
+
+    def test_a_window_two_thirds_in_reach_gets_chances_with_the_rest_filled_by_the_usual(self):
+        # An October run reaches 8 May: 69 of March to May's 92 days. The seen
+        # days are scaled by the usual over the model in March and April
+        # (200 / 244 mm); the last 23 days of May get the usual 100 mm / 31.
+        snapshot = self.compute(monthly_rain=[100.0] * 12, run_day=date(2026, 10, 6), rain_per_day=4.0)
+        cell = snapshot["windows"]["MAM"]["cells"][0]
+        self.assertTrue(cell["rainfallTotal"]["available"])
+        self.assertIn("probabilities", cell["rainfallTotal"])
+        self.assertAlmostEqual(cell["rainfallTotal"]["value"], 69 * 4.0 * 200 / 244 + 23 * 100 / 31, delta=0.2)
+        self.assertTrue(cell["rainyDays"]["available"])
+        self.assertTrue(cell["temperature"]["available"])
+
+    def test_a_window_mostly_past_the_reach_waits_and_says_when(self):
+        snapshot = self.compute(monthly_rain=[100.0] * 12, run_day=date(2026, 10, 6))
+        mjj = snapshot["windows"]["MJJ"]["cells"][0]["rainfallTotal"]
+        self.assertFalse(mjj["available"])
+        self.assertNotIn("probabilities", mjj)
+        # Two thirds of May to July is 1 July. The daily rain runs 180 days from
+        # a release, so the January run is the first to reach it.
+        self.assertEqual(mjj["availableFrom"], "2027-01")
+
+    def test_temperature_gets_chances_while_the_rain_data_falls_short(self):
+        # The October 2026 run as it came back: rain to 3 April (179 days from
+        # the 6th), daily highs to 3 May (209 days).
+        snapshot = self.compute(monthly_rain=[100.0] * 12, run_day=date(2026, 10, 6), rain_days=180, temp_days=210)
+        cell = snapshot["windows"]["MAM"]["cells"][0]
+        self.assertFalse(cell["rainfallTotal"]["available"])
+        self.assertEqual(cell["rainfallTotal"]["availableFrom"], "2026-11")
+        self.assertFalse(cell["rainyDays"]["available"])
+        self.assertTrue(cell["temperature"]["available"])
+        self.assertIn("probabilities", cell["temperature"])
 
     def test_a_gmet_snapshot_in_force_is_served_first_with_the_model_alongside(self):
         seasonal_runtime.store_snapshot(self.compute())
@@ -170,6 +214,15 @@ class RuntimeTests(unittest.TestCase):
         asyncio.run(seasonal_runtime.load_snapshot(force=True))
         self.assertTrue(seasonal_runtime.needs_new_run(date(2026, 10, 4)))
         self.assertEqual(seasonal_runtime.current()["seasons"], {})
+
+    def test_a_snapshot_made_under_an_older_window_rule_counts_as_none(self):
+        stored = self.compute()
+        stored.pop("windowRule")
+        seasonal_runtime.store_snapshot(stored)
+
+        import asyncio
+        asyncio.run(seasonal_runtime.load_snapshot(force=True))
+        self.assertTrue(seasonal_runtime.needs_new_run(date(2027, 2, 7)))
 
     def test_a_snapshot_missing_a_window_this_code_defines_counts_as_none(self):
         snapshot = self.compute()

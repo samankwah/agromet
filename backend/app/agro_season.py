@@ -47,6 +47,13 @@ EARLY_DRY_SPELL_DAYS = 50
 FORECAST_REACH_DAYS = 214
 SEAS5_RELEASE_DAY = 5
 
+# How far the daily data really runs, in days from the monthly release on the
+# 5th. Not the same for both: on the October 2026 run Open-Meteo's daily rain
+# stopped on 3 April (day 180) and the daily high on 3 May (day 210), with
+# nulls after. FORECAST_REACH_DAYS is how much is asked for, not what comes back.
+RAIN_REACH_DAYS = 180
+TEMP_REACH_DAYS = 210
+
 NORTHERN_REGIONS = ("Northern", "Savannah", "North East", "Upper East", "Upper West")
 
 MONTH_NAMES = (
@@ -134,9 +141,9 @@ def reach_end(run_day: date) -> date:
     return run_day + timedelta(days=FORECAST_REACH_DAYS)
 
 
-def available_from(needed_end: date) -> str:
-    """The first SEAS5 release (5th of a month) whose reach covers ``needed_end``."""
-    earliest = needed_end - timedelta(days=FORECAST_REACH_DAYS)
+def available_from(needed_end: date, reach_days: int = RAIN_REACH_DAYS) -> str:
+    """The first SEAS5 release (5th of a month) whose data reaches ``needed_end``."""
+    earliest = needed_end - timedelta(days=reach_days)
     release = date(earliest.year, earliest.month, SEAS5_RELEASE_DAY)
     if release < earliest:
         month = earliest.month + 1
@@ -181,6 +188,14 @@ class Series:
     @property
     def last(self) -> date:
         return self.first + timedelta(days=len(self.values) - 1)
+
+    @property
+    def last_value(self) -> date | None:
+        """The last day that holds a value; the series may run on in nulls."""
+        for index in range(len(self.values) - 1, -1, -1):
+            if self.values[index] is not None:
+                return self.first + timedelta(days=index)
+        return None
 
     def slice(self, start: date, end: date) -> list[float]:
         lo, hi = self.index(start), self.index(end)

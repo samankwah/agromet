@@ -31,6 +31,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import math
 import time
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -39,9 +40,11 @@ from . import database, open_meteo
 from .hazards import GHANA_REGIONS
 from .agro_season import (
     FORECAST_REACH_DAYS,
+    RAIN_REACH_DAYS,
+    RAINY_DAY_MM,
     SEASON_VARIABLES,
     SEASONS,
-    WINDOW_VARIABLES,
+    TEMP_REACH_DAYS,
     WINDOWS,
     Series,
     available_from,
@@ -56,7 +59,6 @@ from .agro_season import (
     sector_of,
     week_label,
     window_bounds,
-    window_indices,
 )
 from .s2s import agreement_confidence, dominant_category, quantile, tercile_probabilities
 from .seasonal import is_dry_window, shrink_to_climatology
@@ -249,11 +251,14 @@ def _display(variable: str, value: float | None, year: int, *, no_onset_from: fl
     return str(value)
 
 
-def _unavailable(variable: str, stats: dict | None, year: int, needed: date, *, sentinel: float | None = None) -> dict:
+def _unavailable(
+    variable: str, stats: dict | None, year: int, needed: date, *,
+    sentinel: float | None = None, reach_days: int = RAIN_REACH_DAYS,
+) -> dict:
     normal = (stats or {}).get("median")
     return {
         "available": False,
-        "availableFrom": available_from(needed),
+        "availableFrom": available_from(needed, reach_days),
         "normal": normal,
         "normalDisplay": _display(variable, normal, year, no_onset_from=sentinel),
     }
@@ -308,6 +313,44 @@ def _season_cell(name: str, lat: float, lng: float, rain_members: list[Series], 
     return cell
 
 
+# A three-month window gets chances once the model's daily data covers this
+# share of its days. The days past the data are filled with the usual amounts,
+# so the members only differ over the days the model sees. Rain and temperature
+# are checked apart: the daily rain stops about a month before the temperature
+# (see RAIN_REACH_DAYS), so a window can have chances for one and not the other.
+MIN_WINDOW_COVERAGE = 2 / 3
+
+# Stamped on every SEAS5 row. A row from before a rule change counts as
+# incomplete, so the first reader recomputes it instead of serving the old
+# reading until next month's release.
+WINDOW_RULE = "two-thirds-of-the-data"
+
+
+def _window_needed(first: date, last: date) -> date:
+    """The last day of data a window needs before it gets chances."""
+    days = (last - first).days + 1
+    return first + timedelta(days=math.ceil(days * MIN_WINDOW_COVERAGE) - 1)
+
+
+def _seen_end(members: list[Series], first: date, last: date) -> date | None:
+    """The last day of the window the members hold data for, or None."""
+    if not members or members[0].last_value is None:
+        return None
+    end = min(last, members[0].last_value)
+    return end if end >= first and members[0].covers(first, end) else None
+
+
+def _usual_rain(monthly_normals: list[float], start: date, end: date) -> float:
+    """The usual rain from ``start`` to ``end``, spread evenly over each month."""
+    total = 0.0
+    day = start
+    while day <= end:
+        month_end = date(day.year + (day.month == 12), day.month % 12 + 1, 1) - timedelta(days=1)
+        total += monthly_normals[day.month - 1] / month_end.day
+        day += timedelta(days=1)
+    return total
+
+
 def _window_cell(
     name: str, lat: float, lng: float,
     rain_members: list[Series], temp_members: list[Series],
@@ -318,17 +361,41 @@ def _window_cell(
     clim = _region_clim(name)
     baseline = (clim.get("windows") or {}).get(key) or {}
     cell: dict = {"id": name, "region": name, "lat": lat, "lng": lng}
-    reachable = last <= reach_end(run_day) and bool(rain_members) and rain_members[0].covers(first, last)
+    needed = _window_needed(first, last)
+    _rain_window(cell, rain_members, rain_anomalies, clim, baseline, first, last, needed, year)
+    _temperature_window(cell, temp_members, temp_anomalies, baseline, first, last, needed, year)
+    return cell
 
-    if not reachable:
-        for variable in WINDOW_VARIABLES:
-            cell[variable] = _unavailable(variable, baseline.get(variable), year, last)
-        rain_stats = baseline.get("rainfallTotal") or {}
-        cell["rainfallTotal"]["dryWindow"] = is_dry_window(rain_stats.get("mean"))
-        return cell
 
-    ratio = _rain_bias_ratio(rain_members, rain_anomalies, clim.get("monthlyRain") or [], first, last)
-    found = [window_indices(_scaled(series, ratio), None, key, year) for series in rain_members]
+def _rain_window(
+    cell: dict, rain_members: list[Series], rain_anomalies: dict, clim: dict, baseline: dict,
+    first: date, last: date, needed: date, year: int,
+) -> None:
+    seen_end = _seen_end(rain_members, first, last)
+    dry = is_dry_window((baseline.get("rainfallTotal") or {}).get("mean"))
+    if seen_end is None or seen_end < needed:
+        for variable in ("rainfallTotal", "rainyDays"):
+            cell[variable] = _unavailable(variable, baseline.get(variable), year, needed)
+        cell["rainfallTotal"]["dryWindow"] = dry
+        return
+
+    monthly_normals = clim.get("monthlyRain") or []
+    ratio = _rain_bias_ratio(rain_members, rain_anomalies, monthly_normals, first, last)
+    # Past the data every member gets the same usual rain, and the usual share
+    # of the window's rainy days.
+    tail_rain = tail_days = 0.0
+    if seen_end < last and len(monthly_normals) == 12:
+        tail_rain = _usual_rain(monthly_normals, seen_end + timedelta(days=1), last)
+        window_rain = _usual_rain(monthly_normals, first, last)
+        rainy_mean = float((baseline.get("rainyDays") or {}).get("mean") or 0.0)
+        tail_days = rainy_mean * tail_rain / window_rain if window_rain > 0 else 0.0
+    found = []
+    for series in rain_members:
+        seen = _scaled(series, ratio).slice(first, seen_end)
+        found.append({
+            "rainfallTotal": round(sum(seen) + tail_rain, 1),
+            "rainyDays": sum(1 for value in seen if value >= RAINY_DAY_MM) + tail_days,
+        })
     for variable in ("rainfallTotal", "rainyDays"):
         stats = baseline.get(variable) or {}
         values = [entry[variable] for entry in found]
@@ -344,26 +411,38 @@ def _window_cell(
         if stats:
             block.update(_probability_block(values, stats))
         cell[variable] = block
-    cell["rainfallTotal"]["dryWindow"] = is_dry_window((baseline.get("rainfallTotal") or {}).get("mean"))
+    cell["rainfallTotal"]["dryWindow"] = dry
 
-    # Temperature: the model's warm or cool habit is removed by shifting each
-    # member by (model normal minus observed normal), the model normal being the
-    # ensemble mean minus its own anomaly over the window's months.
+
+def _temperature_window(
+    cell: dict, temp_members: list[Series], temp_anomalies: dict, baseline: dict,
+    first: date, last: date, needed: date, year: int,
+) -> None:
+    """The window's mean daily high, over the days the model sees.
+
+    The model's warm or cool habit is removed by shifting each member by (model
+    normal minus observed normal), the model normal being the ensemble mean
+    minus its own anomaly, over the months that have an anomaly.
+    """
     stats = baseline.get("temperature") or {}
+    seen_end = _seen_end(temp_members, first, last)
     heats = [
-        value for value in (
-            (sum(series.slice(first, last)) / len(series.slice(first, last))) if series.covers(first, last) else None
-            for series in temp_members
-        ) if value is not None
+        sum(series.slice(first, seen_end)) / len(series.slice(first, seen_end))
+        for series in temp_members
+        if seen_end is not None and seen_end >= needed and series.covers(first, seen_end)
     ]
     if not heats or not stats:
-        cell["temperature"] = _unavailable("temperature", stats, year, last)
-        return cell
+        cell["temperature"] = _unavailable("temperature", stats, year, needed, reach_days=TEMP_REACH_DAYS)
+        return
     mean_heat = sum(heats) / len(heats)
-    anomalies = [temp_anomalies.get(month.strftime("%Y-%m")) for month in _months_between(first, last)]
+    anomalies = [
+        float(value)
+        for value in (temp_anomalies.get(month.strftime("%Y-%m")) for month in _months_between(first, seen_end))
+        if value is not None
+    ]
     shift = 0.0
-    if anomalies and all(value is not None for value in anomalies):
-        model_norm = mean_heat - sum(float(value) for value in anomalies) / len(anomalies)
+    if anomalies:
+        model_norm = mean_heat - sum(anomalies) / len(anomalies)
         shift = model_norm - float(stats.get("mean", model_norm))
     corrected = [value - shift for value in heats]
     median = quantile(sorted(corrected), 0.5)
@@ -377,7 +456,6 @@ def _window_cell(
     }
     block.update(_probability_block(corrected, stats))
     cell["temperature"] = block
-    return cell
 
 
 async def compute_snapshot(run_day: date | None = None) -> dict:
@@ -420,7 +498,14 @@ async def compute_snapshot(run_day: date | None = None) -> dict:
 
     if not any(block["cells"] for block in seasons.values()) and not any(block["cells"] for block in windows.values()):
         raise RuntimeError("upstream returned no usable regions")
-    return {"source": "seas5", "runDate": run_day.isoformat(), "reachEnd": reach_end(run_day).isoformat(), "seasons": seasons, "windows": windows}
+    return {
+        "source": "seas5",
+        "runDate": run_day.isoformat(),
+        "reachEnd": reach_end(run_day).isoformat(),
+        "windowRule": WINDOW_RULE,
+        "seasons": seasons,
+        "windows": windows,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -468,11 +553,15 @@ def _complete(payload: dict) -> bool:
     """True when a SEAS5 row holds every season and window this code defines.
 
     Adding a window (SON was added after the first run) would otherwise leave
-    it missing until the next monthly release, so a row short of one is
-    recomputed by the first reader. GMet rows are not held to this: a
+    it missing until the next monthly release, so a row short of one, or made
+    under an older ``WINDOW_RULE``, is recomputed by the first reader. GMet rows are not held to this: a
     published forecast may cover fewer windows.
     """
-    return set(SEASONS) <= set(payload["seasons"]) and set(WINDOWS) <= set(payload["windows"])
+    return (
+        set(SEASONS) <= set(payload["seasons"])
+        and set(WINDOWS) <= set(payload["windows"])
+        and payload.get("windowRule") == WINDOW_RULE
+    )
 
 
 def _read_latest() -> tuple[dict | None, float, dict | None]:

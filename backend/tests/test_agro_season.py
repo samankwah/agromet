@@ -104,7 +104,7 @@ class CalendarTests(unittest.TestCase):
     def test_ready_from_is_the_first_monthly_release_that_reaches_far_enough(self):
         needed = required_end(MAJOR, 2027, "onset")  # 30 June 2027
         self.assertEqual(needed, date(2027, 6, 30))
-        self.assertEqual(available_from(needed), "2026-12")
+        self.assertEqual(available_from(needed), "2027-01")
 
     def test_dates_read_as_weeks_with_no_dashes(self):
         self.assertEqual(week_label(date(2027, 3, 17)), "Week 3 of March")
