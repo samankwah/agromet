@@ -59,6 +59,41 @@ def open_meteo_payload(temperature: float = 25.5) -> dict:
     }
 
 
+class WeatherFieldsTests(unittest.TestCase):
+    def test_asks_for_cloud_cover_by_height_and_visibility(self):
+        """The app draws its sky from these. Without them every sky falls back
+        to a guess from the weather code."""
+        captured = {}
+
+        class FakeResponse:
+            def raise_for_status(self):
+                pass
+
+            def json(self):
+                return open_meteo_payload()
+
+        class FakeClient:
+            def __init__(self, *args, **kwargs):
+                pass
+
+            async def __aenter__(self):
+                return self
+
+            async def __aexit__(self, *exc):
+                return False
+
+            async def get(self, url, params):
+                captured.update(params)
+                return FakeResponse()
+
+        with patch.object(weather_runtime.httpx, "AsyncClient", FakeClient):
+            asyncio.run(weather_runtime._fetch(*ACCRA))
+
+        current = captured["current"].split(",")
+        for field in ("cloud_cover", "cloud_cover_low", "cloud_cover_mid", "cloud_cover_high", "visibility"):
+            self.assertIn(field, current)
+
+
 class WeatherCacheTests(unittest.TestCase):
     """The cache is the whole point of proxying — without it every carousel
     scroll would be ten upstream requests."""

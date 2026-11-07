@@ -48,6 +48,10 @@ CACHE_PRECISION = 2
 
 FORECAST_DAYS = 7
 
+# The cloud cover by height and the visibility are for the sky drawn behind the
+# app's forecast: how much low, middle and high cloud there is decides what the
+# sky looks like, and a short visibility is harmattan dust or fog. Percent and
+# metres respectively.
 CURRENT_FIELDS = (
     "temperature_2m",
     "relative_humidity_2m",
@@ -55,6 +59,11 @@ CURRENT_FIELDS = (
     "precipitation",
     "weather_code",
     "wind_speed_10m",
+    "cloud_cover",
+    "cloud_cover_low",
+    "cloud_cover_mid",
+    "cloud_cover_high",
+    "visibility",
 )
 
 DAILY_FIELDS = (
