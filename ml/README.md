@@ -1,105 +1,65 @@
-# ml/
+# AgroMet Crop Disease Model
 
-Training and evaluation for the on-device cassava disease classifier.
+Trains the cassava disease model that runs inside the mobile app. Nothing here is
+deployed; the output is one file, `cassava.tflite`, copied into
+`mobile/assets/models/`.
 
-Kept out of `backend/` on purpose. The backend deploys to Vercel Python
-serverless functions with a 250 MB bundle cap and currently declares six
-dependencies; TensorFlow is roughly 600 MB and would not fit even if it were
-needed there. Inference runs on the phone, so nothing in this directory is ever
-deployed. It produces one artefact: `mobile/assets/models/cassava.tflite`.
+## The model
+
+- MobileNetV3-Small with a new classification head, 3.6 MB
+- 5 classes: bacterial blight (`cbb`), brown streak (`cbsd`), green mottle
+  (`cgm`), mosaic (`cmd`), healthy
+- Input: a 224 x 224 colour photo, pixel values 0 to 255 (not 0 to 1)
+
+Results on 1,885 test photos (`models/metrics.json`):
+
+| Class | Precision | Recall | F1 |
+|---|---|---|---|
+| Bacterial blight | 0.37 | 0.48 | 0.42 |
+| Brown streak | 0.74 | 0.63 | 0.68 |
+| Green mottle | 0.57 | 0.60 | 0.59 |
+| Mosaic | 0.87 | 0.81 | 0.84 |
+| Healthy | 0.51 | 0.87 | 0.65 |
+
+**Accuracy 71.5%.** Always guessing the most common class would score 47%.
+Bacterial blight is the weakest class, so the app shows a disclaimer with every
+result.
 
 ## Setup
 
 ```bash
 python -m venv ml/.venv
-./ml/.venv/Scripts/python.exe -m pip install -r ml/requirements.txt
+ml\.venv\Scripts\activate
+pip install -r ml/requirements.txt
 ```
 
-## The input contract
+## Steps
 
-`ml/scripts/model_def.py` is the single definition of the network and, more
-importantly, of what the app must feed it:
+1. **Train.** Either way works:
+   - On a laptop CPU: `python ml/scripts/train_local.py`. This uses the TFDS
+     `cassava` dataset and needs no login. It first needs
+     `pip install tensorflow-datasets importlib_resources`.
+   - On a Kaggle GPU: run `notebooks/01_train_cassava.ipynb` with the Cassava
+     Leaf Disease dataset, then save `cassava.keras` into `ml/models/`.
+2. **Export.** This step stops if the exported model's answers differ from the
+   original:
+   ```bash
+   python ml/scripts/export_tflite.py --model ml/models/cassava.keras
+   cp ml/models/cassava.tflite ml/models/labels.json mobile/assets/models/
+   ```
+3. **Evaluate.** `notebooks/03_evaluate.ipynb` gives per-class scores and the
+   confusion matrix. `scripts/benchmark_kindwise.py` scores the Kindwise API on
+   the same photos for comparison.
 
-| | |
-|---|---|
-| shape | `(1, 224, 224, 3)` |
-| dtype | `float32` |
-| range | **0-255**, not 0-1 |
+`scripts/make_stub_model.py` makes a model with the right shape but random
+weights, so app work can go on before training finishes.
 
-MobileNetV3 in Keras rescales internally. Handing it 0-1 pixels halves the input
-range and costs accuracy without raising an error anywhere, which is the kind of
-bug that survives to submission. `mobile/.../localModel/preprocess.ts` leaves
-pixels at 0-255 for this reason, and `labels.json` records the contract next to
-the model so the two cannot drift apart unnoticed.
+## Files
 
-## Workflow
-
-**1. Stub model, so app work is not blocked.**
-
-```bash
-./ml/.venv/Scripts/python.exe ml/scripts/make_stub_model.py
 ```
-
-Correct shapes, correct class order, random weights. It predicts noise; it
-exists so the whole on-device path can be built and tested before the real model
-is trained, making that model a file swap rather than an integration.
-
-**1b. Optional, only to train locally.** Running the notebook on Kaggle already
-has the data attached, so most people skip this.
-
-```bash
-./ml/.venv/Scripts/python.exe -m pip install kaggle
-./ml/.venv/Scripts/python.exe ml/scripts/download_dataset.py
+scripts/model_def.py   Network definition and input format
+scripts/               Training, export, evaluation and comparison scripts
+notebooks/             Kaggle training (cassava, PlantVillage) and evaluation
+models/                labels.json and metrics.json
+data/                  Notes on collecting field photos in Ghana
 ```
-
-About 6 GB, and it needs a Kaggle API token plus acceptance of the competition
-rules. Training it on CPU is not realistic.
-
-**1c. Or train locally with no credentials at all.**
-
-```bash
-./ml/.venv/Scripts/python.exe -m pip install tensorflow-datasets importlib_resources
-./ml/.venv/Scripts/python.exe ml/scripts/train_local.py
-```
-
-Uses the TFDS `cassava` dataset (Mwebaze et al., Ugandan field photographs),
-which downloads from a public URL and whose label order is already exactly
-`CLASS_IDS`. The script asserts that rather than trusting it.
-
-It runs on a CPU because the frozen backbone's features are computed once and
-cached, so only the classification head trains. The cost of that shortcut is
-that augmentation becomes impossible, since a cached feature vector cannot be
-re-augmented. Expect it to score below the Kaggle notebook, which augments
-properly and fine-tunes on a GPU. It writes `metrics.json` next to the model so
-the difference is measured rather than guessed.
-
-**2. Train on Kaggle.** Upload `notebooks/01_train_cassava.ipynb`, attach the
-Cassava Leaf Disease Classification dataset, and run on a T4. Download
-`cassava.keras` into `ml/models/`.
-
-**3. Export.**
-
-```bash
-./ml/.venv/Scripts/python.exe ml/scripts/export_tflite.py --model ml/models/cassava.keras
-cp ml/models/cassava.tflite ml/models/labels.json mobile/assets/models/
-```
-
-The export refuses to write a model whose predictions drifted from the Keras
-original during conversion. A silently broken conversion is worse than a failed
-one because it only shows up on a phone.
-
-**4. Evaluate.** `notebooks/03_evaluate.ipynb` produces the per-class metrics and
-confusion matrices, and `scripts/benchmark_kindwise.py` scores the commercial API
-over the same photographs so the three systems can be compared on one table.
-
-## Datasets
-
-| Purpose | Dataset |
-|---|---|
-| Training | Cassava Leaf Disease Classification (Kaggle) - ~21k field photographs, 5 classes |
-| Contrast | PlantVillage - laboratory imagery, uniform backgrounds |
-| Test | Field photographs collected in Ghana, labelled with an extension officer |
-
-The contrast experiment is not decoration. A model trained on PlantVillage scores
-near-perfectly on PlantVillage's own split and much worse on real field
-photographs, and measuring that gap on our own data is a finding the report needs.

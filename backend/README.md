@@ -1,321 +1,85 @@
 # AgroMet Backend
 
-REST API server for the AgroMet agricultural meteorological advisory platform. Handles authentication, agricultural data management, crop calendars, weekly advisories, crop disease diagnosis, and market intelligence for Ghana's agricultural sector.
+The API for the AgroMet website and mobile app. It serves forecasts, flood and
+drought risk, outlooks, advisories, calendars, market prices, crop diagnosis and
+the AI assistant.
 
-## Tech Stack
+**Live:** https://agromet-backend.vercel.app/docs
 
-- **Framework:** FastAPI
-- **Runtime:** Python 3.11+, Uvicorn (ASGI)
-- **Database:** SQLite (local dev, zero config) or Postgres (production -- see [The database](#the-database))
-- **Auth:** JWT (PyJWT) with OAuth2 bearer tokens
-- **HTTP Client:** httpx (async, for external API calls)
-- **External APIs:** OpenAI, Kindwise (crop health + plant ID), Google Translate fallback, Ambee (weather)
+Built with Python, FastAPI and Postgres (SQLite for local work).
 
-## API Endpoints
+## Features
 
-### Health
-
-| Method | Endpoint | Description |
+| Feature | How it works | Code |
 |---|---|---|
-| GET | `/api/health` | Health check |
+| Forecast | Open-Meteo, cached | `weather_runtime.py`, `precip_runtime.py` |
+| Flood and drought index | 0 to 100 score per region from river flow (GloFAS), rain, soil moisture and 90-day SPI against 30 years of ERA5 | `hazards.py`, `hazard_math.py` |
+| Weeks 2 to 4 outlook | NOAA GEFS ensemble, compared with ERA5 normals, refreshed daily | `s2s.py`, `s2s_runtime.py` |
+| Seasonal outlook | ECMWF SEAS5: onset, cessation, dry spells and rainfall per region (AGRHYMET rules) | `agro_season.py`, `seasonal*.py` |
+| AI assistant | OpenAI, given the farmer's own forecast, risk levels and prices before it answers; rate limited | `chat_context.py`, `chat_prompt.py` |
+| Crop diagnosis | Kindwise for photos; OpenAI rewords the advice in plain language | `diagnosis.py`, `diagnosis_explain.py` |
+| Advisories and calendars | Staff upload Excel files, preview, then publish | `spreadsheet_parser.py`, `routers/` |
+| Market prices | Example figures from seed data | `routers/market.py` |
 
-### Authentication
+Publishing routes are limited to emails in `ADMIN_EMAILS`. The full route list
+is at `/docs`.
 
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/v1/auth/register` | Create account |
-| POST | `/api/v1/auth/login` | Login, returns JWT |
-| GET | `/api/v1/auth/me` | Get current user profile |
-
-### Agricultural Data
-
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/agricultural-data/upload` | Upload agricultural records (Excel/JSON) |
-| GET | `/api/agricultural-data/{dataType}` | Retrieve records by type |
-| DELETE | `/api/agricultural-data/{dataType}/{recordId}` | Delete a record |
-
-### Crop Calendars
-
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/crop-calendars/create` | Create a crop or poultry calendar |
-| GET | `/api/crop-calendars/district/{district}` | Get calendars by district |
-| GET | `/api/crop-calendars/search` | Search calendars with filters |
-| GET | `/api/crop-calendars/stats` | Calendar statistics |
-
-### Weekly Advisories
-
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/weekly-advisories/upload` | Upload advisory bulletin |
-
-### Market Intelligence
-
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/market/commodities` | List all commodities with prices |
-| GET | `/api/market/commodities/{slug}` | Get single commodity data |
-| GET | `/api/market/trends` | Historical price trends |
-| GET | `/api/market/trends/{slug}` | Trend data for a commodity |
-| GET | `/api/market/regions` | Market centers by region |
-| GET | `/api/market/regions/{region}` | Single region market data |
-
-> Market endpoints are currently being implemented. Database schema is in place.
-
-### File Management
-
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/user/files/upload` | Upload a file |
-| GET | `/user/files` | List user files |
-| DELETE | `/user/files/{fileId}` | Delete a file |
-| GET | `/user/files/{fileId}/download` | Download a file |
-
-### Dashboard
-
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/user/dashboard/stats` | Aggregated dashboard statistics |
-
-## Database Schema
-
-The same schema either way (see [The database](#the-database)) -- these tables:
-
-- **users** -- Account credentials and profile
-- **agricultural_records** -- Uploaded agricultural data (JSON payloads)
-- **calendars** -- Crop and poultry calendar definitions
-- **calendar_activities** -- Activities within a calendar (start/end weeks)
-- **weekly_advisories** -- Agro-meteorological advisory bulletins
-- **weekly_advisory_activities** -- Individual advisory activities
-- **production_cycles** -- Active production cycle tracking
-- **diagnosis_records** -- Crop disease diagnosis results
-- **commodities** -- Market commodity prices, trends, demand levels
-- **commodity_trends** -- Historical price data and seasonal patterns
-- **market_centers** -- Regional market information and price premiums
-
-## Getting Started
-
-### Prerequisites
-
-- Python 3.11+
-- pip
-
-### Installation
+## Run it
 
 ```bash
-git clone https://github.com/samankwah/agromet-backend.git
-cd agromet-backend
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-### Configuration
-
-Copy the environment template and fill in your keys:
-
-```bash
+cd backend
+python -m venv .venv
+.venv\Scripts\activate            # macOS/Linux: source .venv/bin/activate
+pip install -r requirements.txt -r requirements-dev.txt
 cp .env.example .env
-```
-
-| Variable | Description |
-|---|---|
-| `SECRET_KEY` | JWT signing secret (change in production) |
-| `DATABASE_PATH` | SQLite database path (default: `./agromet.db`); ignored when `DATABASE_URL` is set |
-| `DATABASE_URL` | Postgres connection string. **Required in production** -- see [The database](#the-database) |
-| `DATABASE_POOL_MIN` / `DATABASE_POOL_MAX` | Postgres connection pool size (default `0` / `5`) |
-| `FRONTEND_ORIGINS` | Allowed CORS origins |
-| `OPENAI_API_KEY` | OpenAI API key (chatbot) |
-| `KINDWISE_API_KEY` | Kindwise crop health API key |
-| `AMBEE_API_KEY` | Ambee weather data API key |
-| `CRON_SECRET` | Bearer secret the Vercel crons send to the outlook refresh routes |
-| `ADMIN_EMAILS` | Comma-separated emails allowed to publish (hazard bulletins, advisory and calendar uploads, seasonal ingest). **Empty means nobody**: registration is open, so a signed-in account alone proves nothing. List every web dashboard staff account here before deploying. |
-| `CONTACT_EMAIL` | Shown in the privacy policy and terms as the contact address |
-| `AZURE_SEASONAL_URL` | SAS URL for GMet's downscaled seasonal forecast. Unset until GMet publishes the feed |
-
-### Running
-
-```bash
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-API docs available at `http://localhost:8000/docs` (Swagger UI).
+Open http://localhost:8000/docs.
 
-`--host 0.0.0.0` is not optional if you are running the mobile app. Uvicorn binds
-`127.0.0.1` by default, and the Expo client does not use `localhost`: it builds
-its base URL from the host that served the bundle (see `getApiBaseUrl` in
-`mobile/src/shared/api/apiConfig.ts`), because `localhost` means the device
-itself on an emulator or a phone. So the app asks `http://<your-LAN-IP>:8000`,
-nothing is listening there, and every screen reports that the server could not be
-reached, including the weeks 2-to-4 outlook, which then looks like a data
-problem. Set `EXPO_PUBLIC_API_URL` in `mobile/.env` to point at a deployed
-backend instead.
+With no `DATABASE_URL` set, the backend uses a local SQLite file
+(`agromet.db`).
 
-### Testing
+## Environment variables
+
+| Variable | Purpose |
+|---|---|
+| `SECRET_KEY` | Signs login tokens |
+| `DATABASE_URL` | Postgres connection (unset uses SQLite) |
+| `FRONTEND_ORIGINS` | Websites allowed to call the API |
+| `ADMIN_EMAILS` | Accounts allowed to publish (empty means none) |
+| `OPENAI_API_KEY` | AI assistant and diagnosis wording |
+| `KINDWISE_API_KEY` | Crop diagnosis |
+| `CRON_SECRET` | Protects the daily outlook refresh |
+| `CONTACT_EMAIL` | Shown in Terms and Privacy |
+
+The rest, with defaults, are in `.env.example` and `app/config.py`.
+
+## Tests
 
 ```bash
-pip install -r requirements.txt -r requirements-dev.txt
 python -m pytest
 ```
 
-Runs from `backend/` or from the repo root (`python -m pytest backend/tests`);
-`pytest.ini` puts the repo root on `sys.path` either way, because every test
-module imports `backend.app....`. The suite is unittest-style, so
-`python -m unittest discover -s tests -t ..` works without installing pytest at
-all. No API keys are needed: the tests that cover the assistant fake the
-provider.
+268 pass. No API keys or database are needed. 9 Postgres tests are skipped
+unless `TEST_DATABASE_URL` is set.
 
-The suite runs against a throwaway SQLite file, never a developer's own
-`agromet.db` (`tests/conftest.py`). Set `TEST_DATABASE_URL` to a Postgres
-connection string to additionally run `test_database_dialects.py` -- schema
-parity, `RETURNING`, upsert, and cascade-delete, for real, against Postgres.
-A local `docker run -e POSTGRES_PASSWORD=test -p 5432:5432 postgres:16-alpine`
-plus `TEST_DATABASE_URL=postgresql://postgres:test@localhost:5432/postgres`
-is enough. Skipped, not failed, when unset.
+## Deploy
 
-## Project Structure
-
-```
-app/
-  main.py              # Composition root: build the app, wire the database, mount every router
-  config.py            # Every setting this service reads from its environment, in one place
-  deps.py              # Shared FastAPI dependencies -- who's asking (get_current_user & co.)
-  records.py           # Calendar/advisory insert logic two different routers both need
-  database.py          # SQLite/Postgres connection, schema initialization
-  schemas.py           # Pydantic request/response models
-  auth.py              # JWT token creation and verification
-  domain.py            # Business logic (calendars, advisories, cycles)
-  diagnosis.py         # Crop disease diagnosis integration
-  spreadsheet_parser.py # Excel upload parsing and preview
-  chat_prompt.py       # What AgroMet AI is told, and how a turn is assembled
-  chat_context.py      # The live forecast/hazard/price figures it answers from
-  rate_limit.py        # The quota in front of the route that spends money
-  logging_config.py    # Somewhere for log records to actually go
-  routers/             # One module per domain -- see below
-    accounts.py         # Register, log in, /auth/me
-    chat.py              # The assistant, transcription, translation, TTS stubs
-    weather.py            # Ambee proxy + the Open-Meteo bundle
-    diagnosis.py           # Crop disease diagnosis endpoints + history
-    content.py               # FAQ, Terms/Privacy, the Contact form
-    agricultural_data.py      # The generic record upload/list/delete path
-    calendars.py                # Crop/poultry calendar preview+commit, enhanced-calendars
-    advisories.py                 # Weekly advisory preview+commit, list/get/delete
-    production_cycles.py           # Batches tracked against a calendar
-    dashboard.py                    # Aggregate counts for the admin dashboard
-    market.py                        # Commodity prices, trends, market centers
-    hazards.py                        # Flood/drought summary, regions, overrides
-    outlook.py                        # Subseasonal and seasonal outlooks + precipitation field
-    health.py                          # Liveness and integration-status
-tests/
-  conftest.py               # Isolates the suite from a developer's real database
-  test_chat.py              # The assistant: prompt, model call, validation, quota
-  test_chat_context.py      # Grounding: intent routing and the rendered figures
-  test_rate_limit.py        # The quota, including the shared-address case
-  test_diagnosis.py         # Diagnosis module tests
-  test_database_dialects.py # SQLite/Postgres parity -- skipped without TEST_DATABASE_URL
+```bash
+npx vercel --prod
 ```
 
-`main.py` was a single ~2,900-line file until this split -- every route, every
-domain helper and every config constant in one module that every change had
-a chance of colliding with. Splitting it changed no behavior: the same 72
-routes exist at the same paths, verified by diffing the method+path pairs
-before and after, and the full test suite (SQLite and Postgres both) passes
-unchanged. Config constants live in `config.py` and are read as
-`config.NAME` (module attribute access) rather than imported by name, on
-purpose -- it is what lets `unittest.mock.patch("backend.app.config.NAME", ...)`
-reach whichever router actually reads it at request time, regardless of
-which one that turns out to be.
+Run it from this folder. `vercel.json` also schedules two daily jobs that
+refresh the weeks 2 to 4 outlook (05:00 UTC) and the seasonal outlook
+(06:00 UTC).
 
-### The database
+## Folders
 
-SQLite is the default because it needs no setup: clone the repo, run
-`uvicorn`, and `agromet.db` appears next to it. That default is correct for
-local dev and wrong for this app's actual production target. The backend
-deploys to Vercel (`vercel.json`) as a serverless function, and Vercel's
-filesystem is read-only outside `/tmp` -- which is itself wiped on every cold
-start and not shared between concurrent instances. Point SQLite there (which
-`resolve_database_path` in `main.py` does automatically, so it at least
-doesn't crash) and every signup, uploaded calendar, diagnosis record and
-contact message survives only until that particular instance recycles, then
-is gone, with nothing in the logs to say so.
-
-Setting `DATABASE_URL` to a Postgres connection string switches the whole app
-off that path -- **do this before trusting the deployment with real farmer
-data.** Neon, Supabase and Vercel Postgres all publish a free tier and a
-*pooled* connection string (use that one, not the direct one: a serverless
-function can run several concurrent instances, each wanting its own
-connection). `database.py`'s module docstring covers how one code path
-serves both databases; `test_database_dialects.py` proves it against a real
-Postgres rather than asserting it from review.
-
-Every other piece of state in this service already lives outside process
-memory except one, and it already knows it: the chat rate limiter, next.
-
-### The assistant
-
-`/api/chat` is unauthenticated, so it is metered rather than gated: a quota per
-device and a looser one per address (`CHAT_RATE_LIMIT`, `CHAT_DAILY_LIMIT`),
-plus hard ceilings on question length and on `max_output_tokens`. The quota
-counter lives in process memory, which is exact on a long-running host and best
-effort on a serverless one -- see the module docstring in `rate_limit.py`.
-
-Answers are grounded: before the model is called, `chat_context` gathers the
-forecast, flood and drought bands, and market prices for the farmer's region,
-but only the ones the question actually needs. Every source is bounded and
-optional, so a slow upstream costs a section of the answer rather than the
-answer.
-
-With no `OPENAI_API_KEY` the route still answers, with a plainly worded fallback
-and `degraded: true`; `degradedReason` says which failure it was (`no_key`,
-`timeout`, `upstream_error`, `empty_output`).
-
-### The seasonal outlook
-
-`GET /api/outlook/seasonal` serves agro-climatic indices for Ghana's sixteen
-regions, worked out from each ensemble member's daily rain:
-
-- `seasons`: onset date, cessation date, and the early and late dry spells, for
-  the **Northern Single Season**, **Southern Major Season** and **Southern Minor
-  Season**. Each season covers only the regions of its sector (five northern
-  regions, eleven southern).
-- `windows`: rainfall total, number of rainy days and mean maximum temperature
-  for **MAM**, **MJJ**, **JAS** and **SON**.
-
-Every variable carries the ensemble median (`value`, `display`), the ERA5 normal
-(`normal`, `normalDisplay`) and tercile probabilities. A season or window that
-ends after SEAS5's reach (about 7 months) has `available: false`, the normal,
-and `availableFrom` (the first monthly release that will cover it).
-
-- **Definitions:** standard AGRHYMET rules, all thresholds and season calendars
-  in one block at the top of `app/agro_season.py`. Rainy day 1 mm. Onset: 20 mm
-  in 3 days with no dry spell over 7 days in the next 30. Cessation: a 70 mm soil
-  store losing 5 mm a day, first empty day after the season's reference date.
-  Early dry spell: first 50 days after onset; late: day 51 to cessation.
-- **Source:** ECMWF SEAS5 (51 members) through Open-Meteo's seasonal API,
-  fetched by a daily cron (`/api/outlook/seasonal/refresh`, `CRON_SECRET`) that
-  only recomputes after ECMWF's monthly release on the 5th. Stored in
-  `seasonal_snapshots`.
-- **Baseline:** ERA5 1995-2024, the same indices per region, season and window,
-  baked into `app/data/seasonal_climatology.json` by
-  `python -m backend.scripts.build_seasonal_climatology` from the cache the
-  subseasonal bake already downloaded. A few archive cells change abruptly in
-  2017 (a data source change, not climate); the bake skips them.
-- **Method:** member rain is scaled by observed normal over the model's own
-  normal (from its monthly anomalies) before any index is computed, and
-  temperature is shifted the same way. Probabilities are blended 60/40 with
-  climatology because raw seasonal ensembles are overconfident. Windows with
-  under 30 mm a month of normal rain are flagged `dryWindow`.
-- **GMet's forecast:** when a `gmet` snapshot is in force it is served first,
-  with the SEAS5 reading alongside as `modelSeasons` and `modelWindows`. The
-  Azure ingest is a stub (`seasonal_runtime.ingest_gmet`, admin-only
-  `POST /api/outlook/seasonal/ingest`) until the feed format is known; the
-  payload it must produce is written out in `seasonal_runtime.GMET_PAYLOAD_CONTRACT`.
-
-## Related
-
-- **Frontend:** [samankwah/agromet-frontend](https://github.com/samankwah/agromet-frontend)
-
-## License
-
-MIT
+```
+api/index.py     Vercel entry point
+app/             The API (main.py builds it; routers/ holds the routes)
+app/data/        Pre-computed ERA5 normals
+scripts/         Scripts that build those normals
+tests/           Tests
+```

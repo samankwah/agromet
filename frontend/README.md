@@ -1,132 +1,78 @@
-# AgroMet Frontend
+# AgroMet Website
 
-A modern web application for agricultural meteorological advisory services in Ghana. Built for farmers, agricultural extension officers, and agribusiness stakeholders to access weather forecasts, crop calendars, market intelligence, and advisory bulletins.
+The public website and staff dashboard for AgroMet Ghana.
 
-## Tech Stack
+**Live:** https://agromet-ghana.vercel.app
 
-- **Framework:** React 18 + Vite 5
-- **Styling:** Tailwind CSS 3
-- **Routing:** React Router v6
-- **HTTP Client:** Axios with retry support
-- **Maps:** Leaflet / React Leaflet, Google Maps API
-- **Charts:** Recharts, Chart.js, amCharts 5
-- **Auth:** Firebase Authentication
-- **Animations:** Framer Motion, React Spring
-- **Export:** jsPDF, html2canvas, xlsx
+Built with React 18, Vite, Tailwind CSS, Leaflet maps and Recharts.
 
-## Features
+## Pages
 
-### Weather & Forecasts
-- Interactive weather map with regional overlays
-- 7-day, seasonal, and sub-seasonal forecast views
-- Flood and drought monitoring dashboard
-- Animated weather icons and themed UI
+**For the public**
+- Weather map, today's forecast and 7-day forecast (Open-Meteo)
+- Flood and drought monitoring (from the backend)
+- Seasonal and subseasonal forecast pages (sample content; the live outlooks
+  are in the mobile app)
+- Crop and poultry advisories, crop and poultry calendars, agro bulletins
+- Crop disease diagnosis from a photo
+- Market prices with WhatsApp ordering (example prices)
+- News, media, services, about, contact, terms and privacy
+- `/app`: download page for the Android app
 
-### Crop Management
-- Crop calendar builder and viewer (seasonal + poultry cycles)
-- Production cycle tracking with activity timelines
-- Agromet and poultry advisory management
-- Excel-based calendar upload with smart parsing
+**For staff** (`/admin-login`, then `/dashboard`)
+- Upload crop and poultry calendars and advisories from Excel, preview, then
+  publish
+- Dashboard counts
 
-### Market Intelligence
-- Commodity price listings with trend indicators
-- Regional market center data (Greater Accra, Ashanti, Northern, Western)
-- Price charts and demand forecasting
-- WhatsApp-integrated ordering flow
+Publishing is checked by the backend: only accounts listed in its
+`ADMIN_EMAILS` can publish.
 
-### Advisory System
-- Weekly agro-meteorological bulletins
-- SMS advisory generation
-- Weather forecast tables with activity recommendations
-- Crop-specific and region-specific guidance
-
-### AI & Language
-- Crop disease diagnostic tool (image-based)
-- AI chatbot with farm profile context
-- Multi-language support with browser translation fallback and browser TTS
-- Voice input capabilities
-
-### Admin Dashboard
-- Content management hub for calendars and advisories
-- File upload and management
-- Dashboard statistics and reporting
-- Role-based access with protected routes
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js >= 18
-- npm or yarn
-
-### Installation
+## Run it
 
 ```bash
-git clone https://github.com/samankwah/agromet-frontend.git
-cd agromet-frontend
+cd frontend
 npm install
-```
-
-### Configuration
-
-Copy the environment template and fill in your keys:
-
-```bash
 cp .env.example .env
-```
-
-| Variable | Description |
-|---|---|
-| `VITE_BACKEND_BASE_URL` | Backend API URL (default: `http://localhost:8000`) |
-| `VITE_FIREBASE_API_KEY` | Firebase project API key |
-| `VITE_FIREBASE_AUTH_DOMAIN` | Firebase auth domain |
-| `VITE_FIREBASE_PROJECT_ID` | Firebase project ID |
-| `VITE_GOOGLE_MAPS_API_KEY` | Google Maps JavaScript API key |
-| `VITE_AMBEE_API_KEY` | Ambee weather data API key |
-
-### Development
-
-```powershell
 npm run dev
 ```
 
-App runs at `http://localhost:3000` by default.
+Opens at http://localhost:3000. Start the backend first; in development,
+`/api` calls go to it.
 
-### Production Build
+## Environment variables
+
+| Variable | Purpose |
+|---|---|
+| `VITE_BACKEND_BASE_URL` | Backend address (default `http://localhost:8000`) |
+| `VITE_MARKET_WHATSAPP` | WhatsApp number for market orders |
+| `VITE_MARKET_PHONE` | Number for the "Call to order" button (defaults to the WhatsApp number) |
+
+These are fixed when the site is built, so redeploy after changing them.
+
+## Scripts
 
 ```bash
-npm run build
-npm run preview
+npm run dev       # development server
+npm run build     # production build to dist/
+npm run preview   # serve the build
+npm run lint      # ESLint
 ```
 
-Output is in the `dist/` directory, ready for static hosting (Netlify, Vercel, etc.).
+## Deploy
 
-## Project Structure
-
-```
-src/
-  assets/          # Images, icons, static data (ghana-regions.json)
-  blog/            # Blog post components
-  components/      # Reusable UI components
-    Chatbot/       # AI chatbot widget
-    Dashboard/     # Admin dashboard panels
-    WeeklyAdvisory/# Advisory display components
-    common/        # Shared components (filters, renderers, dropdowns)
-  config/          # API configuration
-  contexts/        # React context providers
-  data/            # Static datasets (Ghana codes, languages)
-  firebase/        # Firebase config and helpers
-  hooks/           # Custom React hooks
-  pages/           # Route-level page components
-  services/        # API service layers and business logic
-  styles/          # CSS animations and themes
-  utils/           # Parsers, validators, helpers
+```bash
+npx vercel --prod
 ```
 
-## Related
+Run it from this folder. `vercel.json` sends every path to `index.html` so
+page links work.
 
-- **Backend:** [samankwah/agromet-backend](https://github.com/samankwah/agromet-backend)
+## Folders
 
-## License
-
-MIT
+```
+src/pages/       One file per page
+src/components/  Shared parts (header, chatbot, dashboard panels)
+src/services/    Calls to the backend and Open-Meteo
+src/config/      API and app download settings
+public/          App QR code and store badges
+```
