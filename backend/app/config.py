@@ -75,6 +75,10 @@ SECRET_KEY = os.getenv("SECRET_KEY", "change-me")
 # the scheduled refresh endpoints refuse any request without it. Unset, they
 # refuse everything, rather than letting anyone trigger an upstream fetch.
 CRON_SECRET = os.getenv("CRON_SECRET", "")
+# Optional. When set in Expo's dashboard ("enhanced push security"), Expo only
+# accepts pushes that carry this token, so a leaked device token cannot be used
+# by anyone else to message the farmer.
+EXPO_ACCESS_TOKEN = os.getenv("EXPO_ACCESS_TOKEN", "")
 # The address the privacy policy and terms give for questions and deletion
 # requests. Unset, the published text points people at the Contact screen
 # instead of printing an empty address.

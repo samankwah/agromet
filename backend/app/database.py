@@ -623,6 +623,33 @@ CREATE TABLE IF NOT EXISTS runtime_snapshots (
 CREATE INDEX IF NOT EXISTS idx_runtime_snapshots_kind
 ON runtime_snapshots(kind, id);
 
+-- Phones that asked for weather warnings as notifications. The place is the
+-- farmer's town or district point rounded to about a kilometre, never live
+-- GPS. `hazards` is a comma list of the warning types left switched on.
+CREATE TABLE IF NOT EXISTS push_devices (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    token TEXT NOT NULL UNIQUE,
+    platform TEXT NOT NULL DEFAULT '',
+    lat REAL NOT NULL,
+    lng REAL NOT NULL,
+    place_name TEXT NOT NULL DEFAULT '',
+    region TEXT NOT NULL DEFAULT '',
+    hazards TEXT NOT NULL DEFAULT '',
+    enabled INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    last_seen_at TEXT NOT NULL
+);
+
+-- Which warning went to which phone, so none is sent twice.
+CREATE TABLE IF NOT EXISTS push_sent (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    token TEXT NOT NULL,
+    alert_id TEXT NOT NULL,
+    sent_at TEXT NOT NULL,
+    UNIQUE (token, alert_id)
+);
+
 -- Small key and value facts about the database itself. `init_db` stores
 -- the schema version here, so a cold start that finds the schema current
 -- skips the whole script. (No semicolons in these comments.)

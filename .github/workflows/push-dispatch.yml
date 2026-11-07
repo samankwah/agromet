@@ -1,0 +1,32 @@
+# Sends due weather warnings to phones every 30 minutes.
+#
+# The backend's /api/push/dispatch works out each registered place's warnings
+# and pushes the ones due (backend/app/routers/push.py). It runs here rather
+# than as a Vercel cron because Vercel's Hobby plan runs crons once a day.
+#
+# Needs the repository secret CRON_SECRET, the same value the backend has.
+# GitHub may start a scheduled run a few minutes late under load; the warning
+# rules allow for that (a storm warning goes out from two hours before onset).
+name: Push weather warnings
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Call the dispatch endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "CRON_SECRET is not set in the repository secrets." >&2
+            exit 1
+          fi
+          curl --fail-with-body --silent --show-error --max-time 90 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            https://agromet-backend.vercel.app/api/push/dispatch

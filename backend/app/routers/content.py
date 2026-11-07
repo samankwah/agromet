@@ -48,7 +48,7 @@ FAQ_MESSAGES = {
 #
 # Plain words on purpose: farmers are the audience. No dashes in the copy, the
 # clients render it as is.
-LEGAL_UPDATED = "October 2026"
+LEGAL_UPDATED = "November 2026"
 
 
 def how_to_reach_us() -> str:
@@ -173,7 +173,7 @@ def legal_documents() -> dict[str, dict]:
                 },
                 {
                     "title": "Reminders and alerts",
-                    "body": "Reminders and weather alerts are set up on your phone. We do not send them from our server, and we do not collect a notification token from your phone.",
+                    "body": "Reminders are set up on your phone. If you turn on weather warnings, your phone sends our server a notification token and your town or district, rounded to about a kilometre, never your exact position, so we can warn you about heavy rain, storms, strong wind or extreme heat there even when the app is closed. Turning warnings off in Settings deletes these from our server.",
                 },
                 {
                     "title": "Services we use",
@@ -182,9 +182,9 @@ def legal_documents() -> dict[str, dict]:
                         "OpenAI, to answer AgroMet AI questions, explain crop checks in plain words and turn voice into text",
                         "Kindwise, to check crop photos for pests and disease",
                         "Open-Meteo, for weather forecasts",
-                        "CARTO, for maps",
+                        "Esri and CARTO, for maps",
                         "NASA GIBS, for satellite images",
-                        "Expo, to deliver app updates",
+                        "Expo, to deliver app updates and weather warning notifications",
                         "Vercel, which runs our server",
                         "Neon, which hosts our database",
                         "Google Translate, to translate text on the website when you choose another language",

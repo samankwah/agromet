@@ -32,7 +32,7 @@ class SchemaSplitTests(unittest.TestCase):
         # comment and still parses, so check the late additions arrive whole.
         statements = database._split_statements(database._postgres_ddl(database._SCHEMA))
         for table in (
-            "contact_messages", "ai_reports", "s2s_snapshots", "seasonal_snapshots", "runtime_snapshots", "schema_meta",
+            "contact_messages", "ai_reports", "s2s_snapshots", "seasonal_snapshots", "runtime_snapshots", "schema_meta", "push_devices", "push_sent",
         ):
             with self.subTest(table):
                 self.assertTrue(

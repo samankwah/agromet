@@ -49,6 +49,7 @@ from .routers import (  # noqa: E402 -- see the comment above; this ordering is 
     market,
     outlook,
     production_cycles,
+    push,
     weather,
 )
 
@@ -97,4 +98,5 @@ app.include_router(health.router)
 app.include_router(market.router)
 app.include_router(outlook.router)
 app.include_router(production_cycles.router)
+app.include_router(push.router)
 app.include_router(weather.router)
