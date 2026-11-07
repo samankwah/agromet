@@ -5,6 +5,7 @@ shape `hazards.py`'s endpoints also use."""
 
 from __future__ import annotations
 
+import asyncio
 import hmac
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException
@@ -310,7 +311,7 @@ async def seasonal_advice_for(region: str, season: str | None = None, window: st
         advice = seasonal_advice.region_advice(outlook, resolved, season, window)
     except KeyError as exc:
         raise HTTPException(status_code=400, detail=f"{resolved} has no '{exc.args[0]}'.") from exc
-    rows = _published_rows(resolved, advice["season"]["key"], advice["season"]["year"])
+    rows = await asyncio.to_thread(_published_rows, resolved, advice["season"]["key"], advice["season"]["year"])
     advice = seasonal_advice.apply_published(advice, rows)
     return {
         "success": True,

@@ -1,10 +1,11 @@
 """Open-Meteo weather, fetched and cached per location.
 
-Structured like `hazard_runtime`, for the same reasons: an in-process TTL cache
-with a refresh lock and stale-while-revalidate reads. See that module's header
-for the full rationale; the short version is that this backend runs serverless
-on Vercel, where `/tmp` is per-instance and empty on every cold start, so a
-SQLite cache table would buy nothing a dict does not.
+Structured like `hazard_runtime`: each place's bundle is stored in the database
+(`runtime_snapshots`, kind `weather:<lat>,<lng>`) with an in-process dict as this
+instance's copy. A cold instance reads a place in one round trip instead of
+waiting up to twenty seconds on Open-Meteo, and a stale bundle is served as it
+is while a refresh runs behind the response. Each place has its own refresh
+lock, so a slow fetch for one town no longer holds up every other town.
 
 What is deliberately *not* here: normalisation. The route hands Open-Meteo's own
 response back inside the house envelope, and the mobile app maps it to its
@@ -24,9 +25,11 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import httpx
+
+from . import snapshot_store
 
 logger = logging.getLogger(__name__)
 
@@ -85,9 +88,19 @@ HOURLY_FIELDS = (
     "cape",
 )
 
+# How often a warm instance looks in the database for a place it already holds.
+RELOAD_INTERVAL_SECONDS = 300.0
+
+# Stored bundles older than this are deleted by the daily cron. Every new place
+# a farmer opens the app in adds a row, so without this the table only grows.
+PRUNE_AFTER = timedelta(days=2)
+
+KIND_PREFIX = "weather:"
+
 _CACHE: dict[str, dict] = {}
 _CACHE_STAMPS: dict[str, float] = {}
-_REFRESH_LOCK = asyncio.Lock()
+_LAST_LOADS: dict[str, float] = {}  # monotonic
+_LOCKS: dict[str, asyncio.Lock] = {}
 _LAST_ERROR: str | None = None
 
 
@@ -104,6 +117,36 @@ def is_stale(key: str) -> bool:
 
 def cached_bundle(key: str) -> dict | None:
     return _CACHE.get(key)
+
+
+def _lock_for(key: str) -> asyncio.Lock:
+    lock = _LOCKS.get(key)
+    if lock is None:
+        lock = _LOCKS[key] = asyncio.Lock()
+    return lock
+
+
+async def load_bundle(key: str) -> None:
+    """Pick up the stored bundle for one place if it is newer than ours.
+
+    Skipped while this instance holds a fresh copy, so a warm instance does not
+    pay a round trip per request. A database failure keeps what is in memory.
+    """
+    if key in _CACHE and not is_stale(key):
+        return
+    now = time.monotonic()
+    if key in _CACHE and now - _LAST_LOADS.get(key, 0.0) < RELOAD_INTERVAL_SECONDS:
+        return
+    _LAST_LOADS[key] = now
+
+    try:
+        stored = await asyncio.to_thread(snapshot_store.read_latest, KIND_PREFIX + key)
+    except Exception:
+        logger.exception("could not read the stored weather bundle for %s", key)
+        return
+
+    if stored and stored[1] > _CACHE_STAMPS.get(key, 0.0):
+        _CACHE[key], _CACHE_STAMPS[key] = stored
 
 
 async def _fetch(lat: float, lng: float) -> dict:
@@ -129,8 +172,9 @@ async def _fetch(lat: float, lng: float) -> dict:
 async def refresh(lat: float, lng: float, force: bool = False) -> bool:
     """Fetch and store one location. True when new data was written.
 
-    The lock stops a cold container serving ten carousel towns at once from
-    firing ten simultaneous upstream requests for the same coordinates.
+    The lock is per place: it stops simultaneous requests for the same
+    coordinates from each fetching, without making different towns wait on
+    each other.
     """
     global _LAST_ERROR
 
@@ -138,7 +182,7 @@ async def refresh(lat: float, lng: float, force: bool = False) -> bool:
     if not force and not is_stale(key):
         return False
 
-    async with _REFRESH_LOCK:
+    async with _lock_for(key):
         # Another coroutine may have refreshed this key while we waited.
         if not force and not is_stale(key):
             return False
@@ -149,8 +193,14 @@ async def refresh(lat: float, lng: float, force: bool = False) -> bool:
             logger.warning("weather refresh failed for %s: %s", key, _LAST_ERROR)
             return False
 
+        try:
+            stamp = await asyncio.to_thread(snapshot_store.store, KIND_PREFIX + key, bundle)
+        except Exception:
+            logger.exception("could not store the weather bundle for %s", key)
+            stamp = time.time()
+
         _CACHE[key] = bundle
-        _CACHE_STAMPS[key] = time.time()
+        _CACHE_STAMPS[key] = stamp
         _LAST_ERROR = None
         return True
 
@@ -162,8 +212,15 @@ async def ensure_fresh(lat: float, lng: float) -> None:
     revalidation to a background task, so a page load is never held open behind
     a twenty-second upstream timeout.
     """
-    if cache_key(lat, lng) not in _CACHE:
+    key = cache_key(lat, lng)
+    await load_bundle(key)
+    if key not in _CACHE:
         await refresh(lat, lng, force=True)
+
+
+def prune() -> int:
+    """Delete stored bundles nobody has refreshed in `PRUNE_AFTER`. Blocking."""
+    return snapshot_store.prune(KIND_PREFIX, PRUNE_AFTER)
 
 
 def metadata(key: str) -> dict:
@@ -182,4 +239,7 @@ def reset_cache() -> None:
     global _LAST_ERROR
     _CACHE.clear()
     _CACHE_STAMPS.clear()
+    _LAST_LOADS.clear()
+    _LOCKS.clear()
     _LAST_ERROR = None
+    snapshot_store.clear(KIND_PREFIX)

@@ -3,12 +3,15 @@
 Separated from ``hazards.py`` (pure scoring) and from ``main.py`` (routing) so
 that the I/O and cache behaviour can be reasoned about on its own.
 
-Cache design is dictated by the deployment. ``resolve_database_path`` in
-``main.py`` puts SQLite under ``tempfile.gettempdir()`` on serverless, so the
-database is empty on every cold start and cannot be the primary store. The
-primary store is therefore a module-level dict with a TTL; SQLite is a
-write-through mirror used only when the file is actually writable, which is what
-gives local development persistence across restarts.
+**Where the snapshot lives.** In the database (``runtime_snapshots``, kind
+``hazards``), with a module-level dict as this instance's copy of it. It used to
+live only in the dict, and on Vercel every new instance starts with that dict
+empty, so the first reader on each one waited on three upstream calls with a
+25-second timeout. That is the likeliest cause of the intermittent server errors
+on the summary endpoint. Now a cold instance reads the stored row in one round
+trip, and only an empty table (a fresh deploy) makes a reader fetch, inside a
+hard time limit. A daily cron (``/api/hazards/refresh``) keeps the row filled
+even when nobody opens the screen.
 
 The read path never blocks on the network when it has anything to serve, and it
 never returns a 500 because upstream is down -- a monitoring page showing a
@@ -26,6 +29,7 @@ from pathlib import Path
 
 import httpx
 
+from . import snapshot_store
 from .hazard_math import spi
 from .hazards import (
     ARCHIVE_URL,
@@ -66,10 +70,25 @@ SERIES_DAYS = 90
 ARCHIVE_LAG_DAYS = 7
 ACCUMULATION_DAYS = 90
 
+SNAPSHOT_KIND = "hazards"
+
+# The hard cap on one fetch-and-score, inside the function's 60 s. The upstream
+# timeout alone is 25 s per call, and the three run together.
+REFRESH_BUDGET_SECONDS = 45.0
+
+# How often a warm instance looks for a newer stored row than the one it holds.
+RELOAD_INTERVAL_SECONDS = 300.0
+
+# How long to leave a failed fetch alone, so an empty cache does not turn every
+# request into another call against an upstream that just refused us.
+RETRY_COOLDOWN_SECONDS = 30.0
+
 _CACHE: dict[str, dict] = {}
 _CACHE_STAMP: float = 0.0
 _REFRESH_LOCK = asyncio.Lock()
 _LAST_ERROR: str | None = None
+_LAST_ATTEMPT: float = 0.0
+_LAST_LOAD: float = 0.0  # monotonic
 
 
 # ---------------------------------------------------------------------------
@@ -377,43 +396,83 @@ def last_error() -> str | None:
     return _LAST_ERROR
 
 
+async def load_snapshot(force: bool = False) -> None:
+    """Pick up the stored snapshot if it is newer than the one this instance holds.
+
+    A database failure keeps whatever is already in memory.
+    """
+    global _CACHE, _CACHE_STAMP, _LAST_LOAD
+
+    now = time.monotonic()
+    if not force and _CACHE and now - _LAST_LOAD < RELOAD_INTERVAL_SECONDS:
+        return
+    _LAST_LOAD = now
+
+    try:
+        stored = await asyncio.to_thread(snapshot_store.read_latest, SNAPSHOT_KIND)
+    except Exception:
+        logger.exception("could not read the stored hazard snapshot")
+        return
+
+    if stored and stored[1] > _CACHE_STAMP:
+        _CACHE, _CACHE_STAMP = stored
+
+
 async def refresh(force: bool = False) -> bool:
-    """Refresh the cache. Returns True when new data was stored.
+    """Fetch, score and store every region. Returns True when new data was stored.
 
     The lock stops a burst of concurrent page loads on a cold container from
-    each firing their own pair of upstream requests.
+    each firing their own set of upstream requests.
     """
-    global _CACHE, _CACHE_STAMP, _LAST_ERROR
+    global _CACHE, _CACHE_STAMP, _LAST_ERROR, _LAST_ATTEMPT
 
     if not force and not is_stale():
+        return False
+    if not force and _LAST_ERROR and time.time() - _LAST_ATTEMPT < RETRY_COOLDOWN_SECONDS:
         return False
 
     async with _REFRESH_LOCK:
         # Another coroutine may have refreshed while we waited for the lock.
         if not force and not is_stale():
             return False
+        _LAST_ATTEMPT = time.time()
         try:
-            snapshot = await compute_snapshot()
+            snapshot = await asyncio.wait_for(compute_snapshot(), REFRESH_BUDGET_SECONDS)
+        except asyncio.TimeoutError:
+            _LAST_ERROR = "upstream took too long"
+            logger.warning("hazard refresh failed: %s", _LAST_ERROR)
+            return False
         except Exception as exc:
             _LAST_ERROR = f"{type(exc).__name__}: {exc}"
             logger.warning("hazard refresh failed: %s", _LAST_ERROR)
             return False
 
+        try:
+            stamp = await asyncio.to_thread(snapshot_store.store, SNAPSHOT_KIND, snapshot)
+        except Exception:
+            # The snapshot is good, only sharing it failed. Serve it from here.
+            logger.exception("could not store the hazard snapshot")
+            stamp = time.time()
+
         _CACHE = snapshot
-        _CACHE_STAMP = time.time()
+        _CACHE_STAMP = stamp
         _LAST_ERROR = None
         return True
 
 
 async def ensure_fresh() -> None:
-    """Refresh only when there is nothing to serve, or the data has expired.
+    """Make sure there is something to serve.
 
-    Called from the read path. When a usable cache already exists this returns
-    immediately and the refresh is left to the background task, so a page load
-    is never blocked behind a 25-second upstream timeout.
+    Normally a database read at most. Only when nothing has ever been stored
+    does this reader fetch, inside the time limit, so every reader after it
+    finds the row. A stale snapshot is served as it is, labelled stale.
     """
-    if not _CACHE:
-        await refresh(force=True)
+    await load_snapshot()
+    if _CACHE:
+        return
+    if _LAST_ERROR and time.time() - _LAST_ATTEMPT < RETRY_COOLDOWN_SECONDS:
+        return
+    await refresh(force=True)
 
 
 def metadata() -> dict:
@@ -428,3 +487,14 @@ def metadata() -> dict:
         "sources": DATA_SOURCES,
         "error": _LAST_ERROR,
     }
+
+
+def reset_cache() -> None:
+    """Drop everything, the stored row included. For tests only."""
+    global _CACHE, _CACHE_STAMP, _LAST_ERROR, _LAST_ATTEMPT, _LAST_LOAD
+    _CACHE = {}
+    _CACHE_STAMP = 0.0
+    _LAST_ERROR = None
+    _LAST_ATTEMPT = 0.0
+    _LAST_LOAD = 0.0
+    snapshot_store.clear(SNAPSHOT_KIND)

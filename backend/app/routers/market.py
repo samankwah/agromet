@@ -2,16 +2,19 @@
 
 `seed_market_data()` runs at import time, same as it always has -- this
 module is imported once, when `main.py` registers the router, so the timing
-is unchanged even though the call no longer sits in `main.py` itself.
+is unchanged even though the call no longer sits in `main.py` itself. It only
+writes when the seed data has changed since the last run (see `SEED_VERSION`),
+because on a cold serverless start every upsert is a database round trip.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 
 from fastapi import APIRouter, HTTPException
 
-from ..database import get_connection
+from ..database import get_connection, get_meta, set_meta
 from ..schemas import CommodityResponse, CommodityTrendResponse, MarketCenterResponse
 
 router = APIRouter(prefix="/api/market", tags=["market"])
@@ -139,6 +142,11 @@ SEED_MARKET_CENTERS = [
 ]
 
 
+SEED_VERSION = hashlib.sha256(
+    json.dumps([SEED_COMMODITIES, SEED_TRENDS, SEED_MARKET_CENTERS], sort_keys=True).encode("utf-8")
+).hexdigest()[:16]
+
+
 def seed_market_data() -> None:
     """Bring the market tables up to date with the seed data above.
 
@@ -148,7 +156,14 @@ def seed_market_data() -> None:
     how the database ended up serving four trends for fourteen commodities.
     There is no write API for market data, so there is no operator-entered
     state here to protect.
+
+    The upserts are skipped when `schema_meta` says this exact seed data was
+    already written, which turns about twenty-five round trips per cold start
+    into one.
     """
+    if get_meta("market_seed_version") == SEED_VERSION:
+        return
+
     with get_connection() as conn:
         for slug, name, category, price, unit, trend, demand in SEED_COMMODITIES:
             conn.execute(
@@ -195,6 +210,8 @@ def seed_market_data() -> None:
                 """,
                 (region, json.dumps(markets), transport, premium),
             )
+
+        set_meta(conn, "market_seed_version", SEED_VERSION)
 
 
 seed_market_data()

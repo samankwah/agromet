@@ -392,10 +392,9 @@ async def _hazard_section(region: str | None) -> str | None:
     # quotes have to be the same lines, and a second copy of this logic here
     # is how they would drift apart.
     try:
-        from .routers.hazards import _active_overrides, _apply_overrides
+        from .routers.hazards import _apply_overrides, _load_active_overrides
 
-        with get_connection() as connection:
-            payload = _apply_overrides(payload, _active_overrides(connection))
+        payload = _apply_overrides(payload, await asyncio.to_thread(_load_active_overrides))
     except Exception:
         logger.warning("Chat context: could not apply hazard overrides.", exc_info=True)
 
@@ -431,7 +430,7 @@ def market_rows(message: str, crops: list[str] | None) -> list[dict]:
 
 
 async def _market_section(message: str, crops: list[str] | None) -> str | None:
-    return render_market(market_rows(message, crops))
+    return render_market(await asyncio.to_thread(market_rows, message, crops))
 
 
 # --- assembly ---------------------------------------------------------------

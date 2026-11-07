@@ -227,6 +227,9 @@ class DiagnosisNormalizationTests(unittest.TestCase):
 class DiagnosisApiTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        from backend.app import database
+
+        cls._previous_db_path = database.DATABASE_PATH
         cls._db_dir = tempfile.TemporaryDirectory()
         cls._db_path = os.path.join(cls._db_dir.name, "test-agromet.db")
         set_database_path(cls._db_path)
@@ -235,6 +238,7 @@ class DiagnosisApiTests(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        set_database_path(cls._previous_db_path)
         cls._db_dir.cleanup()
 
     def setUp(self):

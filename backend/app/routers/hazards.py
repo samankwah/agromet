@@ -14,9 +14,13 @@ drift apart.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+import asyncio
+import hmac
+import logging
 
-from .. import hazard_runtime
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, status
+
+from .. import config, hazard_runtime, weather_runtime
 from ..database import get_connection, utc_stamp
 from ..deps import require_admin
 from ..domain import json_dumps, parse_json_list
@@ -35,6 +39,13 @@ from ..hazards import (
 from ..schemas import HazardOverrideRequest
 
 router = APIRouter(tags=["hazards"])
+logger = logging.getLogger(__name__)
+
+
+def _load_active_overrides() -> dict[tuple[str, str], dict]:
+    """`_active_overrides` in its own connection, for `asyncio.to_thread`."""
+    with get_connection() as connection:
+        return _active_overrides(connection)
 
 
 def _active_overrides(connection) -> dict[tuple[str, str], dict]:
@@ -179,8 +190,8 @@ async def hazard_summary(background: BackgroundTasks):
     if hazard_runtime.is_stale():
         background.add_task(hazard_runtime.refresh, False)
 
-    with get_connection() as connection:
-        overrides = _active_overrides(connection)
+    # Blocking database call, so off the event loop.
+    overrides = await asyncio.to_thread(_load_active_overrides)
 
     regions = [
         _strip_series(_apply_overrides(payload, overrides))
@@ -216,8 +227,8 @@ async def hazard_region(region: str, background: BackgroundTasks):
     if hazard_runtime.is_stale():
         background.add_task(hazard_runtime.refresh, False)
 
-    with get_connection() as connection:
-        overrides = _active_overrides(connection)
+    # Blocking database call, so off the event loop.
+    overrides = await asyncio.to_thread(_load_active_overrides)
 
     return {
         "success": True,
@@ -225,6 +236,39 @@ async def hazard_region(region: str, background: BackgroundTasks):
             **_apply_overrides(payload, overrides),
             **hazard_runtime.metadata(),
         },
+    }
+
+
+@router.get("/api/hazards/refresh")
+async def cron_refresh_hazards(authorization: str | None = Header(default=None)):
+    """Compute and store the flood and drought snapshot. Called by the daily Vercel cron.
+
+    Awaited, not started behind the response, because a function that has
+    answered is frozen and a fetch left running never finishes. Keeps the stored
+    row filled even on days nobody opens the screen, so no reader ever waits on
+    upstream. Also prunes weather bundles nobody has asked for lately.
+
+    GET because that is what Vercel's cron sends.
+    """
+    secret = config.CRON_SECRET
+    if not secret:
+        raise HTTPException(status_code=503, detail="CRON_SECRET is not configured.")
+    if not hmac.compare_digest(authorization or "", f"Bearer {secret}"):
+        raise HTTPException(status_code=401, detail="Not authorised.")
+
+    try:
+        pruned = await asyncio.to_thread(weather_runtime.prune)
+    except Exception:
+        logger.exception("could not prune stored weather bundles")
+        pruned = None
+
+    if not await hazard_runtime.refresh(force=True):
+        raise HTTPException(status_code=502, detail=f"Refresh failed: {hazard_runtime.last_error()}")
+
+    snapshot, _ = hazard_runtime.cached_snapshot()
+    return {
+        "success": True,
+        "data": {"regions": len(snapshot), "weatherPruned": pruned, **hazard_runtime.metadata()},
     }
 
 

@@ -267,10 +267,19 @@ SNAPSHOT = {
 
 class EndpointTests(unittest.TestCase):
     def setUp(self):
+        from backend.app import database
+
+        # Put the suite's database back afterwards, or every later module runs
+        # against a deleted file that SQLite silently recreates empty.
+        self._previous_db_path = database.DATABASE_PATH
         handle, self.db_path = tempfile.mkstemp(suffix=".db")
         os.close(handle)
         set_database_path(self.db_path)
         init_db()
+        # A fresh SQLite file per test isolates nothing when the suite runs on
+        # Postgres (TEST_DATABASE_URL), so start every test with no overrides.
+        with database.get_connection() as connection:
+            connection.execute("DELETE FROM hazard_overrides")
 
         from backend.app.main import app
 
@@ -284,6 +293,7 @@ class EndpointTests(unittest.TestCase):
 
     def tearDown(self):
         self._admins.stop()
+        set_database_path(self._previous_db_path)
         try:
             os.remove(self.db_path)
         except OSError:

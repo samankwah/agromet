@@ -31,6 +31,9 @@ def pg_connection():
     """
     from backend.app import database
 
+    # Put back whatever the suite was using, rather than "", which silently
+    # switched every later test module to an SQLite file with no tables.
+    previous_url = database.DATABASE_URL
     database.set_database_url(TEST_DATABASE_URL)
     with database.get_connection() as connection:
         connection.executescript(database._postgres_ddl(database._SCHEMA))
@@ -54,9 +57,11 @@ def pg_connection():
             "commodities",
             "market_centers",
             "users",
+            "runtime_snapshots",
+            "schema_meta",
         ):
             connection.execute(f"DELETE FROM {table}")
-    database.set_database_url("")
+    database.set_database_url(previous_url)
 
 
 def _sqlite_columns() -> dict[str, set[str]]:

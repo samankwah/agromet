@@ -1,7 +1,13 @@
 """Hourly precipitation over Ghana, fetched once and served to everyone.
 
-Mirrors ``s2s_runtime``: a module-level dict with a TTL and an ``asyncio`` lock,
-refreshed off the read path, serving whatever it already has.
+Mirrors ``hazard_runtime``: the field is stored in the database
+(``runtime_snapshots``, kind ``precipitation``) with a module-level dict as this
+instance's copy, so a cold instance reads it in one round trip instead of
+refetching 345 points. Only an empty table makes a reader fetch, inside a hard
+time limit. A stale field is served as it is and refreshed behind the response
+when the platform lets that finish. Whichever instance refreshes stores the
+result for all the others, so the quota is spent once per hour, not once per
+cold start.
 
 **Why this one has to be proxied at all.** The rain map is the first screen that
 wants a field rather than a point, and Open-Meteo weights a request by its
@@ -32,7 +38,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-from . import open_meteo
+from . import open_meteo, snapshot_store
 
 logger = logging.getLogger(__name__)
 
@@ -68,9 +74,22 @@ def _load_grid() -> tuple[list[tuple[float, float]], float]:
 
 GRID, STEP_DEG = _load_grid()
 
+SNAPSHOT_KIND = "precipitation"
+
+# Inside the function's 60 s, leaving room for the database write.
+REFRESH_BUDGET_SECONDS = 45.0
+
+# How often a warm instance looks for a newer stored field than the one it holds.
+RELOAD_INTERVAL_SECONDS = 300.0
+
+# How long to leave a failed fetch alone before trying again.
+RETRY_COOLDOWN_SECONDS = 30.0
+
 _CACHE: dict = {}
 _CACHE_STAMP: float = 0.0
 _LAST_ERROR: str | None = None
+_LAST_ATTEMPT: float = 0.0
+_LAST_LOAD: float = 0.0  # monotonic
 _REFRESH_LOCK = asyncio.Lock()
 
 
@@ -146,41 +165,74 @@ def last_error() -> str | None:
     return _LAST_ERROR
 
 
+async def load_snapshot(force: bool = False) -> None:
+    """Pick up the stored field if it is newer than the one this instance holds."""
+    global _CACHE, _CACHE_STAMP, _LAST_LOAD
+
+    now = time.monotonic()
+    if not force and _CACHE and now - _LAST_LOAD < RELOAD_INTERVAL_SECONDS:
+        return
+    _LAST_LOAD = now
+
+    try:
+        stored = await asyncio.to_thread(snapshot_store.read_latest, SNAPSHOT_KIND)
+    except Exception:
+        logger.exception("could not read the stored precipitation field")
+        return
+
+    if stored and stored[1] > _CACHE_STAMP:
+        _CACHE, _CACHE_STAMP = stored
+
+
 async def refresh(force: bool = False) -> bool:
-    """Refresh the cache. Returns True when new data was stored.
+    """Fetch and store the field. Returns True when new data was stored.
 
     The lock stops a burst of concurrent page loads on a cold container from each
     firing their own upstream request.
     """
-    global _CACHE, _CACHE_STAMP, _LAST_ERROR
+    global _CACHE, _CACHE_STAMP, _LAST_ERROR, _LAST_ATTEMPT
 
     if not force and not is_stale():
+        return False
+    if not force and _LAST_ERROR and time.time() - _LAST_ATTEMPT < RETRY_COOLDOWN_SECONDS:
         return False
 
     async with _REFRESH_LOCK:
         if not force and not is_stale():
             return False
+        _LAST_ATTEMPT = time.time()
         try:
-            snapshot = await _fetch_field()
+            snapshot = await asyncio.wait_for(_fetch_field(), REFRESH_BUDGET_SECONDS)
+        except asyncio.TimeoutError:
+            _LAST_ERROR = "upstream took too long"
+            logger.warning("precipitation refresh failed: %s", _LAST_ERROR)
+            return False
         except Exception as exc:
             _LAST_ERROR = open_meteo.describe(exc)
             logger.warning("precipitation refresh failed: %s", _LAST_ERROR)
             return False
 
+        try:
+            stamp = await asyncio.to_thread(snapshot_store.store, SNAPSHOT_KIND, snapshot)
+        except Exception:
+            logger.exception("could not store the precipitation field")
+            stamp = time.time()
+
         _CACHE = snapshot
-        _CACHE_STAMP = time.time()
+        _CACHE_STAMP = stamp
         _LAST_ERROR = None
         return True
 
 
 async def ensure_fresh() -> None:
-    """Refresh only when there is nothing to serve at all.
-
-    An expired snapshot is still served and revalidated behind the response, so a
-    page load never waits on the upstream timeout.
-    """
-    if not _CACHE:
-        await refresh(force=True)
+    """Make sure there is something to serve: a database read at most, unless
+    nothing has ever been stored."""
+    await load_snapshot()
+    if _CACHE:
+        return
+    if _LAST_ERROR and time.time() - _LAST_ATTEMPT < RETRY_COOLDOWN_SECONDS:
+        return
+    await refresh(force=True)
 
 
 def metadata() -> dict:
@@ -196,8 +248,11 @@ def metadata() -> dict:
 
 
 def reset_cache() -> None:
-    """Drop everything. For tests only."""
-    global _CACHE, _CACHE_STAMP, _LAST_ERROR
+    """Drop everything, the stored row included. For tests only."""
+    global _CACHE, _CACHE_STAMP, _LAST_ERROR, _LAST_ATTEMPT, _LAST_LOAD
     _CACHE = {}
     _CACHE_STAMP = 0.0
     _LAST_ERROR = None
+    _LAST_ATTEMPT = 0.0
+    _LAST_LOAD = 0.0
+    snapshot_store.clear(SNAPSHOT_KIND)

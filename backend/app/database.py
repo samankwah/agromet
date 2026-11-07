@@ -32,6 +32,7 @@ already said it would.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import sqlite3
@@ -607,6 +608,29 @@ CREATE TABLE IF NOT EXISTS seasonal_advisories (
 
 CREATE INDEX IF NOT EXISTS idx_seasonal_advisories_lookup
 ON seasonal_advisories(region, season_key, year);
+
+-- The latest payload of each live feed (hazards, the rain field, weather
+-- per place), so a cold serverless instance reads it in one round trip
+-- instead of waiting on Open-Meteo. Only the newest row of each kind is
+-- kept -- see `snapshot_store.store`. (No semicolons in these comments.)
+CREATE TABLE IF NOT EXISTS runtime_snapshots (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    kind TEXT NOT NULL,
+    computed_at TEXT NOT NULL,
+    payload TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_runtime_snapshots_kind
+ON runtime_snapshots(kind, id);
+
+-- Small key and value facts about the database itself. `init_db` stores
+-- the schema version here, so a cold start that finds the schema current
+-- skips the whole script. (No semicolons in these comments.)
+CREATE TABLE IF NOT EXISTS schema_meta (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    meta_key TEXT NOT NULL UNIQUE,
+    meta_value TEXT NOT NULL
+);
 """
 
 
@@ -617,15 +641,61 @@ def _postgres_ddl(sqlite_ddl: str) -> str:
     )
 
 
+# Bump when `init_db` gains a migration that the schema text alone does not
+# show (an `_add_column_if_missing` call, say), so existing databases rerun it.
+_MIGRATIONS_REVISION = "1"
+
+SCHEMA_VERSION = hashlib.sha256((_SCHEMA + _MIGRATIONS_REVISION).encode("utf-8")).hexdigest()[:16]
+
+
+def get_meta(key: str) -> str | None:
+    """A value from `schema_meta`, or None when it, or the table, is missing.
+
+    Runs in its own connection on purpose: on Postgres a failed statement
+    aborts the whole transaction, so the "table does not exist yet" case must
+    not share one with the work that follows.
+    """
+    try:
+        with get_connection() as connection:
+            row = connection.execute(
+                "SELECT meta_value FROM schema_meta WHERE meta_key = ?", (key,)
+            ).fetchone()
+    except Exception:
+        return None
+    return None if row is None else dict(row)["meta_value"]
+
+
+def set_meta(connection, key: str, value: str) -> None:
+    connection.execute(
+        """
+        INSERT INTO schema_meta (meta_key, meta_value) VALUES (?, ?)
+        ON CONFLICT(meta_key) DO UPDATE SET meta_value = excluded.meta_value
+        """,
+        (key, value),
+    )
+
+
 def init_db() -> None:
+    """Create or migrate the schema, once per schema version.
+
+    This runs on every cold start (it is called at import), and on Neon each
+    statement is a network round trip: running all of `_SCHEMA` cost dozens of
+    them before the first request could be served. So the version that was last
+    applied is stored, and a database that already has it costs one query.
+    """
     if not _is_postgres():
         DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+    if get_meta("schema_version") == SCHEMA_VERSION:
+        return
 
     with get_connection() as connection:
         connection.executescript(_postgres_ddl(_SCHEMA) if _is_postgres() else _SCHEMA)
 
         # Migrations for databases created before a column was added.
         _add_column_if_missing(connection, "production_cycles", "total_duration_weeks", "INTEGER")
+
+        set_meta(connection, "schema_version", SCHEMA_VERSION)
 
 
 def row_to_dict(row: sqlite3.Row | dict | None) -> dict | None:

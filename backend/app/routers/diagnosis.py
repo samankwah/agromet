@@ -9,6 +9,8 @@ request time.
 
 from __future__ import annotations
 
+import asyncio
+
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 
 from .. import config, diagnosis_explain
@@ -57,6 +59,18 @@ def save_diagnosis_record(owner_id: int, diagnosis: dict, crop: str | None, regi
     return cursor.lastrowid
 
 
+def _record_for_user(authorization: str | None, diagnosis: dict, crop: str | None, region: str | None) -> int | None:
+    """Save the diagnosis to the signed-in farmer's history, if anyone is signed in.
+
+    Both steps are blocking database calls, so the async routes run this with
+    `asyncio.to_thread` rather than stalling every other request on the instance.
+    """
+    current_user = get_optional_user(authorization)
+    if not current_user:
+        return None
+    return save_diagnosis_record(current_user["id"], diagnosis, crop, region)
+
+
 def serialize_diagnosis_record(record: dict) -> dict:
     result = decode_payload(record.get("result_json"))
     return {
@@ -90,10 +104,12 @@ async def crop_diagnosis(payload: CropDiagnosisRequest, authorization: str | Non
         language=payload.language,
         context=context,
     )
-    current_user = get_optional_user(authorization)
-    if current_user and diagnosis["status"] == "ok":
-        record_id = save_diagnosis_record(current_user["id"], diagnosis, payload.crop, payload.region)
-        diagnosis["historyId"] = record_id
+    if diagnosis["status"] == "ok":
+        record_id = await asyncio.to_thread(
+            _record_for_user, authorization, diagnosis, payload.crop, payload.region
+        )
+        if record_id is not None:
+            diagnosis["historyId"] = record_id
     return diagnosis
 
 
@@ -116,9 +132,10 @@ async def image_analysis(payload: ImageAnalysisRequest, authorization: str | Non
         language=payload.context.get("language"),
         context=payload.context,
     )
-    current_user = get_optional_user(authorization)
-    if current_user and diagnosis["status"] == "ok":
-        save_diagnosis_record(current_user["id"], diagnosis, payload.context.get("crop"), payload.context.get("region"))
+    if diagnosis["status"] == "ok":
+        await asyncio.to_thread(
+            _record_for_user, authorization, diagnosis, payload.context.get("crop"), payload.context.get("region")
+        )
     if diagnosis["status"] != "ok":
         return {
             "analysis": None,
