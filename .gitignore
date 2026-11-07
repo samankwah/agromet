@@ -53,3 +53,10 @@ mobile/
 # Regenerable by re-running the relevant script; only the fitted, non-dot
 # output (hazard_climatology.json, s2s_climatology.json, ...) is committed.
 backend/app/data/.*.json
+
+# Thesis and its figures: kept local, the repo is public
+docs/*.pdf
+docs/*.docx
+docs/_long_version/
+docs/thesis_src/
+docs/diagrams/fig_*.png
